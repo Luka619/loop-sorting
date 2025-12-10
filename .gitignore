@@ -1,0 +1,99 @@
+############################
+# Unity generated folders
+############################
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+UserSettings/
+MemoryCaptures/
+Logs/
+
+############################
+# Unity auto-generated files
+############################
+
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+############################
+# Rider / VSCode / IDE
+############################
+
+.vscode/
+.idea/
+*.DotSettings
+
+############################
+# OS junk files
+############################
+
+.DS_Store
+Thumbs.db
+
+############################
+# Build outputs
+############################
+
+*.apk
+*.aab
+*.xcodeproj
+*.xcworkspace
+*.xcuserstate
+
+############################
+# PlasticSCM / Collaborate
+############################
+
+.plastic/
+.collab/
+
+############################
+# Crash / Debug files
+############################
+
+*.stacktrace
+
+############################
+# LOOM SORTING SPECIFIC RULES
+############################
+#（你特别要求忽略的 loop sorting 子内容）
+
+/loop sorting/Library/
+/loop sorting/Temp/
+/loop sorting/Obj/
+/loop sorting/Build/
+/loop sorting/UserSettings/
+
+############################
+# Unity asset store tools
+############################
+
+Assets/AssetStoreTools*
+
+############################
+# Other caches
+############################
+
+*.mode*
+*.copy
+*.orig
+*.blend1
+*.blend2

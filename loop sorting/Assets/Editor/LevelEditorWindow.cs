@@ -37,6 +37,7 @@ public class LevelEditorWindow : EditorWindow
     private SerializedObject _flowSO;
     private ReorderableList _flowList;
     private LevelLayout _flowAddCandidate;
+    private Vector2 _flowScroll;
 
     [MenuItem("Tools/Loop Sorting/Level Editor")]
     public static void Open()
@@ -59,9 +60,11 @@ public class LevelEditorWindow : EditorWindow
     {
         DrawHeader();
 
+        EditorGUILayout.BeginHorizontal();
+        DrawLevelSidebar();
+
         _tabIndex = GUILayout.Toolbar(_tabIndex, _tabs);
 
-        EditorGUILayout.BeginHorizontal();
         if (_tabIndex == 0)
         {
             if (_level == null)
@@ -139,6 +142,13 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.Space();
     }
 
+    private void DrawLevelSidebar()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.Width(200f));
+        DrawLevelListPanel();
+        EditorGUILayout.EndVertical();
+    }
+
     private void DrawParameterPanel()
     {
         if (_level == null) return;
@@ -151,7 +161,6 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.45f));
         _paramScroll = EditorGUILayout.BeginScrollView(_paramScroll);
 
-        DrawLevelListPanel();
         EditorGUILayout.LabelField("Global", EditorStyles.boldLabel);
         var propBlockSize = _serializedLevel.FindProperty("blockSize");
         if (propBlockSize != null)
@@ -332,7 +341,7 @@ public class LevelEditorWindow : EditorWindow
     {
         if (_levelOptions == null || _levelOptions.Length == 0) return;
         EditorGUILayout.LabelField("关卡列表", EditorStyles.boldLabel);
-        _levelListScroll = EditorGUILayout.BeginScrollView(_levelListScroll, GUILayout.Height(140));
+        _levelListScroll = EditorGUILayout.BeginScrollView(_levelListScroll);
         int cols = 3;
         int idx = 0;
         while (idx < _levelOptions.Length)
@@ -864,15 +873,20 @@ public class LevelEditorWindow : EditorWindow
 
     private void DrawFlowPanel()
     {
-        EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.9f));
+        float oldLabel = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 90f;
+
+        EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
         EditorGUILayout.LabelField("Level Flow", EditorStyles.boldLabel);
+        _flowScroll = EditorGUILayout.BeginScrollView(_flowScroll, GUILayout.Height(position.height - 120f));
+
         EditorGUILayout.BeginHorizontal();
         _flowAsset = (LevelFlow)EditorGUILayout.ObjectField("Flow Asset", _flowAsset, typeof(LevelFlow), false);
-        if (GUILayout.Button("New Flow", GUILayout.Width(100)))
+        if (GUILayout.Button("New Flow", GUILayout.Width(90)))
         {
             CreateNewFlowAsset();
         }
-        if (_flowAsset != null && GUILayout.Button("设为运行Flow", GUILayout.Width(120)))
+        if (_flowAsset != null && GUILayout.Button("设为运行Flow", GUILayout.Width(110)))
         {
             SetActiveRuntimeFlow(_flowAsset);
         }
@@ -901,7 +915,7 @@ public class LevelEditorWindow : EditorWindow
             _flowList?.DoLayoutList();
             EditorGUILayout.BeginHorizontal();
             _flowAddCandidate = (LevelLayout)EditorGUILayout.ObjectField("Add Level", _flowAddCandidate, typeof(LevelLayout), false);
-            if (GUILayout.Button("Add", GUILayout.Width(60)))
+            if (GUILayout.Button("Add", GUILayout.Width(50)))
             {
                 if (_flowAddCandidate != null)
                 {
@@ -912,7 +926,7 @@ public class LevelEditorWindow : EditorWindow
                     _flowAddCandidate = null;
                 }
             }
-            if (_level != null && GUILayout.Button("Add Current", GUILayout.Width(90)))
+            if (_level != null && GUILayout.Button("Add Current", GUILayout.Width(85)))
             {
                 var prop = _flowSO.FindProperty("levels");
                 int newIndex = prop.arraySize;
@@ -923,7 +937,9 @@ public class LevelEditorWindow : EditorWindow
             _flowSO.ApplyModifiedProperties();
         }
 
+        EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
+        EditorGUIUtility.labelWidth = oldLabel;
     }
 
     private void ApplyAutoAlignSlots(LevelLayout level)

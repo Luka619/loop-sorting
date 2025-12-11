@@ -23,13 +23,13 @@ MonoBehaviour:
     points:
     - {x: 0, y: -2}
     - {x: 6.0000005, y: -1.9957271}
-    - {x: 6, y: 4}
-    - {x: 0, y: 4}
+    - {x: 6, y: 6}
+    - {x: 0, y: 6}
     loop: 0
     width: 20
   boxes:
   - name: 0
-    position: {x: 2.49, y: 0}
+    position: {x: 2, y: 0}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -42,9 +42,9 @@ MonoBehaviour:
     - color: 4
       count: 15
     initialBlocks: 
-    beltSlotIndex: 7
+    beltSlotIndex: 5
   - name: 0
-    position: {x: 4.35, y: 2.08}
+    position: {x: 4.35, y: 3.88}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -54,7 +54,37 @@ MonoBehaviour:
     colorCounts:
     - color: 4
       count: 15
+    - color: 5
+      count: 15
+    initialBlocks: 
+    beltSlotIndex: 39
+  - name: 0
+    position: {x: 1.82, y: 3.88}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 5
+      count: 15
+    - color: 0
+      count: 15
+    initialBlocks: 
+    beltSlotIndex: 45
+  - name: 0
+    position: {x: 4.39, y: 0}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 0
+      count: 15
     - color: 3
       count: 15
     initialBlocks: 
-    beltSlotIndex: 38
+    beltSlotIndex: 11

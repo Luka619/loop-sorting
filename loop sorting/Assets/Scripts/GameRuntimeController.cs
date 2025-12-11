@@ -78,6 +78,37 @@ namespace LoopSorting
         private Text _secondaryLabel;
         private bool _gameOver;
 
+        private void ClearRuntime()
+        {
+            // Stop coroutines
+            StopAllCoroutines();
+
+            // Destroy child objects under controller (conveyors, containers, slot markers, background, UI spawned under this transform)
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                DestroyImmediate(transform.GetChild(i).gameObject);
+            }
+
+            // Clear collections/state
+            _beltSlots.Clear();
+            _slotMarkers.Clear();
+            _slotBasePositions.Clear();
+            _slotCurrentPositions.Clear();
+            foreach (var kv in _beltBlockVisuals)
+            {
+                if (kv.Value != null) DestroyImmediate(kv.Value);
+            }
+            _beltBlockVisuals.Clear();
+            _boxViews.Clear();
+            _containerToBelt.Clear();
+            _game = null;
+            _isReleasing = false;
+            _activeReleasePort = null;
+            _tickTimer = 0f;
+            _beltSpacingUsed = 0f;
+            _gameOver = false;
+        }
+
         public void Build(LevelLayout layout)
         {
             BuildInternal(layout, clearFlow: true);
@@ -96,6 +127,14 @@ namespace LoopSorting
                 Debug.LogError("GameRuntimeController.Build: layout is null");
                 return;
             }
+
+            // Reset root transform to avoid inherited offsets/scale from scene.
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
+
+            // Full cleanup before building next level.
+            ClearRuntime();
 
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
             EnsureEventSystem();
@@ -154,7 +193,12 @@ namespace LoopSorting
 
         private void EnsureBackground()
         {
-            if (_backgroundQuad != null) return;
+            // Rebuild each time to match camera framing and avoid偏移/残留。
+            if (_backgroundQuad != null)
+            {
+                DestroyImmediate(_backgroundQuad);
+                _backgroundQuad = null;
+            }
 
             var cam = Camera.main;
             if (cam == null) return;
@@ -162,21 +206,20 @@ namespace LoopSorting
             _backgroundQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             _backgroundQuad.name = "BackgroundQuad";
             _backgroundQuad.layer = cam.gameObject.layer;
-            _backgroundQuad.transform.SetParent(transform, false);
+            _backgroundQuad.transform.SetParent(cam.transform, false);
 
-            // Position far behind gameplay objects relative to camera (so it never occludes)
-            float dist = Mathf.Min(cam.farClipPlane - 10f, 500f);
-            if (dist < cam.nearClipPlane + 1f) dist = cam.nearClipPlane + 1f;
-            _backgroundQuad.transform.position = cam.transform.position + cam.transform.forward * dist;
-            _backgroundQuad.transform.rotation = cam.transform.rotation;
+            // 锚定相机，推到视锥远端，确保始终在玩法后方且不偏移。
+            float dist = Mathf.Max(5f, cam.farClipPlane * 0.5f);
+            _backgroundQuad.transform.localPosition = Vector3.forward * dist;
+            _backgroundQuad.transform.localRotation = Quaternion.identity;
 
-            // Scale to cover view (orthographic: size independent of distance)
+            // 按相机视口尺寸加 padding 缩放。
             float viewHeight = cam.orthographic ? cam.orthographicSize * 2f : 30f;
             float aspect = Mathf.Max(0.01f, cam.aspect);
             float padding = 1.2f;
             _backgroundQuad.transform.localScale = new Vector3(viewHeight * aspect * padding, viewHeight * padding, 1f);
 
-            // Gradient material
+            // 渐变材质，关闭深度写入/测试，只做背景。
             var tex = new Texture2D(1, 2);
             tex.wrapMode = TextureWrapMode.Clamp;
             Color top = new Color(1f, 0.92f, 0.78f);   // soft warm
@@ -187,6 +230,8 @@ namespace LoopSorting
             var mat = new Material(Shader.Find("Unlit/Texture"));
             mat.mainTexture = tex;
             mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
+            mat.SetInt("_ZWrite", 0);
+            mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
             var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = mat;
 

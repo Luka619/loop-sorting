@@ -30,6 +30,8 @@ public class LevelEditorWindow : EditorWindow
     private int _selectedConveyor = -1;
     private int _draggingConveyor = -1;
     private int _draggingPoint = -1;
+    private int _draggingBox = -1;
+    private Vector2 _boxDragOffset = Vector2.zero;
     private int _selectedPoint = -1;
     private int _tabIndex = 0;
     private readonly string[] _tabs = new[] { "Levels", "Flow" };
@@ -38,6 +40,10 @@ public class LevelEditorWindow : EditorWindow
     private ReorderableList _flowList;
     private LevelLayout _flowAddCandidate;
     private Vector2 _flowScroll;
+    private int _lastPaletteColor = 0;
+    private ReorderableList _colorCountsList;
+    private int _colorListBoxIndex = -1;
+    private int _selectedColorIndex = -1;
 
     [MenuItem("Tools/Loop Sorting/Level Editor")]
     public static void Open()
@@ -59,6 +65,8 @@ public class LevelEditorWindow : EditorWindow
     private void OnGUI()
     {
         DrawHeader();
+
+        HandleGlobalHotkeys();
 
         EditorGUILayout.BeginHorizontal();
         DrawLevelSidebar();
@@ -221,9 +229,31 @@ public class LevelEditorWindow : EditorWindow
                 {
                     _boxesList = new ReorderableList(_serializedLevel, property, true, true, true, true)
                     {
-                        drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes (???????size ????capacity ???????)"),
+                        drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes (位置为中心点，size 为宽高，capacity 为可放积木数量)"),
                         drawElementCallback = DrawBoxElement,
-                        elementHeightCallback = GetBoxHeight
+                        elementHeightCallback = GetBoxHeight,
+                        onAddCallback = list =>
+                        {
+                            if (_level == null)
+                                return;
+                            Undo.RecordObject(_level, "Add Box");
+                            var newBox = new BoxSpec
+                            {
+                                name = $"Box {_level.boxes.Count + 1}",
+                                position = Vector2.zero,
+                                size = Vector2.one,
+                                color = Color.white,
+                                columns = 1,
+                                rows = 1,
+                                opening = OpeningSide.Top,
+                                colorCounts = new List<ColorCount>()
+                            };
+                            _level.boxes.Add(newBox);
+                            _selectedBox = _level.boxes.Count - 1;
+                            _selectedConveyor = -1;
+                            EditorUtility.SetDirty(_level);
+                            _boxesList.index = _selectedBox;
+                        }
                     };
                 }
                 else
@@ -256,6 +286,32 @@ public class LevelEditorWindow : EditorWindow
             box.columns = Mathf.Max(1, EditorGUILayout.IntField("Columns (a)", box.columns));
             box.autoAlignSlot = EditorGUILayout.Toggle("Auto Align Slot", box.autoAlignSlot);
             box.beltSlotIndex = EditorGUILayout.IntField("Belt Slot Index", box.beltSlotIndex);
+
+            // Color counts quick edit
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("Colors", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("快捷键：1-9切色，滚轮调数量，Alt+点击吸取，Tab切盒子。拖拽列表可调顺序。", MessageType.None);
+            EnsureColorList(box);
+            _colorCountsList?.DoLayoutList();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Add Color", GUILayout.Width(90)))
+            {
+                box.colorCounts.Add(new ColorCount { color = (BlockColor)_lastPaletteColor, count = 1 });
+                NormalizeColorCounts(box);
+                EnsureColorList(box, force: true);
+            }
+            if (GUILayout.Button("Normalize", GUILayout.Width(90)))
+            {
+                NormalizeColorCounts(box);
+                EnsureColorList(box, force: true);
+            }
+            if (GUILayout.Button("Clear", GUILayout.Width(60)))
+            {
+                box.colorCounts.Clear();
+                EnsureColorList(box, force: true);
+            }
+            EditorGUILayout.EndHorizontal();
+
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(_level, "Edit Box");
@@ -367,6 +423,7 @@ public class LevelEditorWindow : EditorWindow
     {
         EditorGUILayout.BeginVertical(GUILayout.Width(_previewSize));
         EditorGUILayout.LabelField("关卡预览", EditorStyles.boldLabel);
+        DrawColorLegend();
         var rect = GUILayoutUtility.GetRect(_previewSize, _previewSize, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
         if (Event.current.type == EventType.Repaint)
         {
@@ -479,6 +536,7 @@ public class LevelEditorWindow : EditorWindow
         if (_level.boxes == null) return;
         foreach (var box in _level.boxes)
         {
+            Handles.color = Color.white;
             if (_onlyShowSelectedBox && (_selectedBox < 0 || _level.boxes[_selectedBox] != box))
             {
                 continue;
@@ -501,10 +559,13 @@ public class LevelEditorWindow : EditorWindow
                 poly[i] = ToScreen(rect, bounds, rectWorld[i]);
             }
 
-            var face = new Color(box.color.r, box.color.g, box.color.b, 0.25f);
+            var face = Color.clear; // remove base tint
             var outline = (_selectedBox >= 0 && _level.boxes[_selectedBox] == box) ? Color.green : Color.white;
             Handles.DrawSolidRectangleWithOutline(poly, face, outline);
             Handles.Label(ToScreen(rect, bounds, box.position), $"{box.name} ({box.opening})");
+
+            // Color fill overlay based on actual cell order/counts
+            DrawColorCells(rect, bounds, box);
 
             // Grid overlay
             int cols = Mathf.Max(1, box.columns);
@@ -567,8 +628,74 @@ public class LevelEditorWindow : EditorWindow
         int hit = FindBoxAt(world);
         if (hit != -1)
         {
+            // Eyedropper: Alt+click copies colors from clicked box into current selection (if different),
+            // otherwise just select.
+            if (e.alt && _selectedBox >= 0 && _selectedBox < _level.boxes.Count && _selectedBox != hit)
+            {
+                var copy = _level.boxes[_selectedBox];
+                CopyColorCounts(_level.boxes[hit], ref copy);
+                _level.boxes[_selectedBox] = copy;
+                EditorUtility.SetDirty(_level);
+                EnsureColorList(_level.boxes[_selectedBox], force: true);
+            }
             _selectedBox = hit;
+            if (!e.alt)
+            {
+                // prepare for dragging
+                _draggingBox = hit;
+                _boxDragOffset = _level.boxes[hit].position - world;
+            }
             _selectedConveyor = -1;
+            if (_level.boxes[hit].colorCounts != null && _level.boxes[hit].colorCounts.Count > 0)
+            {
+                // Select color based on clicked cell
+                var box = _level.boxes[hit];
+                var half = box.size * 0.5f;
+                var min = box.position - half;
+                var max = box.position + half;
+                int cols = Mathf.Max(1, box.columns);
+                int rows = Mathf.Max(1, box.rows);
+                var order = BuildCellOrder(cols, rows, box.opening);
+                int capacity = cols * rows;
+                var colorIdx = new int[capacity];
+                for (int i = 0; i < capacity; i++) colorIdx[i] = -1;
+                int fill = 0;
+                for (int ci = 0; ci < box.colorCounts.Count && fill < capacity; ci++)
+                {
+                    int cnt = Mathf.Max(0, box.colorCounts[ci].count);
+                    for (int k = 0; k < cnt && fill < capacity; k++)
+                    {
+                        colorIdx[fill++] = ci;
+                    }
+                }
+                int hitCell = -1;
+                // compute cell indices
+                float cellW = box.size.x / cols;
+                float cellH = box.size.y / rows;
+                for (int i = 0; i < capacity; i++)
+                {
+                    var cell = order[i];
+                    float cxMin = min.x + cell.x * cellW;
+                    float cyMin = min.y + cell.y * cellH;
+                    float cxMax = cxMin + cellW;
+                    float cyMax = cyMin + cellH;
+                    if (world.x >= cxMin && world.x <= cxMax && world.y >= cyMin && world.y <= cyMax)
+                    {
+                        hitCell = i;
+                        break;
+                    }
+                }
+                if (hitCell >= 0 && hitCell < capacity && colorIdx[hitCell] >= 0)
+                {
+                    _selectedColorIndex = colorIdx[hitCell];
+                }
+                else
+                {
+                    _selectedColorIndex = 0;
+                }
+                _lastPaletteColor = (int)box.colorCounts[Mathf.Clamp(_selectedColorIndex, 0, box.colorCounts.Count - 1)].color;
+                EnsureColorList(_level.boxes[hit], force: true);
+            }
             Repaint();
             e.Use();
             return;
@@ -583,6 +710,63 @@ public class LevelEditorWindow : EditorWindow
             Repaint();
             e.Use();
             return;
+        }
+
+        // Click on empty space: clear selection to避免误操作
+        _selectedBox = -1;
+        _selectedConveyor = -1;
+        _selectedPoint = -1;
+        Repaint();
+    }
+
+    private void DrawColorCells(Rect rect, Rect bounds, BoxSpec box)
+    {
+        if (box.colorCounts == null || box.colorCounts.Count == 0) return;
+        int cols = Mathf.Max(1, box.columns);
+        int rows = Mathf.Max(1, box.rows);
+        int capacity = cols * rows;
+        if (capacity <= 0) return;
+
+        var order = BuildCellOrder(cols, rows, box.opening);
+        var colorIdx = new int[capacity];
+        for (int i = 0; i < capacity; i++) colorIdx[i] = -1;
+
+        int fillIndex = 0;
+        for (int ci = 0; ci < box.colorCounts.Count && fillIndex < capacity; ci++)
+        {
+            int count = Mathf.Max(0, box.colorCounts[ci].count);
+            for (int k = 0; k < count && fillIndex < capacity; k++)
+            {
+                colorIdx[fillIndex++] = ci;
+            }
+        }
+
+        var min = box.position - box.size * 0.5f;
+        var cellSize = new Vector2(box.size.x / cols, box.size.y / rows);
+        for (int i = 0; i < capacity; i++)
+        {
+            int ci = colorIdx[i];
+            if (ci < 0 || ci >= box.colorCounts.Count) continue;
+            var cell = order[i];
+            var cmin = new Vector2(min.x + cell.x * cellSize.x, min.y + cell.y * cellSize.y);
+            var cmax = cmin + cellSize;
+            var poly = new Vector3[4]
+            {
+                ToScreen(rect, bounds, new Vector2(cmin.x, cmin.y)),
+                ToScreen(rect, bounds, new Vector2(cmax.x, cmin.y)),
+                ToScreen(rect, bounds, new Vector2(cmax.x, cmax.y)),
+                ToScreen(rect, bounds, new Vector2(cmin.x, cmax.y))
+            };
+            var col = ToColor(box.colorCounts[ci].color);
+            col.a = 0.7f;
+            Handles.DrawSolidRectangleWithOutline(poly, col, Color.clear);
+
+            // highlight selected color
+            if (_selectedBox >= 0 && _selectedBox < _level.boxes.Count && _level.boxes[_selectedBox] == box && _selectedColorIndex == ci)
+            {
+                Handles.color = Color.white;
+                Handles.DrawAAPolyLine(3f, poly);
+            }
         }
     }
 
@@ -611,6 +795,142 @@ public class LevelEditorWindow : EditorWindow
                 _draggingConveyor = -1;
                 _draggingPoint = -1;
             }
+        }
+
+        // Drag selected box
+        if (_draggingBox >= 0 && _draggingBox < (_level?.boxes?.Count ?? 0))
+        {
+            if ((e.type == EventType.MouseDrag || e.type == EventType.MouseMove) && e.button == 0)
+            {
+                var local = e.mousePosition;
+                var world = ToWorld(rect, bounds, local);
+                world = SnapIfNeeded(world);
+                Undo.RecordObject(_level, "Move Box");
+                var box = _level.boxes[_draggingBox];
+                box.position = world + _boxDragOffset;
+                _level.boxes[_draggingBox] = box;
+                EditorUtility.SetDirty(_level);
+                Repaint();
+                e.Use();
+            }
+            else if (e.type == EventType.MouseUp)
+            {
+                _draggingBox = -1;
+            }
+        }
+    }
+
+    private void HandleGlobalHotkeys()
+    {
+        var e = Event.current;
+        if (e == null) return;
+        if (_level == null || _level.boxes == null || _level.boxes.Count == 0) return;
+
+        // Tab / Shift+Tab: cycle boxes
+        if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Tab)
+        {
+            int dir = e.shift ? -1 : 1;
+            if (_selectedBox < 0) _selectedBox = 0;
+            else _selectedBox = (_selectedBox + dir + _level.boxes.Count) % _level.boxes.Count;
+            _selectedConveyor = -1;
+            Repaint();
+            e.Use();
+            return;
+        }
+
+        if (_selectedBox < 0 || _selectedBox >= _level.boxes.Count) return;
+        var box = _level.boxes[_selectedBox];
+        int capacity = Mathf.Max(1, box.columns * box.rows);
+        if (box.colorCounts == null) box.colorCounts = new List<ColorCount>();
+
+        // Delete key: remove selected box
+        if (e.type == EventType.KeyDown && (e.keyCode == KeyCode.Delete || e.keyCode == KeyCode.Backspace))
+        {
+            Undo.RecordObject(_level, "Delete Box");
+            _level.boxes.RemoveAt(_selectedBox);
+            _selectedBox = Mathf.Clamp(_selectedBox - 1, -1, _level.boxes.Count - 1);
+            _colorCountsList = null;
+            _colorListBoxIndex = -1;
+            _selectedColorIndex = -1;
+            EditorUtility.SetDirty(_level);
+            Repaint();
+            e.Use();
+            return;
+        }
+
+        // Number keys 1-9: fill single color to full capacity
+        if (e.type == EventType.KeyDown && e.keyCode >= KeyCode.Alpha1 && e.keyCode <= KeyCode.Alpha9)
+        {
+            int idx = (int)e.keyCode - (int)KeyCode.Alpha1;
+            _lastPaletteColor = idx;
+            // 如果当前已有选中颜色段，则仅更换该段的颜色；否则填满整盒
+            if (_selectedColorIndex >= 0 && _selectedColorIndex < box.colorCounts.Count)
+            {
+                box.colorCounts[_selectedColorIndex].color = (BlockColor)idx;
+            }
+            else
+            {
+                box.colorCounts.Clear();
+                box.colorCounts.Add(new ColorCount { color = (BlockColor)idx, count = capacity });
+                _selectedColorIndex = 0;
+            }
+            _level.boxes[_selectedBox] = box;
+            EditorUtility.SetDirty(_level);
+            EnsureColorList(box, force: true);
+            Repaint();
+            e.Use();
+            return;
+        }
+
+        // Scroll wheel: adjust selected color count quickly
+        if (e.type == EventType.ScrollWheel && box.colorCounts.Count > 0)
+        {
+            int delta = e.delta.y > 0 ? -1 : 1;
+            int idx = (_selectedColorIndex >= 0 && _selectedColorIndex < box.colorCounts.Count) ? _selectedColorIndex : 0;
+            var cc = box.colorCounts[idx];
+            cc.count = Mathf.Clamp(cc.count + delta, 0, capacity);
+            box.colorCounts[idx] = cc;
+            // Rebalance others: allow selected to reach full capacity, others scaled down if needed
+            int remainingCap = Mathf.Max(0, capacity - cc.count);
+            int otherTotal = 0;
+            for (int i = 0; i < box.colorCounts.Count; i++)
+            {
+                if (i == idx) continue;
+                otherTotal += Mathf.Max(0, box.colorCounts[i].count);
+            }
+            if (remainingCap == 0)
+            {
+                for (int i = 0; i < box.colorCounts.Count; i++)
+                {
+                    if (i == idx) continue;
+                    box.colorCounts[i].count = 0;
+                }
+            }
+            else if (otherTotal > remainingCap && otherTotal > 0)
+            {
+                float scale = remainingCap / (float)otherTotal;
+                int acc = 0;
+                for (int i = 0; i < box.colorCounts.Count; i++)
+                {
+                    if (i == idx) continue;
+                    int v = Mathf.Max(0, Mathf.RoundToInt(box.colorCounts[i].count * scale));
+                    box.colorCounts[i].count = v;
+                    acc += v;
+                }
+                // adjust selected if rounding error made sum exceed capacity
+                int sum = acc + cc.count;
+                if (sum > capacity)
+                {
+                    cc.count = Mathf.Max(0, cc.count - (sum - capacity));
+                    box.colorCounts[idx] = cc;
+                }
+            }
+            _level.boxes[_selectedBox] = box;
+            EditorUtility.SetDirty(_level);
+            EnsureColorList(box, force: true);
+            Repaint();
+            e.Use();
+            return;
         }
     }
 
@@ -766,6 +1086,166 @@ public class LevelEditorWindow : EditorWindow
         return best;
     }
 
+    private static void NormalizeColorCounts(BoxSpec box)
+    {
+        if (box.colorCounts == null) box.colorCounts = new List<ColorCount>();
+        int capacity = Mathf.Max(1, box.columns * box.rows);
+        int total = 0;
+        foreach (var cc in box.colorCounts) total += Mathf.Max(0, cc.count);
+        if (total <= 0)
+        {
+            box.colorCounts.Clear();
+            return;
+        }
+        float scale = capacity / (float)total;
+        int acc = 0;
+        for (int i = 0; i < box.colorCounts.Count; i++)
+        {
+            int val = Mathf.Max(0, Mathf.RoundToInt(box.colorCounts[i].count * scale));
+            box.colorCounts[i].count = val;
+            acc += val;
+        }
+        if (acc < capacity && box.colorCounts.Count > 0)
+        {
+            box.colorCounts[0].count += (capacity - acc);
+        }
+        if (acc > capacity && box.colorCounts.Count > 0)
+        {
+            box.colorCounts[0].count = Mathf.Max(0, box.colorCounts[0].count - (acc - capacity));
+        }
+    }
+
+    private static void CopyColorCounts(BoxSpec from, ref BoxSpec to)
+    {
+        if (from.colorCounts == null) return;
+        if (to.colorCounts == null) to.colorCounts = new List<ColorCount>();
+        to.colorCounts.Clear();
+        foreach (var cc in from.colorCounts)
+        {
+            to.colorCounts.Add(new ColorCount { color = cc.color, count = cc.count });
+        }
+        NormalizeColorCounts(to);
+    }
+
+    private static List<Vector2Int> BuildCellOrder(int cols, int rows, OpeningSide opening)
+    {
+        var order = new List<Vector2Int>(cols * rows);
+        switch (opening)
+        {
+            case OpeningSide.Top:
+                for (int r = 0; r < rows; r++)
+                    for (int c = 0; c < cols; c++)
+                        order.Add(new Vector2Int(c, r));
+                break;
+            case OpeningSide.Bottom:
+                for (int r = rows - 1; r >= 0; r--)
+                    for (int c = 0; c < cols; c++)
+                        order.Add(new Vector2Int(c, r));
+                break;
+            case OpeningSide.Left:
+                for (int c = 0; c < cols; c++)
+                    for (int r = 0; r < rows; r++)
+                        order.Add(new Vector2Int(c, r));
+                break;
+            case OpeningSide.Right:
+                for (int c = cols - 1; c >= 0; c--)
+                    for (int r = 0; r < rows; r++)
+                        order.Add(new Vector2Int(c, r));
+                break;
+        }
+        return order;
+    }
+
+    private void EnsureColorList(BoxSpec box, bool force = false)
+    {
+        if (_serializedLevel == null || _level == null || box == null) return;
+        if (!force && _colorCountsList != null && _colorListBoxIndex == _selectedBox) return;
+
+        var boxesProp = _serializedLevel.FindProperty("boxes");
+        if (_selectedBox < 0 || _selectedBox >= boxesProp.arraySize) return;
+        var colorsProp = boxesProp.GetArrayElementAtIndex(_selectedBox).FindPropertyRelative("colorCounts");
+
+        _colorCountsList = new ReorderableList(_serializedLevel, colorsProp, true, true, true, true);
+        _colorCountsList.drawHeaderCallback = rect =>
+        {
+            EditorGUI.LabelField(rect, "颜色与数量 (拖拽可排序)");
+        };
+        _colorCountsList.drawElementCallback = (rect, index, active, focused) =>
+        {
+            rect.y += 2f;
+            var element = colorsProp.GetArrayElementAtIndex(index);
+            var colorProp = element.FindPropertyRelative("color");
+            var countProp = element.FindPropertyRelative("count");
+            var left = new Rect(rect.x, rect.y, 140f, EditorGUIUtility.singleLineHeight);
+            var right = new Rect(rect.x + 150f, rect.y, rect.width - 190f, EditorGUIUtility.singleLineHeight);
+            var del = new Rect(rect.xMax - 30f, rect.y, 30f, EditorGUIUtility.singleLineHeight);
+            EditorGUI.PropertyField(left, colorProp, GUIContent.none);
+            countProp.intValue = Mathf.Max(0, EditorGUI.IntField(right, countProp.intValue));
+            if (GUI.Button(del, "X"))
+            {
+                colorsProp.DeleteArrayElementAtIndex(index);
+            }
+        };
+        _colorCountsList.onSelectCallback = list =>
+        {
+            _selectedColorIndex = list.index;
+            var element = colorsProp.GetArrayElementAtIndex(_selectedBox >= 0 && _selectedBox < colorsProp.arraySize ? list.index : 0);
+            var colorProp = element.FindPropertyRelative("color");
+            _lastPaletteColor = colorProp != null ? colorProp.enumValueIndex : 0;
+        };
+        _colorCountsList.onAddCallback = list =>
+        {
+            colorsProp.arraySize++;
+            var elem = colorsProp.GetArrayElementAtIndex(colorsProp.arraySize - 1);
+            elem.FindPropertyRelative("color").enumValueIndex = _lastPaletteColor;
+            elem.FindPropertyRelative("count").intValue = 1;
+            _selectedColorIndex = colorsProp.arraySize - 1;
+        };
+        _colorCountsList.onReorderCallback = list =>
+        {
+            _selectedColorIndex = list.index;
+        };
+        _colorListBoxIndex = _selectedBox;
+    }
+
+    private void DrawColorLegend()
+    {
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("快捷键色卡：", GUILayout.Width(80));
+        int colorCount = System.Enum.GetValues(typeof(BlockColor)).Length;
+        int max = Mathf.Min(9, colorCount);
+        for (int i = 0; i < max; i++)
+        {
+            var col = ToColor((BlockColor)i);
+            var prev = GUI.color;
+            GUI.color = col;
+            if (GUILayout.Button($"{i + 1}", GUILayout.Width(28), GUILayout.Height(20)))
+            {
+                _lastPaletteColor = i;
+                if (_selectedBox >= 0 && _selectedBox < (_level?.boxes?.Count ?? 0))
+                {
+                    _selectedColorIndex = 0;
+                }
+            }
+            GUI.color = prev;
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private Color ToColor(BlockColor c)
+    {
+        switch (c)
+        {
+            case BlockColor.Red: return new Color(0.9f, 0.2f, 0.2f);
+            case BlockColor.Blue: return new Color(0.2f, 0.4f, 0.9f);
+            case BlockColor.Yellow: return new Color(0.98f, 0.8f, 0.15f);
+            case BlockColor.Green: return new Color(0.25f, 0.8f, 0.35f);
+            case BlockColor.Purple: return new Color(0.6f, 0.35f, 0.9f);
+            case BlockColor.Orange: return new Color(1.0f, 0.6f, 0.2f);
+            default: return Color.white;
+        }
+    }
+
     private bool FindConveyorPointAt(Vector2 localMouse, Rect rect, Rect bounds, out int conveyorIndex, out int pointIndex)
     {
         conveyorIndex = -1;
@@ -830,6 +1310,9 @@ public class LevelEditorWindow : EditorWindow
         _draggingConveyor = -1;
         _draggingPoint = -1;
         _selectedPoint = -1;
+        _colorCountsList = null;
+        _colorListBoxIndex = -1;
+        _selectedColorIndex = -1;
         Repaint();
         RefreshLevelList();
         _selectedIndex = IndexOfLevel(level, _levelOptions);

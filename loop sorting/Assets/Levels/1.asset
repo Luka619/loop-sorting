@@ -41,22 +41,22 @@ MonoBehaviour:
     colorCounts:
     - color: 0
       count: 15
-    - color: 1
+    - color: 2
       count: 15
     initialBlocks: 0000000001000000
     beltSlotIndex: 6
-  - name: 1
-    position: {x: 1.01, y: 1.98}
+  - name: Box 2
+    position: {x: 1.2810256, y: 1.954359}
     size: {x: 0.90000004, y: 3}
-    color: {r: 0, g: 0, b: 0, a: 0}
+    color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
     rows: 10
-    opening: 3
+    opening: 2
     autoAlignSlot: 1
     colorCounts:
-    - color: 1
-      count: 15
     - color: 0
       count: 15
-    initialBlocks: 0100000000000000
+    - color: 2
+      count: 15
+    initialBlocks: 
     beltSlotIndex: 11

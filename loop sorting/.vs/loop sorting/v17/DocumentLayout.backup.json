@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "D:\\A-workspace\\loop-sorting\\loop sorting\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|d:\\a-workspace\\loop-sorting\\loop sorting\\assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{0A30ABEE-27FD-B927-5DA6-9D08FC043625}|Assembly-CSharp-Editor.csproj|d:\\a-workspace\\loop-sorting\\loop sorting\\assets\\editor\\leveleditorwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A30ABEE-27FD-B927-5DA6-9D08FC043625}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\editor\\leveleditorwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -19,12 +23,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "LevelRuntimePlayer.cs",
+              "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Scripts\\LevelRuntimePlayer.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LevelRuntimePlayer.cs",
+              "ToolTip": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Scripts\\LevelRuntimePlayer.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LevelRuntimePlayer.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAqwF4AAABSAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-10T11:38:32.293Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "LevelEditorWindow.cs",
               "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Editor\\LevelEditorWindow.cs",
               "RelativeDocumentMoniker": "Assets\\Editor\\LevelEditorWindow.cs",
               "ToolTip": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Editor\\LevelEditorWindow.cs",
               "RelativeToolTip": "Assets\\Editor\\LevelEditorWindow.cs",
-              "ViewState": "AgIAAKgAAAAAAAAAAAAWwLwAAABHAAAAAAAAAA==",
+              "ViewState": "AgIAAKgAAAAAAAAAAAAWwLwAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-10T10:21:00.11Z",
               "EditorCaption": ""

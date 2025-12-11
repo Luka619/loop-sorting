@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace LoopSorting
 {
@@ -19,8 +20,8 @@ namespace LoopSorting
         public float cameraZOffset = -10f;
         [Tooltip("Visual size of each block in box grid.")]
         public Vector2 blockVisualSize = new Vector2(0.45f, 0.45f);
-        [Tooltip("Max blocks allowed on the conveyor (0 = no extra limit). If layout sets beltCapacity > 0, it overrides this.")]
-        public int beltBlockLimit = 0;
+        [Tooltip("Max blocks / slots on the conveyor (default 50). If layout sets beltCapacity > 0, it overrides this.")]
+        public int beltBlockLimit = 50;
         [Tooltip("Scale factor for belt block size relative to slot spacing.")]
         public float beltBlockSizeFactor = 0.65f;
         [Header("Animation")]
@@ -40,6 +41,10 @@ namespace LoopSorting
         public bool showSlotMarkersRuntime = true;
         public float slotMarkerScale = 0.15f;
         public Color slotMarkerColor = new Color(0.6f, 0.6f, 0.6f, 0.3f);
+        [Header("Speed")]
+        public float[] speedSteps = new float[] { 1f, 1.5f, 2f };
+        [Header("UI Theme")]
+        public UITheme uiTheme;
 
         private LoopSortingGame _game;
         private List<Transform> _beltSlots = new List<Transform>();
@@ -55,9 +60,37 @@ namespace LoopSorting
         private float _beltSpacingUsed;
         private bool _isReleasing;
         private int? _activeReleasePort;
+        private float _speedMultiplier = 1f;
+        private int _speedIndex = 0;
+        private Button _speedButton;
+        private Text _speedButtonLabel;
+        private GameObject _backgroundQuad;
+        private GameObject _eventSystem;
+        private Canvas _uiCanvas;
+        private LevelFlow _flow;
+        private int _flowIndex;
+        private LevelLayout _currentLayout;
+        private GameObject _resultPanel;
+        private Text _resultText;
+        private Button _primaryButton;
+        private Button _secondaryButton;
+        private Text _primaryLabel;
+        private Text _secondaryLabel;
+        private bool _gameOver;
 
         public void Build(LevelLayout layout)
         {
+            BuildInternal(layout, clearFlow: true);
+        }
+
+        private void BuildInternal(LevelLayout layout, bool clearFlow)
+        {
+            if (clearFlow)
+            {
+                _flow = null;
+                _flowIndex = 0;
+            }
+            _currentLayout = layout;
             if (layout == null)
             {
                 Debug.LogError("GameRuntimeController.Build: layout is null");
@@ -65,14 +98,101 @@ namespace LoopSorting
             }
 
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
-            EnsureCounterUI();
+            EnsureEventSystem();
 
             BuildConveyor(layout);
             BuildContainers(layout);
+            _currentLayout = layout;
             _levelBounds = LayoutUtils.ComputeLayoutBounds(layout);
             FitCameraToLevel(layout);
+            EnsureBackground();
+            EnsureCounterUI();
             SyncContainersVisuals();
             SyncBeltVisuals();
+        }
+
+        public void Build(LevelFlow flow, int startIndex = 0)
+        {
+            _flow = flow;
+            _flowIndex = Mathf.Clamp(startIndex, 0, flow != null ? Mathf.Max(0, flow.levels.Count - 1) : 0);
+            var layout = flow != null && flow.levels.Count > 0 ? flow.levels[_flowIndex] : null;
+            BuildInternal(layout, clearFlow: false);
+        }
+
+        private void CycleSpeed()
+        {
+            if (speedSteps == null || speedSteps.Length == 0)
+            {
+                _speedMultiplier = 1f;
+                UpdateSpeedButtonLabel();
+                return;
+            }
+            _speedIndex = (_speedIndex + 1) % speedSteps.Length;
+            _speedMultiplier = Mathf.Max(0.0001f, speedSteps[_speedIndex]);
+            UpdateSpeedButtonLabel();
+        }
+
+        private void UpdateSpeedButtonLabel()
+        {
+            if (_speedButtonLabel == null) return;
+            float val = _speedMultiplier;
+            _speedButtonLabel.text = $"{val:0.##}x";
+        }
+
+        private void EnsureEventSystem()
+        {
+            if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() != null)
+            {
+                return;
+            }
+
+            _eventSystem = new GameObject("EventSystem");
+            _eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            _eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            DontDestroyOnLoad(_eventSystem);
+        }
+
+        private void EnsureBackground()
+        {
+            if (_backgroundQuad != null) return;
+
+            var cam = Camera.main;
+            if (cam == null) return;
+
+            _backgroundQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _backgroundQuad.name = "BackgroundQuad";
+            _backgroundQuad.layer = cam.gameObject.layer;
+            _backgroundQuad.transform.SetParent(transform, false);
+
+            // Position far behind gameplay objects relative to camera (so it never occludes)
+            float dist = Mathf.Min(cam.farClipPlane - 10f, 500f);
+            if (dist < cam.nearClipPlane + 1f) dist = cam.nearClipPlane + 1f;
+            _backgroundQuad.transform.position = cam.transform.position + cam.transform.forward * dist;
+            _backgroundQuad.transform.rotation = cam.transform.rotation;
+
+            // Scale to cover view (orthographic: size independent of distance)
+            float viewHeight = cam.orthographic ? cam.orthographicSize * 2f : 30f;
+            float aspect = Mathf.Max(0.01f, cam.aspect);
+            float padding = 1.2f;
+            _backgroundQuad.transform.localScale = new Vector3(viewHeight * aspect * padding, viewHeight * padding, 1f);
+
+            // Gradient material
+            var tex = new Texture2D(1, 2);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            Color top = new Color(1f, 0.92f, 0.78f);   // soft warm
+            Color bottom = new Color(1f, 0.87f, 0.65f); // slight red-ish yellow
+            tex.SetPixels(new[] { bottom, top });
+            tex.Apply();
+
+            var mat = new Material(Shader.Find("Unlit/Texture"));
+            mat.mainTexture = tex;
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
+            var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = mat;
+
+            // Disable collider
+            var col = _backgroundQuad.GetComponent<Collider>();
+            if (col != null) Destroy(col);
         }
 
         private int? TryGetBlockedPort()
@@ -98,7 +218,7 @@ namespace LoopSorting
                 return;
             }
 
-            _tickTimer += Time.deltaTime;
+            _tickTimer += Time.deltaTime * _speedMultiplier;
             float progress = Mathf.Clamp01(_tickTimer / Mathf.Max(0.0001f, conveyorTickSeconds));
             UpdateSlotMarkersVisuals(progress);
             UpdateBeltBlockVisuals(progress);
@@ -111,6 +231,7 @@ namespace LoopSorting
                 SyncBeltVisuals();
                 SyncContainersVisuals();
                 UpdateBeltCounter();
+                CheckEndConditions();
             }
         }
 
@@ -143,7 +264,23 @@ namespace LoopSorting
                 return;
             }
 
-            var path = layout.conveyors[0];
+            // Pick the first conveyor that has at least 2 points; ignore empty placeholders.
+            ConveyorPath path = null;
+            for (int i = 0; i < layout.conveyors.Count; i++)
+            {
+                var candidate = layout.conveyors[i];
+                if (candidate != null && candidate.points != null && candidate.points.Count >= 2)
+                {
+                    path = candidate;
+                    break;
+                }
+            }
+            if (path == null)
+            {
+                Debug.LogError("No valid conveyor path (needs at least 2 points).");
+                return;
+            }
+
             float spacing = layout.beltSlotSpacing > 0f ? layout.beltSlotSpacing : beltSlotSpacing;
             _beltSlots = LayoutUtils.BuildSlotsFromPath(
                 path,
@@ -154,7 +291,21 @@ namespace LoopSorting
                 smoothTension: layout.cornerSmoothTension,
                 smoothSubdivisions: layout.cornerSubdivisions);
 
+            // Safety: ensure we always have at least one slot to avoid zero-length conveyor crashes.
+            if (_beltSlots == null || _beltSlots.Count == 0)
+            {
+                _beltSlots = new List<Transform>();
+                var t = new GameObject("Slot_0").transform;
+                t.position = path.points != null && path.points.Count > 0
+                    ? new Vector3(path.points[0].x, path.points[0].y, 0f)
+                    : Vector3.zero;
+                _beltSlots.Add(t);
+                _beltSpacingUsed = spacing;
+                Debug.LogWarning("BuildConveyor: slot generation failed, created a single fallback slot to keep the game running.");
+            }
+
             BuildSlotMarkers();
+            EnsureBackground();
 
             var trackParent = new GameObject("ConveyorSlots");
             trackParent.transform.SetParent(transform, false);
@@ -172,9 +323,15 @@ namespace LoopSorting
             var parent = new GameObject("Containers");
             parent.transform.SetParent(transform, false);
 
+            float unit = layout.blockSize > 0 ? layout.blockSize : blockVisualSize.x;
+            blockVisualSize = new Vector2(unit, unit);
+
             for (int i = 0; i < layout.boxes.Count; i++)
             {
                 var spec = layout.boxes[i];
+
+                // derive size from rows/cols and block size
+                spec.size = LayoutUtils.ComputeBoxSize(spec, unit);
 
                 var go = new GameObject(string.IsNullOrEmpty(spec.name) ? $"Box_{i}" : spec.name);
                 go.transform.SetParent(parent.transform, false);
@@ -193,7 +350,7 @@ namespace LoopSorting
                 containers.Add(container);
 
                 int slotIndex = spec.autoAlignSlot
-                    ? LayoutUtils.ResolveBeltSlotIndex(spec, _beltSlots)
+                    ? LayoutUtils.ResolveBeltSlotIndex(spec, _beltSlots, unit)
                     : Mathf.Clamp(spec.beltSlotIndex, 0, Mathf.Max(0, _beltSlots.Count - 1));
                 _containerToBelt[i] = slotIndex;
                 containerToBelt[i] = slotIndex;
@@ -277,6 +434,88 @@ namespace LoopSorting
             beltCounterUI.SetValue(empty, total);
         }
 
+        private void CheckEndConditions()
+        {
+            if (_gameOver || _game == null) return;
+
+            bool win = _game.IsSolved(true);
+            if (win)
+            {
+                ShowResult(true);
+                return;
+            }
+
+            bool beltFull = _game.Conveyor.BlockCount >= _game.Conveyor.Length;
+            if (beltFull && !CanAnyContainerAcceptAnyBeltBlock())
+            {
+                ShowResult(false);
+            }
+        }
+
+        private bool CanAnyContainerAcceptAnyBeltBlock()
+        {
+            for (int i = 0; i < _game.Conveyor.Length; i++)
+            {
+                var slot = _game.Conveyor.GetSlot(i);
+                if (!slot.HasValue) continue;
+                var block = slot.Value;
+                for (int c = 0; c < _game.Containers.Count; c++)
+                {
+                    if (_game.Containers[c].CanAccept(block))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void ShowResult(bool win)
+        {
+            _gameOver = true;
+            EnsureResultPanel();
+            _resultPanel.SetActive(true);
+            _resultText.text = win ? "Level Complete" : "Level Failed";
+            _primaryLabel.text = win ? "Next" : "Retry";
+            _secondaryLabel.text = win ? "Retry" : "Close";
+        }
+
+        private void OnPrimaryClicked()
+        {
+            if (_resultPanel != null) _resultPanel.SetActive(false);
+            if (_flow != null && _flow.levels.Count > 0 && _primaryLabel != null && _primaryLabel.text == "Next")
+            {
+                int next = _flowIndex + 1;
+                if (next < _flow.levels.Count)
+                {
+                    _flowIndex = next;
+                    _gameOver = false;
+                    Build(_flow, _flowIndex);
+                    return;
+                }
+            }
+            RestartCurrent();
+        }
+
+        private void OnSecondaryClicked()
+        {
+            if (_resultPanel != null) _resultPanel.SetActive(false);
+            RestartCurrent();
+        }
+
+        private void RestartCurrent()
+        {
+            _gameOver = false;
+            if (_flow != null && _flow.levels.Count > 0)
+            {
+                Build(_flow, _flowIndex);
+            }
+            else
+            {
+                Build(_currentLayout);
+            }
+        }
+
         private void FitCameraToLevel(LevelLayout layout)
         {
             var cam = Camera.main;
@@ -351,15 +590,10 @@ namespace LoopSorting
             }
 
             int safety = 0;
-            int maxOps = pending + _beltSlots.Count;
+            int maxOps = Mathf.Max(128, pending * 4); // generous safety to avoid early stop when belt temporarily blocked
 
-            while (safety < maxOps)
+            while (pending > 0 && safety < maxOps)
             {
-                if (pending <= 0)
-                {
-                    break;
-                }
-
                 // Check front color still matches.
                 if (!container.TryPeek(out var peek) || peek.Color != targetColor)
                 {
@@ -370,7 +604,7 @@ namespace LoopSorting
                 if (result == ReleaseResult.BeltBlocked)
                 {
                     // Slot is occupied, wait and retry next frame/interval. Belt moves independently.
-                    yield return new WaitForSeconds(releaseBlockedRetry);
+                    yield return new WaitForSeconds(releaseBlockedRetry / Mathf.Max(0.0001f, _speedMultiplier));
                     safety++;
                     continue;
                 }
@@ -384,30 +618,27 @@ namespace LoopSorting
                 SyncBeltVisuals();
                 SyncContainersVisuals();
 
-                yield return new WaitForSeconds(releaseInterval);
+                yield return new WaitForSeconds(releaseInterval / Mathf.Max(0.0001f, _speedMultiplier));
                 safety++;
             }
 
             _isReleasing = false;
             _activeReleasePort = null;
+            CheckEndConditions();
         }
 
         private void EnsureCounterUI()
         {
-            if (beltCounterUI != null)
+            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null)
             {
                 return;
             }
 
-            beltCounterUI = FindObjectOfType<BeltCounterUI>();
-            if (beltCounterUI != null)
-            {
-                return;
-            }
-
-            var canvasGO = new GameObject("BeltCounterCanvas");
-            var canvas = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var canvasGO = new GameObject("HUDCanvas");
+            _uiCanvas = canvasGO.AddComponent<Canvas>();
+            _uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _uiCanvas.overrideSorting = true;
+            _uiCanvas.sortingOrder = 0;
             canvasGO.AddComponent<CanvasScaler>();
             canvasGO.AddComponent<GraphicRaycaster>();
             DontDestroyOnLoad(canvasGO);
@@ -416,10 +647,12 @@ namespace LoopSorting
             textGO.transform.SetParent(canvasGO.transform, false);
             var text = textGO.AddComponent<Text>();
             text.alignment = TextAnchor.UpperLeft;
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            text.fontSize = 24;
-            text.color = Color.white;
-            text.text = "空余格: -/-";
+            text.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = uiTheme != null ? uiTheme.counterFontSize : 24;
+            text.color = uiTheme != null ? uiTheme.counterColor : Color.white;
+            text.text = "Belt: -/-";
             var rect = text.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
@@ -427,6 +660,118 @@ namespace LoopSorting
             rect.anchoredPosition = new Vector2(10f, -10f);
 
             beltCounterUI = textGO.AddComponent<BeltCounterUI>();
+            var buttonGO = new GameObject("SpeedButton");
+            buttonGO.transform.SetParent(canvasGO.transform, false);
+            _speedButton = buttonGO.AddComponent<Button>();
+            var img = buttonGO.AddComponent<Image>();
+            img.color = uiTheme != null ? uiTheme.buttonColor : new Color(0.2f, 0.2f, 0.2f, 0.85f);
+            if (uiTheme != null && uiTheme.buttonSprite != null) img.sprite = uiTheme.buttonSprite;
+            var btnRect = buttonGO.GetComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(1f, 1f);
+            btnRect.anchorMax = new Vector2(1f, 1f);
+            btnRect.pivot = new Vector2(1f, 1f);
+            btnRect.sizeDelta = new Vector2(80f, 36f);
+            btnRect.anchoredPosition = new Vector2(-10f, -10f);
+
+            var labelGO = new GameObject("Label");
+            labelGO.transform.SetParent(buttonGO.transform, false);
+            _speedButtonLabel = labelGO.AddComponent<Text>();
+            _speedButtonLabel.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            _speedButtonLabel.alignment = TextAnchor.MiddleCenter;
+            _speedButtonLabel.color = uiTheme != null ? uiTheme.buttonTextColor : Color.white;
+            var labelRect = _speedButtonLabel.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+
+            _speedButton.onClick.AddListener(CycleSpeed);
+            UpdateSpeedButtonLabel();
+
+            EnsureResultPanel();
+        }
+
+        private void EnsureResultPanel()
+        {
+            if (_resultPanel != null) return;
+            var panelGO = new GameObject("ResultPanel");
+            panelGO.transform.SetParent(_uiCanvas.transform, false);
+            _resultPanel = panelGO;
+            var image = panelGO.AddComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.6f);
+            var rect = panelGO.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var boxGO = new GameObject("Box");
+            boxGO.transform.SetParent(panelGO.transform, false);
+            var boxRect = boxGO.AddComponent<RectTransform>();
+            boxRect.sizeDelta = new Vector2(320f, 180f);
+            boxRect.anchorMin = new Vector2(0.5f, 0.5f);
+            boxRect.anchorMax = new Vector2(0.5f, 0.5f);
+            boxRect.pivot = new Vector2(0.5f, 0.5f);
+            boxRect.anchoredPosition = Vector2.zero;
+            var boxImg = boxGO.AddComponent<Image>();
+            boxImg.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+
+            var titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(boxGO.transform, false);
+            _resultText = titleGO.AddComponent<Text>();
+            _resultText.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            _resultText.alignment = TextAnchor.MiddleCenter;
+            _resultText.fontSize = 24;
+            _resultText.color = Color.white;
+            var titleRect = _resultText.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 0.55f);
+            titleRect.anchorMax = new Vector2(1f, 0.95f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+
+            // Buttons
+            _primaryButton = CreateButton(boxGO.transform, "PrimaryButton", new Vector2(0.25f, 0.15f));
+            _secondaryButton = CreateButton(boxGO.transform, "SecondaryButton", new Vector2(0.75f, 0.15f));
+            _primaryLabel = _primaryButton.GetComponentInChildren<Text>();
+            _secondaryLabel = _secondaryButton.GetComponentInChildren<Text>();
+            _primaryButton.onClick.AddListener(OnPrimaryClicked);
+            _secondaryButton.onClick.AddListener(OnSecondaryClicked);
+
+            _resultPanel.SetActive(false);
+        }
+
+        private Button CreateButton(Transform parent, string name, Vector2 anchor)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(120f, 40f);
+            rect.anchoredPosition = Vector2.zero;
+            var img = go.AddComponent<Image>();
+            img.color = uiTheme != null ? uiTheme.buttonColor : new Color(0.2f, 0.2f, 0.2f, 0.85f);
+            if (uiTheme != null && uiTheme.buttonSprite != null) img.sprite = uiTheme.buttonSprite;
+            var btn = go.AddComponent<Button>();
+            var textGO = new GameObject("Label");
+            textGO.transform.SetParent(go.transform, false);
+            var text = textGO.AddComponent<Text>();
+            text.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.color = uiTheme != null ? uiTheme.buttonTextColor : Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            var tRect = text.GetComponent<RectTransform>();
+            tRect.anchorMin = Vector2.zero;
+            tRect.anchorMax = Vector2.one;
+            tRect.offsetMin = Vector2.zero;
+            tRect.offsetMax = Vector2.zero;
+            return btn;
         }
 
         private void BuildSlotMarkers()

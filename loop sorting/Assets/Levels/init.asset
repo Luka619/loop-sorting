@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d60c2c974380a248bcf28ae03002a8b, type: 3}
-  m_Name: LevelRuntimeConfig
+  m_Script: {fileID: 11500000, guid: 9e4af0ce99a430f4294f7bead4c2f1d7, type: 3}
+  m_Name: init
   m_EditorClassIdentifier: 
-  activeLevel: {fileID: 0}
-  activeFlow: {fileID: 11400000, guid: 322a9dff8bd937a45acfcd77f8fdc243, type: 2}
-  flowStartIndex: 0
+  levels:
+  - {fileID: 11400000, guid: 11117491be38c914dbadbbe8d40ce36f, type: 2}
+  startIndex: 0

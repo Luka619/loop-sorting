@@ -24,7 +24,7 @@ namespace LoopSorting
             }
 
             BuildConveyors(layout.conveyors);
-            BuildBoxes(layout.boxes);
+            BuildBoxes(layout);
         }
 
         private void BuildConveyors(List<ConveyorPath> conveyors)
@@ -58,16 +58,19 @@ namespace LoopSorting
             }
         }
 
-        private void BuildBoxes(List<BoxSpec> boxes)
+        private void BuildBoxes(LevelLayout layout)
         {
             var parent = new GameObject("Boxes");
             parent.transform.SetParent(transform, false);
 
-            foreach (var box in boxes)
+            float unit = layout.blockSize > 0 ? layout.blockSize : 0.6f;
+
+            foreach (var box in layout.boxes)
             {
                 int columns = Mathf.Max(1, box.columns);
                 int rows = Mathf.Max(1, box.rows);
                 int capacity = columns * rows;
+                box.size = LayoutUtils.ComputeBoxSize(box, unit);
 
                 GameObject go;
                 if (boxPrefab != null)

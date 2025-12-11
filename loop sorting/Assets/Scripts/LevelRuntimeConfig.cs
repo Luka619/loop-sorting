@@ -10,5 +10,8 @@ namespace LoopSorting
     public class LevelRuntimeConfig : ScriptableObject
     {
         public LevelLayout activeLevel;
+        [Tooltip("Optional flow to drive sequential levels. If set, overrides activeLevel.")]
+        public LevelFlow activeFlow;
+        public int flowStartIndex = 0;
     }
 }

@@ -49,7 +49,7 @@ namespace LoopSorting
     {
         public string name = "Box";
         public Vector2 position;
-        public Vector2 size = Vector2.one;
+        [HideInInspector] public Vector2 size = Vector2.one;
         public Color color = Color.white;
         [Tooltip("Grid width (a) for visual layout and capacity calculation a*b.")]
         public int columns = 1;

@@ -17,6 +17,7 @@ public class LevelEditorWindow : EditorWindow
 
     // UI state
     private Vector2 _paramScroll;
+    private Vector2 _levelListScroll;
     private bool _showConveyorSettings = true;
     private bool _showBoxSettings = true;
     private bool _snapToGrid = false;
@@ -30,6 +31,12 @@ public class LevelEditorWindow : EditorWindow
     private int _draggingConveyor = -1;
     private int _draggingPoint = -1;
     private int _selectedPoint = -1;
+    private int _tabIndex = 0;
+    private readonly string[] _tabs = new[] { "Levels", "Flow" };
+    private LevelFlow _flowAsset;
+    private SerializedObject _flowSO;
+    private ReorderableList _flowList;
+    private LevelLayout _flowAddCandidate;
 
     [MenuItem("Tools/Loop Sorting/Level Editor")]
     public static void Open()
@@ -52,25 +59,34 @@ public class LevelEditorWindow : EditorWindow
     {
         DrawHeader();
 
-        if (_level == null)
-        {
-            DrawCreateButtons();
-            return;
-        }
-
-        if (_serializedLevel == null)
-        {
-            BindSerializedObject();
-        }
-
-        _serializedLevel.Update();
+        _tabIndex = GUILayout.Toolbar(_tabIndex, _tabs);
 
         EditorGUILayout.BeginHorizontal();
-        DrawPreviewPanel();
-        DrawParameterPanel();
-        EditorGUILayout.EndHorizontal();
+        if (_tabIndex == 0)
+        {
+            if (_level == null)
+            {
+                DrawCreateButtons();
+            }
+            else
+            {
+                UpdateBoxSizesFromBlockSize();
+                if (_serializedLevel == null)
+                {
+                    BindSerializedObject();
+                }
 
-        _serializedLevel.ApplyModifiedProperties();
+                _serializedLevel.Update();
+                DrawPreviewPanel();
+                DrawParameterPanel();
+                _serializedLevel.ApplyModifiedProperties();
+            }
+        }
+        else
+        {
+            DrawFlowPanel();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     private void DrawHeader()
@@ -125,20 +141,50 @@ public class LevelEditorWindow : EditorWindow
 
     private void DrawParameterPanel()
     {
+        if (_level == null) return;
+        if (_serializedLevel == null)
+        {
+            BindSerializedObject();
+            if (_serializedLevel == null) return;
+        }
+
         EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.45f));
         _paramScroll = EditorGUILayout.BeginScrollView(_paramScroll);
+
+        DrawLevelListPanel();
+        EditorGUILayout.LabelField("Global", EditorStyles.boldLabel);
+        var propBlockSize = _serializedLevel.FindProperty("blockSize");
+        if (propBlockSize != null)
+        {
+            EditorGUILayout.PropertyField(propBlockSize, new GUIContent("Block Edge Size"));
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("Missing property: blockSize", MessageType.Error);
+        }
+        if (GUILayout.Button("Add Conveyor", GUILayout.Width(120)))
+        {
+            AddDefaultConveyor();
+        }
+        EditorGUILayout.Space(4f);
 
         _showConveyorSettings = EditorGUILayout.Foldout(_showConveyorSettings, "Conveyor Settings", true);
         if (_showConveyorSettings)
         {
             EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(_serializedLevel.FindProperty("beltCapacity"), new GUIContent("Belt Capacity (0=∞)"));
-            EditorGUILayout.PropertyField(_serializedLevel.FindProperty("beltSlotSpacing"), new GUIContent("Belt Slot Spacing (units, 0=default 0.6)"));
-            EditorGUILayout.PropertyField(_serializedLevel.FindProperty("smoothCorners"), new GUIContent("Smooth Corners"));
-            if (_serializedLevel.FindProperty("smoothCorners").boolValue)
+            var propCap = _serializedLevel.FindProperty("beltCapacity");
+            var propSpacing = _serializedLevel.FindProperty("beltSlotSpacing");
+            var propSmooth = _serializedLevel.FindProperty("smoothCorners");
+            var propTension = _serializedLevel.FindProperty("cornerSmoothTension");
+            var propSubdiv = _serializedLevel.FindProperty("cornerSubdivisions");
+
+            if (propCap != null) EditorGUILayout.PropertyField(propCap, new GUIContent("Belt Capacity (0=default 50)"));
+            if (propSpacing != null) EditorGUILayout.PropertyField(propSpacing, new GUIContent("Belt Slot Spacing (units, 0=default 0.6)"));
+            if (propSmooth != null) EditorGUILayout.PropertyField(propSmooth, new GUIContent("Smooth Corners"));
+            if (propSmooth != null && propSmooth.boolValue)
             {
-                EditorGUILayout.PropertyField(_serializedLevel.FindProperty("cornerSmoothTension"), new GUIContent("Corner Smooth Tension"));
-                EditorGUILayout.PropertyField(_serializedLevel.FindProperty("cornerSubdivisions"), new GUIContent("Corner Subdivisions"));
+                if (propTension != null) EditorGUILayout.PropertyField(propTension, new GUIContent("Corner Smooth Tension"));
+                if (propSubdiv != null) EditorGUILayout.PropertyField(propSubdiv, new GUIContent("Corner Subdivisions"));
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4f);
@@ -162,14 +208,21 @@ public class LevelEditorWindow : EditorWindow
             if (_boxesList == null)
             {
                 var property = _serializedLevel.FindProperty("boxes");
-                _boxesList = new ReorderableList(_serializedLevel, property, true, true, true, true)
+                if (property != null)
                 {
-                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes (位置为中心点，size 为宽高，capacity 为可放积木数量)"),
-                    drawElementCallback = DrawBoxElement,
-                    elementHeightCallback = GetBoxHeight
-                };
+                    _boxesList = new ReorderableList(_serializedLevel, property, true, true, true, true)
+                    {
+                        drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes (???????size ????capacity ???????)"),
+                        drawElementCallback = DrawBoxElement,
+                        elementHeightCallback = GetBoxHeight
+                    };
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("Missing property: boxes", MessageType.Error);
+                }
             }
-            _boxesList.DoLayoutList();
+            _boxesList?.DoLayoutList();
         }
 
         EditorGUILayout.EndScrollView();
@@ -178,7 +231,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void DrawSelectedItemPanel()
     {
-        if (_level == null) return;
+        if (_level == null || _level.boxes == null || _level.conveyors == null) return;
 
         EditorGUILayout.BeginVertical("box");
         EditorGUILayout.LabelField("Selected", EditorStyles.boldLabel);
@@ -273,6 +326,32 @@ public class LevelEditorWindow : EditorWindow
         }
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
+    }
+
+    private void DrawLevelListPanel()
+    {
+        if (_levelOptions == null || _levelOptions.Length == 0) return;
+        EditorGUILayout.LabelField("关卡列表", EditorStyles.boldLabel);
+        _levelListScroll = EditorGUILayout.BeginScrollView(_levelListScroll, GUILayout.Height(140));
+        int cols = 3;
+        int idx = 0;
+        while (idx < _levelOptions.Length)
+        {
+            EditorGUILayout.BeginHorizontal();
+            for (int c = 0; c < cols && idx < _levelOptions.Length; c++, idx++)
+            {
+                var lvl = _levelOptions[idx];
+                var prev = GUI.backgroundColor;
+                GUI.backgroundColor = (lvl == _level) ? Color.green : Color.white;
+                if (GUILayout.Button(lvl != null ? lvl.name : "NULL"))
+                {
+                    SetLevel(lvl);
+                }
+                GUI.backgroundColor = prev;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndScrollView();
     }
 
     private void DrawPreviewPanel()
@@ -388,6 +467,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void DrawPreviewBoxes(Rect rect, Rect bounds, List<Vector2> slotPositions)
     {
+        if (_level.boxes == null) return;
         foreach (var box in _level.boxes)
         {
             if (_onlyShowSelectedBox && (_selectedBox < 0 || _level.boxes[_selectedBox] != box))
@@ -727,6 +807,12 @@ public class LevelEditorWindow : EditorWindow
     private void SetLevel(LevelLayout level)
     {
         _level = level;
+        if (_level != null)
+        {
+            // Defensive init in case older assets have null lists
+            if (_level.conveyors == null) _level.conveyors = new List<ConveyorPath>();
+            if (_level.boxes == null) _level.boxes = new List<BoxSpec>();
+        }
         _serializedLevel = null;
         _conveyorsList = null;
         _boxesList = null;
@@ -776,6 +862,70 @@ public class LevelEditorWindow : EditorWindow
         }
     }
 
+    private void DrawFlowPanel()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.9f));
+        EditorGUILayout.LabelField("Level Flow", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        _flowAsset = (LevelFlow)EditorGUILayout.ObjectField("Flow Asset", _flowAsset, typeof(LevelFlow), false);
+        if (GUILayout.Button("New Flow", GUILayout.Width(100)))
+        {
+            CreateNewFlowAsset();
+        }
+        if (_flowAsset != null && GUILayout.Button("设为运行Flow", GUILayout.Width(120)))
+        {
+            SetActiveRuntimeFlow(_flowAsset);
+        }
+        EditorGUILayout.EndHorizontal();
+
+        if (_flowAsset != null)
+        {
+            if (_flowSO == null || _flowSO.targetObject != _flowAsset)
+            {
+                _flowSO = new SerializedObject(_flowAsset);
+                var prop = _flowSO.FindProperty("levels");
+                _flowList = new ReorderableList(_flowSO, prop, true, true, true, true)
+                {
+                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Level Sequence"),
+                    drawElementCallback = (rect, index, active, focused) =>
+                    {
+                        var element = prop.GetArrayElementAtIndex(index);
+                        rect.y += 2f;
+                        EditorGUI.ObjectField(rect, element, GUIContent.none);
+                    }
+                };
+            }
+
+            _flowSO.Update();
+            EditorGUILayout.PropertyField(_flowSO.FindProperty("startIndex"), new GUIContent("Start Index"));
+            _flowList?.DoLayoutList();
+            EditorGUILayout.BeginHorizontal();
+            _flowAddCandidate = (LevelLayout)EditorGUILayout.ObjectField("Add Level", _flowAddCandidate, typeof(LevelLayout), false);
+            if (GUILayout.Button("Add", GUILayout.Width(60)))
+            {
+                if (_flowAddCandidate != null)
+                {
+                    var prop = _flowSO.FindProperty("levels");
+                    int newIndex = prop.arraySize;
+                    prop.InsertArrayElementAtIndex(newIndex);
+                    prop.GetArrayElementAtIndex(newIndex).objectReferenceValue = _flowAddCandidate;
+                    _flowAddCandidate = null;
+                }
+            }
+            if (_level != null && GUILayout.Button("Add Current", GUILayout.Width(90)))
+            {
+                var prop = _flowSO.FindProperty("levels");
+                int newIndex = prop.arraySize;
+                prop.InsertArrayElementAtIndex(newIndex);
+                prop.GetArrayElementAtIndex(newIndex).objectReferenceValue = _level;
+            }
+            EditorGUILayout.EndHorizontal();
+            _flowSO.ApplyModifiedProperties();
+        }
+
+        EditorGUILayout.EndVertical();
+    }
+
     private void ApplyAutoAlignSlots(LevelLayout level)
     {
         if (level == null || level.conveyors == null || level.conveyors.Count == 0)
@@ -783,10 +933,26 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
+        // Pick the first conveyor that has at least 2 points
+        ConveyorPath path = null;
+        for (int i = 0; i < level.conveyors.Count; i++)
+        {
+            var c = level.conveyors[i];
+            if (c != null && c.points != null && c.points.Count >= 2)
+            {
+                path = c;
+                break;
+            }
+        }
+        if (path == null)
+        {
+            return;
+        }
+
         float used;
         float spacing = level.beltSlotSpacing > 0 ? level.beltSlotSpacing : 0.6f;
         var slots = LayoutUtils.BuildSlotsFromPath(
-            level.conveyors[0],
+            path,
             spacing,
             level.beltCapacity,
             out used,
@@ -836,6 +1002,30 @@ public class LevelEditorWindow : EditorWindow
         EditorGUIUtility.PingObject(asset);
     }
 
+    private void CreateNewFlowAsset()
+    {
+        const string levelsFolder = "Assets/Levels";
+        if (!Directory.Exists(levelsFolder))
+        {
+            Directory.CreateDirectory(levelsFolder);
+            AssetDatabase.Refresh();
+        }
+
+        var path = EditorUtility.SaveFilePanelInProject("Create Level Flow", "LevelFlow", "asset", "保存 LevelFlow 资源", levelsFolder);
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+
+        var asset = ScriptableObject.CreateInstance<LevelFlow>();
+        AssetDatabase.CreateAsset(asset, path);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        _flowAsset = asset;
+        _flowSO = new SerializedObject(asset);
+        EditorGUIUtility.PingObject(asset);
+    }
+
     private static void SetActiveRuntimeLevel(LevelLayout layout)
     {
         var resourcePath = "Assets/Levels/Resources/Levels";
@@ -859,11 +1049,60 @@ public class LevelEditorWindow : EditorWindow
         Debug.Log($"已将关卡设置为运行关卡: {layout.name}");
     }
 
+    private static void SetActiveRuntimeFlow(LevelFlow flow)
+    {
+        var resourcePath = "Assets/Levels/Resources/Levels";
+        if (!Directory.Exists(resourcePath))
+        {
+            Directory.CreateDirectory(resourcePath);
+        }
+
+        var assetPath = $"{resourcePath}/LevelRuntimeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<LevelRuntimeConfig>(assetPath);
+        if (config == null)
+        {
+            config = ScriptableObject.CreateInstance<LevelRuntimeConfig>();
+            AssetDatabase.CreateAsset(config, assetPath);
+        }
+
+        config.activeFlow = flow;
+        config.activeLevel = null;
+        config.flowStartIndex = flow != null ? Mathf.Clamp(flow.startIndex, 0, Mathf.Max(0, flow.levels.Count - 1)) : 0;
+        EditorUtility.SetDirty(config);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log($"已将 Flow 设置为运行: {flow?.name}");
+    }
+
     private Vector2 SnapIfNeeded(Vector2 v)
     {
         if (!_snapToGrid || _gridSize <= 0.0001f) return v;
         float g = _gridSize;
         return new Vector2(Mathf.Round(v.x / g) * g, Mathf.Round(v.y / g) * g);
+    }
+
+    private void UpdateBoxSizesFromBlockSize()
+    {
+        if (_level == null) return;
+        float unit = _level.blockSize > 0 ? _level.blockSize : 0.6f;
+        foreach (var b in _level.boxes)
+        {
+            b.size = new Vector2(Mathf.Max(1, b.columns) * unit, Mathf.Max(1, b.rows) * unit);
+        }
+    }
+
+    private void AddDefaultConveyor()
+    {
+        if (_level == null) return;
+        Undo.RecordObject(_level, "Add Conveyor");
+        var path = new ConveyorPath();
+        path.points.Add(new Vector2(-2f, 0f));
+        path.points.Add(new Vector2(2f, 0f));
+        path.width = 0.3f;
+        _level.conveyors.Add(path);
+        EditorUtility.SetDirty(_level);
+        RefreshLevelList();
+        Repaint();
     }
 
     private void OnSceneGUI(SceneView view)
@@ -908,12 +1147,10 @@ public class LevelEditorWindow : EditorWindow
                 var box = _level.boxes[i];
                 EditorGUI.BeginChangeCheck();
                 var pos = Handles.PositionHandle(new Vector3(box.position.x, box.position.y, 0f), Quaternion.identity);
-                var sizeHandle = Handles.ScaleHandle(new Vector3(box.size.x, box.size.y, 1f), pos, Quaternion.identity, HandleUtility.GetHandleSize(pos));
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObject(_level, "Move/Scale Box");
+                    Undo.RecordObject(_level, "Move Box");
                     box.position = SnapIfNeeded(new Vector2(pos.x, pos.y));
-                    box.size = new Vector2(Mathf.Max(0.1f, sizeHandle.x), Mathf.Max(0.1f, sizeHandle.y));
                     EditorUtility.SetDirty(_level);
                     Repaint();
                 }

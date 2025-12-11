@@ -19,6 +19,8 @@ namespace LoopSorting
         [Range(0f, 1f)] public float cornerSmoothTension = 0.5f;
         [Tooltip("Subdivisions per segment when smoothing (>1 enables rounding).")]
         [Range(2, 24)] public int cornerSubdivisions = 10;
+        [Tooltip("Global block edge length (units). Used to derive box size = columns * blockSize by rows * blockSize.")]
+        public float blockSize = 0.6f;
         public List<ConveyorPath> conveyors = new List<ConveyorPath>();
         public List<BoxSpec> boxes = new List<BoxSpec>();
     }

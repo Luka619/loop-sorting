@@ -12,10 +12,49 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 2
   m_EditorClassIdentifier: 
-  beltCapacity: 0
+  beltCapacity: 50
+  beltSlotSpacing: 0
+  smoothCorners: 1
+  cornerSmoothTension: 1
+  cornerSubdivisions: 10
+  blockSize: 0.3
   conveyors:
-  - name: 
-    points: []
+  - name: Conveyor
+    points:
+    - {x: 0, y: -2}
+    - {x: 6.0000005, y: -1.9957271}
+    - {x: 6, y: 4}
+    - {x: 0, y: 4}
     loop: 0
-    width: 0
-  boxes: []
+    width: 20
+  boxes:
+  - name: 0
+    position: {x: 2.49, y: 0}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 3
+      count: 15
+    - color: 4
+      count: 15
+    initialBlocks: 
+    beltSlotIndex: 7
+  - name: 0
+    position: {x: 4.35, y: 2.08}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 4
+      count: 15
+    - color: 3
+      count: 15
+    initialBlocks: 
+    beltSlotIndex: 38

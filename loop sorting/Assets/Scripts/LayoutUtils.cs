@@ -33,7 +33,8 @@ namespace LoopSorting
             {
                 foreach (var b in layout.boxes)
                 {
-                    var half = b.size * 0.5f;
+                    var boxSize = ComputeBoxSize(b, layout.blockSize);
+                    var half = boxSize * 0.5f;
                     var bMin = b.position - half;
                     var bMax = b.position + half;
                     min = Vector2.Min(min, bMin);
@@ -48,14 +49,14 @@ namespace LoopSorting
             }
 
             var center = (min + max) * 0.5f;
-            var size = max - min;
-            return new Bounds(new Vector3(center.x, center.y, 0f), new Vector3(size.x, size.y, 0f));
+            var boundsSize = max - min;
+            return new Bounds(new Vector3(center.x, center.y, 0f), new Vector3(boundsSize.x, boundsSize.y, 0f));
         }
 
         public static List<Transform> BuildSlotsFromPath(
             ConveyorPath path,
             float desiredSpacing,
-            int minSlots,
+            int explicitSlotCount,
             out float usedSpacing,
             bool smoothCorners = false,
             float smoothTension = 0.2f,
@@ -83,9 +84,8 @@ namespace LoopSorting
                 return slots;
             }
 
-            int target = Mathf.Max(4, Mathf.RoundToInt(total / Mathf.Max(0.1f, desiredSpacing)));
-            int minTarget = minSlots > 0 ? minSlots : 0;
-            int slotCount = Mathf.Max(target, minTarget);
+            int slotCount = explicitSlotCount > 0 ? explicitSlotCount : 50; // default 50 slots
+            slotCount = Mathf.Max(1, slotCount);
             float step = total / slotCount;
             usedSpacing = step;
 
@@ -230,7 +230,7 @@ namespace LoopSorting
             return new Vector3(lastPoint.x, lastPoint.y, 0f);
         }
 
-        public static int ResolveBeltSlotIndex(BoxSpec spec, IList<Transform> slots)
+        public static int ResolveBeltSlotIndex(BoxSpec spec, IList<Transform> slots, float blockSize = 0.6f)
         {
             if (slots == null || slots.Count == 0)
             {
@@ -243,17 +243,8 @@ namespace LoopSorting
                 return spec.beltSlotIndex;
             }
 
-            Vector2 normal = Vector2.down;
-            switch (spec.opening)
-            {
-                case OpeningSide.Top: normal = Vector2.up; break;
-                case OpeningSide.Bottom: normal = Vector2.down; break;
-                case OpeningSide.Left: normal = Vector2.left; break;
-                case OpeningSide.Right: normal = Vector2.right; break;
-            }
-
-            var half = spec.size * 0.5f;
-            var mouth = spec.position + normal * Mathf.Max(half.x, half.y);
+            var size = ComputeBoxSize(spec, blockSize);
+            var mouth = ComputeMouth(spec, size);
             var mouth3 = new Vector3(mouth.x, mouth.y, 0f);
 
             int best = 0;
@@ -269,6 +260,29 @@ namespace LoopSorting
             }
 
             return best;
+        }
+
+        public static Vector2 ComputeBoxSize(BoxSpec spec, float blockSize)
+        {
+            float unit = blockSize > 0 ? blockSize : 0.6f;
+            int cols = Mathf.Max(1, spec.columns);
+            int rows = Mathf.Max(1, spec.rows);
+            return new Vector2(cols * unit, rows * unit);
+        }
+
+        public static Vector2 ComputeMouth(BoxSpec spec, Vector2 size)
+        {
+            Vector2 normal = Vector2.down;
+            switch (spec.opening)
+            {
+                case OpeningSide.Top: normal = Vector2.up; break;
+                case OpeningSide.Bottom: normal = Vector2.down; break;
+                case OpeningSide.Left: normal = Vector2.left; break;
+                case OpeningSide.Right: normal = Vector2.right; break;
+            }
+
+            var half = size * 0.5f;
+            return spec.position + normal * Mathf.Max(half.x, half.y);
         }
     }
 }

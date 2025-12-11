@@ -1,46 +1,51 @@
-# Loop Sorting 设计概览
+# Loop Sorting 设计文档（最新版）
 
 ## 核心玩法
-- 多个箱体 + 循环传送带（单向，首尾相连）。带子按固定节奏均匀前进。
-- 点击箱体：最外层连续同色的积木依次出货，槽位被占则等待，再次有空位时继续。一次仅允许一个箱体出货。
-- 入货：带子经过箱口槽位时，若箱体为空或最外层颜色匹配且未超容量，积木进入箱体。进入箱体时填充到“最内层”未占用位置（列表尾部）。
-- 目标：每个箱体内部颜色统一（可选要求填满）。
+- 多个箱体 + 循环单向传送带。传送带按固定节奏均匀前进（首尾相连）。
+- 点击箱体：最外层连续同色的积木依次出货；出口槽占用则等待，有空位继续；同一时刻只允许一个箱体出货。
+- 入货：带子经过箱口槽位时，若箱体为空或最外层颜色匹配且未超容量，积木进入箱体；进入时填充到“最内层”未占用的位置（列表尾部）。
+- 目标：每个箱体内部颜色统一且填满判定为胜利；若传送带满且没有任何箱体可以接收带上的任意积木则失败。
 
 ## 数据结构（运行时）
 - `BlockColor` / `Block`：颜色枚举与只读块。
-- `Container`：容量、最外层在索引 0。`TryPeek/TryPop` 取最外层；`TryPush` 追加到末尾（最内层）。
-- `Conveyor`：循环槽位数组，`Advance(blockedPort?)` 支持前半段阻塞等待出货口腾空。
+- `Container`：容量，最外层在索引0；`TryPeek/TryPop` 取最外层；`TryPush` 追加到尾部（最内层）；`CanAccept` 判断颜色/容量。
+- `Conveyor`：循环槽位数组，`Advance(blockedPort?)` 支持出口前半段阻塞等待出口腾空。
 - `LoopSortingGame`：容器与传送带协调，`TryReleaseFromContainer` 放块到指定槽位。
-- `GameRuntimeController`：场景驱动，生成槽位/箱体可视化，处理点击出货协程、槽位可视化插值、计数器。
-- `LayoutUtils`：共用的槽位生成（等弧长，支持局部圆角）、边界计算、槽位对齐。
+- `GameRuntimeController`：场景驱动；生成槽位/箱体可视化；处理点击出货协程、槽位插值、计数器、胜败判定、关卡流。
+- `LayoutUtils`：槽位生成（等弧长、可局部圆角）、边界计算、槽位对齐。
 
 ## 关卡数据
-- `LevelLayout`：传送带路径点（首个 conveyor 使用）、beltCapacity、beltSlotSpacing、平滑开关与参数、箱体列表。
-- `BoxSpec`：位置/尺寸、columns×rows 容量、开口方向、autoAlignSlot（自动最近槽位或手动 beltSlotIndex）、colorCounts（颜色+数量，顺序即外层→内层）。
+- `LevelLayout`：传送带路径点（首个 conveyor 使用）、beltCapacity、beltSlotSpacing、平滑开关与参数、blockSize（格子边长）、箱体列表。
+- `BoxSpec`：位置、列×行容量、开口方向、autoAlignSlot（最近槽位或手动 beltSlotIndex）、colorCounts（颜色+数量，外层→内层）。
+- `LevelFlow`：关卡序列与 startIndex，用于按顺序播放关卡。
+- `LevelRuntimeConfig`：可配置 activeLevel 或 activeFlow+flowStartIndex。
 
 ## 编辑器
-- `LevelEditorWindow`：所见即所得预览（槽位平滑与运行时一致），显示槽位索引、箱体网格、开口到槽位连线。保存时若 autoAlign 会写回 beltSlotIndex。可调 beltCapacity、beltSlotSpacing、平滑开关/参数。
+- `LevelEditorWindow`：
+  - Tabs：Levels / Flow。
+  - Levels：左侧预览（槽位、网格、开口连线、槽位编号），右侧参数；关卡列表按钮网格快速切换；保存时若 autoAlign 会写回 beltSlotIndex；可调 beltCapacity、beltSlotSpacing、平滑参数。
+  - Flow：选择/新建 LevelFlow，ReorderableList 维护关卡序列与起始索引，可一键设为运行 Flow（写入 LevelRuntimeConfig）。
+  - 场景视图可拖拽传送带点、箱体位置；可选网格吸附。
 
-## 运行时可视化
-- 槽位标记：灰色半透明球，按 tick 进度在相邻槽位间插值（末槽不回跳）。
-- 积木：位置始终对齐槽位当前插值位置（含 z 偏移），避免“卡顿”。
-- 箱体：网格静态，不随出货挤压；出货仅清空前端槽位。
-- UI：传送带空余计数器自动生成。
-
-## 出/入货规则细节
-- 出货：点击箱体，计算最外层连续同色数量 pending，逐块尝试放入出货槽位；若槽位占用则等待 `releaseBlockedRetry`，成功后等待 `releaseInterval`；出货过程中其他箱体不出货。
-- 传送带阻塞：当出货槽位占用时，槽位索引小于该口的块在前方空则前进，前方是出货口则等待；其他索引保持常规前进。
-- 入货：经过箱口槽位时颜色匹配/空则进；填充箱体内部最内层空位。
-
-## 视觉&同步
-- 槽位：按等弧长分布，拐点可局部圆角（可配置），编辑器/运行时一致。标记灰色半透明球，按 tick 进度在槽位之间插值（末槽不回跳）。
+## 运行时可视化与 UI
+- 槽位标记：灰色半透明球，随 tick 在相邻槽位间插值（末槽不回跳）；槽位分布与编辑器一致。
 - 积木：位置每帧对齐当前槽位插值坐标（含 z 偏移），与槽位同步平滑移动。
 - 箱体：网格静态；出货/进货只更新相应槽位，已有积木不移动。
+- 背景：世界空间渐变 Quad，放在相机远处（Background renderQueue）。
+- HUD：空余计数器、速度按钮（1x/1.5x/2x）；结果面板（胜利/失败，Next/Retry/Close）；可通过 `UITheme` 配置字体、按钮皮肤、颜色、渐变。
+- EventSystem 自动创建；HUD 在 Overlay Canvas，不遮挡玩法。
 
-## 其他
-- 入货填充最内层空位；出货只移除最外层同色，其他保持原位。
-- 可在关卡中配置平滑开关/参数、槽距/容量；编辑器保存时自动写回 autoAlign 的槽位索引。*** End Patch
+## 进/出货规则细节
+- 出货：点击箱体，计算最外层连续同色 pending，逐块尝试放到出口槽；若槽占用则等待 `releaseBlockedRetry`，成功后等待 `releaseInterval`；出货中其他箱体不出货。
+- 传送带阻塞：当出口槽占用时，索引小于出口的块若前方空则前进，前方是出口则等待；其他索引保持常规前进。
+- 入货：经过箱口槽位时颜色匹配/空则进；填充箱体内部最内层空位。
 
-## TODO/注意
-- 平滑路径参数可调节；若槽位分布异常，检查路径点距离、容量/间距、平滑参数。
-- 可继续增加编辑器交互（路径点拖拽、模拟按钮等）和美术替换（预制体）。
+## 关卡流与胜败逻辑
+- 胜利：所有容器颜色统一且填满，弹出结果面板；Flow 中有下一关则 Next 进入下一关，否则可 Retry。
+- 失败：传送带满且没有任何容器可接收带上任意积木时失败，弹窗 Retry。
+- Flow 启动顺序由 `LevelRuntimeConfig.activeFlow` + `flowStartIndex` 或单关卡 `activeLevel` 决定。
+
+## 注意/可调项
+- 槽位平滑、槽距、容量、blockSize、速度倍率、出货间隔/阻塞重试等参数可在关卡或控制器中配置。
+- 若槽位分布异常，检查路径点间距、平滑参数、容量与槽距设置。
+- UI 主题可通过 `UITheme` 统一替换字体/按钮/背景渐变。

@@ -76,6 +76,7 @@ namespace LoopSorting
         private Button _boosterFillButton;
         private Button _boosterShuffleButton;
         private System.Random _rng = new System.Random();
+        private bool _inputLocked = false;
         private GameObject _backgroundQuad;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
@@ -281,7 +282,70 @@ namespace LoopSorting
             }
         }
 
-        private void UseBoosterFillColor()
+        private IEnumerator NormalizeBeltStateAnimated()
+        {
+            if (_game == null) yield break;
+            if (_game.Conveyor.BlockCount == 0) yield break;
+            for (int i = 0; i < _game.Conveyor.Length; i++)
+            {
+                _game.Conveyor.Advance(null);
+                SyncBeltVisuals();
+                SyncContainersVisuals();
+                UpdateBeltCounter();
+                if (_game.Conveyor.BlockCount == 0) break;
+                yield return new WaitForSeconds(conveyorTickSeconds / Mathf.Max(0.0001f, _speedMultiplier));
+            }
+        }
+
+        private IEnumerator BoosterFillSequence()
+        {
+            if (_game == null || _inputLocked) yield break;
+            _inputLocked = true;
+            SetInteractableForBooster(false);
+
+            float prevSpeed = _speedMultiplier;
+            _speedMultiplier = 5f;
+
+            if (_game.Conveyor.BlockCount > 0)
+            {
+                yield return StartCoroutine(NormalizeBeltStateAnimated());
+            }
+            ApplyBoosterFillColor();
+
+            _speedMultiplier = prevSpeed;
+            SetInteractableForBooster(true);
+            _inputLocked = false;
+        }
+
+        private IEnumerator BoosterShuffleSequence()
+        {
+            if (_game == null || _inputLocked) yield break;
+            _inputLocked = true;
+            SetInteractableForBooster(false);
+
+            float prevSpeed = _speedMultiplier;
+            _speedMultiplier = 5f;
+
+            if (_game.Conveyor.BlockCount > 0)
+            {
+                yield return StartCoroutine(NormalizeBeltStateAnimated());
+            }
+            ApplyBoosterShuffle();
+
+            _speedMultiplier = prevSpeed;
+            SetInteractableForBooster(true);
+            _inputLocked = false;
+        }
+
+        private void SetInteractableForBooster(bool val)
+        {
+            if (_boosterFillButton != null) _boosterFillButton.interactable = val;
+            if (_boosterShuffleButton != null) _boosterShuffleButton.interactable = val;
+            if (_settingsButton != null) _settingsButton.interactable = val;
+            if (_speedButton != null) _speedButton.interactable = val;
+        }
+
+        private void ApplyBoosterFillColor()
         {
             if (_game == null) return;
 
@@ -344,15 +408,13 @@ namespace LoopSorting
             }
             if (targetIdx < 0) targetIdx = 0;
 
-            // collect target color blocks from all containers and conveyor
+            // collect target color blocks from all containers (keep conveyor intact)
             var sourceBlocks = new List<Block>();
             for (int i = 0; i < _game.Containers.Count; i++)
             {
                 var rem = _game.Containers[i].RemoveBlocksWhere(b => b.Color == targetColor);
                 sourceBlocks.AddRange(rem);
             }
-            var beltRem = _game.Conveyor.RemoveBlocksWhere(b => b.Color == targetColor);
-            sourceBlocks.AddRange(beltRem);
 
             // collect displaced non-target from target container so它们不会消失
             var displaced = _game.Containers[targetIdx].RemoveBlocksWhere(b => b.Color != targetColor);
@@ -423,7 +485,7 @@ namespace LoopSorting
             return runs;
         }
 
-        private void UseBoosterShuffle()
+        private void ApplyBoosterShuffle()
         {
             if (_game == null) return;
 
@@ -451,9 +513,7 @@ namespace LoopSorting
                 _game.Containers[i].ClearAndAdd(Array.Empty<Block>());
             }
 
-            // conveyor: remove non-completed colors and add as single-block chunks
-            var beltPool = _game.Conveyor.RemoveBlocksWhere(b => !completedColors.Contains(b.Color));
-            foreach (var b in beltPool) chunks.Add((b.Color, 1));
+            // conveyor: keep as-is (do not disturb existing belt blocks)
 
             if (chunks.Count == 0) return;
 
@@ -490,14 +550,24 @@ namespace LoopSorting
                 cont.ClearAndAdd(newBlocks);
             }
 
-            // leftover chunks to belt
-            var remaining = new List<Block>();
+            // leftover chunks: try to fit into any remaining space in unfinished containers, otherwise ignore (belt stays unchanged)
             while (queue.Count > 0)
             {
                 var ch = queue.Dequeue();
-                for (int i = 0; i < ch.count; i++) remaining.Add(new Block(ch.color));
+                for (int i = 0; i < targetContainers.Count && ch.count > 0; i++)
+                {
+                    var cont = _game.Containers[targetContainers[i]];
+                    int room = cont.Capacity - cont.Count;
+                    int take = Math.Min(room, ch.count);
+                    if (take > 0)
+                    {
+                        var extra = Enumerable.Repeat(new Block(ch.color), take);
+                        cont.AddBlocks(extra);
+                        ch.count -= take;
+                    }
+                }
+                // 如果仍有剩余，保持不变（不影响传送带）
             }
-            FillConveyorFreeSlots(remaining);
 
             SyncContainersVisuals();
             SyncBeltVisuals();
@@ -542,7 +612,7 @@ namespace LoopSorting
 
         public void HandleContainerClick(int containerIndex)
         {
-            if (_game == null || _isReleasing)
+            if (_game == null || _isReleasing || _inputLocked)
             {
                 return;
             }
@@ -1023,12 +1093,12 @@ namespace LoopSorting
             _boosterFillButton = CreateButton(_boosterPanel.transform, "BoosterFill", new Vector2(0.25f, 0.5f));
             _boosterFillButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
             _boosterFillButton.GetComponentInChildren<Text>().text = "完成颜色";
-            _boosterFillButton.onClick.AddListener(UseBoosterFillColor);
+            _boosterFillButton.onClick.AddListener(() => StartCoroutine(BoosterFillSequence()));
 
             _boosterShuffleButton = CreateButton(_boosterPanel.transform, "BoosterShuffle", new Vector2(0.75f, 0.5f));
             _boosterShuffleButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
             _boosterShuffleButton.GetComponentInChildren<Text>().text = "打乱顺序";
-            _boosterShuffleButton.onClick.AddListener(UseBoosterShuffle);
+            _boosterShuffleButton.onClick.AddListener(() => StartCoroutine(BoosterShuffleSequence()));
 
             EnsureResultPanel();
         }

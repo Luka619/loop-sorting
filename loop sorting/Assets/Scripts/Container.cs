@@ -29,6 +29,45 @@ namespace LoopSorting
         public bool IsEmpty => _blocks.Count == 0;
         public IReadOnlyList<Block> Blocks => _blocks;
 
+        /// <summary>
+        /// Remove blocks that match predicate and return them.
+        /// </summary>
+        public List<Block> RemoveBlocksWhere(Func<Block, bool> predicate)
+        {
+            var removed = new List<Block>();
+            for (int i = _blocks.Count - 1; i >= 0; i--)
+            {
+                if (predicate(_blocks[i]))
+                {
+                    removed.Add(_blocks[i]);
+                    _blocks.RemoveAt(i);
+                }
+            }
+            removed.Reverse();
+            return removed;
+        }
+
+        /// <summary>
+        /// Clear current blocks and add new ones up to capacity.
+        /// </summary>
+        public void ClearAndAdd(IEnumerable<Block> blocks)
+        {
+            _blocks.Clear();
+            AddBlocks(blocks);
+        }
+
+        /// <summary>
+        /// Append blocks (inner-first) up to capacity.
+        /// </summary>
+        public void AddBlocks(IEnumerable<Block> blocks)
+        {
+            foreach (var b in blocks)
+            {
+                if (_blocks.Count >= _capacity) break;
+                _blocks.Add(b);
+            }
+        }
+
         public bool TryPeek(out Block block)
         {
             if (_blocks.Count == 0)

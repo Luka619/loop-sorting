@@ -22,6 +22,39 @@ namespace LoopSorting
         public IReadOnlyList<Block?> Slots => _slots;
         public int BlockCount => CountBlocks();
 
+        public List<Block> RemoveBlocksWhere(Func<Block, bool> predicate)
+        {
+            var removed = new List<Block>();
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                if (_slots[i].HasValue && predicate(_slots[i].Value))
+                {
+                    removed.Add(_slots[i].Value);
+                    _slots[i] = null;
+                }
+            }
+            return removed;
+        }
+
+        public void ClearSlots()
+        {
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                _slots[i] = null;
+            }
+        }
+
+        public void FillSequential(IEnumerable<Block> blocks)
+        {
+            ClearSlots();
+            int idx = 0;
+            foreach (var b in blocks)
+            {
+                if (idx >= _slots.Length) break;
+                _slots[idx++] = b;
+            }
+        }
+
         public bool TryPlaceAt(int index, Block block)
         {
             ValidateIndex(index);

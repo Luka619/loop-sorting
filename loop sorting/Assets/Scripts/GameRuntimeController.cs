@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -71,6 +72,10 @@ namespace LoopSorting
         private GameObject _settingsPanel;
         private Toggle _vibrationToggle;
         private Toggle _soundToggle;
+        private GameObject _boosterPanel;
+        private Button _boosterFillButton;
+        private Button _boosterShuffleButton;
+        private System.Random _rng = new System.Random();
         private GameObject _backgroundQuad;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
@@ -273,6 +278,242 @@ namespace LoopSorting
             {
                 if (_vibrationToggle != null) _vibrationToggle.isOn = vibrationEnabled;
                 if (_soundToggle != null) _soundToggle.isOn = soundEnabled;
+            }
+        }
+
+        private void UseBoosterFillColor()
+        {
+            if (_game == null) return;
+
+            // find completed colors
+            var completedColors = new HashSet<BlockColor>();
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var c = _game.Containers[i];
+                if (c.IsUniformAndFull())
+                {
+                    if (c.Blocks.Count > 0) completedColors.Add(c.Blocks[0].Color);
+                }
+            }
+
+            // count colors available and unfinished colors
+            var colorCounts = new Dictionary<BlockColor, int>();
+            foreach (var cont in _game.Containers)
+            {
+                foreach (var b in cont.Blocks)
+                {
+                    if (!colorCounts.ContainsKey(b.Color)) colorCounts[b.Color] = 0;
+                    colorCounts[b.Color]++;
+                }
+            }
+            foreach (var slot in _game.Conveyor.Slots)
+            {
+                if (slot.HasValue)
+                {
+                    if (!colorCounts.ContainsKey(slot.Value.Color)) colorCounts[slot.Value.Color] = 0;
+                    colorCounts[slot.Value.Color]++;
+                }
+            }
+
+            var candidates = new List<BlockColor>();
+            foreach (var kv in colorCounts)
+            {
+                if (!completedColors.Contains(kv.Key))
+                {
+                    candidates.Add(kv.Key);
+                }
+            }
+            if (candidates.Count == 0) return;
+
+            var targetColor = candidates[_rng.Next(candidates.Count)];
+
+            // pick target container with most targetColor and not already full uniform of another color
+            int targetIdx = -1;
+            int bestCount = -1;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var c = _game.Containers[i];
+                if (c.IsUniformAndFull()) continue;
+                int count = 0;
+                foreach (var b in c.Blocks) if (b.Color == targetColor) count++;
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    targetIdx = i;
+                }
+            }
+            if (targetIdx < 0) targetIdx = 0;
+
+            // collect target color blocks from all containers and conveyor
+            var sourceBlocks = new List<Block>();
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var rem = _game.Containers[i].RemoveBlocksWhere(b => b.Color == targetColor);
+                sourceBlocks.AddRange(rem);
+            }
+            var beltRem = _game.Conveyor.RemoveBlocksWhere(b => b.Color == targetColor);
+            sourceBlocks.AddRange(beltRem);
+
+            // collect displaced non-target from target container so它们不会消失
+            var displaced = _game.Containers[targetIdx].RemoveBlocksWhere(b => b.Color != targetColor);
+
+            // fill target container with targetColor up to capacity
+            int cap = _game.Containers[targetIdx].Capacity;
+            var fillList = new List<Block>();
+            for (int i = 0; i < cap; i++)
+            {
+                if (sourceBlocks.Count > 0)
+                {
+                    fillList.Add(sourceBlocks[0]);
+                    sourceBlocks.RemoveAt(0);
+                }
+                else
+                {
+                    fillList.Add(new Block(targetColor));
+                }
+            }
+            _game.Containers[targetIdx].ClearAndAdd(fillList);
+
+            // put displaced + leftover target blocks back into containers (fill other unfinished containers)
+            var leftovers = new List<Block>();
+            leftovers.AddRange(displaced);
+            leftovers.AddRange(sourceBlocks);
+            if (leftovers.Count > 0)
+            {
+                for (int i = 0; i < _game.Containers.Count && leftovers.Count > 0; i++)
+                {
+                    if (i == targetIdx) continue;
+                    var cont = _game.Containers[i];
+                    int room = cont.Capacity - cont.Count;
+                    int take = Math.Min(room, leftovers.Count);
+                    if (take > 0)
+                    {
+                        var extra = leftovers.GetRange(0, take);
+                        cont.AddBlocks(extra);
+                        leftovers.RemoveRange(0, take);
+                    }
+                }
+            }
+
+            SyncContainersVisuals();
+            SyncBeltVisuals();
+            CheckEndConditions();
+        }
+
+        private List<(BlockColor color, int count)> BuildColorRuns(IReadOnlyList<Block> blocks)
+        {
+            var runs = new List<(BlockColor color, int count)>();
+            if (blocks == null || blocks.Count == 0) return runs;
+            var currentColor = blocks[0].Color;
+            int run = 1;
+            for (int i = 1; i < blocks.Count; i++)
+            {
+                if (blocks[i].Color == currentColor)
+                {
+                    run++;
+                }
+                else
+                {
+                    runs.Add((currentColor, run));
+                    currentColor = blocks[i].Color;
+                    run = 1;
+                }
+            }
+            runs.Add((currentColor, run));
+            return runs;
+        }
+
+        private void UseBoosterShuffle()
+        {
+            if (_game == null) return;
+
+            var completedColors = new HashSet<BlockColor>();
+            var completedContainers = new HashSet<int>();
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var c = _game.Containers[i];
+                if (c.IsUniformAndFull())
+                {
+                    completedContainers.Add(i);
+                    if (c.Blocks.Count > 0) completedColors.Add(c.Blocks[0].Color);
+                }
+            }
+
+            // gather chunks (consecutive runs) from unfinished containers
+            var chunks = new List<(BlockColor color, int count)>();
+            var targetContainers = new List<int>();
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                if (completedContainers.Contains(i)) continue;
+                targetContainers.Add(i);
+                var runs = BuildColorRuns(_game.Containers[i].Blocks);
+                chunks.AddRange(runs);
+                _game.Containers[i].ClearAndAdd(Array.Empty<Block>());
+            }
+
+            // conveyor: remove non-completed colors and add as single-block chunks
+            var beltPool = _game.Conveyor.RemoveBlocksWhere(b => !completedColors.Contains(b.Color));
+            foreach (var b in beltPool) chunks.Add((b.Color, 1));
+
+            if (chunks.Count == 0) return;
+
+            // shuffle chunks
+            for (int i = chunks.Count - 1; i > 0; i--)
+            {
+                int j = _rng.Next(i + 1);
+                (chunks[i], chunks[j]) = (chunks[j], chunks[i]);
+            }
+
+            var queue = new Queue<(BlockColor color, int count)>(chunks);
+            // distribute chunks into containers, splitting if overflow (remaining re-enqueued)
+            foreach (var idx in targetContainers)
+            {
+                var cont = _game.Containers[idx];
+                int space = cont.Capacity;
+                var newBlocks = new List<Block>();
+                while (space > 0 && queue.Count > 0)
+                {
+                    var chunk = queue.Dequeue();
+                    int take = Math.Min(space, chunk.count);
+                    for (int t = 0; t < take; t++)
+                    {
+                        newBlocks.Add(new Block(chunk.color));
+                    }
+                    space -= take;
+                    int leftover = chunk.count - take;
+                    if (leftover > 0)
+                    {
+                        // put remainder back to queue
+                        queue.Enqueue((chunk.color, leftover));
+                    }
+                }
+                cont.ClearAndAdd(newBlocks);
+            }
+
+            // leftover chunks to belt
+            var remaining = new List<Block>();
+            while (queue.Count > 0)
+            {
+                var ch = queue.Dequeue();
+                for (int i = 0; i < ch.count; i++) remaining.Add(new Block(ch.color));
+            }
+            FillConveyorFreeSlots(remaining);
+
+            SyncContainersVisuals();
+            SyncBeltVisuals();
+            CheckEndConditions();
+        }
+
+        private void FillConveyorFreeSlots(List<Block> blocks)
+        {
+            if (blocks == null || blocks.Count == 0) return;
+            for (int i = 0; i < _game.Conveyor.Length && blocks.Count > 0; i++)
+            {
+                if (!_game.Conveyor.GetSlot(i).HasValue)
+                {
+                    _game.Conveyor.TryPlaceAt(i, blocks[0]);
+                    blocks.RemoveAt(0);
+                }
             }
         }
         private void Update()
@@ -693,7 +934,7 @@ namespace LoopSorting
 
         private void EnsureCounterUI()
         {
-            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null)
+            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null)
             {
                 return;
             }
@@ -768,6 +1009,26 @@ namespace LoopSorting
             sRect.sizeDelta = new Vector2(36f, 36f);
             sRect.anchoredPosition = new Vector2(-100f, -10f);
             _settingsButton.onClick.AddListener(() => ToggleSettingsPanel(true));
+
+            // Booster panel (bottom center)
+            _boosterPanel = new GameObject("BoosterPanel");
+            _boosterPanel.transform.SetParent(canvasGO.transform, false);
+            var bRect = _boosterPanel.AddComponent<RectTransform>();
+            bRect.anchorMin = new Vector2(0.5f, 0f);
+            bRect.anchorMax = new Vector2(0.5f, 0f);
+            bRect.pivot = new Vector2(0.5f, 0f);
+            bRect.sizeDelta = new Vector2(320f, 80f);
+            bRect.anchoredPosition = new Vector2(0f, 12f);
+
+            _boosterFillButton = CreateButton(_boosterPanel.transform, "BoosterFill", new Vector2(0.25f, 0.5f));
+            _boosterFillButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
+            _boosterFillButton.GetComponentInChildren<Text>().text = "完成颜色";
+            _boosterFillButton.onClick.AddListener(UseBoosterFillColor);
+
+            _boosterShuffleButton = CreateButton(_boosterPanel.transform, "BoosterShuffle", new Vector2(0.75f, 0.5f));
+            _boosterShuffleButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
+            _boosterShuffleButton.GetComponentInChildren<Text>().text = "打乱顺序";
+            _boosterShuffleButton.onClick.AddListener(UseBoosterShuffle);
 
             EnsureResultPanel();
         }

@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
+  m_Name: 1
+  m_EditorClassIdentifier: 
+  beltCapacity: 150
+  beltSlotSpacing: 0
+  smoothCorners: 1
+  cornerSmoothTension: 1
+  cornerSubdivisions: 10
+  conveyors:
+  - name: 
+    points:
+    - {x: -3.6768556, y: 0.13228483}
+    - {x: 3.0607083, y: 0.5362158}
+    - {x: -4, y: -3}
+    - {x: 3.561582, y: -2.9313421}
+    - {x: -3.1608758, y: -5.377045}
+    loop: 1
+    width: 20
+  boxes:
+  - name: 0
+    position: {x: -0.79, y: 1.98}
+    size: {x: 1, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 0
+      count: 15
+    - color: 1
+      count: 15
+    initialBlocks: 0000000001000000
+    beltSlotIndex: 16
+  - name: 1
+    position: {x: 1.01, y: 1.98}
+    size: {x: 1, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 1
+      count: 15
+    - color: 0
+      count: 15
+    initialBlocks: 0100000000000000
+    beltSlotIndex: 26

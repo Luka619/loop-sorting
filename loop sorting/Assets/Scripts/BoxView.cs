@@ -11,6 +11,7 @@ namespace LoopSorting
 
         private readonly List<GameObject> _blockVisuals = new List<GameObject>();
         private readonly List<BlockColor?> _slotColors = new List<BlockColor?>();
+        private readonly List<bool> _slotHidden = new List<bool>();
         private int _columns = 1;
         private int _rows = 1;
         private int _capacity = 1;
@@ -19,6 +20,9 @@ namespace LoopSorting
         private OpeningSide _opening = OpeningSide.Top;
         private List<Vector2Int> _cellOrder = new List<Vector2Int>();
         private List<int> _tmpIndices = new List<int>();
+        private GameObject _lockOverlay;
+        private GameObject _lockBadge;
+        private bool _locked;
 
         public void Init(int containerIndex, GameRuntimeController controller, Vector2 size, int columns, int rows, Vector2 blockSize, OpeningSide opening)
         {
@@ -32,6 +36,7 @@ namespace LoopSorting
             _opening = opening;
             _cellOrder = BuildCellOrder(_columns, _rows, _opening);
             _slotColors.Clear();
+            _slotHidden.Clear();
 
             var collider = GetComponent<BoxCollider>();
             collider.size = new Vector3(size.x, size.y, 0.3f);
@@ -61,6 +66,7 @@ namespace LoopSorting
                     int idx = _tmpIndices[0];
                     _tmpIndices.RemoveAt(0);
                     _slotColors[idx] = null;
+                    _slotHidden[idx] = false;
                 }
             }
             else if (newCount > oldCount)
@@ -71,6 +77,7 @@ namespace LoopSorting
                     int targetSlot = FindFirstEmptyFromInner();
                     if (targetSlot < 0) break;
                     _slotColors[targetSlot] = blocks[oldCount + a].Color;
+                    _slotHidden[targetSlot] = blocks[oldCount + a].Hidden;
                 }
             }
 
@@ -84,6 +91,30 @@ namespace LoopSorting
             for (int i = 0; i < seqLen; i++)
             {
                 _slotColors[_tmpIndices[i]] = blocks[i].Color;
+                _slotHidden[_tmpIndices[i]] = blocks[i].Hidden;
+            }
+
+            // Enforce run-based hidden logic: same-color consecutive blocks share hidden state;
+            // if the run touches the outermost position, reveal the whole run.
+            for (int i = 0; i < _tmpIndices.Count;)
+            {
+                int idx = _tmpIndices[i];
+                var color = _slotColors[idx].Value;
+                bool runHidden = _slotHidden[idx];
+                if (i == 0)
+                {
+                    runHidden = false; // front run always revealed
+                }
+
+                int j = i;
+                while (j < _tmpIndices.Count)
+                {
+                    int idx2 = _tmpIndices[j];
+                    if (_slotColors[idx2].Value != color) break;
+                    _slotHidden[idx2] = runHidden;
+                    j++;
+                }
+                i = j;
             }
 
             RefreshVisuals();
@@ -91,6 +122,7 @@ namespace LoopSorting
 
         private void OnMouseUpAsButton()
         {
+            if (_locked) return;
             Controller?.HandleContainerClick(ContainerIndex);
         }
 
@@ -113,10 +145,12 @@ namespace LoopSorting
             while (_slotColors.Count < _capacity)
             {
                 _slotColors.Add(null);
+                _slotHidden.Add(false);
             }
             while (_slotColors.Count > _capacity)
             {
                 _slotColors.RemoveAt(_slotColors.Count - 1);
+                _slotHidden.RemoveAt(_slotHidden.Count - 1);
             }
         }
 
@@ -175,8 +209,60 @@ namespace LoopSorting
             var renderer = _blockVisuals[slotIndex].GetComponent<Renderer>();
             if (renderer != null)
             {
-                renderer.sharedMaterial.color = BlockVisual.ToUnityColor(color);
+                bool hidden = _slotHidden[slotIndex] && slotIndex > 0;
+                var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
+                renderer.sharedMaterial.color = matColor;
             }
+        }
+
+        public void SetLocked(bool val, BlockColor unlockColor = BlockColor.Red)
+        {
+            _locked = val;
+            if (_lockOverlay == null)
+            {
+                _lockOverlay = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockOverlay.name = "LockOverlay";
+                _lockOverlay.transform.SetParent(transform, false);
+                _lockOverlay.transform.localPosition = new Vector3(0f, 0f, -0.2f); // in front of blocks
+                _lockOverlay.transform.localScale = new Vector3(_boxSize.x * 1.05f, _boxSize.y * 1.05f, 1f);
+                var rend = _lockOverlay.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    var mat = new Material(Shader.Find("Unlit/Color"))
+                    {
+                        color = new Color(0.5f, 0.5f, 0.5f, 0.9f)
+                    };
+                    mat.renderQueue = 3000;
+                    rend.sharedMaterial = mat;
+                }
+                var col = _lockOverlay.GetComponent<Collider>();
+                if (col != null) GameObject.Destroy(col);
+
+                _lockBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockBadge.name = "LockBadge";
+                _lockBadge.transform.SetParent(_lockOverlay.transform, false);
+                _lockBadge.transform.localPosition = new Vector3(0f, 0f, -0.05f); // above overlay
+                float badgeSize = Mathf.Min(_boxSize.x, _boxSize.y) * 0.3f;
+                _lockBadge.transform.localScale = new Vector3(badgeSize, badgeSize, 1f);
+                var badgeRend = _lockBadge.GetComponent<Renderer>();
+                if (badgeRend != null)
+                {
+                    var bmat = new Material(Shader.Find("Unlit/Color"));
+                    bmat.renderQueue = 3001;
+                    badgeRend.sharedMaterial = bmat;
+                }
+                var badgeCol = _lockBadge.GetComponent<Collider>();
+                if (badgeCol != null) GameObject.Destroy(badgeCol);
+            }
+            if (_lockBadge != null)
+            {
+                var badgeR = _lockBadge.GetComponent<Renderer>();
+                if (badgeR != null)
+                {
+                    badgeR.sharedMaterial.color = BlockVisual.ToUnityColor(unlockColor);
+                }
+            }
+            _lockOverlay.SetActive(val);
         }
 
         private static List<Vector2Int> BuildCellOrder(int cols, int rows, OpeningSide opening)

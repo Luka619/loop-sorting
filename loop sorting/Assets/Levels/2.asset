@@ -39,10 +39,14 @@ MonoBehaviour:
     colorCounts:
     - color: 3
       count: 15
+      hidden: 0
     - color: 4
       count: 15
+      hidden: 0
     initialBlocks: 
     beltSlotIndex: 5
+    locked: 0
+    unlockColor: 0
   - name: 0
     position: {x: 4.35, y: 3.88}
     size: {x: 0.90000004, y: 3}
@@ -54,10 +58,14 @@ MonoBehaviour:
     colorCounts:
     - color: 4
       count: 15
+      hidden: 0
     - color: 5
       count: 15
+      hidden: 0
     initialBlocks: 
     beltSlotIndex: 39
+    locked: 0
+    unlockColor: 0
   - name: 0
     position: {x: 1.82, y: 3.88}
     size: {x: 0.90000004, y: 3}
@@ -69,10 +77,14 @@ MonoBehaviour:
     colorCounts:
     - color: 5
       count: 15
+      hidden: 0
     - color: 0
       count: 15
+      hidden: 0
     initialBlocks: 
     beltSlotIndex: 45
+    locked: 1
+    unlockColor: 4
   - name: 0
     position: {x: 4.39, y: 0}
     size: {x: 0.90000004, y: 3}
@@ -84,7 +96,11 @@ MonoBehaviour:
     colorCounts:
     - color: 0
       count: 15
+      hidden: 0
     - color: 3
       count: 15
+      hidden: 0
     initialBlocks: 
     beltSlotIndex: 11
+    locked: 1
+    unlockColor: 5

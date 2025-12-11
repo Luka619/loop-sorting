@@ -41,10 +41,14 @@ MonoBehaviour:
     colorCounts:
     - color: 0
       count: 15
+      hidden: 1
     - color: 2
       count: 15
+      hidden: 0
     initialBlocks: 0000000001000000
     beltSlotIndex: 6
+    locked: 0
+    unlockColor: 0
   - name: Box 2
     position: {x: 1.2810256, y: 1.954359}
     size: {x: 0.90000004, y: 3}
@@ -56,7 +60,11 @@ MonoBehaviour:
     colorCounts:
     - color: 0
       count: 15
+      hidden: 1
     - color: 2
       count: 15
+      hidden: 0
     initialBlocks: 
     beltSlotIndex: 11
+    locked: 0
+    unlockColor: 0

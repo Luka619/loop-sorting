@@ -276,21 +276,26 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.LabelField("Selected", EditorStyles.boldLabel);
         if (_selectedBox >= 0 && _selectedBox < _level.boxes.Count)
         {
-            var box = _level.boxes[_selectedBox];
-            EditorGUI.BeginChangeCheck();
-            box.name = EditorGUILayout.TextField("Name", box.name);
-            box.position = EditorGUILayout.Vector2Field("Position", box.position);
-            box.size = EditorGUILayout.Vector2Field("Size (w,h)", box.size);
-            box.opening = (OpeningSide)EditorGUILayout.EnumPopup("Opening", box.opening);
-            box.rows = Mathf.Max(1, EditorGUILayout.IntField("Rows (b)", box.rows));
-            box.columns = Mathf.Max(1, EditorGUILayout.IntField("Columns (a)", box.columns));
-            box.autoAlignSlot = EditorGUILayout.Toggle("Auto Align Slot", box.autoAlignSlot);
-            box.beltSlotIndex = EditorGUILayout.IntField("Belt Slot Index", box.beltSlotIndex);
+        var box = _level.boxes[_selectedBox];
+        EditorGUI.BeginChangeCheck();
+        box.name = EditorGUILayout.TextField("Name", box.name);
+        box.position = EditorGUILayout.Vector2Field("Position", box.position);
+        box.size = EditorGUILayout.Vector2Field("Size (w,h)", box.size);
+        box.opening = (OpeningSide)EditorGUILayout.EnumPopup("Opening", box.opening);
+        box.rows = Mathf.Max(1, EditorGUILayout.IntField("Rows (b)", box.rows));
+        box.columns = Mathf.Max(1, EditorGUILayout.IntField("Columns (a)", box.columns));
+        box.autoAlignSlot = EditorGUILayout.Toggle("Auto Align Slot", box.autoAlignSlot);
+        box.beltSlotIndex = EditorGUILayout.IntField("Belt Slot Index", box.beltSlotIndex);
+        box.locked = EditorGUILayout.Toggle("Locked", box.locked);
+        if (box.locked)
+        {
+            box.unlockColor = (BlockColor)EditorGUILayout.EnumPopup("Unlock Color", box.unlockColor);
+        }
 
-            // Color counts quick edit
-            EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("Colors", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("快捷键：1-9切色，滚轮调数量，Alt+点击吸取，Tab切盒子。拖拽列表可调顺序。", MessageType.None);
+        // Color counts quick edit
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("Colors", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("快捷键：1-9切色，滚轮调数量，Alt+点击吸取，Tab切盒子。拖拽列表可调顺序。", MessageType.None);
             EnsureColorList(box);
             _colorCountsList?.DoLayoutList();
             EditorGUILayout.BeginHorizontal();
@@ -310,11 +315,11 @@ public class LevelEditorWindow : EditorWindow
                 box.colorCounts.Clear();
                 EnsureColorList(box, force: true);
             }
-            EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndHorizontal();
 
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_level, "Edit Box");
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(_level, "Edit Box");
                 _level.boxes[_selectedBox] = box;
                 EditorUtility.SetDirty(_level);
             }
@@ -757,8 +762,9 @@ public class LevelEditorWindow : EditorWindow
                 ToScreen(rect, bounds, new Vector2(cmax.x, cmax.y)),
                 ToScreen(rect, bounds, new Vector2(cmin.x, cmax.y))
             };
-            var col = ToColor(box.colorCounts[ci].color);
-            col.a = 0.7f;
+            var cc = box.colorCounts[ci];
+            var col = cc.hidden ? new Color(0.2f, 0.2f, 0.2f, 0.5f) : ToColor(cc.color);
+            col.a = cc.hidden ? 0.5f : 0.7f;
             Handles.DrawSolidRectangleWithOutline(poly, col, Color.clear);
 
             // highlight selected color
@@ -766,6 +772,12 @@ public class LevelEditorWindow : EditorWindow
             {
                 Handles.color = Color.white;
                 Handles.DrawAAPolyLine(3f, poly);
+            }
+
+            if (cc.hidden)
+            {
+                Handles.color = Color.white;
+                Handles.Label((poly[0] + poly[2]) * 0.5f, "H", EditorStyles.miniBoldLabel);
             }
         }
     }
@@ -877,6 +889,34 @@ public class LevelEditorWindow : EditorWindow
             _level.boxes[_selectedBox] = box;
             EditorUtility.SetDirty(_level);
             EnsureColorList(box, force: true);
+            Repaint();
+            e.Use();
+            return;
+        }
+
+        // H: mark selected color as hidden (toggle)
+        if (e.type == EventType.KeyDown && e.keyCode == KeyCode.H)
+        {
+            if (_selectedColorIndex >= 0 && _selectedColorIndex < box.colorCounts.Count)
+            {
+                var cc = box.colorCounts[_selectedColorIndex];
+                cc.hidden = !cc.hidden;
+                box.colorCounts[_selectedColorIndex] = cc;
+                _level.boxes[_selectedBox] = box;
+                EditorUtility.SetDirty(_level);
+                EnsureColorList(box, force: true);
+                Repaint();
+            }
+            e.Use();
+            return;
+        }
+
+        // L: toggle lock box
+        if (e.type == EventType.KeyDown && e.keyCode == KeyCode.L)
+        {
+            box.locked = !box.locked;
+            _level.boxes[_selectedBox] = box;
+            EditorUtility.SetDirty(_level);
             Repaint();
             e.Use();
             return;
@@ -1176,11 +1216,14 @@ public class LevelEditorWindow : EditorWindow
             var element = colorsProp.GetArrayElementAtIndex(index);
             var colorProp = element.FindPropertyRelative("color");
             var countProp = element.FindPropertyRelative("count");
+            var hiddenProp = element.FindPropertyRelative("hidden");
             var left = new Rect(rect.x, rect.y, 140f, EditorGUIUtility.singleLineHeight);
-            var right = new Rect(rect.x + 150f, rect.y, rect.width - 190f, EditorGUIUtility.singleLineHeight);
+            var right = new Rect(rect.x + 150f, rect.y, rect.width - 250f, EditorGUIUtility.singleLineHeight);
+            var hid = new Rect(rect.x + rect.width - 90f, rect.y, 50f, EditorGUIUtility.singleLineHeight);
             var del = new Rect(rect.xMax - 30f, rect.y, 30f, EditorGUIUtility.singleLineHeight);
             EditorGUI.PropertyField(left, colorProp, GUIContent.none);
             countProp.intValue = Mathf.Max(0, EditorGUI.IntField(right, countProp.intValue));
+            hiddenProp.boolValue = EditorGUI.ToggleLeft(hid, "H", hiddenProp.boolValue);
             if (GUI.Button(del, "X"))
             {
                 colorsProp.DeleteArrayElementAtIndex(index);

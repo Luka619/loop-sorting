@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LoopSorting
@@ -7,6 +7,7 @@ namespace LoopSorting
     {
         private readonly int _capacity;
         private readonly List<Block> _blocks;
+        private bool _locked;
 
         public Container(int capacity, IEnumerable<Block> initialBlocks = null)
         {
@@ -27,7 +28,13 @@ namespace LoopSorting
         public int Capacity => _capacity;
         public int Count => _blocks.Count;
         public bool IsEmpty => _blocks.Count == 0;
+        public bool Locked => _locked;
         public IReadOnlyList<Block> Blocks => _blocks;
+
+        public void SetLocked(bool locked)
+        {
+            _locked = locked;
+        }
 
         /// <summary>
         /// Remove blocks that match predicate and return them.
@@ -35,6 +42,10 @@ namespace LoopSorting
         public List<Block> RemoveBlocksWhere(Func<Block, bool> predicate)
         {
             var removed = new List<Block>();
+            if (_locked)
+            {
+                return removed;
+            }
             for (int i = _blocks.Count - 1; i >= 0; i--)
             {
                 if (predicate(_blocks[i]))
@@ -52,6 +63,10 @@ namespace LoopSorting
         /// </summary>
         public void ClearAndAdd(IEnumerable<Block> blocks)
         {
+            if (_locked)
+            {
+                return;
+            }
             _blocks.Clear();
             AddBlocks(blocks);
         }
@@ -61,6 +76,10 @@ namespace LoopSorting
         /// </summary>
         public void AddBlocks(IEnumerable<Block> blocks)
         {
+            if (_locked)
+            {
+                return;
+            }
             foreach (var b in blocks)
             {
                 if (_blocks.Count >= _capacity) break;
@@ -70,7 +89,7 @@ namespace LoopSorting
 
         public bool TryPeek(out Block block)
         {
-            if (_blocks.Count == 0)
+            if (_locked || _blocks.Count == 0)
             {
                 block = default;
                 return false;
@@ -93,6 +112,11 @@ namespace LoopSorting
 
         public bool CanAccept(Block block)
         {
+            if (_locked)
+            {
+                return false;
+            }
+
             if (_blocks.Count >= _capacity)
             {
                 return false;

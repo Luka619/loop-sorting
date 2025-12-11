@@ -37,6 +37,7 @@ namespace LoopSorting
     {
         public BlockColor color = BlockColor.Red;
         public int count = 1;
+        public bool hidden = false;
     }
 
     /// <summary>
@@ -66,6 +67,11 @@ namespace LoopSorting
 
         [Tooltip("Belt slot index where this box connects (0-based along conveyor slots).")]
         public int beltSlotIndex = 0;
+
+        [Tooltip("Whether this box is locked and hidden until unlockColor box is completed.")]
+        public bool locked = false;
+        [Tooltip("The color that must be completed in another box to unlock this box.")]
+        public BlockColor unlockColor = BlockColor.Red;
     }
 
 }

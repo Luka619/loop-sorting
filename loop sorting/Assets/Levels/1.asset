@@ -51,7 +51,7 @@ MonoBehaviour:
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
     rows: 10
-    opening: 2
+    opening: 3
     autoAlignSlot: 1
     colorCounts:
     - color: 0

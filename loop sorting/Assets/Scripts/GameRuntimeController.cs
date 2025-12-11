@@ -31,6 +31,9 @@ namespace LoopSorting
         public float releaseBlockedRetry = 0.1f;
         [Tooltip("Z offset for belt blocks so they render above markers (negative brings closer to camera).")]
         public float beltBlockZOffset = -0.05f;
+        [Header("Settings")]
+        public bool vibrationEnabled = true;
+        public bool soundEnabled = true;
         [Header("UI")]
         public BeltCounterUI beltCounterUI;
         [Header("Debug/Visuals")]
@@ -64,6 +67,10 @@ namespace LoopSorting
         private int _speedIndex = 0;
         private Button _speedButton;
         private Text _speedButtonLabel;
+        private Button _settingsButton;
+        private GameObject _settingsPanel;
+        private Toggle _vibrationToggle;
+        private Toggle _soundToggle;
         private GameObject _backgroundQuad;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
@@ -146,6 +153,7 @@ namespace LoopSorting
             FitCameraToLevel(layout);
             EnsureBackground();
             EnsureCounterUI();
+            EnsureSettingsUI();
             SyncContainersVisuals();
             SyncBeltVisuals();
         }
@@ -255,6 +263,17 @@ namespace LoopSorting
             }
 
             return null;
+        }
+
+        private void ToggleSettingsPanel(bool show)
+        {
+            if (_settingsPanel == null) return;
+            _settingsPanel.SetActive(show);
+            if (show)
+            {
+                if (_vibrationToggle != null) _vibrationToggle.isOn = vibrationEnabled;
+                if (_soundToggle != null) _soundToggle.isOn = soundEnabled;
+            }
         }
         private void Update()
         {
@@ -674,7 +693,7 @@ namespace LoopSorting
 
         private void EnsureCounterUI()
         {
-            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null)
+            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null)
             {
                 return;
             }
@@ -735,6 +754,21 @@ namespace LoopSorting
             _speedButton.onClick.AddListener(CycleSpeed);
             UpdateSpeedButtonLabel();
 
+            // Settings button
+            var settingsGO = new GameObject("SettingsButton");
+            settingsGO.transform.SetParent(canvasGO.transform, false);
+            _settingsButton = settingsGO.AddComponent<Button>();
+            var sImg = settingsGO.AddComponent<Image>();
+            sImg.color = uiTheme != null ? uiTheme.buttonColor : new Color(0.2f, 0.2f, 0.2f, 0.85f);
+            if (uiTheme != null && uiTheme.buttonSprite != null) sImg.sprite = uiTheme.buttonSprite;
+            var sRect = settingsGO.GetComponent<RectTransform>();
+            sRect.anchorMin = new Vector2(1f, 1f);
+            sRect.anchorMax = new Vector2(1f, 1f);
+            sRect.pivot = new Vector2(1f, 1f);
+            sRect.sizeDelta = new Vector2(36f, 36f);
+            sRect.anchoredPosition = new Vector2(-100f, -10f);
+            _settingsButton.onClick.AddListener(() => ToggleSettingsPanel(true));
+
             EnsureResultPanel();
         }
 
@@ -789,6 +823,62 @@ namespace LoopSorting
             _resultPanel.SetActive(false);
         }
 
+        private void EnsureSettingsUI()
+        {
+            if (_uiCanvas == null) return;
+            if (_settingsPanel != null && _vibrationToggle != null && _soundToggle != null) return;
+
+            // panel
+            _settingsPanel = new GameObject("SettingsPanel");
+            _settingsPanel.transform.SetParent(_uiCanvas.transform, false);
+            var overlayImg = _settingsPanel.AddComponent<Image>();
+            overlayImg.color = new Color(0f, 0f, 0f, 0.4f);
+            var overlayRect = _settingsPanel.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+
+            var boxGO = new GameObject("Box");
+            boxGO.transform.SetParent(_settingsPanel.transform, false);
+            var boxRect = boxGO.AddComponent<RectTransform>();
+            boxRect.sizeDelta = new Vector2(260f, 180f);
+            boxRect.anchorMin = new Vector2(0.5f, 0.5f);
+            boxRect.anchorMax = new Vector2(0.5f, 0.5f);
+            boxRect.pivot = new Vector2(0.5f, 0.5f);
+            boxRect.anchoredPosition = Vector2.zero;
+            var boxImg = boxGO.AddComponent<Image>();
+            boxImg.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+
+            var titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(boxGO.transform, false);
+            var titleText = titleGO.AddComponent<Text>();
+            titleText.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            titleText.alignment = TextAnchor.MiddleCenter;
+            titleText.fontSize = 20;
+            titleText.color = Color.white;
+            titleText.text = "设置";
+            var titleRect = titleText.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 0.75f);
+            titleRect.anchorMax = new Vector2(1f, 0.95f);
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+
+            _vibrationToggle = CreateToggle(boxGO.transform, "振动", vibrationEnabled, new Vector2(0.2f, 0.55f));
+            _vibrationToggle.onValueChanged.AddListener(val => vibrationEnabled = val);
+
+            _soundToggle = CreateToggle(boxGO.transform, "声音", soundEnabled, new Vector2(0.2f, 0.35f));
+            _soundToggle.onValueChanged.AddListener(val => soundEnabled = val);
+
+            var closeBtn = CreateButton(boxGO.transform, "CloseSettings", new Vector2(0.5f, 0.1f));
+            closeBtn.onClick.AddListener(() => ToggleSettingsPanel(false));
+            closeBtn.GetComponentInChildren<Text>().text = "关闭";
+
+            _settingsPanel.SetActive(false);
+        }
+
         private Button CreateButton(Transform parent, string name, Vector2 anchor)
         {
             var go = new GameObject(name);
@@ -817,6 +907,51 @@ namespace LoopSorting
             tRect.offsetMin = Vector2.zero;
             tRect.offsetMax = Vector2.zero;
             return btn;
+        }
+
+        private Toggle CreateToggle(Transform parent, string label, bool initial, Vector2 anchor)
+        {
+            var go = new GameObject(label);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.sizeDelta = new Vector2(180f, 30f);
+            rect.anchoredPosition = Vector2.zero;
+
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0.2f, 0.2f, 0.2f, 0.7f);
+
+            var toggle = go.AddComponent<Toggle>();
+            var check = new GameObject("Check").AddComponent<Image>();
+            check.transform.SetParent(go.transform, false);
+            var cRect = check.GetComponent<RectTransform>();
+            cRect.anchorMin = new Vector2(0f, 0.5f);
+            cRect.anchorMax = new Vector2(0f, 0.5f);
+            cRect.pivot = new Vector2(0f, 0.5f);
+            cRect.sizeDelta = new Vector2(20f, 20f);
+            cRect.anchoredPosition = new Vector2(10f, 0f);
+            check.color = new Color(0.4f, 0.8f, 0.4f, 0.9f);
+            toggle.graphic = check;
+            toggle.isOn = initial;
+
+            var lblGO = new GameObject("Label");
+            lblGO.transform.SetParent(go.transform, false);
+            var text = lblGO.AddComponent<Text>();
+            text.font = uiTheme != null && uiTheme.font != null
+                ? uiTheme.font
+                : Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleLeft;
+            text.text = label;
+            var tRect = text.GetComponent<RectTransform>();
+            tRect.anchorMin = new Vector2(0f, 0f);
+            tRect.anchorMax = new Vector2(1f, 1f);
+            tRect.offsetMin = new Vector2(40f, 0f);
+            tRect.offsetMax = new Vector2(0f, 0f);
+
+            return toggle;
         }
 
         private void BuildSlotMarkers()

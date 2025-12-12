@@ -57,9 +57,9 @@ namespace LoopSorting
         [Tooltip("Grid height (b) for visual layout and capacity calculation a*b.")]
         public int rows = 1;
         public OpeningSide opening = OpeningSide.Top;
-        [Tooltip("自动对齐到开口方向最近的传送带槽位。关闭后使用 beltSlotIndex。")]
+        [Tooltip("Auto-align to the nearest belt slot in the opening direction. When off, uses beltSlotIndex.")]
         public bool autoAlignSlot = true;
-        [Tooltip("颜色+数量。按列表顺序依次填充（索引0为最外层/靠近开口），直到容量 columns*rows 填满。")]
+        [Tooltip("Color + count. Filled in list order (index 0 is outermost / mouth-facing) until capacity (columns*rows) is full.")]
         public List<ColorCount> colorCounts = new List<ColorCount>();
 
         // Deprecated: use colorCounts. Kept hidden for backward compatibility.

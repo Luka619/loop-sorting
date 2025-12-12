@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace LoopSorting
@@ -19,7 +19,7 @@ namespace LoopSorting
         public void SetValue(int empty, int total)
         {
             if (_text == null) return;
-            _text.text = $"空余格: {empty}/{total}";
+            _text.text = $"Empty Slots: {empty}/{total}";
         }
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LoopSorting
@@ -28,7 +28,7 @@ namespace LoopSorting
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
 
-        // Render / layering guideline (z 越小越靠近相机):
+        // Render / layering guideline (smaller Z = closer to camera):
         // Blocks:            z = 0
         // Completed overlay: z = -0.18, queue 3000
         // Lock overlay:      z = -0.24, queue 3100

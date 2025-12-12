@@ -41,7 +41,7 @@ namespace LoopSorting
         public bool showSlotGizmos = true;
         public Color slotColor = new Color(1f, 0.8f, 0.2f, 0.9f);
         public float slotGizmoRadius = 0.1f;
-        [Tooltip("在游戏中可见的槽位标记")]
+        [Tooltip("Slot markers visible in-game (visual only).")]
         public bool showSlotMarkersRuntime = true;
         public float slotMarkerScale = 0.15f;
         public Color slotMarkerColor = new Color(0.6f, 0.6f, 0.6f, 0.3f);
@@ -376,7 +376,7 @@ namespace LoopSorting
                 }
             }
 
-            // count colors available from UNLOCKED containers only (booster不会移动locked或传送带上的积木)
+            // Count colors available from UNLOCKED containers only (boosters do not move locked boxes or belt blocks).
             var colorCounts = new Dictionary<BlockColor, int>();
             for (int i = 0; i < _game.Containers.Count; i++)
             {
@@ -390,7 +390,7 @@ namespace LoopSorting
                 }
             }
 
-            // 筛选：只能选择能够充满某个未锁定容器的颜色
+            // Filter: only colors that can fully fill at least one unlocked container.
             var candidates = new List<BlockColor>();
             foreach (var kv in colorCounts)
             {
@@ -1341,12 +1341,12 @@ namespace LoopSorting
 
             _boosterFillButton = CreateButton(_boosterPanel.transform, "BoosterFill", new Vector2(0.25f, 0.5f));
             _boosterFillButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
-            _boosterFillButton.GetComponentInChildren<Text>().text = "完成颜色";
+            _boosterFillButton.GetComponentInChildren<Text>().text = "Fill Color";
             _boosterFillButton.onClick.AddListener(() => StartCoroutine(BoosterFillSequence()));
 
             _boosterShuffleButton = CreateButton(_boosterPanel.transform, "BoosterShuffle", new Vector2(0.75f, 0.5f));
             _boosterShuffleButton.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 46f);
-            _boosterShuffleButton.GetComponentInChildren<Text>().text = "打乱顺序";
+            _boosterShuffleButton.GetComponentInChildren<Text>().text = "Shuffle";
             _boosterShuffleButton.onClick.AddListener(() => StartCoroutine(BoosterShuffleSequence()));
 
             EnsureResultPanel();
@@ -1439,22 +1439,22 @@ namespace LoopSorting
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.fontSize = 20;
             titleText.color = Color.white;
-            titleText.text = "设置";
+            titleText.text = "Settings";
             var titleRect = titleText.GetComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0f, 0.75f);
             titleRect.anchorMax = new Vector2(1f, 0.95f);
             titleRect.offsetMin = Vector2.zero;
             titleRect.offsetMax = Vector2.zero;
 
-            _vibrationToggle = CreateToggle(boxGO.transform, "振动", vibrationEnabled, new Vector2(0.2f, 0.55f));
+            _vibrationToggle = CreateToggle(boxGO.transform, "Vibration", vibrationEnabled, new Vector2(0.2f, 0.55f));
             _vibrationToggle.onValueChanged.AddListener(val => vibrationEnabled = val);
 
-            _soundToggle = CreateToggle(boxGO.transform, "声音", soundEnabled, new Vector2(0.2f, 0.35f));
+            _soundToggle = CreateToggle(boxGO.transform, "Sound", soundEnabled, new Vector2(0.2f, 0.35f));
             _soundToggle.onValueChanged.AddListener(val => soundEnabled = val);
 
             var closeBtn = CreateButton(boxGO.transform, "CloseSettings", new Vector2(0.5f, 0.1f));
             closeBtn.onClick.AddListener(() => ToggleSettingsPanel(false));
-            closeBtn.GetComponentInChildren<Text>().text = "关闭";
+            closeBtn.GetComponentInChildren<Text>().text = "Close";
 
             _settingsPanel.SetActive(false);
         }
@@ -1587,7 +1587,7 @@ namespace LoopSorting
                 if (marker == null) continue;
 
                 var from = _slotBasePositions[i];
-                // 不对最后一个做插值，避免入口出口之间的飞点
+                // Do not interpolate the last one to avoid a visual jump between exit and entry.
                 if (i == count - 1)
                 {
                     if (!_beltLoop)

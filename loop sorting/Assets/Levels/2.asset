@@ -21,9 +21,9 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: 0, y: -2}
-    - {x: 6.0000005, y: -1.9957271}
-    - {x: 6, y: 6}
+    - {x: -0, y: -2}
+    - {x: 5.5, y: -2}
+    - {x: 5.5, y: 6}
     - {x: 0, y: 6}
     - {x: 0, y: -2}
     loop: 1

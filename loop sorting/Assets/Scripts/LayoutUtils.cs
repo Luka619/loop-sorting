@@ -237,8 +237,8 @@ namespace LoopSorting
                 return 0;
             }
 
-            // explicit index wins
-            if (spec.beltSlotIndex >= 0 && spec.beltSlotIndex < slots.Count)
+            // When autoAlignSlot is off, keep the authored beltSlotIndex.
+            if (!spec.autoAlignSlot && spec.beltSlotIndex >= 0 && spec.beltSlotIndex < slots.Count)
             {
                 return spec.beltSlotIndex;
             }
@@ -282,7 +282,8 @@ namespace LoopSorting
             }
 
             var half = size * 0.5f;
-            return spec.position + normal * Mathf.Max(half.x, half.y);
+            float dist = (normal == Vector2.left || normal == Vector2.right) ? half.x : half.y;
+            return spec.position + normal * dist;
         }
     }
 }

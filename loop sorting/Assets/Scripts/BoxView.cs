@@ -263,37 +263,106 @@ namespace LoopSorting
                 return;
             }
 
-            var min = new Vector2(float.MaxValue, float.MaxValue);
-            var max = new Vector2(float.MinValue, float.MinValue);
             var cellSize = new Vector2(_boxSize.x / _columns, _boxSize.y / _rows);
 
-            foreach (var idx in indices)
+            // Build exact outline around the occupied cells (instead of a bounding rectangle),
+            // so the outline matches the block count even when the last row is partial.
+            var filled = new bool[_columns, _rows];
+            for (int i = 0; i < indices.Count; i++)
             {
-                int col = idx % _columns;
-                int row = idx / _columns;
-                if (_cellOrder != null && _cellOrder.Count == _columns * _rows && idx < _cellOrder.Count)
+                int slotIndex = indices[i];
+                int col = slotIndex % _columns;
+                int row = slotIndex / _columns;
+                if (_cellOrder != null && _cellOrder.Count == _columns * _rows && slotIndex < _cellOrder.Count)
                 {
-                    col = _cellOrder[idx].x;
-                    row = _cellOrder[idx].y;
+                    col = _cellOrder[slotIndex].x;
+                    row = _cellOrder[slotIndex].y;
                 }
-                var origin = new Vector2(-_boxSize.x * 0.5f + cellSize.x * 0.5f, _boxSize.y * 0.5f - cellSize.y * 0.5f);
-                var pos = origin + new Vector2(col * cellSize.x, -row * cellSize.y);
-                min = Vector2.Min(min, pos);
-                max = Vector2.Max(max, pos);
+                if (col < 0 || col >= _columns || row < 0 || row >= _rows) continue;
+                filled[col, row] = true;
             }
 
-            if (min.x > max.x || min.y > max.y)
+            // Directed boundary edges (clockwise). Encode vertex (x,y) into int key.
+            static int Key(int x, int y) => (x & 0xFFFF) | (y << 16);
+            static int KeyX(int key) => key & 0xFFFF;
+            static int KeyY(int key) => (key >> 16) & 0xFFFF;
+
+            var next = new Dictionary<int, int>(256);
+            for (int r = 0; r < _rows; r++)
+            {
+                for (int c = 0; c < _columns; c++)
+                {
+                    if (!filled[c, r]) continue;
+
+                    // top
+                    if (r == 0 || !filled[c, r - 1])
+                    {
+                        next[Key(c, r)] = Key(c + 1, r);
+                    }
+                    // right
+                    if (c == _columns - 1 || !filled[c + 1, r])
+                    {
+                        next[Key(c + 1, r)] = Key(c + 1, r + 1);
+                    }
+                    // bottom
+                    if (r == _rows - 1 || !filled[c, r + 1])
+                    {
+                        next[Key(c + 1, r + 1)] = Key(c, r + 1);
+                    }
+                    // left
+                    if (c == 0 || !filled[c - 1, r])
+                    {
+                        next[Key(c, r + 1)] = Key(c, r);
+                    }
+                }
+            }
+
+            if (next.Count == 0)
             {
                 if (_frontOutline != null) _frontOutline.gameObject.SetActive(false);
                 return;
             }
 
-            // Ensure black outline wraps blocks clearly (larger margin)
-            var margin = cellSize * 0.6f;
-            var bl = new Vector3(min.x - margin.x, min.y - margin.y, OutlineZ);
-            var tl = new Vector3(min.x - margin.x, max.y + margin.y, OutlineZ);
-            var tr = new Vector3(max.x + margin.x, max.y + margin.y, OutlineZ);
-            var br = new Vector3(max.x + margin.x, min.y - margin.y, OutlineZ);
+            // Choose a stable start vertex (top-most, then left-most).
+            int startKey = 0;
+            bool hasStart = false;
+            foreach (var k in next.Keys)
+            {
+                if (!hasStart)
+                {
+                    startKey = k;
+                    hasStart = true;
+                    continue;
+                }
+                int y0 = KeyY(startKey), x0 = KeyX(startKey);
+                int y1 = KeyY(k), x1 = KeyX(k);
+                if (y1 < y0 || (y1 == y0 && x1 < x0))
+                {
+                    startKey = k;
+                }
+            }
+
+            var path = new List<Vector3>(next.Count + 1);
+            int cur = startKey;
+            int guard = 0;
+            while (guard++ < next.Count + 2)
+            {
+                int vx = KeyX(cur);
+                int vy = KeyY(cur);
+                float px = -_boxSize.x * 0.5f + vx * cellSize.x;
+                float py = _boxSize.y * 0.5f - vy * cellSize.y;
+                path.Add(new Vector3(px, py, OutlineZ));
+
+                if (!next.TryGetValue(cur, out var nxt))
+                {
+                    break;
+                }
+                cur = nxt;
+                if (cur == startKey)
+                {
+                    break;
+                }
+            }
 
             if (_frontOutline == null)
             {
@@ -302,8 +371,6 @@ namespace LoopSorting
                 _frontOutline = go.AddComponent<LineRenderer>();
                 _frontOutline.useWorldSpace = false;
                 _frontOutline.loop = true;
-                _frontOutline.startWidth = 0.07f;
-                _frontOutline.endWidth = 0.07f;
                 _frontOutline.sharedMaterial = new Material(Shader.Find("Unlit/Color"))
                 {
                     color = Color.black
@@ -314,11 +381,20 @@ namespace LoopSorting
                 _frontOutline.numCornerVertices = 2;
             }
 
-            _frontOutline.positionCount = 4;
-            _frontOutline.SetPosition(0, bl);
-            _frontOutline.SetPosition(1, tl);
-            _frontOutline.SetPosition(2, tr);
-            _frontOutline.SetPosition(3, br);
+            if (path.Count < 3)
+            {
+                _frontOutline.gameObject.SetActive(false);
+                return;
+            }
+
+            _frontOutline.positionCount = path.Count;
+            float width = Mathf.Clamp(Mathf.Min(cellSize.x, cellSize.y) * 0.12f, 0.04f, 0.09f);
+            _frontOutline.startWidth = width;
+            _frontOutline.endWidth = width;
+            for (int i = 0; i < path.Count; i++)
+            {
+                _frontOutline.SetPosition(i, path[i]);
+            }
             _frontOutline.gameObject.SetActive(true);
         }
 

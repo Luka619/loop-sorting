@@ -96,30 +96,54 @@ namespace LoopSorting
             int? blockIndex = blockedPort;
             bool blockActive = blockIndex.HasValue && _slots[blockIndex.Value].HasValue;
 
-            // Move belt contents forward in reverse order to avoid overwriting.
-            for (int i = _slots.Length - 1; i >= 0; i--)
+            bool hasEmpty = false;
+            for (int i = 0; i < _slots.Length; i++)
             {
                 if (!_slots[i].HasValue)
                 {
-                    continue;
+                    hasEmpty = true;
+                    break;
                 }
+            }
 
-                int next = (i + 1) % _slots.Length;
-
-                // If blocking is active and this segment is before the blocked port,
-                // do not move into the blocked port.
-                if (blockActive && i < blockIndex.Value && next == blockIndex.Value)
+            if (!hasEmpty)
+            {
+                // Full belt: advance is a pure rotation (simultaneous move).
+                // Note: blockedPort logic relies on empty slots; when full, we keep moving to allow ports to consume blocks.
+                var last = _slots[_slots.Length - 1];
+                for (int i = _slots.Length - 1; i >= 1; i--)
                 {
-                    continue;
+                    _slots[i] = _slots[i - 1];
                 }
-
-                if (_slots[next].HasValue)
+                _slots[0] = last;
+            }
+            else
+            {
+                // Move belt contents forward in reverse order to avoid overwriting.
+                for (int i = _slots.Length - 1; i >= 0; i--)
                 {
-                    continue;
-                }
+                    if (!_slots[i].HasValue)
+                    {
+                        continue;
+                    }
 
-                _slots[next] = _slots[i];
-                _slots[i] = null;
+                    int next = (i + 1) % _slots.Length;
+
+                    // If blocking is active and this segment is before the blocked port,
+                    // do not move into the blocked port.
+                    if (blockActive && i < blockIndex.Value && next == blockIndex.Value)
+                    {
+                        continue;
+                    }
+
+                    if (_slots[next].HasValue)
+                    {
+                        continue;
+                    }
+
+                    _slots[next] = _slots[i];
+                    _slots[i] = null;
+                }
             }
 
             // Try to drop blocks into connected containers after movement.
@@ -133,6 +157,12 @@ namespace LoopSorting
                 }
 
                 var container = port.Value;
+                // New rule: a block should not enter an empty container if there exists any other
+                // non-empty, non-full container whose front color matches this block.
+                if (container.IsEmpty && ExistsPreferredNonEmptyTarget(container, slot.Value))
+                {
+                    continue;
+                }
                 if (!container.TryPush(slot.Value))
                 {
                     continue;
@@ -140,6 +170,18 @@ namespace LoopSorting
 
                 _slots[beltIndex] = null;
             }
+        }
+
+        private bool ExistsPreferredNonEmptyTarget(Container emptyTarget, Block block)
+        {
+            foreach (var kv in _ports)
+            {
+                var c = kv.Value;
+                if (c == null || c == emptyTarget) continue;
+                if (c.Count <= 0) continue; // only consider non-empty containers
+                if (c.CanAccept(block)) return true;
+            }
+            return false;
         }
 
         private void ValidateIndex(int index)

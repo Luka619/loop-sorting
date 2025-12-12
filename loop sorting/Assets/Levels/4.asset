@@ -21,17 +21,17 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -2, y: 6}
-    - {x: 8, y: 6}
-    - {x: 8, y: -8}
-    - {x: -2, y: -8}
-    - {x: -2, y: 6}
+    - {x: 0.0007890883, y: 3}
+    - {x: 0, y: -2}
+    - {x: 4, y: -2}
+    - {x: 4, y: 3}
+    - {x: 0, y: 3}
     loop: 1
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -6.0, y: 0.0}
-    size: {x: 0.9, y: 3.0}
+    position: {x: 1.233378, y: 0.117616594}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 10
@@ -39,18 +39,21 @@ MonoBehaviour:
     autoAlignSlot: 1
     colorCounts:
     - color: 0
-      count: 15
+      count: 9
       hidden: 0
-    - color: 1
-      count: 15
+    - color: 2
+      count: 12
+      hidden: 0
+    - color: 0
+      count: 9
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 17
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 3.0, y: 4.0}
-    size: {x: 0.9, y: 3.0}
+    position: {x: 2.959319, y: 0.93589765}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 10
@@ -58,31 +61,28 @@ MonoBehaviour:
     autoAlignSlot: 1
     colorCounts:
     - color: 2
-      count: 15
+      count: 6
       hidden: 0
-    - color: 3
+    - color: 0
+      count: 9
+      hidden: 0
+    - color: 2
       count: 15
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 41
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: -3.0, y: -4.0}
-    size: {x: 3.0, y: 0.9}
-    color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
-    opening: 0
+    position: {x: 2.0996227, y: 5.032313}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    columns: 3
+    rows: 10
+    opening: 3
     autoAlignSlot: 1
-    colorCounts:
-    - color: 4
-      count: 15
-      hidden: 0
-    - color: 5
-      count: 15
-      hidden: 0
+    colorCounts: []
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 44
     locked: 0
-    unlockColor: 4
+    unlockColor: 0

@@ -8,6 +8,7 @@ namespace LoopSorting
         private readonly int _capacity;
         private readonly List<Block> _blocks;
         private bool _locked;
+        private bool _busy;
 
         public Container(int capacity, IEnumerable<Block> initialBlocks = null)
         {
@@ -29,11 +30,17 @@ namespace LoopSorting
         public int Count => _blocks.Count;
         public bool IsEmpty => _blocks.Count == 0;
         public bool Locked => _locked;
+        public bool Busy => _busy;
         public IReadOnlyList<Block> Blocks => _blocks;
 
         public void SetLocked(bool locked)
         {
             _locked = locked;
+        }
+
+        public void SetBusy(bool busy)
+        {
+            _busy = busy;
         }
 
         /// <summary>
@@ -112,7 +119,7 @@ namespace LoopSorting
 
         public bool CanAccept(Block block)
         {
-            if (_locked)
+            if (_locked || _busy)
             {
                 return false;
             }

@@ -94,6 +94,8 @@ namespace LoopSorting
         private Text _primaryLabel;
         private Text _secondaryLabel;
         private bool _gameOver;
+        private bool _fullBeltFastForward;
+        private int _fullBeltStepsRemaining;
 
         private void ClearRuntime()
         {
@@ -128,6 +130,8 @@ namespace LoopSorting
             _tickTimer = 0f;
             _beltSpacingUsed = 0f;
             _gameOver = false;
+            _fullBeltFastForward = false;
+            _fullBeltStepsRemaining = 0;
         }
 
         public void Build(LevelLayout layout)
@@ -627,7 +631,8 @@ namespace LoopSorting
                 return;
             }
 
-            _tickTimer += Time.deltaTime * _speedMultiplier;
+            float effectiveSpeed = _fullBeltFastForward ? 5f : _speedMultiplier;
+            _tickTimer += Time.deltaTime * effectiveSpeed;
             float progress = Mathf.Clamp01(_tickTimer / Mathf.Max(0.0001f, conveyorTickSeconds));
             UpdateSlotMarkersVisuals(progress);
             UpdateBeltBlockVisuals(progress);
@@ -636,14 +641,59 @@ namespace LoopSorting
             {
                 _tickTimer = 0f;
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
-            _game.TickConveyor(blocked);
-            SyncBeltVisuals();
-            SyncContainersVisuals();
-            UpdateLocks();
-            UpdateCompletionStates();
-            UpdateBeltCounter();
-            CheckEndConditions();
+                _game.TickConveyor(blocked);
+                SyncBeltVisuals();
+                SyncContainersVisuals();
+                UpdateLocks();
+                UpdateCompletionStates();
+                UpdateBeltCounter();
+                HandleFullBeltFastForwardAfterTick();
+                CheckEndConditions();
+            }
         }
+
+        private void HandleFullBeltFastForwardAfterTick()
+        {
+            if (_gameOver || _game == null) return;
+
+            int limit = _beltCapacity > 0 ? Mathf.Min(_beltCapacity, _game.Conveyor.Length) : _game.Conveyor.Length;
+            bool beltFull = _game.Conveyor.BlockCount >= limit;
+
+            if (_fullBeltFastForward)
+            {
+                if (!beltFull)
+                {
+                    StopFullBeltFastForward();
+                    return;
+                }
+
+                _fullBeltStepsRemaining = Mathf.Max(0, _fullBeltStepsRemaining - 1);
+                if (_fullBeltStepsRemaining <= 0)
+                {
+                    // Still full after one full loop: fail the level.
+                    ShowResult(false);
+                    StopFullBeltFastForward();
+                }
+                return;
+            }
+
+            if (beltFull)
+            {
+                StartFullBeltFastForward();
+            }
+        }
+
+        private void StartFullBeltFastForward()
+        {
+            if (_game == null) return;
+            _fullBeltFastForward = true;
+            _fullBeltStepsRemaining = Mathf.Max(1, _game.Conveyor.Length);
+        }
+
+        private void StopFullBeltFastForward()
+        {
+            _fullBeltFastForward = false;
+            _fullBeltStepsRemaining = 0;
         }
 
         public void HandleContainerClick(int containerIndex)
@@ -995,10 +1045,17 @@ namespace LoopSorting
                 return;
             }
 
-            bool beltFull = _game.Conveyor.BlockCount >= _game.Conveyor.Length;
-            if (beltFull && !CanAnyContainerAcceptAnyBeltBlock())
+            // Full-belt failure is handled by the fast-forward loop logic in Update().
+            // If belt becomes full outside of a conveyor tick, arm the fast-forward state here.
+            int limit = _beltCapacity > 0 ? Mathf.Min(_beltCapacity, _game.Conveyor.Length) : _game.Conveyor.Length;
+            bool beltFull = _game.Conveyor.BlockCount >= limit;
+            if (beltFull && !_fullBeltFastForward)
             {
-                ShowResult(false);
+                StartFullBeltFastForward();
+            }
+            else if (!beltFull && _fullBeltFastForward)
+            {
+                StopFullBeltFastForward();
             }
         }
 
@@ -1103,7 +1160,9 @@ namespace LoopSorting
 
             var list = new List<Block>(capacity);
             int filled = 0;
-            for (int idx = spec.colorCounts.Count - 1; idx >= 0 && filled < capacity; idx--)
+            // colorCounts are authored outer->inner (index 0 is the outermost / mouth-facing layer).
+            // Keep the same order at runtime so the editor preview and gameplay match.
+            for (int idx = 0; idx < spec.colorCounts.Count && filled < capacity; idx++)
             {
                 var cc = spec.colorCounts[idx];
                 int cnt = Mathf.Max(0, cc.count);
@@ -1126,6 +1185,8 @@ namespace LoopSorting
             _activeReleasePort = _containerToBelt.TryGetValue(containerIndex, out var portIdx) ? portIdx : (int?)null;
 
             var container = _game.Containers[containerIndex];
+            // This container cannot accept incoming blocks while releasing.
+            container.SetBusy(true);
             // Determine how many consecutive blocks of the same color are at the front.
             int pending = 0;
             for (int i = 0; i < container.Count; i++)
@@ -1169,12 +1230,19 @@ namespace LoopSorting
                 SyncBeltVisuals();
                 SyncContainersVisuals();
 
+                // Keep the operable outline in sync with the remaining run.
+                if (containerIndex < _boxViews.Count)
+                {
+                    _boxViews[containerIndex].ShowFrontOutline(pending, pending > 0);
+                }
+
                 yield return new WaitForSeconds(releaseInterval / Mathf.Max(0.0001f, _speedMultiplier));
                 safety++;
             }
 
             _isReleasing = false;
             _activeReleasePort = null;
+            container.SetBusy(false);
             if (containerIndex < _boxViews.Count)
             {
                 _boxViews[containerIndex].HideFrontOutline();

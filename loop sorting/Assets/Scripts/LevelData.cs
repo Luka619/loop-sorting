@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LoopSorting
@@ -59,7 +59,7 @@ namespace LoopSorting
         public OpeningSide opening = OpeningSide.Top;
         [Tooltip("自动对齐到开口方向最近的传送带槽位。关闭后使用 beltSlotIndex。")]
         public bool autoAlignSlot = true;
-        [Tooltip("颜色+数量。按列表顺序依次填充，索引0为最外层，直到容量(columns*rows)填满。")]
+        [Tooltip("颜色+数量。按列表顺序依次填充（索引0为最外层/靠近开口），直到容量 columns*rows 填满。")]
         public List<ColorCount> colorCounts = new List<ColorCount>();
 
         // Deprecated: use colorCounts. Kept hidden for backward compatibility.

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditorInternal;
@@ -20,7 +20,7 @@ public class LevelEditorWindow : EditorWindow
     private Vector2 _levelListScroll;
     private bool _showConveyorSettings = true;
     private bool _showBoxSettings = true;
-    private bool _snapToGrid = false;
+    private bool _snapToGrid = true;
     private bool _showSlotMarkers = true;
     private bool _onlyShowSelectedBox = false;
     private bool _onlyShowSelectedConveyor = false;
@@ -44,6 +44,9 @@ public class LevelEditorWindow : EditorWindow
     private ReorderableList _colorCountsList;
     private int _colorListBoxIndex = -1;
     private int _selectedColorIndex = -1;
+    private int _lastSelBox = -2;
+    private int _lastSelConv = -2;
+    private int _lastSelPoint = -2;
 
     [MenuItem("Tools/Loop Sorting/Level Editor")]
     public static void Open()
@@ -98,6 +101,15 @@ public class LevelEditorWindow : EditorWindow
             DrawFlowPanel();
         }
         EditorGUILayout.EndHorizontal();
+
+        // clear keyboard focus if selection changed (avoid stale input on new target)
+        if (_selectedBox != _lastSelBox || _selectedConveyor != _lastSelConv || _selectedPoint != _lastSelPoint)
+        {
+            ClearEditorInputFocus();
+            _lastSelBox = _selectedBox;
+            _lastSelConv = _selectedConveyor;
+            _lastSelPoint = _selectedPoint;
+        }
     }
 
     private void DrawHeader()
@@ -105,7 +117,7 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.LabelField("Loop Sorting Level Editor", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.BeginVertical("box");
-        EditorGUILayout.LabelField("选择已有关卡 (Assets/Levels)", EditorStyles.miniBoldLabel);
+        EditorGUILayout.LabelField("閫夋嫨宸叉湁鍏冲崱 (Assets/Levels)", EditorStyles.miniBoldLabel);
         var nextIndex = EditorGUILayout.Popup("Level Layout", _selectedIndex, _levelOptionNames);
         if (nextIndex != _selectedIndex && nextIndex >= 0 && nextIndex < _levelOptions.Length)
         {
@@ -119,7 +131,7 @@ public class LevelEditorWindow : EditorWindow
             SetLevel(nextLevel);
         }
 
-        if (GUILayout.Button("刷新列表", GUILayout.Width(80)))
+        if (GUILayout.Button("鍒锋柊鍒楄〃", GUILayout.Width(80)))
         {
             RefreshLevelList();
         }
@@ -136,18 +148,18 @@ public class LevelEditorWindow : EditorWindow
             EditorGUIUtility.PingObject(_level);
         }
 
-        if (_level != null && GUILayout.Button("保存", GUILayout.Width(60)))
+        if (_level != null && GUILayout.Button("淇濆瓨", GUILayout.Width(60)))
         {
             SaveCurrentLevel();
         }
 
-        if (_level != null && GUILayout.Button("设为运行关卡", GUILayout.Width(100)))
+        if (_level != null && GUILayout.Button("璁句负杩愯鍏冲崱", GUILayout.Width(100)))
         {
             SetActiveRuntimeLevel(_level);
         }
         using (new EditorGUI.DisabledScope(_level == null))
         {
-            if (GUILayout.Button("运行时跳到当前关", GUILayout.Width(140)))
+            if (GUILayout.Button("杩愯鏃惰烦鍒板綋鍓嶅叧", GUILayout.Width(140)))
             {
                 JumpToCurrentLevelAtRuntime();
             }
@@ -216,7 +228,7 @@ public class LevelEditorWindow : EditorWindow
 
         EditorGUILayout.LabelField("Drag Options", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
-        _snapToGrid = EditorGUILayout.ToggleLeft("Snap to Grid", _snapToGrid, GUILayout.Width(120));
+        _snapToGrid = EditorGUILayout.ToggleLeft("Snap to Grid (0.5)", _snapToGrid, GUILayout.Width(150));
         _showSlotMarkers = EditorGUILayout.ToggleLeft("Show Slots", _showSlotMarkers, GUILayout.Width(120));
         _onlyShowSelectedBox = EditorGUILayout.ToggleLeft("Only Selected Box", _onlyShowSelectedBox, GUILayout.Width(150));
         _onlyShowSelectedConveyor = EditorGUILayout.ToggleLeft("Only Selected Conveyor", _onlyShowSelectedConveyor, GUILayout.Width(170));
@@ -236,7 +248,7 @@ public class LevelEditorWindow : EditorWindow
                 {
                     _boxesList = new ReorderableList(_serializedLevel, property, true, true, true, true)
                     {
-                        drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes (位置为中心点，size 为宽高，capacity 为可放积木数量)"),
+                        drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Boxes（位置为中心点；尺寸由列x行xblockSize 自动计算；容量=列x行）"),
                         drawElementCallback = DrawBoxElement,
                         elementHeightCallback = GetBoxHeight,
                         onAddCallback = list =>
@@ -303,9 +315,9 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.Space(4);
         EditorGUILayout.LabelField("Colors", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("快捷键：1-9切色，滚轮调数量，Alt+点击吸取，Tab切盒子。拖拽列表可调顺序。", MessageType.None);
-            EnsureColorList(box);
-            _colorCountsList?.DoLayoutList();
-            EditorGUILayout.BeginHorizontal();
+        EnsureColorList(box);
+        _colorCountsList?.DoLayoutList();
+        EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Add Color", GUILayout.Width(90)))
             {
                 box.colorCounts.Add(new ColorCount { color = (BlockColor)_lastPaletteColor, count = 1 });
@@ -721,9 +733,10 @@ public class LevelEditorWindow : EditorWindow
                 {
                     var cell = order[i];
                     float cxMin = min.x + cell.x * cellW;
-                    float cyMin = min.y + cell.y * cellH;
                     float cxMax = cxMin + cellW;
-                    float cyMax = cyMin + cellH;
+                    // Match runtime BoxView: (0,0) is top-left in the box grid.
+                    float cyMax = max.y - cell.y * cellH;
+                    float cyMin = cyMax - cellH;
                     if (world.x >= cxMin && world.x <= cxMax && world.y >= cyMin && world.y <= cyMax)
                     {
                         hitCell = i;
@@ -757,7 +770,7 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
-        // Click on empty space: clear selection to避免误操作
+        // Click on empty space: clear selection
         _selectedBox = -1;
         _selectedConveyor = -1;
         _selectedPoint = -1;
@@ -787,14 +800,16 @@ public class LevelEditorWindow : EditorWindow
         }
 
         var min = box.position - box.size * 0.5f;
+        var max = box.position + box.size * 0.5f;
         var cellSize = new Vector2(box.size.x / cols, box.size.y / rows);
         for (int i = 0; i < capacity; i++)
         {
             int ci = colorIdx[i];
             if (ci < 0 || ci >= box.colorCounts.Count) continue;
             var cell = order[i];
-            var cmin = new Vector2(min.x + cell.x * cellSize.x, min.y + cell.y * cellSize.y);
-            var cmax = cmin + cellSize;
+            // Match runtime BoxView: (0,0) is top-left in the box grid.
+            var cmin = new Vector2(min.x + cell.x * cellSize.x, max.y - (cell.y + 1) * cellSize.y);
+            var cmax = new Vector2(cmin.x + cellSize.x, cmin.y + cellSize.y);
             var poly = new Vector3[4]
             {
                 ToScreen(rect, bounds, new Vector2(cmin.x, cmin.y)),
@@ -915,7 +930,7 @@ public class LevelEditorWindow : EditorWindow
         {
             int idx = (int)e.keyCode - (int)KeyCode.Alpha1;
             _lastPaletteColor = idx;
-            // 如果当前已有选中颜色段，则仅更换该段的颜色；否则填满整盒
+            // 濡傛灉褰撳墠宸叉湁閫変腑棰滆壊娈碉紝鍒欎粎鏇存崲璇ユ鐨勯鑹诧紱鍚﹀垯濉弧鏁寸洅
             if (_selectedColorIndex >= 0 && _selectedColorIndex < box.colorCounts.Count)
             {
                 box.colorCounts[_selectedColorIndex].color = (BlockColor)idx;
@@ -1147,7 +1162,8 @@ public class LevelEditorWindow : EditorWindow
             case OpeningSide.Right: normal = Vector2.right; break;
         }
         var half = box.size * 0.5f;
-        return box.position + normal * Mathf.Max(half.x, half.y);
+        float dist = (normal == Vector2.left || normal == Vector2.right) ? half.x : half.y;
+        return box.position + normal * dist;
     }
 
     private static int FindNearestSlot(Vector2 point, List<Vector2> slots)
@@ -1248,7 +1264,7 @@ public class LevelEditorWindow : EditorWindow
         _colorCountsList = new ReorderableList(_serializedLevel, colorsProp, true, true, true, true);
         _colorCountsList.drawHeaderCallback = rect =>
         {
-            EditorGUI.LabelField(rect, "颜色与数量 (拖拽可排序)");
+            EditorGUI.LabelField(rect, "颜色与数量（外→内，拖拽可排序）");
         };
         _colorCountsList.drawElementCallback = (rect, index, active, focused) =>
         {
@@ -1294,7 +1310,7 @@ public class LevelEditorWindow : EditorWindow
     private void DrawColorLegend()
     {
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("快捷键色卡：", GUILayout.Width(80));
+        EditorGUILayout.LabelField("蹇嵎閿壊鍗★細", GUILayout.Width(80));
         int colorCount = System.Enum.GetValues(typeof(BlockColor)).Length;
         int max = Mathf.Min(9, colorCount);
         for (int i = 0; i < max; i++)
@@ -1373,7 +1389,7 @@ public class LevelEditorWindow : EditorWindow
         EditorUtility.SetDirty(_level);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log($"已保存关卡: {_level.name}");
+        Debug.Log($"已保存关卡 {_level.name}");
     }
 
     private void SetLevel(LevelLayout level)
@@ -1433,7 +1449,7 @@ public class LevelEditorWindow : EditorWindow
 
         if (_levelOptions.Length == 0)
         {
-            Debug.Log("LevelEditorWindow: 在 Assets/Levels 下没有找到 LevelLayout 资源。");
+            Debug.Log("LevelEditorWindow: Assets/Levels 下没有找到 LevelLayout 资源。");
         }
     }
 
@@ -1452,7 +1468,7 @@ public class LevelEditorWindow : EditorWindow
         {
             CreateNewFlowAsset();
         }
-        if (_flowAsset != null && GUILayout.Button("设为运行Flow", GUILayout.Width(110)))
+        if (_flowAsset != null && GUILayout.Button("璁句负杩愯Flow", GUILayout.Width(110)))
         {
             SetActiveRuntimeFlow(_flowAsset);
         }
@@ -1479,7 +1495,7 @@ public class LevelEditorWindow : EditorWindow
             _flowSO.Update();
             EditorGUILayout.PropertyField(_flowSO.FindProperty("startIndex"), new GUIContent("Start Index"));
             _flowList?.DoLayoutList();
-            EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.BeginHorizontal();
             _flowAddCandidate = (LevelLayout)EditorGUILayout.ObjectField("Add Level", _flowAddCandidate, typeof(LevelLayout), false);
             if (GUILayout.Button("Add", GUILayout.Width(50)))
             {
@@ -1570,7 +1586,7 @@ public class LevelEditorWindow : EditorWindow
             AssetDatabase.Refresh();
         }
 
-        var path = EditorUtility.SaveFilePanelInProject("Create Level Layout", "LevelLayout", "asset", "保存 LevelLayout 资源", levelsFolder);
+        var path = EditorUtility.SaveFilePanelInProject("Create Level Layout", "LevelLayout", "asset", "淇濆瓨 LevelLayout 璧勬簮", levelsFolder);
         if (string.IsNullOrEmpty(path))
         {
             return;
@@ -1593,7 +1609,7 @@ public class LevelEditorWindow : EditorWindow
             AssetDatabase.Refresh();
         }
 
-        var path = EditorUtility.SaveFilePanelInProject("Create Level Flow", "LevelFlow", "asset", "保存 LevelFlow 资源", levelsFolder);
+        var path = EditorUtility.SaveFilePanelInProject("Create Level Flow", "LevelFlow", "asset", "淇濆瓨 LevelFlow 璧勬簮", levelsFolder);
         if (string.IsNullOrEmpty(path))
         {
             return;
@@ -1628,7 +1644,7 @@ public class LevelEditorWindow : EditorWindow
         EditorUtility.SetDirty(config);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log($"已将关卡设置为运行关卡: {layout.name}");
+        Debug.Log($"已将关卡设置为运行关卡 {layout.name}");
     }
 
     private static void SetActiveRuntimeFlow(LevelFlow flow)
@@ -1653,7 +1669,7 @@ public class LevelEditorWindow : EditorWindow
         EditorUtility.SetDirty(config);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log($"已将 Flow 设置为运行: {flow?.name}");
+        Debug.Log($"已将关卡流设置为运行 {flow?.name}");
     }
 
     private Vector2 SnapIfNeeded(Vector2 v)
@@ -1687,6 +1703,13 @@ public class LevelEditorWindow : EditorWindow
         Repaint();
     }
 
+    private void ClearEditorInputFocus()
+    {
+        GUI.FocusControl(null);
+        GUIUtility.keyboardControl = 0;
+        GUIUtility.hotControl = 0;
+    }
+
     private void JumpToCurrentLevelAtRuntime()
     {
         if (_level == null) return;
@@ -1704,7 +1727,7 @@ public class LevelEditorWindow : EditorWindow
         }
 
         ctrl.Build(_level);
-        Debug.Log($"已在运行时跳到当前关卡: {_level.name}");
+        Debug.Log($"已在运行时跳到当前关卡 {_level.name}");
     }
 
     private void OnSceneGUI(SceneView view)

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
-  m_Name: 2
+  m_Name: 5
   m_EditorClassIdentifier: 
   beltCapacity: 50
   beltSlotSpacing: 0
@@ -21,62 +21,65 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: 0, y: -2}
-    - {x: 6.0000005, y: -1.9957271}
-    - {x: 6, y: 6}
-    - {x: 0, y: 6}
-    - {x: 0, y: -2}
-    loop: 1
+    - {x: -8, y: 0}
+    - {x: 8, y: 0}
+    loop: 0
     width: 20
   boxes:
-  - name: 0
-    position: {x: 3, y: 1.982564}
-    size: {x: 3, y: 0.90000004}
+  - name: Box 1
+    position: {x: -2.0, y: 3.0}
+    size: {x: 0.9, y: 3.0}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
-    opening: 0
+    columns: 3
+    rows: 10
+    opening: 3
     autoAlignSlot: 1
     colorCounts:
-    - color: 5
+    - color: 0
+      count: 15
+      hidden: 0
+    - color: 1
       count: 15
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 43
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 2
+    position: {x: 6.0, y: -1.0}
+    size: {x: 0.9, y: 3.0}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 2
+      count: 15
+      hidden: 0
+    - color: 3
+      count: 15
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 0
     locked: 0
     unlockColor: 2
-  - name: 0
-    position: {x: 3, y: 4.2902565}
-    size: {x: 3, y: 0.90000004}
+  - name: Box 3
+    position: {x: -6.0, y: 3.0}
+    size: {x: 3.0, y: 0.9}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
     rows: 3
     opening: 0
     autoAlignSlot: 1
     colorCounts:
+    - color: 4
+      count: 15
+      hidden: 0
     - color: 5
       count: 15
       hidden: 0
-    - color: 0
-      count: 15
-      hidden: 0
     initialBlocks: 
-    beltSlotIndex: 38
+    beltSlotIndex: 0
     locked: 0
     unlockColor: 4
-  - name: 0
-    position: {x: 3, y: -0.051282056}
-    size: {x: 3, y: 0.90000004}
-    color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
-    opening: 0
-    autoAlignSlot: 1
-    colorCounts:
-    - color: 0
-      count: 15
-      hidden: 0
-    initialBlocks: 
-    beltSlotIndex: 46
-    locked: 0
-    unlockColor: 5

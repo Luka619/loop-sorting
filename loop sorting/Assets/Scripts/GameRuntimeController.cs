@@ -57,9 +57,11 @@ namespace LoopSorting
         private Dictionary<int, int> _containerToBelt = new Dictionary<int, int>();
         private List<BoxSpec> _boxSpecs = new List<BoxSpec>();
         private List<bool> _boxLocked = new List<bool>();
+        private List<bool> _boxCompleted = new List<bool>();
         private List<GameObject> _slotMarkers = new List<GameObject>();
         private List<Vector3> _slotBasePositions = new List<Vector3>();
         private List<Vector3> _slotCurrentPositions = new List<Vector3>();
+        private bool _beltLoop;
         private float _tickTimer;
         private Bounds _levelBounds;
         private int _beltCapacity;
@@ -118,6 +120,8 @@ namespace LoopSorting
             _containerToBelt.Clear();
             _boxSpecs.Clear();
             _boxLocked.Clear();
+            _boxCompleted.Clear();
+            _beltLoop = false;
             _game = null;
             _isReleasing = false;
             _activeReleasePort = null;
@@ -296,6 +300,7 @@ namespace LoopSorting
                 SyncBeltVisuals();
                 SyncContainersVisuals();
                 UpdateLocks();
+                UpdateCompletionStates();
                 UpdateBeltCounter();
                 if (_game.Conveyor.BlockCount == 0) break;
                 yield return new WaitForSeconds(conveyorTickSeconds / Mathf.Max(0.0001f, _speedMultiplier));
@@ -359,6 +364,7 @@ namespace LoopSorting
             for (int i = 0; i < _game.Containers.Count; i++)
             {
                 if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                if (i < _boxCompleted.Count && _boxCompleted[i]) { if (_game.Containers[i].Blocks.Count > 0) completedColors.Add(_game.Containers[i].Blocks[0].Color); continue; }
                 var c = _game.Containers[i];
                 if (c.IsUniformAndFull() && c.Blocks.Count > 0)
                 {
@@ -371,6 +377,7 @@ namespace LoopSorting
             for (int i = 0; i < _game.Containers.Count; i++)
             {
                 if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                 var cont = _game.Containers[i];
                 foreach (var b in cont.Blocks)
                 {
@@ -389,6 +396,7 @@ namespace LoopSorting
                 for (int i = 0; i < _game.Containers.Count; i++)
                 {
                     if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                    if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                     var cont = _game.Containers[i];
                     if (cont.IsUniformAndFull()) continue;
                     if (kv.Value >= cont.Capacity)
@@ -412,6 +420,7 @@ namespace LoopSorting
             for (int i = 0; i < _game.Containers.Count; i++)
             {
                 if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                 var c = _game.Containers[i];
                 if (c.IsUniformAndFull()) continue;
                 // only consider containers we can actually fill
@@ -432,6 +441,7 @@ namespace LoopSorting
             for (int i = 0; i < _game.Containers.Count; i++)
             {
                 if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                 var rem = _game.Containers[i].RemoveBlocksWhere(b => b.Color == targetColor);
                 sourceBlocks.AddRange(rem);
             }
@@ -466,6 +476,7 @@ namespace LoopSorting
                 for (int i = 0; i < _game.Containers.Count && leftovers.Count > 0; i++)
                 {
                     if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                    if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                     if (i == targetIdx) continue;
                     var cont = _game.Containers[i];
                     int room = cont.Capacity - cont.Count;
@@ -482,6 +493,7 @@ namespace LoopSorting
             SyncContainersVisuals();
             SyncBeltVisuals();
             UpdateLocks();
+            UpdateCompletionStates();
             CheckEndConditions();
         }
 
@@ -604,6 +616,7 @@ namespace LoopSorting
             SyncContainersVisuals();
             SyncBeltVisuals();
             UpdateLocks();
+            UpdateCompletionStates();
             CheckEndConditions();
         }
 
@@ -623,13 +636,14 @@ namespace LoopSorting
             {
                 _tickTimer = 0f;
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
-                _game.TickConveyor(blocked);
-                SyncBeltVisuals();
-                SyncContainersVisuals();
-                UpdateLocks();
-                UpdateBeltCounter();
-                CheckEndConditions();
-            }
+            _game.TickConveyor(blocked);
+            SyncBeltVisuals();
+            SyncContainersVisuals();
+            UpdateLocks();
+            UpdateCompletionStates();
+            UpdateBeltCounter();
+            CheckEndConditions();
+        }
         }
 
         public void HandleContainerClick(int containerIndex)
@@ -645,6 +659,7 @@ namespace LoopSorting
             }
 
             var container = _game.Containers[containerIndex];
+            if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex]) return;
             if (containerIndex < _boxLocked.Count && _boxLocked[containerIndex])
             {
                 return;
@@ -652,6 +667,17 @@ namespace LoopSorting
             if (!container.TryPeek(out var first))
             {
                 return;
+            }
+
+            // show outline for the pending run
+            int pending = 0;
+            for (int i = 0; i < container.Count; i++)
+            {
+                if (container.Blocks[i].Color == first.Color) pending++; else break;
+            }
+            if (containerIndex < _boxViews.Count)
+            {
+                _boxViews[containerIndex].ShowFrontOutline(pending, true);
             }
 
             StartCoroutine(ReleaseRoutine(containerIndex, first.Color));
@@ -681,6 +707,7 @@ namespace LoopSorting
                 Debug.LogError("No valid conveyor path (needs at least 2 points).");
                 return;
             }
+            _beltLoop = path.loop;
 
             float spacing = layout.beltSlotSpacing > 0f ? layout.beltSlotSpacing : beltSlotSpacing;
             _beltSlots = LayoutUtils.BuildSlotsFromPath(
@@ -720,6 +747,7 @@ namespace LoopSorting
         {
             _boxSpecs.Clear();
             _boxLocked.Clear();
+            _boxCompleted.Clear();
             var containers = new List<Container>();
             var containerToBelt = new Dictionary<int, int>();
 
@@ -746,9 +774,11 @@ namespace LoopSorting
                 int rows = Mathf.Max(1, spec.rows);
                 boxView.Init(i, this, spec.size, columns, rows, blockVisualSize, spec.opening);
                 boxView.SetLocked(spec.locked, spec.unlockColor);
+                boxView.SetCompleted(false);
                 _boxViews.Add(boxView);
                 _boxSpecs.Add(spec);
                 _boxLocked.Add(spec.locked);
+                _boxCompleted.Add(false);
 
                 int capacity = Mathf.Max(1, columns * rows);
                 var boxBlocks = BuildBlocksForSpec(spec, capacity);
@@ -766,6 +796,7 @@ namespace LoopSorting
             _game = new LoopSortingGame(_beltSlots.Count, containers, containerToBelt, _beltCapacity);
             UpdateBeltCounter();
             UpdateLocks();
+            UpdateCompletionStates();
         }
 
         private void SyncContainersVisuals()
@@ -845,6 +876,49 @@ namespace LoopSorting
             beltCounterUI.SetValue(empty, total);
         }
 
+        private void UpdateCompletionStates()
+        {
+            if (_game == null) return;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                bool completed = _game.Containers[i].IsUniformAndFull();
+                if (i >= _boxCompleted.Count) _boxCompleted.Add(completed);
+                else _boxCompleted[i] = completed;
+
+                if (i < _boxViews.Count)
+                {
+                    _boxViews[i].SetCompleted(completed);
+                }
+            }
+            UpdateFrontOutlines();
+        }
+
+        private void UpdateFrontOutlines()
+        {
+            if (_game == null) return;
+            for (int i = 0; i < _game.Containers.Count && i < _boxViews.Count; i++)
+            {
+                var cont = _game.Containers[i];
+                bool locked = i < _boxLocked.Count && _boxLocked[i];
+                bool completed = i < _boxCompleted.Count && _boxCompleted[i];
+                if (locked || completed || cont.Count == 0)
+                {
+                    _boxViews[i].HideFrontOutline();
+                    continue;
+                }
+
+                // compute run length of front-most color
+                int run = 0;
+                var first = cont.Blocks[0].Color;
+                for (int j = 0; j < cont.Count; j++)
+                {
+                    if (cont.Blocks[j].Color == first) run++; else break;
+                }
+
+                _boxViews[i].ShowFrontOutline(run, true);
+            }
+        }
+
         private void UpdateLocks()
         {
             if (_game == null)
@@ -896,7 +970,25 @@ namespace LoopSorting
         {
             if (_gameOver || _game == null) return;
 
-            bool win = _game.IsSolved(true);
+            bool win = true;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var c = _game.Containers[i];
+                if (c.Count == 0)
+                {
+                    continue; // empty box allowed
+                }
+
+                if (!c.IsUniformAndFull())
+                {
+                    win = false;
+                    break;
+                }
+            }
+            if (win && _game.Conveyor.BlockCount > 0)
+            {
+                win = false;
+            }
             if (win)
             {
                 ShowResult(true);
@@ -1083,6 +1175,10 @@ namespace LoopSorting
 
             _isReleasing = false;
             _activeReleasePort = null;
+            if (containerIndex < _boxViews.Count)
+            {
+                _boxViews[containerIndex].HideFrontOutline();
+            }
             UpdateLocks();
             CheckEndConditions();
         }
@@ -1426,11 +1522,23 @@ namespace LoopSorting
                 // 不对最后一个做插值，避免入口出口之间的飞点
                 if (i == count - 1)
                 {
-                    marker.transform.position = from;
-                    SetSlotCurrent(i, from);
+                    if (!_beltLoop)
+                    {
+                        marker.SetActive(false);
+                        SetSlotCurrent(i, from);
+                    }
+                    else
+                    {
+                        marker.SetActive(true);
+                        var to = _slotBasePositions[0];
+                        var pos = Vector3.Lerp(from, to, progress);
+                        marker.transform.position = pos;
+                        SetSlotCurrent(i, pos);
+                    }
                 }
                 else
                 {
+                    marker.SetActive(true);
                     var to = _slotBasePositions[i + 1];
                     var pos = Vector3.Lerp(from, to, progress);
                     marker.transform.position = pos;
@@ -1438,7 +1546,7 @@ namespace LoopSorting
                 }
             }
             // last slot current position fallback
-            if (count > 0 && _slotCurrentPositions.Count >= count)
+            if (count > 0 && _slotCurrentPositions.Count >= count && !_beltLoop)
             {
                 _slotCurrentPositions[count - 1] = _slotBasePositions[count - 1];
             }

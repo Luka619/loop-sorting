@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d60c2c974380a248bcf28ae03002a8b, type: 3}
   m_Name: LevelRuntimeConfig
   m_EditorClassIdentifier: 
-  activeLevel: {fileID: 0}
+  activeLevel: {fileID: 11400000, guid: 99564cb2d118b5049abca25198611bc2, type: 2}
   activeFlow: {fileID: 11400000, guid: 322a9dff8bd937a45acfcd77f8fdc243, type: 2}
   flowStartIndex: 0

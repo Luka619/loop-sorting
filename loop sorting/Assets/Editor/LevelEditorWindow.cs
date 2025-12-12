@@ -145,6 +145,13 @@ public class LevelEditorWindow : EditorWindow
         {
             SetActiveRuntimeLevel(_level);
         }
+        using (new EditorGUI.DisabledScope(_level == null))
+        {
+            if (GUILayout.Button("运行时跳到当前关", GUILayout.Width(140)))
+            {
+                JumpToCurrentLevelAtRuntime();
+            }
+        }
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
@@ -329,6 +336,7 @@ public class LevelEditorWindow : EditorWindow
             var conv = _level.conveyors[_selectedConveyor];
             EditorGUI.BeginChangeCheck();
             conv.width = EditorGUILayout.FloatField("Width", conv.width);
+            conv.loop = EditorGUILayout.Toggle("Loop", conv.loop);
             EditorGUILayout.LabelField("Points", conv.points != null ? conv.points.Count.ToString() : "0");
             if (conv.points != null && conv.points.Count > 0)
             {
@@ -541,6 +549,7 @@ public class LevelEditorWindow : EditorWindow
         if (_level.boxes == null) return;
         foreach (var box in _level.boxes)
         {
+            bool isLocked = box.locked;
             Handles.color = Color.white;
             if (_onlyShowSelectedBox && (_selectedBox < 0 || _level.boxes[_selectedBox] != box))
             {
@@ -568,6 +577,37 @@ public class LevelEditorWindow : EditorWindow
             var outline = (_selectedBox >= 0 && _level.boxes[_selectedBox] == box) ? Color.green : Color.white;
             Handles.DrawSolidRectangleWithOutline(poly, face, outline);
             Handles.Label(ToScreen(rect, bounds, box.position), $"{box.name} ({box.opening})");
+
+            if (isLocked)
+            {
+                var center = box.position;
+                float pad = Mathf.Max(box.size.x, box.size.y) * 0.1f;
+                var cmin = box.position - box.size * 0.5f - Vector2.one * pad;
+                var cmax = box.position + box.size * 0.5f + Vector2.one * pad;
+                var cres = new[]
+                {
+                    new Vector2(cmin.x, cmin.y),
+                    new Vector2(cmax.x, cmin.y),
+                    new Vector2(cmax.x, cmax.y),
+                    new Vector2(cmin.x, cmax.y)
+                };
+                Vector3[] scr = ToScreen(rect, bounds, (IList<Vector2>)cres).ToArray();
+                Color unlockCol = ToColor(box.unlockColor);
+                Handles.DrawSolidRectangleWithOutline(scr, Color.clear, unlockCol);
+                // draw a second inset outline to give thickness
+                float inset = pad * 0.35f;
+                var imin = cmin + Vector2.one * inset;
+                var imax = cmax - Vector2.one * inset;
+                var ires = new[]
+                {
+                    new Vector2(imin.x, imin.y),
+                    new Vector2(imax.x, imin.y),
+                    new Vector2(imax.x, imax.y),
+                    new Vector2(imin.x, imax.y)
+                };
+                Vector3[] iscr = ToScreen(rect, bounds, (IList<Vector2>)ires).ToArray();
+                Handles.DrawSolidRectangleWithOutline(iscr, Color.clear, unlockCol);
+            }
 
             // Color fill overlay based on actual cell order/counts
             DrawColorCells(rect, bounds, box);
@@ -1523,7 +1563,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void CreateNewLevelAsset()
     {
-        const string levelsFolder = "Assets/Levels";
+        const string levelsFolder = "Assets/Flows";
         if (!Directory.Exists(levelsFolder))
         {
             Directory.CreateDirectory(levelsFolder);
@@ -1645,6 +1685,26 @@ public class LevelEditorWindow : EditorWindow
         EditorUtility.SetDirty(_level);
         RefreshLevelList();
         Repaint();
+    }
+
+    private void JumpToCurrentLevelAtRuntime()
+    {
+        if (_level == null) return;
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("运行时跳关需要在 Play 模式下使用。");
+            return;
+        }
+
+        var ctrl = Object.FindObjectOfType<GameRuntimeController>();
+        if (ctrl == null)
+        {
+            Debug.LogWarning("未找到 GameRuntimeController，确保场景中有运行控制器。");
+            return;
+        }
+
+        ctrl.Build(_level);
+        Debug.Log($"已在运行时跳到当前关卡: {_level.name}");
     }
 
     private void OnSceneGUI(SceneView view)

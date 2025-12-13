@@ -871,10 +871,11 @@ public class LevelEditorWindow : EditorWindow
             {
                 var local = e.mousePosition;
                 var world = ToWorld(rect, bounds, local);
-                world = SnapIfNeeded(world);
                 Undo.RecordObject(_level, "Move Box");
                 var box = _level.boxes[_draggingBox];
-                box.position = world + _boxDragOffset;
+                // Snap the final position (absolute grid from origin), not the mouse delta.
+                // This avoids "offset snapping" when the initial position isn't on-grid.
+                box.position = SnapIfNeeded(world + _boxDragOffset);
                 _level.boxes[_draggingBox] = box;
                 EditorUtility.SetDirty(_level);
                 Repaint();

@@ -21,16 +21,16 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -5, y: -5}
+    - {x: -2.5, y: -5}
     - {x: 5, y: -5}
     - {x: 5, y: 5}
-    - {x: -5, y: 5}
-    - {x: -5, y: -5}
+    - {x: -3, y: 5}
+    - {x: -3, y: -5}
     loop: 1
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -2.3931625, y: -3.008547}
+    position: {x: -0.4487179, y: -3.556979}
     size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
@@ -52,7 +52,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 2.2649572, y: -2.9444444}
+    position: {x: 2.7179484, y: -3.2521353}
     size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
@@ -74,7 +74,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: -2.1367521, y: 2.965812}
+    position: {x: 0.1880343, y: 3.5968661}
     size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
@@ -96,7 +96,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 5
-    position: {x: -2.8589745, y: -0.58974355}
+    position: {x: -1.0598292, y: -0.82763356}
     size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
@@ -118,7 +118,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: -2.6452992, y: 0.8247863}
+    position: {x: -0.9829061, y: 1.1438749}
     size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
@@ -131,7 +131,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 7
-    position: {x: 2.9871795, y: -0.61111104}
+    position: {x: 3.6111112, y: 0.2037043}
     size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
@@ -144,7 +144,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 7
-    position: {x: 2.5213675, y: 3.0555558}
+    position: {x: 2.4871793, y: 3.3874648}
     size: {x: 1.5, y: 1.8000001}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 5

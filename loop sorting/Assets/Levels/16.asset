@@ -33,10 +33,10 @@ MonoBehaviour:
   boxes:
   - name: Box 1
     position: {x: -1.2820511, y: -1.9316231}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -55,10 +55,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 2
     position: {x: 0.91025627, y: -1.9316232}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -77,10 +77,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 3
     position: {x: -3.7435894, y: -0.61111045}
-    size: {x: 3, y: 0.90000004}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 0
     autoAlignSlot: 1
     colorCounts:
@@ -99,10 +99,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 4
     position: {x: -3.6923075, y: 1.8247863}
-    size: {x: 3, y: 0.90000004}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 0
     autoAlignSlot: 1
     colorCounts:
@@ -121,10 +121,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 5
     position: {x: 3.8461533, y: -1.752136}
-    size: {x: 3, y: 0.90000004}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts:
@@ -143,10 +143,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 6
     position: {x: 0.6794868, y: 1.7239314}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 2
     autoAlignSlot: 1
     colorCounts: []
@@ -156,10 +156,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 7
     position: {x: -1.2435896, y: 1.6598288}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 2
     autoAlignSlot: 1
     colorCounts: []

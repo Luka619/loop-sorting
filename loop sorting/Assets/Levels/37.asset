@@ -1,0 +1,191 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
+  m_Name: 37
+  m_EditorClassIdentifier: 
+  beltCapacity: 41
+  beltSlotSpacing: 0
+  smoothCorners: 1
+  cornerSmoothTension: 1
+  cornerSubdivisions: 10
+  blockSize: 0.3
+  conveyors:
+  - name: Conveyor
+    points:
+    - {x: -6, y: 4}
+    - {x: 6, y: 4}
+    - {x: 6, y: 1}
+    - {x: -6, y: 1}
+    - {x: -6, y: -2}
+    - {x: 6, y: -2}
+    - {x: 6, y: -5}
+    loop: 0
+    width: 20
+  boxes:
+  - name: Box 1
+    position: {x: -0.6923073, y: 2.3461537}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 0
+      count: 12
+      hidden: 0
+    - color: 1
+      count: 9
+      hidden: 1
+    - color: 2
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 1
+    unlockColor: 5
+  - name: Box 2
+    position: {x: 3, y: 2.5}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 1
+      count: 12
+      hidden: 0
+    - color: 2
+      count: 9
+      hidden: 1
+    - color: 3
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 3
+    position: {x: -3.820513, y: 2.2628205}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 2
+      count: 12
+      hidden: 0
+    - color: 3
+      count: 9
+      hidden: 1
+    - color: 4
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 1
+    unlockColor: 5
+  - name: Box 4
+    position: {x: 1.4358976, y: -0.60897505}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 3
+      count: 12
+      hidden: 0
+    - color: 4
+      count: 9
+      hidden: 1
+    - color: 5
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 5
+    position: {x: -3.051282, y: -3.4935899}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 4
+      count: 12
+      hidden: 0
+    - color: 5
+      count: 9
+      hidden: 1
+    - color: 0
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 6
+    position: {x: 1.8461539, y: -3.8269231}
+    size: {x: 0.90000004, y: 3}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 10
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 5
+      count: 12
+      hidden: 0
+    - color: 0
+      count: 9
+      hidden: 1
+    - color: 1
+      count: 9
+      hidden: 1
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 7
+    position: {x: 4.602564, y: -3.4743588}
+    size: {x: 3, y: 0.90000004}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 10
+    rows: 3
+    opening: 1
+    autoAlignSlot: 1
+    colorCounts: []
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 8
+    position: {x: -3.833333, y: -0.5}
+    size: {x: 3, y: 0.90000004}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 10
+    rows: 3
+    opening: 0
+    autoAlignSlot: 1
+    colorCounts: []
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0

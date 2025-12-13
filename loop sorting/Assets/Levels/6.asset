@@ -26,12 +26,12 @@ MonoBehaviour:
     - {x: 1, y: 1.5}
     - {x: -3, y: 1.5}
     - {x: -3, y: -3.5}
-    - {x: 1, y: -3.5}
+    - {x: 2, y: -3.5}
     loop: 0
     width: 20
   boxes:
   - name: Box 1
-    position: {x: 0.67282635, y: -0.89273405}
+    position: {x: 0.69312555, y: -1.0754265}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -50,7 +50,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: -1.4111395, y: -0.9585037}
+    position: {x: -1.4517378, y: -1.0599995}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -69,12 +69,12 @@ MonoBehaviour:
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: 3.3215346, y: 3.180855}
+    position: {x: -1.1800447, y: 2.9525788}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
     rows: 3
-    opening: 0
+    opening: 1
     autoAlignSlot: 1
     colorCounts:
     - color: 3

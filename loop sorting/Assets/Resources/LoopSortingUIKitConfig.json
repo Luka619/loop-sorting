@@ -1,0 +1,102 @@
+{
+  "resourcesRoot": "loop_sorting_ui_components_v03_bright_candy",
+  "layout": {
+    "referenceWidth": 1080,
+    "referenceHeight": 1920,
+    "reservedTop": 0.0,
+    "reservedBottom": 0.0,
+    "modules": {
+      "counter": { "x": 24, "y": 24, "w": 320, "h": 110 },
+      "speed": { "x": 692, "y": 24, "w": 170, "h": 170 },
+      "settings": { "x": 886, "y": 24, "w": 170, "h": 170 }
+    },
+    "boosters": {
+      "anchorX": 0.5,
+      "anchorY": 0.06,
+      "offsetX": 150,
+      "offsetY": 0,
+      "width": 250,
+      "height": 250
+    }
+  },
+  "nineSliceRules": [
+    { "pattern": "mint_square_*", "border": [170, 170, 170, 170] },
+    { "pattern": "purple_square_*", "border": [170, 170, 170, 170] },
+    { "pattern": "orange_square_*", "border": [170, 170, 170, 170] },
+
+    { "pattern": "mint_long_*", "border": [140, 140, 90, 90] },
+    { "pattern": "purple_long_*", "border": [140, 140, 90, 90] },
+    { "pattern": "orange_long_*", "border": [140, 140, 90, 90] },
+
+    { "pattern": "pill_bg*", "border": [90, 90, 60, 60] },
+    { "pattern": "panel_modal.png", "border": [120, 120, 120, 120] },
+    { "pattern": "panel_result.png", "border": [120, 120, 120, 120] },
+
+    { "pattern": "tag_fast_*", "border": [60, 60, 40, 40] },
+    { "pattern": "tag_small_*", "border": [50, 50, 30, 30] }
+  ],
+  "sprites": [
+    { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.counter.bg", "path": "UI_Sprites/pill_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.counter.icon", "path": "UI_Sprites/icon_loop.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+
+    { "key": "ui.button.mint_square.normal", "path": "UI_Sprites/mint_square_normal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.mint_square.pressed", "path": "UI_Sprites/mint_square_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.mint_square.disabled", "path": "UI_Sprites/mint_square_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.button.purple_square.normal", "path": "UI_Sprites/purple_square_normal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.purple_square.pressed", "path": "UI_Sprites/purple_square_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.purple_square.disabled", "path": "UI_Sprites/purple_square_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.button.mint_long.normal", "path": "UI_Sprites/mint_long_normal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.mint_long.pressed", "path": "UI_Sprites/mint_long_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.mint_long.disabled", "path": "UI_Sprites/mint_long_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.button.orange_long.normal", "path": "UI_Sprites/orange_long_normal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.orange_long.pressed", "path": "UI_Sprites/orange_long_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.orange_long.disabled", "path": "UI_Sprites/orange_long_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.icon.gear", "path": "UI_Sprites/icon_gear.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.close", "path": "UI_Sprites/icon_close.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.fill", "path": "UI_Sprites/icon_fill.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.shuffle", "path": "UI_Sprites/icon_shuffle.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.next", "path": "UI_Sprites/icon_next.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.retry", "path": "UI_Sprites/icon_retry.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.lock", "path": "UI_Sprites/icon_lock.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+
+    { "key": "ui.badge.bg", "path": "UI_Sprites/badge_red_bg.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.0", "path": "UI_Sprites/digit_0.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.1", "path": "UI_Sprites/digit_1.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.2", "path": "UI_Sprites/digit_2.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.3", "path": "UI_Sprites/digit_3.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.4", "path": "UI_Sprites/digit_4.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.5", "path": "UI_Sprites/digit_5.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.6", "path": "UI_Sprites/digit_6.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.7", "path": "UI_Sprites/digit_7.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.8", "path": "UI_Sprites/digit_8.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.digit.9", "path": "UI_Sprites/digit_9.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+
+    { "key": "ui.tag_fast.info", "path": "UI_Sprites/tag_fast_info_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.tag_fast.danger", "path": "UI_Sprites/tag_fast_danger_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.tag_small.info", "path": "UI_Sprites/tag_small_info_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.overlay_dim", "path": "UI_Sprites/overlay_dim.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.panel_modal", "path": "UI_Sprites/panel_modal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.panel_result", "path": "UI_Sprites/panel_result.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
+    { "key": "ui.toggle.track_on", "path": "UI_Sprites/toggle_track_on.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.toggle.track_off", "path": "UI_Sprites/toggle_track_off.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.toggle.knob", "path": "UI_Sprites/toggle_knob.png", "pixelsPerUnit": 100, "applyNineSlice": false }
+  ],
+  "textures": [
+    { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png" },
+
+    { "key": "world.conveyor_belt", "path": "conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128_alphaEdges.png" },
+    { "key": "world.conveyor_slot", "path": "World_Sprites/conveyor_slot.png" },
+    { "key": "world.lock_overlay", "path": "World_Sprites/lock_overlay.png" },
+    { "key": "world.lock_marker_plate", "path": "World_Sprites/lock_marker_plate.png" },
+    { "key": "world.lock_marker_color_disc", "path": "World_Sprites/lock_marker_color_disc.png" },
+    { "key": "world.lock_marker_lock_icon", "path": "World_Sprites/lock_marker_lock_icon.png" },
+    { "key": "world.completed_overlay", "path": "World_Sprites/completed_overlay.png" }
+  ]
+}

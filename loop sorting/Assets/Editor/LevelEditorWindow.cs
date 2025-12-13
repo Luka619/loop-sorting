@@ -26,6 +26,8 @@ public class LevelEditorWindow : EditorWindow
     private bool _onlyShowSelectedConveyor = false;
     private float _gridSize = 0.5f;
     private float _previewSize = 520f;
+    private bool _previewPortrait916 = true;
+    private bool _showRuntimeUIOverlay = true;
     private int _selectedBox = -1;
     private int _selectedConveyor = -1;
     private int _draggingConveyor = -1;
@@ -47,6 +49,11 @@ public class LevelEditorWindow : EditorWindow
     private int _lastSelBox = -2;
     private int _lastSelConv = -2;
     private int _lastSelPoint = -2;
+
+    // Preview-only camera framing (to match GameRuntimeController.FitCameraToLevel).
+    private static bool _previewCameraActive;
+    private static float _previewScaleMultiplier = 1f;
+    private static Vector2 _previewCameraCenterWorld;
 
     [MenuItem("Tools/Loop Sorting/Level Editor")]
     public static void Open()
@@ -450,6 +457,8 @@ public class LevelEditorWindow : EditorWindow
         EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
         DrawColorLegend();
         var rect = GUILayoutUtility.GetRect(_previewSize, _previewSize, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+        _previewPortrait916 = EditorGUILayout.ToggleLeft("9:16 Frame", _previewPortrait916);
+        _showRuntimeUIOverlay = EditorGUILayout.ToggleLeft("Show Runtime UI Overlay", _showRuntimeUIOverlay);
         if (Event.current.type == EventType.Repaint)
         {
             EditorGUI.DrawRect(rect, new Color(0.12f, 0.12f, 0.12f, 0.4f));
@@ -464,16 +473,151 @@ public class LevelEditorWindow : EditorWindow
 
         var bounds = ComputeBounds(_level);
         var localRect = new Rect(0, 0, rect.width, rect.height);
+        var frameRect = _previewPortrait916 ? FitAspect(localRect, 9f / 16f) : localRect;
+
+        // Match runtime camera framing (GameRuntimeController.FitCameraToLevel):
+        // scale is multiplied by "available", and camera is shifted in world space so the level center
+        // appears centered within the available region.
+        var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
+        float top = Mathf.Clamp01(uiLayout.reservedTop);
+        float bottom = Mathf.Clamp01(uiLayout.reservedBottom);
+        float available = Mathf.Clamp01(1f - top - bottom);
+        if (available < 0.35f) available = 0.35f;
+
+        _previewCameraActive = true;
+        _previewScaleMultiplier = available;
+        _previewCameraCenterWorld = bounds.center;
+        {
+            // Compute ortho size exactly like runtime does (with auto padding already baked into bounds).
+            float aspect = Mathf.Max(0.0001f, frameRect.width / Mathf.Max(0.0001f, frameRect.height));
+            float w = Mathf.Max(0.0001f, bounds.width);
+            float h = Mathf.Max(0.0001f, bounds.height);
+            float baseOrtho = Mathf.Max(h * 0.5f, w * 0.5f / aspect);
+            float orthoSize = baseOrtho / available;
+
+            float desiredCenterY01 = bottom + available * 0.5f;
+            float delta01 = desiredCenterY01 - 0.5f;
+            float worldOffsetY = delta01 * (2f * orthoSize);
+            _previewCameraCenterWorld = bounds.center + new Vector2(0f, worldOffsetY);
+        }
+
         GUI.BeginClip(rect);
         Handles.BeginGUI();
         var slotPositions = BuildSlotPositionsForPreview(_level);
-        DrawPreviewConveyors(localRect, bounds, slotPositions);
-        DrawPreviewBoxes(localRect, bounds, slotPositions);
-        HandlePreviewClick(localRect, bounds, slotPositions);
-        HandlePreviewDrag(localRect, bounds);
+
+        // Frame background/border.
+        if (Event.current.type == EventType.Repaint)
+        {
+            EditorGUI.DrawRect(frameRect, new Color(0f, 0f, 0f, 0.18f));
+            DrawRectOutline(frameRect, new Color(1f, 1f, 1f, 0.35f), 2f);
+        }
+
+        if (_showRuntimeUIOverlay)
+        {
+            DrawRuntimeUIOverlay(frameRect);
+        }
+
+        DrawPreviewConveyors(frameRect, bounds, slotPositions);
+        DrawPreviewBoxes(frameRect, bounds, slotPositions);
+        HandlePreviewClick(frameRect, bounds, slotPositions);
+        HandlePreviewDrag(frameRect, bounds);
         Handles.EndGUI();
         GUI.EndClip();
+
+        _previewCameraActive = false;
+        _previewScaleMultiplier = 1f;
+        _previewCameraCenterWorld = Vector2.zero;
         EditorGUILayout.EndVertical();
+    }
+
+    private static Rect FitAspect(Rect outer, float aspectWOverH)
+    {
+        aspectWOverH = Mathf.Max(0.0001f, aspectWOverH);
+        float targetW = outer.height * aspectWOverH;
+        float targetH = outer.height;
+        if (targetW > outer.width)
+        {
+            targetW = outer.width;
+            targetH = targetW / aspectWOverH;
+        }
+
+        float x = outer.x + (outer.width - targetW) * 0.5f;
+        float y = outer.y + (outer.height - targetH) * 0.5f;
+        return new Rect(x, y, targetW, targetH);
+    }
+
+    private static void DrawRectOutline(Rect r, Color c, float thickness)
+    {
+        EditorGUI.DrawRect(new Rect(r.x, r.y, r.width, thickness), c);
+        EditorGUI.DrawRect(new Rect(r.x, r.yMax - thickness, r.width, thickness), c);
+        EditorGUI.DrawRect(new Rect(r.x, r.y, thickness, r.height), c);
+        EditorGUI.DrawRect(new Rect(r.xMax - thickness, r.y, thickness, r.height), c);
+    }
+
+    private void DrawRuntimeUIOverlay(Rect frame)
+    {
+        var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
+        float reservedTop = Mathf.Clamp01(uiLayout.reservedTop);
+        float reservedBottom = Mathf.Clamp01(uiLayout.reservedBottom);
+
+        float topH = frame.height * reservedTop;
+        float bottomH = frame.height * reservedBottom;
+        var topRect = new Rect(frame.x, frame.y, frame.width, topH);
+        var bottomRect = new Rect(frame.x, frame.yMax - bottomH, frame.width, bottomH);
+
+        EditorGUI.DrawRect(topRect, new Color(0f, 0f, 0f, 0.14f));
+        EditorGUI.DrawRect(bottomRect, new Color(0f, 0f, 0f, 0.16f));
+        DrawRectOutline(topRect, new Color(1f, 1f, 1f, 0.10f), 1f);
+        DrawRectOutline(bottomRect, new Color(1f, 1f, 1f, 0.10f), 1f);
+
+        // Draw major HUD module footprints in reference resolution, scaled into the frame.
+        float refW = Mathf.Max(1f, uiLayout.referenceWidth);
+        float refH = Mathf.Max(1f, uiLayout.referenceHeight);
+        float sx = frame.width / refW;
+        float sy = frame.height / refH;
+
+        // Helper: create a rect in top-left pixel coords, then scale+offset into frame.
+        Rect Map(Rect rTopLeft)
+        {
+            return new Rect(frame.x + rTopLeft.x * sx, frame.y + rTopLeft.y * sy, rTopLeft.width * sx, rTopLeft.height * sy);
+        }
+
+        var counterBg = Map(uiLayout.counter);
+        var speedBtn = Map(uiLayout.speed);
+        var settingsBtn = Map(uiLayout.settings);
+        var boosterFill = Map(AnchorRect(
+            refW, refH,
+            uiLayout.boosterAnchor.x, uiLayout.boosterAnchor.y,
+            0.5f, 0.5f,
+            -uiLayout.boosterOffset.x, uiLayout.boosterOffset.y,
+            uiLayout.boosterSize.x, uiLayout.boosterSize.y));
+        var boosterShuffle = Map(AnchorRect(
+            refW, refH,
+            uiLayout.boosterAnchor.x, uiLayout.boosterAnchor.y,
+            0.5f, 0.5f,
+            uiLayout.boosterOffset.x, uiLayout.boosterOffset.y,
+            uiLayout.boosterSize.x, uiLayout.boosterSize.y));
+
+        DrawRectOutline(counterBg, new Color(0.4f, 0.9f, 0.7f, 0.35f), 2f);
+        DrawRectOutline(speedBtn, new Color(0.8f, 0.8f, 1f, 0.35f), 2f);
+        DrawRectOutline(settingsBtn, new Color(0.8f, 0.8f, 1f, 0.35f), 2f);
+        DrawRectOutline(boosterFill, new Color(0.4f, 0.9f, 0.7f, 0.25f), 2f);
+        DrawRectOutline(boosterShuffle, new Color(0.7f, 0.5f, 1f, 0.25f), 2f);
+
+        // Playable region outline.
+        var playable = new Rect(frame.x, frame.y + topH, frame.width, frame.height - topH - bottomH);
+        DrawRectOutline(playable, new Color(0.2f, 1f, 0.2f, 0.18f), 2f);
+    }
+
+    private static Rect AnchorRect(float w, float h, float ax, float ay, float px, float py, float ox, float oy, float rw, float rh)
+    {
+        // Returns a rect in TOP-LEFT origin pixels (same space as the preview overlay).
+        float pivotX = ax * w + ox;
+        float pivotY = ay * h + oy; // bottom-left origin Y
+        float blX = pivotX - px * rw;
+        float blY = pivotY - py * rh;
+        float topLeftY = h - (blY + rh);
+        return new Rect(blX, topLeftY, rw, rh);
     }
 
     private void DrawCreateButtons()
@@ -1076,18 +1220,18 @@ public class LevelEditorWindow : EditorWindow
     private static Vector3 ToScreen(Rect viewRect, Rect bounds, Vector2 world)
     {
         var scale = GetScale(viewRect, bounds);
-        var center = bounds.center;
-        var x = viewRect.width * 0.5f + (world.x - center.x) * scale;
-        var y = viewRect.height * 0.5f - (world.y - center.y) * scale;
+        var center = _previewCameraActive ? _previewCameraCenterWorld : bounds.center;
+        var x = viewRect.x + viewRect.width * 0.5f + (world.x - center.x) * scale;
+        var y = viewRect.y + viewRect.height * 0.5f - (world.y - center.y) * scale;
         return new Vector3(x, y, 0f);
     }
 
     private static Vector2 ToWorld(Rect viewRect, Rect bounds, Vector2 screen)
     {
         var scale = GetScale(viewRect, bounds);
-        var center = bounds.center;
-        float x = (screen.x - viewRect.width * 0.5f) / scale + center.x;
-        float y = (viewRect.height * 0.5f - screen.y) / scale + center.y;
+        var center = _previewCameraActive ? _previewCameraCenterWorld : bounds.center;
+        float x = (screen.x - (viewRect.x + viewRect.width * 0.5f)) / scale + center.x;
+        float y = ((viewRect.y + viewRect.height * 0.5f) - screen.y) / scale + center.y;
         return new Vector2(x, y);
     }
 
@@ -1107,7 +1251,8 @@ public class LevelEditorWindow : EditorWindow
         var size = bounds.size;
         size.x = Mathf.Max(size.x, 0.001f);
         size.y = Mathf.Max(size.y, 0.001f);
-        return Mathf.Min(viewRect.width / size.x, viewRect.height / size.y) * 0.9f;
+        float baseScale = Mathf.Min(viewRect.width / size.x, viewRect.height / size.y);
+        return baseScale * (_previewCameraActive ? _previewScaleMultiplier : 1f);
     }
 
     private static int IndexOfLevel(LevelLayout layout, LevelLayout[] options)
@@ -1123,7 +1268,17 @@ public class LevelEditorWindow : EditorWindow
 
     private Rect ComputeBounds(LevelLayout level)
     {
+        // Match runtime camera padding behavior (GameRuntimeController.cameraPadding default is negative -> auto).
         var b = LayoutUtils.ComputeLayoutBounds(level);
+        if (b.size == Vector3.zero)
+        {
+            return new Rect(Vector2.zero, Vector2.one);
+        }
+
+        var size = b.size;
+        float paddingToUse = Mathf.Max(size.x, size.y) * 0.08f + 0.35f;
+        b.Expand(paddingToUse * 2f);
+
         return new Rect(
             new Vector2(b.center.x, b.center.y) - new Vector2(b.size.x, b.size.y) * 0.5f,
             new Vector2(b.size.x, b.size.y)

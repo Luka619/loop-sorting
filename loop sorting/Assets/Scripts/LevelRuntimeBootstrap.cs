@@ -25,11 +25,11 @@ namespace LoopSorting
             if (hasFlow)
             {
                 int start = Mathf.Clamp(config.flowStartIndex, 0, config.activeFlow.levels.Count - 1);
-                controller.Build(config.activeFlow, start);
+                controller.Boot(config.activeFlow, start);
             }
             else
             {
-                controller.Build(config.activeLevel);
+                controller.Boot(config.activeLevel);
             }
         }
     }

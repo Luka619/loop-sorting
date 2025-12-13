@@ -22,6 +22,9 @@ namespace LoopSorting
         private List<int> _tmpIndices = new List<int>();
         private GameObject _lockOverlay;
         private GameObject _lockBadge;
+        private GameObject _lockMarkerPlate;
+        private GameObject _lockMarkerDisc;
+        private GameObject _lockMarkerIcon;
         private bool _locked;
         private bool _completed;
         private GameObject _completedOverlay;
@@ -44,8 +47,10 @@ namespace LoopSorting
         private const int LockOverlayQueue = 3100;
         private const float LockBadgeZ = -0.28f;
         private const int LockBadgeQueue = 3200;
-        private const float OutlineZ = -0.12f;
-        private const float BoxOutlineZ = -0.35f;
+        // Depth offset for the black "front outline". With a tilted orthographic camera this also affects screen-Y,
+        // so keep it small to align visually with the box face.
+        private const float OutlineZ = 0.08f;
+        private const float BoxOutlineZ = -0.12f;
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 
@@ -333,13 +338,9 @@ namespace LoopSorting
                 Mathf.Min(_blockSize.y, cellSize.y * 0.9f)
             );
             _blockVisuals[slotIndex].transform.localScale = fitScale;
-            var renderer = _blockVisuals[slotIndex].GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                bool hidden = _slotHidden[slotIndex] && slotIndex > 0;
-                var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
-                renderer.sharedMaterial.color = matColor;
-            }
+            bool hidden = _slotHidden[slotIndex] && slotIndex > 0;
+            var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
+            BlockVisual.ApplyColor(_blockVisuals[slotIndex], matColor);
         }
 
         private void CacheMouth()
@@ -673,45 +674,153 @@ namespace LoopSorting
                 _lockOverlay.name = "LockOverlay";
                 _lockOverlay.transform.SetParent(transform, false);
                 _lockOverlay.transform.localPosition = new Vector3(0f, 0f, LockOverlayZ); // in front of blocks
-                _lockOverlay.transform.localScale = new Vector3(_boxSize.x * 1.05f, _boxSize.y * 1.05f, 1f);
                 var rend = _lockOverlay.GetComponent<Renderer>();
                 if (rend != null)
                 {
-                    var mat = new Material(Shader.Find("Unlit/Color"))
+                    if (LoopSortingUIKit.IsAvailable())
                     {
-                        color = new Color(0.5f, 0.5f, 0.5f, 0.9f)
-                    };
-                    mat.renderQueue = LockOverlayQueue;
-                    rend.sharedMaterial = mat;
+                        var tex = LoopSortingUIKit.LoadTextureByKey("world.lock_overlay");
+                        if (tex != null)
+                        {
+                            rend.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, LockOverlayQueue);
+                        }
+                    }
+
+                    if (rend.sharedMaterial == null)
+                    {
+                        var mat = new Material(Shader.Find("Unlit/Color"))
+                        {
+                            color = new Color(0.5f, 0.5f, 0.5f, 0.9f)
+                        };
+                        mat.renderQueue = LockOverlayQueue;
+                        rend.sharedMaterial = mat;
+                    }
                 }
                 var col = _lockOverlay.GetComponent<Collider>();
                 if (col != null) GameObject.Destroy(col);
 
-                _lockBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockBadge.name = "LockBadge";
-                _lockBadge.transform.SetParent(_lockOverlay.transform, false);
-                _lockBadge.transform.localPosition = new Vector3(0f, 0f, LockBadgeZ); // above overlay
-                float badgeSize = Mathf.Min(_boxSize.x, _boxSize.y) * 0.3f;
-                _lockBadge.transform.localScale = new Vector3(badgeSize, badgeSize, 1f);
-                var badgeRend = _lockBadge.GetComponent<Renderer>();
-                if (badgeRend != null)
+                // Marker root sits above overlay (do not parent under overlay to avoid double Z offsets).
+                _lockBadge = new GameObject("LockMarker");
+                _lockBadge.transform.SetParent(transform, false);
+                _lockBadge.transform.localPosition = new Vector3(0f, 0f, LockBadgeZ);
+                _lockBadge.transform.localRotation = Quaternion.identity;
+                _lockBadge.transform.localScale = Vector3.one;
+
+                _lockMarkerPlate = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockMarkerPlate.name = "MarkerPlate";
+                _lockMarkerPlate.transform.SetParent(_lockBadge.transform, false);
+                _lockMarkerPlate.transform.localPosition = Vector3.zero;
+                var plateCol = _lockMarkerPlate.GetComponent<Collider>();
+                if (plateCol != null) GameObject.Destroy(plateCol);
+
+                _lockMarkerDisc = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockMarkerDisc.name = "MarkerColorDisc";
+                _lockMarkerDisc.transform.SetParent(_lockBadge.transform, false);
+                _lockMarkerDisc.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+                var discCol = _lockMarkerDisc.GetComponent<Collider>();
+                if (discCol != null) GameObject.Destroy(discCol);
+
+                _lockMarkerIcon = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockMarkerIcon.name = "MarkerLockIcon";
+                _lockMarkerIcon.transform.SetParent(_lockBadge.transform, false);
+                _lockMarkerIcon.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+                var iconCol = _lockMarkerIcon.GetComponent<Collider>();
+                if (iconCol != null) GameObject.Destroy(iconCol);
+
+                if (LoopSortingUIKit.IsAvailable())
                 {
-                    var bmat = new Material(Shader.Find("Unlit/Color"));
-                    bmat.renderQueue = LockBadgeQueue;
-                    badgeRend.sharedMaterial = bmat;
+                    var plateTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_plate");
+                    var discTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_color_disc");
+                    var iconTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_lock_icon");
+
+                    if (plateTex != null)
+                    {
+                        var r = _lockMarkerPlate.GetComponent<Renderer>();
+                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(plateTex, Color.white, LockBadgeQueue);
+                    }
+                    if (discTex != null)
+                    {
+                        var r = _lockMarkerDisc.GetComponent<Renderer>();
+                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(discTex, Color.white, LockBadgeQueue + 1);
+                    }
+                    if (iconTex != null)
+                    {
+                        var r = _lockMarkerIcon.GetComponent<Renderer>();
+                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(iconTex, Color.white, LockBadgeQueue + 2);
+                    }
                 }
-                var badgeCol = _lockBadge.GetComponent<Collider>();
-                if (badgeCol != null) GameObject.Destroy(badgeCol);
+
+                // Fallback materials if textures aren't available (avoid pink default).
+                EnsureUnlitColorMaterial(_lockMarkerPlate, Color.white, LockBadgeQueue);
+                EnsureUnlitColorMaterial(_lockMarkerDisc, Color.white, LockBadgeQueue + 1);
+                EnsureUnlitColorMaterial(_lockMarkerIcon, Color.white, LockBadgeQueue + 2);
             }
-            if (_lockBadge != null)
+
+            // Keep scales in sync in case the box is rebuilt with a different size.
+            if (_lockOverlay != null)
             {
-                var badgeR = _lockBadge.GetComponent<Renderer>();
-                if (badgeR != null)
+                _lockOverlay.transform.localScale = new Vector3(_boxSize.x * 1.05f, _boxSize.y * 1.05f, 1f);
+            }
+
+            float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
+            float plateWidth = badgeBase * 0.42f;
+            float plateHeight = plateWidth;
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                var plateTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_plate");
+                if (plateTex != null && plateTex.width > 0)
                 {
-                    badgeR.sharedMaterial.color = BlockVisual.ToUnityColor(unlockColor);
+                    plateHeight = plateWidth * ((float)plateTex.height / plateTex.width);
                 }
             }
-            _lockOverlay.SetActive(val);
+
+            if (_lockMarkerPlate != null)
+            {
+                _lockMarkerPlate.transform.localScale = new Vector3(plateWidth, plateHeight, 1f);
+            }
+            if (_lockMarkerDisc != null)
+            {
+                float disc = plateWidth * 0.52f;
+                _lockMarkerDisc.transform.localScale = new Vector3(disc, disc, 1f);
+                var discR = _lockMarkerDisc.GetComponent<Renderer>();
+                if (discR != null && discR.sharedMaterial != null)
+                {
+                    var c = BlockVisual.ToUnityColor(unlockColor);
+                    c.a = 1f;
+                    discR.sharedMaterial.color = c;
+                }
+            }
+            if (_lockMarkerIcon != null)
+            {
+                float iconW = plateWidth * 0.56f;
+                float iconH = iconW;
+                if (LoopSortingUIKit.IsAvailable())
+                {
+                    var iconTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_lock_icon");
+                    if (iconTex != null && iconTex.width > 0)
+                    {
+                        iconH = iconW * ((float)iconTex.height / iconTex.width);
+                    }
+                }
+                _lockMarkerIcon.transform.localScale = new Vector3(iconW, iconH, 1f);
+            }
+
+            if (_lockOverlay != null) _lockOverlay.SetActive(val);
+            if (_lockBadge != null) _lockBadge.SetActive(val);
+        }
+
+        private static void EnsureUnlitColorMaterial(GameObject quad, Color color, int renderQueue)
+        {
+            if (quad == null) return;
+            var r = quad.GetComponent<Renderer>();
+            if (r == null) return;
+            if (r.sharedMaterial != null) return;
+            var mat = new Material(Shader.Find("Unlit/Color"))
+            {
+                color = color
+            };
+            mat.renderQueue = renderQueue;
+            r.sharedMaterial = mat;
         }
 
         public void SetCompleted(bool val)
@@ -723,19 +832,35 @@ namespace LoopSorting
                 _completedOverlay.name = "CompletedOverlay";
                 _completedOverlay.transform.SetParent(transform, false);
                 _completedOverlay.transform.localPosition = new Vector3(0f, 0f, CompletedOverlayZ); // above blocks, below lock
-                _completedOverlay.transform.localScale = new Vector3(_boxSize.x * 1.02f, _boxSize.y * 1.02f, 1f);
                 var rend = _completedOverlay.GetComponent<Renderer>();
                 if (rend != null)
                 {
-                    var mat = new Material(Shader.Find("Unlit/Color"))
+                    if (LoopSortingUIKit.IsAvailable())
                     {
-                        color = new Color(0.2f, 0.8f, 0.2f, 0.35f)
-                    };
-                    mat.renderQueue = CompletedQueue;
-                    rend.sharedMaterial = mat;
+                        var tex = LoopSortingUIKit.LoadTextureByKey("world.completed_overlay");
+                        if (tex != null)
+                        {
+                            rend.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, CompletedQueue);
+                        }
+                    }
+
+                    if (rend.sharedMaterial == null)
+                    {
+                        var mat = new Material(Shader.Find("Unlit/Color"))
+                        {
+                            color = new Color(0.2f, 0.8f, 0.2f, 0.35f)
+                        };
+                        mat.renderQueue = CompletedQueue;
+                        rend.sharedMaterial = mat;
+                    }
                 }
                 var col = _completedOverlay.GetComponent<Collider>();
                 if (col != null) GameObject.Destroy(col);
+            }
+
+            if (_completedOverlay != null)
+            {
+                _completedOverlay.transform.localScale = new Vector3(_boxSize.x * 1.02f, _boxSize.y * 1.02f, 1f);
             }
             _completedOverlay.SetActive(val);
         }

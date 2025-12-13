@@ -105,16 +105,3 @@ MonoBehaviour:
     beltSlotIndex: 0
     locked: 0
     unlockColor: 0
-  - name: Box 5
-    position: {x: -1.9076916, y: 1.1709402}
-    size: {x: 3, y: 0.90000004}
-    color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
-    opening: 0
-    autoAlignSlot: 1
-    colorCounts: []
-    initialBlocks: 
-    beltSlotIndex: 0
-    locked: 0
-    unlockColor: 0

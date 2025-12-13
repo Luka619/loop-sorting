@@ -27,7 +27,6 @@ MonoBehaviour:
     - {x: -2.5, y: 0.5}
     - {x: -2.5, y: -3.5}
     - {x: 6, y: -3.5}
-    - {x: 6, y: -5}
     loop: 0
     width: 20
   boxes:

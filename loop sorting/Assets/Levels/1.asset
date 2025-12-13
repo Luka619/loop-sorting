@@ -31,7 +31,7 @@ MonoBehaviour:
     width: 20
   boxes:
   - name: Box 2
-    position: {x: 1.2810256, y: 1.954359}
+    position: {x: 1.5, y: 2}
     size: {x: 0.90000004, y: 3}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
@@ -47,7 +47,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 1
-    position: {x: -0.9487181, y: 1.0576923}
+    position: {x: -1, y: 1}
     size: {x: 0.90000004, y: 3}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3

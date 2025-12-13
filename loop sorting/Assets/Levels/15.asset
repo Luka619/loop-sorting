@@ -107,29 +107,3 @@ MonoBehaviour:
     beltSlotIndex: 0
     locked: 0
     unlockColor: 0
-  - name: Box 5
-    position: {x: -3.2179482, y: 3.0059826}
-    size: {x: 0.90000004, y: 3}
-    color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
-    opening: 2
-    autoAlignSlot: 1
-    colorCounts: []
-    initialBlocks: 
-    beltSlotIndex: 0
-    locked: 0
-    unlockColor: 0
-  - name: Box 6
-    position: {x: 2.602564, y: 2.786325}
-    size: {x: 0.90000004, y: 3}
-    color: {r: 1, g: 1, b: 1, a: 1}
-    columns: 3
-    rows: 10
-    opening: 2
-    autoAlignSlot: 1
-    colorCounts: []
-    initialBlocks: 
-    beltSlotIndex: 0
-    locked: 0
-    unlockColor: 0

@@ -121,7 +121,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 5
-    position: {x: -0.09930749, y: -0.8897884}
+    position: {x: -0.05657245, y: -0.084944665}
     size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
@@ -143,12 +143,12 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: 0.26964712, y: 0.8531332}
+    position: {x: 3.573066, y: 0.6722217}
     size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
-    opening: 1
+    opening: 0
     autoAlignSlot: 1
     colorCounts: []
     initialBlocks: 

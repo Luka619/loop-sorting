@@ -114,6 +114,9 @@ namespace LoopSorting
         private Canvas _uiCanvas;
         private Canvas _mainMenuCanvas;
         private Button _mainMenuPlayButton;
+        private RectTransform _hudRootRect;
+        private RectTransform _lockChipLayer;
+        private readonly Dictionary<int, RectTransform> _lockChipByBox = new Dictionary<int, RectTransform>();
         private LevelFlow _pendingFlow;
         private int _pendingFlowIndex;
         private LevelLayout _pendingLevel;
@@ -181,6 +184,10 @@ namespace LoopSorting
 
             _coins = InitialCoins;
             _lives = InitialLives;
+
+            _hudRootRect = null;
+            _lockChipLayer = null;
+            _lockChipByBox.Clear();
         }
 
         [ContextMenu("Debug/Log Box Ports Now")]
@@ -258,10 +265,18 @@ namespace LoopSorting
             FitCameraToLevel(layout);
             EnsureBackground();
             EnsureCounterUI();
+            RefreshLevelHudLabel();
             if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(true);
             EnsureSettingsUI();
             SyncContainersVisuals();
             SyncBeltVisuals();
+        }
+
+        private void RefreshLevelHudLabel()
+        {
+            if (_levelHudText == null) return;
+            int levelNumber = _flow != null ? (_flowIndex + 1) : 1;
+            _levelHudText.text = $"LEVEL {levelNumber}";
         }
 
         public void Build(LevelFlow flow, int startIndex = 0)
@@ -606,6 +621,158 @@ namespace LoopSorting
             {
                 if (_vibrationToggle != null) _vibrationToggle.isOn = vibrationEnabled;
                 if (_soundToggle != null) _soundToggle.isOn = soundEnabled;
+            }
+        }
+
+        private void SyncLockChipsUI()
+        {
+            if (_uiCanvas == null || _hudRootRect == null) return;
+            if (_boxViews == null || _boxViews.Count == 0) return;
+            if (_boxLocked == null || _boxLocked.Count == 0) return;
+
+            if (_lockChipLayer == null)
+            {
+                var layerGO = new GameObject("LockChipLayer");
+                layerGO.transform.SetParent(_hudRootRect, false);
+                _lockChipLayer = layerGO.AddComponent<RectTransform>();
+                _lockChipLayer.anchorMin = Vector2.zero;
+                _lockChipLayer.anchorMax = Vector2.one;
+                _lockChipLayer.offsetMin = Vector2.zero;
+                _lockChipLayer.offsetMax = Vector2.zero;
+            }
+
+            var toRemove = new List<int>();
+            foreach (var kv in _lockChipByBox)
+            {
+                int idx = kv.Key;
+                bool locked = idx >= 0 && idx < _boxLocked.Count && _boxLocked[idx];
+                if (!locked)
+                {
+                    if (kv.Value != null) Destroy(kv.Value.gameObject);
+                    toRemove.Add(idx);
+                }
+            }
+            for (int i = 0; i < toRemove.Count; i++) _lockChipByBox.Remove(toRemove[i]);
+
+            for (int i = 0; i < _boxViews.Count && i < _boxLocked.Count; i++)
+            {
+                if (!_boxLocked[i]) continue;
+                if (_lockChipByBox.ContainsKey(i)) continue;
+
+                var unlockColor = i < _boxSpecs.Count && _boxSpecs[i] != null ? _boxSpecs[i].unlockColor : BlockColor.Red;
+                _lockChipByBox[i] = CreateLockChip(_lockChipLayer, unlockColor);
+            }
+
+            UpdateLockChipPositions();
+        }
+
+        private RectTransform CreateLockChip(RectTransform parent, BlockColor unlockColor)
+        {
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            var go = new GameObject("LockChip");
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(240f, 90f);
+
+            var bg = go.AddComponent<Image>();
+            bg.raycastTarget = false;
+            if (hasKit)
+            {
+                bg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.lock.chip_plate");
+                bg.type = bg.sprite != null && bg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                bg.color = Color.white;
+            }
+            else
+            {
+                bg.color = new Color(0f, 0f, 0f, 0.45f);
+            }
+
+            var discGO = new GameObject("ColorDisc");
+            discGO.transform.SetParent(go.transform, false);
+            var disc = discGO.AddComponent<Image>();
+            disc.raycastTarget = false;
+            if (hasKit)
+            {
+                disc.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.lock.color_disc");
+                var c = BlockVisual.ToUnityColor(unlockColor);
+                disc.color = new Color(c.r, c.g, c.b, 1f);
+            }
+            else
+            {
+                disc.color = BlockVisual.ToUnityColor(unlockColor);
+            }
+            var discRect = discGO.GetComponent<RectTransform>();
+            discRect.anchorMin = new Vector2(0f, 0.5f);
+            discRect.anchorMax = new Vector2(0f, 0.5f);
+            discRect.pivot = new Vector2(0f, 0.5f);
+            discRect.anchoredPosition = new Vector2(18f, 0f);
+            discRect.sizeDelta = new Vector2(64f, 64f);
+
+            var iconGO = new GameObject("LockIcon");
+            iconGO.transform.SetParent(go.transform, false);
+            var icon = iconGO.AddComponent<Image>();
+            icon.raycastTarget = false;
+            if (hasKit)
+            {
+                icon.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.lock");
+                icon.color = Color.white;
+            }
+            var iconRect = iconGO.GetComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0f, 0.5f);
+            iconRect.anchorMax = new Vector2(0f, 0.5f);
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(58f, 0f);
+            iconRect.sizeDelta = new Vector2(56f, 56f);
+
+            return rect;
+        }
+
+        private void UpdateLockChipPositions()
+        {
+            if (_hudRootRect == null || _lockChipByBox.Count == 0) return;
+            var cam = Camera.main;
+            if (cam == null) return;
+
+            float pad = 20f;
+            float halfW = _hudRootRect.rect.width * 0.5f;
+            float halfH = _hudRootRect.rect.height * 0.5f;
+
+            foreach (var kv in _lockChipByBox)
+            {
+                int boxIndex = kv.Key;
+                var chip = kv.Value;
+                if (chip == null) continue;
+                if (boxIndex < 0 || boxIndex >= _boxViews.Count) continue;
+                var box = _boxViews[boxIndex];
+                if (box == null) continue;
+
+                float lift = 0.55f;
+                if (boxIndex < _boxSpecs.Count && _boxSpecs[boxIndex] != null)
+                {
+                    lift = Mathf.Max(lift, _boxSpecs[boxIndex].size.y * 0.65f + 0.25f);
+                }
+
+                var world = box.transform.position + new Vector3(0f, lift, 0f);
+                var screen = cam.WorldToScreenPoint(world);
+                if (screen.z < 0.01f)
+                {
+                    chip.gameObject.SetActive(false);
+                    continue;
+                }
+                chip.gameObject.SetActive(true);
+
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRootRect, screen, null, out var local))
+                {
+                    float maxX = halfW - pad - chip.sizeDelta.x * 0.5f;
+                    float minX = -halfW + pad + chip.sizeDelta.x * 0.5f;
+                    float maxY = halfH - pad - chip.sizeDelta.y * 0.5f;
+                    float minY = -halfH + pad + chip.sizeDelta.y * 0.5f;
+                    chip.anchoredPosition = new Vector2(Mathf.Clamp(local.x, minX, maxX), Mathf.Clamp(local.y, minY, maxY));
+                }
             }
         }
 
@@ -1587,7 +1754,8 @@ namespace LoopSorting
                 bool locked = i < _boxLocked.Count && _boxLocked[i];
                 var unlockColor = i < _boxSpecs.Count && _boxSpecs[i] != null ? _boxSpecs[i].unlockColor : BlockColor.Red;
                 _boxViews[i].SetLocked(locked, unlockColor);
-                _boxViews[i].SyncBlocks(_game.Containers[i].Blocks);
+                // Locked boxes must hide all contents until unlocked.
+                _boxViews[i].SyncBlocks(locked ? null : _game.Containers[i].Blocks);
             }
         }
 

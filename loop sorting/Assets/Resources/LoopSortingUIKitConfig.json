@@ -133,6 +133,9 @@
     { "key": "ui.panel_shop", "path": "UI_Sprites/panel_thick_gold_blue.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.shop.item_bg", "path": "UI_Sprites/shop_card_beige.png", "pixelsPerUnit": 100, "applyNineSlice": true },
 
+    { "key": "ui.lock.chip_plate", "path": "UI_Sprites/lock_chip_plate.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.lock.color_disc", "path": "World_Sprites/lock_marker_color_disc.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+
     { "key": "ui.toggle.track_on", "path": "UI_Sprites/toggle_track_on.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.toggle.track_off", "path": "UI_Sprites/toggle_track_off.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.toggle.knob", "path": "UI_Sprites/toggle_knob.png", "pixelsPerUnit": 100, "applyNineSlice": false }

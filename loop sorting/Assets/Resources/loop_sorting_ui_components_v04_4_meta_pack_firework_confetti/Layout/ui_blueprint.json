@@ -1,0 +1,4374 @@
+{
+  "referenceResolution": {
+    "w": 1080,
+    "h": 1920,
+    "canvasScaler": "ScaleWithScreenSize",
+    "match": 0.5
+  },
+  "spritesFolders": {
+    "UI_Sprites": "UI_Sprites/",
+    "World_Sprites": "World_Sprites/",
+    "Blocks": "Blocks/"
+  },
+  "prefabs": {
+    "IconButton": {
+      "type": "Button",
+      "spriteStates": {
+        "normal": "mint_square_normal.png",
+        "pressed": "mint_square_pressed.png",
+        "disabled": "mint_square_disabled.png"
+      },
+      "children": [
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "<set_by_usage>",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              10
+            ],
+            "sizeDelta": [
+              200,
+              200
+            ]
+          }
+        }
+      ]
+    },
+    "BoosterButton_Fill": {
+      "type": "Button",
+      "spriteStates": {
+        "normal": "mint_square_normal.png",
+        "pressed": "mint_square_pressed.png",
+        "disabled": "mint_square_disabled.png"
+      },
+      "children": [
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "icon_fill.png",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              40
+            ],
+            "sizeDelta": [
+              190,
+              190
+            ]
+          }
+        },
+        {
+          "name": "Label",
+          "type": "TMP_Text",
+          "text": "FILL",
+          "style": "BoosterLabel",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.0
+            ],
+            "anchorMax": [
+              0.5,
+              0.0
+            ],
+            "pivot": [
+              0.5,
+              0.0
+            ],
+            "anchoredPosition": [
+              0,
+              40
+            ],
+            "sizeDelta": [
+              240,
+              80
+            ]
+          }
+        },
+        {
+          "name": "Badge",
+          "type": "GameObject",
+          "active": true,
+          "rect": {
+            "anchorMin": [
+              1.0,
+              0.0
+            ],
+            "anchorMax": [
+              1.0,
+              0.0
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -20,
+              40
+            ],
+            "sizeDelta": [
+              140,
+              140
+            ]
+          },
+          "children": [
+            {
+              "name": "BadgeBG",
+              "type": "Image",
+              "sprite": "badge_red_bg.png",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  120,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "BadgeDigit",
+              "type": "Image",
+              "sprite": "digit_3.png",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  64,
+                  88
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "BoosterButton_Shuffle": {
+      "type": "Button",
+      "spriteStates": {
+        "normal": "purple_square_normal.png",
+        "pressed": "purple_square_pressed.png",
+        "disabled": "purple_square_disabled.png"
+      },
+      "children": [
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "icon_shuffle.png",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              40
+            ],
+            "sizeDelta": [
+              190,
+              190
+            ]
+          }
+        },
+        {
+          "name": "Label",
+          "type": "TMP_Text",
+          "text": "SHUFFLE",
+          "style": "BoosterLabel",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.0
+            ],
+            "anchorMax": [
+              0.5,
+              0.0
+            ],
+            "pivot": [
+              0.5,
+              0.0
+            ],
+            "anchoredPosition": [
+              0,
+              40
+            ],
+            "sizeDelta": [
+              240,
+              80
+            ]
+          }
+        },
+        {
+          "name": "Badge",
+          "type": "GameObject",
+          "active": true,
+          "rect": {
+            "anchorMin": [
+              1.0,
+              0.0
+            ],
+            "anchorMax": [
+              1.0,
+              0.0
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -20,
+              40
+            ],
+            "sizeDelta": [
+              140,
+              140
+            ]
+          },
+          "children": [
+            {
+              "name": "BadgeBG",
+              "type": "Image",
+              "sprite": "badge_red_bg.png",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  120,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "BadgeDigit",
+              "type": "Image",
+              "sprite": "digit_3.png",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  64,
+                  88
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "FreeSlotsCounter": {
+      "type": "GameObject",
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "pill_bg.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.0,
+              1.0
+            ],
+            "anchorMax": [
+              0.0,
+              1.0
+            ],
+            "pivot": [
+              0.0,
+              1.0
+            ],
+            "anchoredPosition": [
+              60,
+              -60
+            ],
+            "sizeDelta": [
+              360,
+              120
+            ]
+          }
+        },
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "icon_loop.png",
+          "rect": {
+            "anchorMin": [
+              0.0,
+              1.0
+            ],
+            "anchorMax": [
+              0.0,
+              1.0
+            ],
+            "pivot": [
+              0.0,
+              1.0
+            ],
+            "anchoredPosition": [
+              80,
+              -60
+            ],
+            "sizeDelta": [
+              90,
+              90
+            ]
+          }
+        },
+        {
+          "name": "Value",
+          "type": "TMP_Text",
+          "text": "12",
+          "style": "CounterValue",
+          "rect": {
+            "anchorMin": [
+              0.0,
+              1.0
+            ],
+            "anchorMax": [
+              0.0,
+              1.0
+            ],
+            "pivot": [
+              0.0,
+              1.0
+            ],
+            "anchoredPosition": [
+              170,
+              -60
+            ],
+            "sizeDelta": [
+              160,
+              90
+            ]
+          }
+        }
+      ]
+    },
+    "LockedBoxChip_UI": {
+      "type": "GameObject",
+      "children": [
+        {
+          "name": "Plate",
+          "type": "Image",
+          "sprite": "lock_chip_plate.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              260,
+              90
+            ]
+          }
+        },
+        {
+          "name": "ColorDisc",
+          "type": "Image",
+          "sprite": "World_Sprites/lock_marker_color_disc.png",
+          "rect": {
+            "anchorMin": [
+              0.0,
+              0.5
+            ],
+            "anchorMax": [
+              0.0,
+              0.5
+            ],
+            "pivot": [
+              0.0,
+              0.5
+            ],
+            "anchoredPosition": [
+              50,
+              0
+            ],
+            "sizeDelta": [
+              70,
+              70
+            ]
+          },
+          "tint": "<unlockColor>"
+        },
+        {
+          "name": "LockIcon",
+          "type": "Image",
+          "sprite": "icon_lock.png",
+          "rect": {
+            "anchorMin": [
+              0.0,
+              0.5
+            ],
+            "anchorMax": [
+              0.0,
+              0.5
+            ],
+            "pivot": [
+              0.0,
+              0.5
+            ],
+            "anchoredPosition": [
+              50,
+              0
+            ],
+            "sizeDelta": [
+              64,
+              64
+            ]
+          }
+        },
+        {
+          "name": "Text",
+          "type": "TMP_Text",
+          "text": "LOCKED",
+          "style": "SmallPillText",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              40,
+              0
+            ],
+            "sizeDelta": [
+              160,
+              70
+            ]
+          }
+        }
+      ]
+    },
+    "LockedBoxVisual": {
+      "type": "GameObject",
+      "note": "Attach under Box root (world). Sorting order: overlay above blocks; marker above overlay.",
+      "children": [
+        {
+          "name": "LockOverlay",
+          "type": "SpriteRenderer",
+          "sprite": "World_Sprites/lock_overlay.png",
+          "sortingOrder": "<above_blocks>",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "localScale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "MarkerPlate",
+          "type": "SpriteRenderer",
+          "sprite": "World_Sprites/lock_marker_plate.png",
+          "sortingOrder": "<above_overlay>",
+          "localPosition": [
+            0,
+            0,
+            0.01
+          ],
+          "localScale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "MarkerColor",
+          "type": "SpriteRenderer",
+          "sprite": "World_Sprites/lock_marker_color_disc.png",
+          "sortingOrder": "<above_overlay+1>",
+          "localPosition": [
+            0,
+            0,
+            0.02
+          ],
+          "tint": "<unlockColor>",
+          "localScale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "LockIcon",
+          "type": "SpriteRenderer",
+          "sprite": "World_Sprites/lock_marker_lock_icon.png",
+          "sortingOrder": "<above_overlay+2>",
+          "localPosition": [
+            0,
+            0,
+            0.03
+          ],
+          "localScale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "Screen_MainMenu": {
+      "type": "Canvas",
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "bg_main.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "SettingsButton",
+          "type": "PrefabInstance",
+          "prefab": "IconButton",
+          "rect": {
+            "anchorMin": [
+              1,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              1,
+              1
+            ],
+            "anchoredPosition": [
+              -80,
+              -80
+            ],
+            "sizeDelta": [
+              180,
+              180
+            ]
+          },
+          "overrides": {
+            "Icon.sprite": "icon_gear.png"
+          }
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "LOOP\nSORTING",
+          "style": "TitleMain",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.8
+            ],
+            "anchorMax": [
+              0.5,
+              0.8
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -80
+            ],
+            "sizeDelta": [
+              700,
+              260
+            ]
+          }
+        },
+        {
+          "name": "LevelPill",
+          "type": "GameObject",
+          "children": [
+            {
+              "name": "PillBG",
+              "type": "Image",
+              "sprite": "tag_small_info_bg.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  380,
+                  90
+                ]
+              }
+            },
+            {
+              "name": "LevelText",
+              "type": "TMP_Text",
+              "text": "LEVEL 1",
+              "style": "SmallPillText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  360,
+                  80
+                ]
+              }
+            }
+          ],
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              380,
+              90
+            ]
+          }
+        },
+        {
+          "name": "PlayButton",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "orange_long_normal.png",
+            "pressed": "orange_long_pressed.png",
+            "disabled": "orange_long_disabled.png"
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "PLAY",
+              "style": "PrimaryButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  500,
+                  120
+                ]
+              }
+            }
+          ],
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.34
+            ],
+            "anchorMax": [
+              0.5,
+              0.34
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              260
+            ]
+          }
+        }
+      ]
+    },
+    "Screen_GameplayHUD": {
+      "type": "Canvas",
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "bg_main.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "FreeSlotsCounter",
+          "type": "PrefabInstance",
+          "prefab": "FreeSlotsCounter",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "SettingsButton",
+          "type": "PrefabInstance",
+          "prefab": "IconButton",
+          "rect": {
+            "anchorMin": [
+              1,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              1,
+              1
+            ],
+            "anchoredPosition": [
+              -80,
+              -60
+            ],
+            "sizeDelta": [
+              180,
+              180
+            ]
+          },
+          "overrides": {
+            "Icon.sprite": "icon_gear.png"
+          }
+        },
+        {
+          "name": "FastTag",
+          "type": "GameObject",
+          "active": false,
+          "children": [
+            {
+              "name": "BG",
+              "type": "Image",
+              "sprite": "tag_fast_info_bg.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  1
+                ],
+                "anchorMax": [
+                  0.5,
+                  1
+                ],
+                "pivot": [
+                  0.5,
+                  1
+                ],
+                "anchoredPosition": [
+                  0,
+                  -160
+                ],
+                "sizeDelta": [
+                  330,
+                  78
+                ]
+              }
+            },
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "FAST x5",
+              "style": "TagText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  1
+                ],
+                "anchorMax": [
+                  0.5,
+                  1
+                ],
+                "pivot": [
+                  0.5,
+                  1
+                ],
+                "anchoredPosition": [
+                  0,
+                  -160
+                ],
+                "sizeDelta": [
+                  320,
+                  70
+                ]
+              }
+            }
+          ],
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "BoosterFill",
+          "type": "PrefabInstance",
+          "prefab": "BoosterButton_Fill",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.1
+            ],
+            "anchorMax": [
+              0.5,
+              0.1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -220,
+              0
+            ],
+            "sizeDelta": [
+              460,
+              460
+            ]
+          }
+        },
+        {
+          "name": "BoosterShuffle",
+          "type": "PrefabInstance",
+          "prefab": "BoosterButton_Shuffle",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.1
+            ],
+            "anchorMax": [
+              0.5,
+              0.1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              220,
+              0
+            ],
+            "sizeDelta": [
+              460,
+              460
+            ]
+          }
+        }
+      ]
+    },
+    "Modal_Settings": {
+      "type": "GameObject",
+      "active": false,
+      "children": [
+        {
+          "name": "Dim",
+          "type": "Image",
+          "sprite": "overlay_dim.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "Panel",
+          "type": "Image",
+          "sprite": "panel_modal.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              860,
+              720
+            ]
+          }
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "SETTINGS",
+          "style": "ModalTitle",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.75
+            ],
+            "anchorMax": [
+              0.5,
+              0.75
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              600,
+              120
+            ]
+          }
+        },
+        {
+          "name": "CloseButton",
+          "type": "PrefabInstance",
+          "prefab": "IconButton",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              360,
+              260
+            ],
+            "sizeDelta": [
+              140,
+              140
+            ]
+          },
+          "overrides": {
+            "Icon.sprite": "icon_close.png"
+          }
+        },
+        {
+          "name": "RowSound",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              80
+            ],
+            "sizeDelta": [
+              760,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "Label",
+              "type": "TMP_Text",
+              "text": "SOUND",
+              "style": "ModalRowLabel",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  40,
+                  0
+                ],
+                "sizeDelta": [
+                  300,
+                  80
+                ]
+              }
+            },
+            {
+              "name": "ToggleTrack",
+              "type": "Image",
+              "sprite": "toggle_track_on.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -40,
+                  0
+                ],
+                "sizeDelta": [
+                  220,
+                  60
+                ]
+              }
+            },
+            {
+              "name": "ToggleKnob",
+              "type": "Image",
+              "sprite": "toggle_knob.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -130,
+                  0
+                ],
+                "sizeDelta": [
+                  64,
+                  64
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "RowVibration",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -40
+            ],
+            "sizeDelta": [
+              760,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "Label",
+              "type": "TMP_Text",
+              "text": "VIBRATION",
+              "style": "ModalRowLabel",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  40,
+                  0
+                ],
+                "sizeDelta": [
+                  300,
+                  80
+                ]
+              }
+            },
+            {
+              "name": "ToggleTrack",
+              "type": "Image",
+              "sprite": "toggle_track_off.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -40,
+                  0
+                ],
+                "sizeDelta": [
+                  220,
+                  60
+                ]
+              }
+            },
+            {
+              "name": "ToggleKnob",
+              "type": "Image",
+              "sprite": "toggle_knob.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -190,
+                  0
+                ],
+                "sizeDelta": [
+                  64,
+                  64
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Modal_Result": {
+      "type": "GameObject",
+      "active": false,
+      "children": [
+        {
+          "name": "Dim",
+          "type": "Image",
+          "sprite": "overlay_dim.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "Panel",
+          "type": "Image",
+          "sprite": "panel_result.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              720
+            ]
+          }
+        },
+        {
+          "name": "Banner",
+          "type": "Image",
+          "sprite": "tag_fast_info_bg.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.73
+            ],
+            "anchorMax": [
+              0.5,
+              0.73
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              620,
+              96
+            ]
+          },
+          "tint": "<Victory=orange / Lose=red>"
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "VICTORY",
+          "style": "ResultTitle",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.73
+            ],
+            "anchorMax": [
+              0.5,
+              0.73
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              600,
+              90
+            ]
+          }
+        },
+        {
+          "name": "PrimaryButton",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "mint_long_normal.png",
+            "pressed": "mint_long_pressed.png",
+            "disabled": "mint_long_disabled.png"
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "NEXT",
+              "style": "PrimaryButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  500,
+                  120
+                ]
+              }
+            }
+          ],
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.4
+            ],
+            "anchorMax": [
+              0.5,
+              0.4
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              260
+            ]
+          }
+        }
+      ]
+    },
+    "HUD_TopBar": {
+      "type": "GameObject",
+      "children": [
+        {
+          "name": "PauseButton",
+          "type": "PrefabInstance",
+          "prefab": "IconButton",
+          "rect": {
+            "anchorMin": [
+              0,
+              1
+            ],
+            "anchorMax": [
+              0,
+              1
+            ],
+            "pivot": [
+              0,
+              1
+            ],
+            "anchoredPosition": [
+              80,
+              -90
+            ],
+            "sizeDelta": [
+              180,
+              180
+            ]
+          },
+          "overrides": {
+            "Icon.sprite": "icon_pause.png"
+          }
+        },
+        {
+          "name": "ShopButton",
+          "type": "PrefabInstance",
+          "prefab": "IconButton",
+          "rect": {
+            "anchorMin": [
+              0,
+              1
+            ],
+            "anchorMax": [
+              0,
+              1
+            ],
+            "pivot": [
+              0,
+              1
+            ],
+            "anchoredPosition": [
+              80,
+              -280
+            ],
+            "sizeDelta": [
+              180,
+              180
+            ]
+          },
+          "overrides": {
+            "Icon.sprite": "icon_shop.png"
+          }
+        },
+        {
+          "name": "LevelLabel",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              1
+            ],
+            "anchorMax": [
+              0.5,
+              1
+            ],
+            "pivot": [
+              0.5,
+              1
+            ],
+            "anchoredPosition": [
+              0,
+              -90
+            ],
+            "sizeDelta": [
+              420,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "BG",
+              "type": "Image",
+              "sprite": "hud_level_label_bg.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  420,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Level 8",
+              "style": "HUDLevelText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  400,
+                  100
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CoinPill",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              1,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              1,
+              1
+            ],
+            "anchoredPosition": [
+              -80,
+              -90
+            ],
+            "sizeDelta": [
+              520,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "BG",
+              "type": "Image",
+              "sprite": "hud_pill_dark.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  520,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Plus",
+              "type": "Image",
+              "sprite": "icon_plus.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  56,
+                  0
+                ],
+                "sizeDelta": [
+                  66,
+                  66
+                ]
+              }
+            },
+            {
+              "name": "Value",
+              "type": "TMP_Text",
+              "text": "810",
+              "style": "HUDCurrencyText",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  130,
+                  0
+                ],
+                "sizeDelta": [
+                  200,
+                  90
+                ]
+              }
+            },
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_coin_128.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -70,
+                  0
+                ],
+                "sizeDelta": [
+                  96,
+                  96
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HeartPill",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              1,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              1,
+              1
+            ],
+            "anchoredPosition": [
+              -80,
+              -220
+            ],
+            "sizeDelta": [
+              520,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "BG",
+              "type": "Image",
+              "sprite": "hud_pill_dark.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  520,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Plus",
+              "type": "Image",
+              "sprite": "icon_plus.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  56,
+                  0
+                ],
+                "sizeDelta": [
+                  66,
+                  66
+                ]
+              }
+            },
+            {
+              "name": "Value",
+              "type": "TMP_Text",
+              "text": "5",
+              "style": "HUDCurrencyText",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  150,
+                  0
+                ],
+                "sizeDelta": [
+                  120,
+                  90
+                ]
+              }
+            },
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_heart_128.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -70,
+                  0
+                ],
+                "sizeDelta": [
+                  96,
+                  96
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Modal_Settings_Full": {
+      "type": "GameObject",
+      "active": false,
+      "children": [
+        {
+          "name": "Dim",
+          "type": "Image",
+          "sprite": "overlay_dim.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "Panel",
+          "type": "Image",
+          "sprite": "panel_thick_gold_blue.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              1060
+            ]
+          }
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "SETTINGS",
+          "style": "ModalTitleBig",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.8
+            ],
+            "anchorMax": [
+              0.5,
+              0.8
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              700,
+              120
+            ]
+          }
+        },
+        {
+          "name": "Close",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_close_red_normal.png",
+            "pressed": "btn_close_red_pressed.png",
+            "disabled": "btn_close_red_normal.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              380,
+              450
+            ],
+            "sizeDelta": [
+              128,
+              128
+            ]
+          }
+        },
+        {
+          "name": "RowAudio",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              200
+            ],
+            "sizeDelta": [
+              820,
+              190
+            ]
+          },
+          "children": [
+            {
+              "name": "Card",
+              "type": "Image",
+              "sprite": "card_setting_row.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  820,
+                  190
+                ]
+              }
+            },
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_music.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  90,
+                  0
+                ],
+                "sizeDelta": [
+                  96,
+                  96
+                ]
+              }
+            },
+            {
+              "name": "Label",
+              "type": "TMP_Text",
+              "text": "Audio :",
+              "style": "SettingRowText",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  190,
+                  0
+                ],
+                "sizeDelta": [
+                  240,
+                  90
+                ]
+              }
+            },
+            {
+              "name": "Toggle",
+              "type": "Image",
+              "sprite": "toggle_full_on.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -80,
+                  0
+                ],
+                "sizeDelta": [
+                  260,
+                  86
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "RowVibration",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -10
+            ],
+            "sizeDelta": [
+              820,
+              190
+            ]
+          },
+          "children": [
+            {
+              "name": "Card",
+              "type": "Image",
+              "sprite": "card_setting_row.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  820,
+                  190
+                ]
+              }
+            },
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_vibrate.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  90,
+                  0
+                ],
+                "sizeDelta": [
+                  96,
+                  96
+                ]
+              }
+            },
+            {
+              "name": "Label",
+              "type": "TMP_Text",
+              "text": "Vibration :",
+              "style": "SettingRowText",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  215,
+                  0
+                ],
+                "sizeDelta": [
+                  280,
+                  90
+                ]
+              }
+            },
+            {
+              "name": "Toggle",
+              "type": "Image",
+              "sprite": "toggle_full_on.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -80,
+                  0
+                ],
+                "sizeDelta": [
+                  260,
+                  86
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BtnRestore",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_small_blue_normal.png",
+            "pressed": "btn_small_blue_pressed.png",
+            "disabled": "btn_small_blue_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -220,
+              -310
+            ],
+            "sizeDelta": [
+              420,
+              170
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Restore\nPurchases",
+              "style": "SmallButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  380,
+                  150
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BtnSupport",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_small_green_normal.png",
+            "pressed": "btn_small_green_pressed.png",
+            "disabled": "btn_small_green_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              220,
+              -310
+            ],
+            "sizeDelta": [
+              420,
+              170
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Support",
+              "style": "SmallButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  380,
+                  150
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BtnRetryLevel",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_small_red_normal.png",
+            "pressed": "btn_small_red_pressed.png",
+            "disabled": "btn_small_red_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              220,
+              -505
+            ],
+            "sizeDelta": [
+              420,
+              170
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Retry Level",
+              "style": "SmallButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  380,
+                  150
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Screen_Shop": {
+      "type": "Canvas",
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "bg_main.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "TopBar",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              1
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              220
+            ]
+          },
+          "children": [
+            {
+              "name": "Scallop",
+              "type": "Image",
+              "sprite": "shop_topbar_scallop_tile_512x128.png",
+              "imageType": "Tiled",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0
+                ],
+                "anchorMax": [
+                  1,
+                  1
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  0,
+                  220
+                ]
+              }
+            },
+            {
+              "name": "Title",
+              "type": "TMP_Text",
+              "text": "SHOP",
+              "style": "ShopTitle",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  10
+                ],
+                "sizeDelta": [
+                  600,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Close",
+              "type": "Button",
+              "spriteStates": {
+                "normal": "btn_close_red_normal.png",
+                "pressed": "btn_close_red_pressed.png",
+                "disabled": "btn_close_red_normal.png"
+              },
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -90,
+                  0
+                ],
+                "sizeDelta": [
+                  128,
+                  128
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CurrencyRow",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              1
+            ],
+            "anchorMax": [
+              0.5,
+              1
+            ],
+            "pivot": [
+              0.5,
+              1
+            ],
+            "anchoredPosition": [
+              0,
+              -250
+            ],
+            "sizeDelta": [
+              1000,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "Hearts",
+              "type": "GameObject",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  480,
+                  120
+                ]
+              },
+              "children": [
+                {
+                  "name": "BG",
+                  "type": "Image",
+                  "sprite": "hud_pill_dark_small.png",
+                  "imageType": "Sliced",
+                  "rect": {
+                    "anchorMin": [
+                      0.5,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0.5,
+                      0.5
+                    ],
+                    "pivot": [
+                      0.5,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      0,
+                      0
+                    ],
+                    "sizeDelta": [
+                      480,
+                      120
+                    ]
+                  }
+                },
+                {
+                  "name": "Icon",
+                  "type": "Image",
+                  "sprite": "icon_heart_128.png",
+                  "rect": {
+                    "anchorMin": [
+                      0,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0,
+                      0.5
+                    ],
+                    "pivot": [
+                      0,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      60,
+                      0
+                    ],
+                    "sizeDelta": [
+                      90,
+                      90
+                    ]
+                  }
+                },
+                {
+                  "name": "Value",
+                  "type": "TMP_Text",
+                  "text": "5",
+                  "style": "HUDCurrencyText",
+                  "rect": {
+                    "anchorMin": [
+                      0,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0,
+                      0.5
+                    ],
+                    "pivot": [
+                      0,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      160,
+                      0
+                    ],
+                    "sizeDelta": [
+                      140,
+                      90
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Coins",
+              "type": "GameObject",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  480,
+                  120
+                ]
+              },
+              "children": [
+                {
+                  "name": "BG",
+                  "type": "Image",
+                  "sprite": "hud_pill_dark_small.png",
+                  "imageType": "Sliced",
+                  "rect": {
+                    "anchorMin": [
+                      0.5,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0.5,
+                      0.5
+                    ],
+                    "pivot": [
+                      0.5,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      0,
+                      0
+                    ],
+                    "sizeDelta": [
+                      480,
+                      120
+                    ]
+                  }
+                },
+                {
+                  "name": "Icon",
+                  "type": "Image",
+                  "sprite": "icon_coin_128.png",
+                  "rect": {
+                    "anchorMin": [
+                      0,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0,
+                      0.5
+                    ],
+                    "pivot": [
+                      0,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      60,
+                      0
+                    ],
+                    "sizeDelta": [
+                      90,
+                      90
+                    ]
+                  }
+                },
+                {
+                  "name": "Value",
+                  "type": "TMP_Text",
+                  "text": "810",
+                  "style": "HUDCurrencyText",
+                  "rect": {
+                    "anchorMin": [
+                      0,
+                      0.5
+                    ],
+                    "anchorMax": [
+                      0,
+                      0.5
+                    ],
+                    "pivot": [
+                      0,
+                      0.5
+                    ],
+                    "anchoredPosition": [
+                      190,
+                      0
+                    ],
+                    "sizeDelta": [
+                      240,
+                      90
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ScrollList",
+          "type": "PrefabInstance",
+          "prefab": "ShopScrollList",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -300
+            ],
+            "sizeDelta": [
+              0,
+              -300
+            ]
+          }
+        }
+      ]
+    },
+    "Modal_MoreLives": {
+      "type": "GameObject",
+      "active": false,
+      "children": [
+        {
+          "name": "Dim",
+          "type": "Image",
+          "sprite": "overlay_dim.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "name": "Panel",
+          "type": "Image",
+          "sprite": "panel_thick_gold_blue.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              1060
+            ]
+          }
+        },
+        {
+          "name": "Close",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_close_red_normal.png",
+            "pressed": "btn_close_red_pressed.png",
+            "disabled": "btn_close_red_normal.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              380,
+              450
+            ],
+            "sizeDelta": [
+              128,
+              128
+            ]
+          }
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "MORE LIVES!",
+          "style": "ModalTitleBig",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.8
+            ],
+            "anchorMax": [
+              0.5,
+              0.8
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              800,
+              120
+            ]
+          }
+        },
+        {
+          "name": "HeartBig",
+          "type": "Image",
+          "sprite": "heart_big.png",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -40,
+              140
+            ],
+            "sizeDelta": [
+              320,
+              320
+            ]
+          }
+        },
+        {
+          "name": "HeartValue",
+          "type": "TMP_Text",
+          "text": "5",
+          "style": "HeartBigValue",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -40,
+              135
+            ],
+            "sizeDelta": [
+              200,
+              150
+            ]
+          }
+        },
+        {
+          "name": "TimerLabel",
+          "type": "TMP_Text",
+          "text": "Time to next Life:",
+          "style": "MoreLivesLabel",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -20
+            ],
+            "sizeDelta": [
+              700,
+              90
+            ]
+          }
+        },
+        {
+          "name": "TimerPill",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              -110
+            ],
+            "sizeDelta": [
+              420,
+              120
+            ]
+          },
+          "children": [
+            {
+              "name": "BG",
+              "type": "Image",
+              "sprite": "pill_timer_beige.png",
+              "imageType": "Sliced",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  420,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_clock.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  70,
+                  0
+                ],
+                "sizeDelta": [
+                  70,
+                  70
+                ]
+              }
+            },
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "FULL",
+              "style": "TimerPillText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  50,
+                  0
+                ],
+                "sizeDelta": [
+                  260,
+                  90
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BtnWatchAd",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_small_orange_normal.png",
+            "pressed": "btn_small_orange_pressed.png",
+            "disabled": "btn_small_orange_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -220,
+              -360
+            ],
+            "sizeDelta": [
+              420,
+              170
+            ]
+          },
+          "children": [
+            {
+              "name": "Icon",
+              "type": "Image",
+              "sprite": "icon_video.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  88,
+                  0
+                ],
+                "sizeDelta": [
+                  80,
+                  80
+                ]
+              }
+            },
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Get  +1",
+              "style": "SmallButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  40,
+                  0
+                ],
+                "sizeDelta": [
+                  300,
+                  150
+                ]
+              }
+            },
+            {
+              "name": "Heart",
+              "type": "Image",
+              "sprite": "icon_heart_128.png",
+              "rect": {
+                "anchorMin": [
+                  1,
+                  0.5
+                ],
+                "anchorMax": [
+                  1,
+                  0.5
+                ],
+                "pivot": [
+                  1,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -80,
+                  0
+                ],
+                "sizeDelta": [
+                  78,
+                  78
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BtnRefillCoins",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_small_green_normal.png",
+            "pressed": "btn_small_green_pressed.png",
+            "disabled": "btn_small_green_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.52
+            ],
+            "anchorMax": [
+              0.5,
+              0.52
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              220,
+              -360
+            ],
+            "sizeDelta": [
+              420,
+              170
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "Refill",
+              "style": "SmallButtonText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  -30,
+                  -20
+                ],
+                "sizeDelta": [
+                  300,
+                  120
+                ]
+              }
+            },
+            {
+              "name": "Coin",
+              "type": "Image",
+              "sprite": "icon_coin_128.png",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  0.5
+                ],
+                "anchorMax": [
+                  0,
+                  0.5
+                ],
+                "pivot": [
+                  0,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  110,
+                  42
+                ],
+                "sizeDelta": [
+                  76,
+                  76
+                ]
+              }
+            },
+            {
+              "name": "Cost",
+              "type": "TMP_Text",
+              "text": "900",
+              "style": "PriceText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  70,
+                  42
+                ],
+                "sizeDelta": [
+                  200,
+                  90
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "LockNode": {
+      "type": "GameObject",
+      "children": [
+        {
+          "name": "Base",
+          "type": "Image",
+          "sprite": "lock_node_base.png",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              320,
+              320
+            ]
+          }
+        },
+        {
+          "name": "Lock",
+          "type": "Image",
+          "sprite": "lock_node_lock.png",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.55
+            ],
+            "anchorMax": [
+              0.5,
+              0.55
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              20
+            ],
+            "sizeDelta": [
+              180,
+              180
+            ]
+          }
+        },
+        {
+          "name": "LabelBG",
+          "type": "Image",
+          "sprite": "lock_node_label_bg.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.25
+            ],
+            "anchorMax": [
+              0.5,
+              0.25
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              220,
+              70
+            ]
+          }
+        },
+        {
+          "name": "Label",
+          "type": "TMP_Text",
+          "text": "Lvl 9",
+          "style": "LockNodeLabel",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.25
+            ],
+            "anchorMax": [
+              0.5,
+              0.25
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              220,
+              70
+            ]
+          }
+        }
+      ]
+    },
+    "ShopSectionHeader": {
+      "type": "GameObject",
+      "components": [
+        {
+          "type": "LayoutElement",
+          "preferredHeight": 96
+        }
+      ],
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "shop_group_bar.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              900,
+              96
+            ]
+          }
+        },
+        {
+          "name": "Text",
+          "type": "TMP_Text",
+          "text": "SECTION",
+          "style": "GroupBarText",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              880,
+              80
+            ]
+          }
+        }
+      ]
+    },
+    "ShopItemCard": {
+      "type": "GameObject",
+      "components": [
+        {
+          "type": "LayoutElement",
+          "preferredHeight": 260
+        }
+      ],
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "shop_card_beige.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              1000,
+              260
+            ]
+          }
+        },
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "icon_coin_stack.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0.5
+            ],
+            "anchorMax": [
+              0,
+              0.5
+            ],
+            "pivot": [
+              0,
+              0.5
+            ],
+            "anchoredPosition": [
+              160,
+              0
+            ],
+            "sizeDelta": [
+              220,
+              220
+            ]
+          }
+        },
+        {
+          "name": "Title",
+          "type": "TMP_Text",
+          "text": "Item Title",
+          "style": "ShopCardTitle",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -50,
+              -20
+            ],
+            "sizeDelta": [
+              520,
+              120
+            ]
+          }
+        },
+        {
+          "name": "Desc",
+          "type": "TMP_Text",
+          "text": "Item description",
+          "style": "ShopCardDesc",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              -50,
+              55
+            ],
+            "sizeDelta": [
+              520,
+              70
+            ]
+          }
+        },
+        {
+          "name": "Price",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_price_green_normal.png",
+            "pressed": "btn_price_green_pressed.png",
+            "disabled": "btn_price_green_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              1,
+              0.5
+            ],
+            "anchorMax": [
+              1,
+              0.5
+            ],
+            "pivot": [
+              1,
+              0.5
+            ],
+            "anchoredPosition": [
+              -160,
+              0
+            ],
+            "sizeDelta": [
+              340,
+              140
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "$0.99",
+              "style": "PriceText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  300,
+                  120
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ShopCoinPackRow": {
+      "type": "GameObject",
+      "components": [
+        {
+          "type": "LayoutElement",
+          "preferredHeight": 200
+        }
+      ],
+      "children": [
+        {
+          "name": "BG",
+          "type": "Image",
+          "sprite": "shop_row_yellow.png",
+          "imageType": "Sliced",
+          "rect": {
+            "anchorMin": [
+              0.5,
+              0.5
+            ],
+            "anchorMax": [
+              0.5,
+              0.5
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              1000,
+              200
+            ]
+          }
+        },
+        {
+          "name": "Icon",
+          "type": "Image",
+          "sprite": "icon_coin_128.png",
+          "rect": {
+            "anchorMin": [
+              0,
+              0.5
+            ],
+            "anchorMax": [
+              0,
+              0.5
+            ],
+            "pivot": [
+              0,
+              0.5
+            ],
+            "anchoredPosition": [
+              140,
+              0
+            ],
+            "sizeDelta": [
+              120,
+              120
+            ]
+          }
+        },
+        {
+          "name": "Amount",
+          "type": "TMP_Text",
+          "text": "1000",
+          "style": "ShopCoinAmount",
+          "rect": {
+            "anchorMin": [
+              0,
+              0.5
+            ],
+            "anchorMax": [
+              0,
+              0.5
+            ],
+            "pivot": [
+              0,
+              0.5
+            ],
+            "anchoredPosition": [
+              320,
+              0
+            ],
+            "sizeDelta": [
+              360,
+              120
+            ]
+          }
+        },
+        {
+          "name": "Price",
+          "type": "Button",
+          "spriteStates": {
+            "normal": "btn_price_green_normal.png",
+            "pressed": "btn_price_green_pressed.png",
+            "disabled": "btn_price_green_disabled.png"
+          },
+          "rect": {
+            "anchorMin": [
+              1,
+              0.5
+            ],
+            "anchorMax": [
+              1,
+              0.5
+            ],
+            "pivot": [
+              1,
+              0.5
+            ],
+            "anchoredPosition": [
+              -170,
+              0
+            ],
+            "sizeDelta": [
+              340,
+              140
+            ]
+          },
+          "children": [
+            {
+              "name": "Text",
+              "type": "TMP_Text",
+              "text": "$1.99",
+              "style": "PriceText",
+              "rect": {
+                "anchorMin": [
+                  0.5,
+                  0.5
+                ],
+                "anchorMax": [
+                  0.5,
+                  0.5
+                ],
+                "pivot": [
+                  0.5,
+                  0.5
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  300,
+                  120
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ShopScrollList": {
+      "type": "GameObject",
+      "rect": {
+        "anchorMin": [
+          0,
+          0
+        ],
+        "anchorMax": [
+          1,
+          1
+        ],
+        "pivot": [
+          0.5,
+          0.5
+        ],
+        "anchoredPosition": [
+          0,
+          0
+        ],
+        "sizeDelta": [
+          0,
+          0
+        ]
+      },
+      "components": [
+        {
+          "type": "ScrollRect",
+          "vertical": true,
+          "horizontal": false,
+          "movementType": "Elastic",
+          "inertia": true,
+          "decelerationRate": 0.135,
+          "scrollSensitivity": 25,
+          "viewport": "Viewport",
+          "content": "Content",
+          "horizontalScrollbar": null,
+          "verticalScrollbar": null
+        }
+      ],
+      "children": [
+        {
+          "name": "Viewport",
+          "type": "GameObject",
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              0.5
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              0
+            ]
+          },
+          "components": [
+            {
+              "type": "RectMask2D"
+            }
+          ],
+          "children": [
+            {
+              "name": "Content",
+              "type": "GameObject",
+              "rect": {
+                "anchorMin": [
+                  0,
+                  1
+                ],
+                "anchorMax": [
+                  1,
+                  1
+                ],
+                "pivot": [
+                  0.5,
+                  1
+                ],
+                "anchoredPosition": [
+                  0,
+                  0
+                ],
+                "sizeDelta": [
+                  0,
+                  0
+                ]
+              },
+              "components": [
+                {
+                  "type": "VerticalLayoutGroup",
+                  "childAlignment": "UpperCenter",
+                  "spacing": 28,
+                  "padding": {
+                    "left": 0,
+                    "right": 0,
+                    "top": 24,
+                    "bottom": 60
+                  },
+                  "childControlWidth": true,
+                  "childControlHeight": false,
+                  "childForceExpandWidth": true,
+                  "childForceExpandHeight": false
+                },
+                {
+                  "type": "ContentSizeFitter",
+                  "verticalFit": "PreferredSize",
+                  "horizontalFit": "Unconstrained"
+                }
+              ],
+              "children": [
+                {
+                  "name": "Header_NoAds",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopSectionHeader",
+                  "overrides": {
+                    "Text.text": "NO ADS"
+                  }
+                },
+                {
+                  "name": "Card_NoAds",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopItemCard",
+                  "overrides": {
+                    "BG.sprite": "shop_card_purple.png",
+                    "Icon.sprite": "icon_no_ads_tv.png",
+                    "Title.text": "No ADS",
+                    "Desc.text": "Remove FORCED ADS",
+                    "Price/Text.text": "$7.99"
+                  }
+                },
+                {
+                  "name": "Card_NoAdsBundle",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopItemCard",
+                  "overrides": {
+                    "BG.sprite": "shop_card_purple.png",
+                    "Icon.sprite": "icon_no_ads_tv.png",
+                    "Title.text": "No ADS Bundle",
+                    "Desc.text": "Coins + Boosters",
+                    "Price/Text.text": "$11.99"
+                  }
+                },
+                {
+                  "name": "Header_Bundles",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopSectionHeader",
+                  "overrides": {
+                    "Text.text": "BUNDLES"
+                  }
+                },
+                {
+                  "name": "Card_Beginner",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopItemCard",
+                  "overrides": {
+                    "BG.sprite": "shop_card_beige.png",
+                    "Icon.sprite": "icon_coin_bag.png",
+                    "Title.text": "Beginner Pack",
+                    "Desc.text": "6000 + bonus",
+                    "Price/Text.text": "$9.99"
+                  }
+                },
+                {
+                  "name": "Header_Coins",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopSectionHeader",
+                  "overrides": {
+                    "Text.text": "COINS"
+                  }
+                },
+                {
+                  "name": "Coin_1000",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopCoinPackRow",
+                  "overrides": {
+                    "Amount.text": "1000",
+                    "Price/Text.text": "$1.99"
+                  }
+                },
+                {
+                  "name": "Coin_5000",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopCoinPackRow",
+                  "overrides": {
+                    "Amount.text": "5000",
+                    "Price/Text.text": "$7.99"
+                  }
+                },
+                {
+                  "name": "Coin_10000",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopCoinPackRow",
+                  "overrides": {
+                    "Amount.text": "10000",
+                    "Price/Text.text": "$14.99"
+                  }
+                },
+                {
+                  "name": "Coin_25000",
+                  "type": "PrefabInstance",
+                  "prefab": "ShopCoinPackRow",
+                  "overrides": {
+                    "Amount.text": "25000",
+                    "Price/Text.text": "$29.99"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "FadeTop",
+          "type": "Image",
+          "sprite": "shop_scroll_fade_top.png",
+          "raycastTarget": false,
+          "rect": {
+            "anchorMin": [
+              0,
+              1
+            ],
+            "anchorMax": [
+              1,
+              1
+            ],
+            "pivot": [
+              0.5,
+              1
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              180
+            ]
+          }
+        },
+        {
+          "name": "FadeBottom",
+          "type": "Image",
+          "sprite": "shop_scroll_fade_bottom.png",
+          "raycastTarget": false,
+          "rect": {
+            "anchorMin": [
+              0,
+              0
+            ],
+            "anchorMax": [
+              1,
+              0
+            ],
+            "pivot": [
+              0.5,
+              0
+            ],
+            "anchoredPosition": [
+              0,
+              0
+            ],
+            "sizeDelta": [
+              0,
+              180
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

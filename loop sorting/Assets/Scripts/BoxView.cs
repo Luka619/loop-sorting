@@ -34,6 +34,7 @@ namespace LoopSorting
         private GameObject _completedGlass;
         private GameObject _completedBadge;
         private GameObject _completedBurst;
+        private GameObject _completedConfetti;
         private Coroutine _completedFxRoutine;
 
         private const float CompletedNineSliceBorderFrac = 0.14f;
@@ -870,6 +871,16 @@ namespace LoopSorting
             {
                 if (wasCompleted && _completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
                 _completedFxRoutine = null;
+                if (_completedBurst != null)
+                {
+                    Destroy(_completedBurst);
+                    _completedBurst = null;
+                }
+                if (_completedConfetti != null)
+                {
+                    Destroy(_completedConfetti);
+                    _completedConfetti = null;
+                }
                 _completedOverlay.SetActive(false);
                 return;
             }
@@ -1170,8 +1181,8 @@ namespace LoopSorting
                 _completedBadge.transform.localScale = Vector3.zero;
             }
 
-            // Burst sheet (8 frames, 4x2) over ~0.35s.
-            CreateCompletedBurst();
+            // Confetti-only (more natural, avoids sprite-sheet square edge artifacts).
+            CreateCompletedConfettiFx();
 
             while (t < dur)
             {
@@ -1187,69 +1198,188 @@ namespace LoopSorting
                 yield return null;
             }
 
-            // Cleanup burst a moment later (animation handles its own frames).
-            yield return new WaitForSeconds(0.45f);
+            // Let confetti fall for a bit before cleanup.
+            yield return new WaitForSeconds(1.65f);
             if (_completedBurst != null)
             {
                 Destroy(_completedBurst);
                 _completedBurst = null;
             }
+            if (_completedConfetti != null)
+            {
+                Destroy(_completedConfetti);
+                _completedConfetti = null;
+            }
         }
 
-        private void CreateCompletedBurst()
+        private void CreateCompletedConfettiFx()
         {
             if (_completedOverlay == null) return;
+
             if (_completedBurst != null) Destroy(_completedBurst);
+            if (_completedConfetti != null) Destroy(_completedConfetti);
+            _completedBurst = null;
+            _completedConfetti = null;
 
-            var tex = LoopSortingUIKit.IsAvailable()
-                ? LoopSortingUIKit.LoadTexture("World_Sprites/vfx_complete_burst_sheet_8f_512x256.png")
-                : null;
-            if (tex == null) return;
+            if (!LoopSortingUIKit.IsAvailable())
+            {
+                return;
+            }
 
-            _completedBurst = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            _completedBurst.name = "CompletedBurst";
-            _completedBurst.transform.SetParent(_completedOverlay.transform, false);
-            _completedBurst.transform.localPosition = new Vector3(0f, 0f, -0.03f);
-            RemoveCollider(_completedBurst);
-
-            float baseSize = Mathf.Min(_boxSize.x, _boxSize.y) * 0.95f * 2f;
-            _completedBurst.transform.localScale = new Vector3(baseSize, baseSize, 1f);
-
-            var r = _completedBurst.GetComponent<Renderer>();
-            if (r == null) return;
-
-            var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, CompletedQueue + 3);
-            // 4x2 sheet: each frame is 1/4 by 1/2.
-            mat.mainTextureScale = new Vector2(0.25f, 0.5f);
-            mat.mainTextureOffset = new Vector2(0f, 0.5f);
-            r.sharedMaterial = mat;
-
-            StartCoroutine(AnimateBurstSheet(r, mat));
+            CreateConfettiBurst();
         }
 
-        private IEnumerator AnimateBurstSheet(Renderer r, Material mat)
+        private void CreateConfettiBurst()
         {
-            if (r == null || mat == null) yield break;
+            if (_completedOverlay == null) return;
 
-            float total = 0.38f;
-            int frames = 8;
-            float frameDur = total / frames;
-            var tint = GetCompletedTintColor();
-            tint.a = 1f;
+            var texRect = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_rect_256.png");
+            var texTri = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_tri_256.png");
+            var texStream = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_stream_256.png");
+            var texStar = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_star_256.png");
 
-            for (int i = 0; i < frames; i++)
+            var textures = new List<Texture2D>(4);
+            if (texRect != null) textures.Add(texRect);
+            if (texTri != null) textures.Add(texTri);
+            if (texStream != null) textures.Add(texStream);
+            if (texStar != null) textures.Add(texStar);
+            if (textures.Count == 0) return;
+
+            _completedConfetti = new GameObject("Confetti");
+            _completedConfetti.transform.SetParent(_completedOverlay.transform, false);
+            _completedConfetti.transform.localPosition = new Vector3(0f, 0f, -0.04f);
+            _completedConfetti.transform.localRotation = Quaternion.identity;
+            _completedConfetti.transform.localScale = Vector3.one;
+
+            var palette = BuildConfettiPalette(GetCompletedTintColor());
+
+            int totalCount = 28;
+            int perSystem = Mathf.Max(6, Mathf.RoundToInt((float)totalCount / textures.Count));
+
+            float baseSize = Mathf.Min(_boxSize.x, _boxSize.y);
+            float startSize = Mathf.Clamp(baseSize * 0.10f, 0.06f, 0.22f) * 3.0f;
+            float startSpeed = Mathf.Clamp(baseSize * 4.8f, 3.0f, 10.5f);
+
+            for (int i = 0; i < textures.Count; i++)
             {
-                int col = i % 4;
-                int row = i < 4 ? 1 : 0; // top row first (y=0.5), then bottom row (y=0)
-                mat.mainTextureOffset = new Vector2(col * 0.25f, row * 0.5f);
-
-                float a = i < frames - 2 ? 1f : Mathf.Lerp(1f, 0f, (i - (frames - 2)) / 2f);
-                var c = tint;
-                c.a = a;
-                mat.color = c;
-
-                yield return new WaitForSeconds(frameDur);
+                var c0 = palette[i % palette.Length];
+                var c1 = palette[(i + 1) % palette.Length];
+                CreateOneConfettiSystem(_completedConfetti.transform, $"Confetti_{i}", textures[i], c0, c1, perSystem, startSize, startSpeed);
             }
+        }
+
+        private static void CreateOneConfettiSystem(
+            Transform parent,
+            string name,
+            Texture2D texture,
+            Color colorA,
+            Color colorB,
+            int burstCount,
+            float startSize,
+            float startSpeed)
+        {
+            if (parent == null || texture == null) return;
+
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.85f, 1.35f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(startSpeed * 0.55f, startSpeed * 1.05f);
+            main.startSize = new ParticleSystem.MinMaxCurve(startSize * 0.7f, startSize * 1.25f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.gravityModifier = new ParticleSystem.MinMaxCurve(1.0f, 1.25f);
+            main.startColor = new ParticleSystem.MinMaxGradient(colorA, colorB);
+            main.maxParticles = 128;
+
+            var emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)burstCount) });
+
+            var shape = ps.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            // ParticleSystem cone emits along local +Z; rotate the shape so it fires upward (+Y) in our XY gameplay plane.
+            shape.rotation = new Vector3(-90f, 0f, 0f);
+            shape.angle = 18f;
+            shape.radius = 0.10f;
+
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = BuildAlphaFadeGradient();
+
+            var rot = ps.rotationOverLifetime;
+            rot.enabled = true;
+            rot.z = new ParticleSystem.MinMaxCurve(-3.5f, 3.5f);
+
+            var sizeOver = ps.sizeOverLifetime;
+            sizeOver.enabled = true;
+            sizeOver.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.7f));
+
+            var renderer = ps.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.alignment = ParticleSystemRenderSpace.View;
+            renderer.material = CreateAdditiveTextureMaterial(texture, Color.white, CompletedQueue + 5);
+
+            ps.Play();
+        }
+
+        private static ParticleSystem.MinMaxGradient BuildAlphaFadeGradient()
+        {
+            var g = new Gradient();
+            g.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(Color.white, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            return new ParticleSystem.MinMaxGradient(g);
+        }
+
+        private static Color[] BuildConfettiPalette(Color baseColor)
+        {
+            baseColor.a = 1f;
+
+            Color.RGBToHSV(baseColor, out float h, out float s, out float v);
+            s = Mathf.Clamp01(Mathf.Max(0.45f, s));
+            v = Mathf.Clamp01(Mathf.Max(0.65f, v));
+
+            var a = Color.HSVToRGB(h, s, Mathf.Clamp01(v * 1.15f));
+            var b = Color.HSVToRGB(Mathf.Repeat(h + 0.08f, 1f), s * 0.9f, Mathf.Clamp01(v * 0.95f));
+            var c = Color.HSVToRGB(Mathf.Repeat(h - 0.10f, 1f), s * 0.8f, Mathf.Clamp01(v * 1.05f));
+            var d = Color.HSVToRGB(Mathf.Repeat(h + 0.18f, 1f), s * 0.75f, Mathf.Clamp01(v * 0.85f));
+            a.a = b.a = c.a = d.a = 1f;
+            return new[] { a, b, c, d };
+        }
+
+        private static Material CreateAdditiveTextureMaterial(Texture2D texture, Color color, int renderQueue)
+        {
+            var shader =
+                Shader.Find("Particles/Additive") ??
+                Shader.Find("Legacy Shaders/Particles/Additive") ??
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Unlit/Texture");
+
+            var mat = new Material(shader);
+            if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
+            else mat.mainTexture = texture;
+            mat.color = color;
+            mat.renderQueue = renderQueue;
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            return mat;
         }
 
         private static void RemoveCollider(GameObject quad)

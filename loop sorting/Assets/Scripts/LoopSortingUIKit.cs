@@ -34,6 +34,10 @@ namespace LoopSorting
             public RectFile counter;
             public RectFile speed;
             public RectFile settings;
+            public RectFile level;
+            public RectFile shop;
+            public RectFile coins;
+            public RectFile lives;
         }
 
         [Serializable]
@@ -133,6 +137,10 @@ namespace LoopSorting
             public Rect counter;
             public Rect speed;
             public Rect settings;
+            public Rect level;
+            public Rect shop;
+            public Rect coins;
+            public Rect lives;
             public Vector2 boosterAnchor;
             public Vector2 boosterOffset;
             public Vector2 boosterSize;
@@ -367,24 +375,28 @@ namespace LoopSorting
                 resourcesRoot = DefaultResourcesRoot,
                 layout = new LayoutFile
                 {
-                    referenceWidth = 1080f,
-                    referenceHeight = 1920f,
-                    reservedTop = 0.08f,
-                    reservedBottom = 0.12f,
+                     referenceWidth = 1080f,
+                     referenceHeight = 1920f,
+                    reservedTop = 0.065f,
+                    reservedBottom = 0.11f,
                     modules = new LayoutModulesFile
                     {
-                        counter = new RectFile { x = 24f, y = 24f, w = 320f, h = 110f },
-                        speed = new RectFile { x = 692f, y = 24f, w = 170f, h = 170f },
-                        settings = new RectFile { x = 886f, y = 24f, w = 170f, h = 170f },
+                        shop = new RectFile { x = 24f, y = 24f, w = 88f, h = 88f },
+                        counter = new RectFile { x = 124f, y = 24f, w = 180f, h = 88f },
+                        level = new RectFile { x = 320f, y = 24f, w = 180f, h = 88f },
+                        lives = new RectFile { x = 510f, y = 24f, w = 168f, h = 88f },
+                        coins = new RectFile { x = 690f, y = 24f, w = 160f, h = 88f },
+                        speed = new RectFile { x = 868f, y = 24f, w = 88f, h = 88f },
+                        settings = new RectFile { x = 968f, y = 24f, w = 88f, h = 88f },
                     },
                     boosters = new BoosterLayoutFile
                     {
                         anchorX = 0.5f,
-                        anchorY = 0.06f,
-                        offsetX = 150f,
+                        anchorY = 0.07f,
+                        offsetX = 120f,
                         offsetY = 0f,
-                        width = 250f,
-                        height = 250f,
+                        width = 180f,
+                        height = 180f,
                     },
                 },
                 nineSliceRules = new[]
@@ -480,13 +492,21 @@ namespace LoopSorting
             float reservedBottom = Mathf.Clamp01(layoutFile != null ? layoutFile.reservedBottom : 0.16f);
 
             Rect counter = new Rect(50f, 50f, 320f, 110f);
-            Rect speed = new Rect(640f, 55f, 170f, 170f);
-            Rect settings = new Rect(840f, 55f, 170f, 170f);
+            Rect speed = new Rect(372f, 24f, 150f, 150f);
+            Rect settings = new Rect(542f, 24f, 150f, 150f);
+            Rect level = new Rect(280f, 24f, 520f, 90f);
+            Rect shop = new Rect(24f, 140f, 120f, 120f);
+            Rect coins = new Rect(716f, 24f, 340f, 96f);
+            Rect lives = new Rect(716f, 132f, 340f, 96f);
             if (layoutFile != null && layoutFile.modules != null)
             {
                 counter = ToRect(layoutFile.modules.counter, counter);
                 speed = ToRect(layoutFile.modules.speed, speed);
                 settings = ToRect(layoutFile.modules.settings, settings);
+                level = ToRect(layoutFile.modules.level, level);
+                shop = ToRect(layoutFile.modules.shop, shop);
+                coins = ToRect(layoutFile.modules.coins, coins);
+                lives = ToRect(layoutFile.modules.lives, lives);
             }
 
             var booster = layoutFile != null && layoutFile.boosters != null ? layoutFile.boosters : null;
@@ -509,6 +529,10 @@ namespace LoopSorting
                 counter = counter,
                 speed = speed,
                 settings = settings,
+                level = level,
+                shop = shop,
+                coins = coins,
+                lives = lives,
                 boosterAnchor = boosterAnchor,
                 boosterOffset = boosterOffset,
                 boosterSize = boosterSize,

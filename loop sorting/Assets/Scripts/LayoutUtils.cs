@@ -230,7 +230,12 @@ namespace LoopSorting
             return new Vector3(lastPoint.x, lastPoint.y, 0f);
         }
 
-        public static int ResolveBeltSlotIndex(BoxSpec spec, IList<Transform> slots, float blockSize = 0.6f)
+        public static int ResolveBeltSlotIndex(
+            BoxSpec spec,
+            IList<Transform> slots,
+            float blockSize = 0.6f,
+            ISet<int> reserved = null,
+            ISet<int> avoidForAutoAlign = null)
         {
             if (slots == null || slots.Count == 0)
             {
@@ -247,15 +252,68 @@ namespace LoopSorting
             var mouth = ComputeMouth(spec, size);
             var mouth3 = new Vector3(mouth.x, mouth.y, 0f);
 
+            Vector2 normal2 = Vector2.down;
+            switch (spec.opening)
+            {
+                case OpeningSide.Top: normal2 = Vector2.up; break;
+                case OpeningSide.Bottom: normal2 = Vector2.down; break;
+                case OpeningSide.Left: normal2 = Vector2.left; break;
+                case OpeningSide.Right: normal2 = Vector2.right; break;
+            }
+            var normal3 = new Vector3(normal2.x, normal2.y, 0f);
+
             int best = 0;
             float bestDist = float.MaxValue;
-            for (int i = 0; i < slots.Count; i++)
+            bool foundForward = false;
+
+            // Two-pass search:
+            // 1) Prefer slots in front of the opening direction.
+            // 2) Fallback to any slot if nothing is in front (or all are reserved).
+            for (int pass = 0; pass < 2; pass++)
             {
-                float d = Vector3.SqrMagnitude(slots[i].position - mouth3);
-                if (d < bestDist)
+                for (int i = 0; i < slots.Count; i++)
                 {
-                    bestDist = d;
-                    best = i;
+                    if (avoidForAutoAlign != null && avoidForAutoAlign.Contains(i)) continue;
+                    if (reserved != null && reserved.Contains(i)) continue;
+
+                    var v = slots[i].position - mouth3;
+                    if (pass == 0)
+                    {
+                        // Require the slot to be roughly "in front" of the mouth.
+                        if (Vector3.Dot(v, normal3) <= 0.001f) continue;
+                    }
+
+                    float d = v.sqrMagnitude;
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = i;
+                        foundForward = pass == 0;
+                    }
+                }
+
+                if (bestDist < float.MaxValue)
+                {
+                    break;
+                }
+            }
+
+            // If everything is reserved/avoided, just return the nearest slot (even if avoided) to avoid crashes.
+            bool bestDisallowed =
+                (reserved != null && reserved.Contains(best)) ||
+                (avoidForAutoAlign != null && avoidForAutoAlign.Contains(best));
+            if (bestDisallowed)
+            {
+                bestDist = float.MaxValue;
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    var v = slots[i].position - mouth3;
+                    float d = v.sqrMagnitude;
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = i;
+                    }
                 }
             }
 

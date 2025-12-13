@@ -1,0 +1,804 @@
+{
+  "version": "v0.4_meta_pack",
+  "referenceResolution": [
+    1080,
+    1920
+  ],
+  "nineSliceRecommendations": {
+    "*_square_*": {
+      "border": [
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    "*_long_*": {
+      "border": [
+        140,
+        140,
+        90,
+        90
+      ]
+    },
+    "pill_bg*": {
+      "border": [
+        90,
+        90,
+        60,
+        60
+      ]
+    },
+    "panel_*": {
+      "border": [
+        120,
+        120,
+        120,
+        120
+      ]
+    },
+    "tag_fast_*": {
+      "border": [
+        60,
+        60,
+        40,
+        40
+      ]
+    },
+    "tag_small_*": {
+      "border": [
+        50,
+        50,
+        30,
+        30
+      ]
+    },
+    "lock_chip_plate.png": {
+      "border": [
+        60,
+        60,
+        40,
+        40
+      ]
+    },
+    "panel_thick_gold_blue.png": {
+      "border": [
+        140,
+        140,
+        140,
+        140
+      ]
+    },
+    "card_setting_row.png": {
+      "border": [
+        70,
+        70,
+        50,
+        50
+      ]
+    },
+    "hud_pill_dark*.png": {
+      "border": [
+        40,
+        40,
+        30,
+        30
+      ]
+    },
+    "shop_card_*.png": {
+      "border": [
+        90,
+        90,
+        60,
+        60
+      ]
+    },
+    "shop_group_bar.png": {
+      "border": [
+        48,
+        48,
+        30,
+        30
+      ]
+    },
+    "btn_small_*": {
+      "border": [
+        80,
+        80,
+        55,
+        55
+      ]
+    },
+    "btn_price_green_*": {
+      "border": [
+        60,
+        60,
+        40,
+        40
+      ]
+    },
+    "lock_node_label_bg.png": {
+      "border": [
+        30,
+        30,
+        20,
+        20
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "UI_Sprites/badge_red_bg.png",
+      "w": 152,
+      "h": 162
+    },
+    {
+      "file": "UI_Sprites/bg_main.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "UI_Sprites/btn_close_red_normal.png",
+      "w": 160,
+      "h": 170
+    },
+    {
+      "file": "UI_Sprites/btn_close_red_pressed.png",
+      "w": 160,
+      "h": 170
+    },
+    {
+      "file": "UI_Sprites/btn_price_green_disabled.png",
+      "w": 384,
+      "h": 198
+    },
+    {
+      "file": "UI_Sprites/btn_price_green_normal.png",
+      "w": 384,
+      "h": 198
+    },
+    {
+      "file": "UI_Sprites/btn_price_green_pressed.png",
+      "w": 384,
+      "h": 194
+    },
+    {
+      "file": "UI_Sprites/btn_small_blue_disabled.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_blue_normal.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_blue_pressed.png",
+      "w": 464,
+      "h": 224
+    },
+    {
+      "file": "UI_Sprites/btn_small_green_disabled.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_green_normal.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_green_pressed.png",
+      "w": 464,
+      "h": 224
+    },
+    {
+      "file": "UI_Sprites/btn_small_orange_disabled.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_orange_normal.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_orange_pressed.png",
+      "w": 464,
+      "h": 224
+    },
+    {
+      "file": "UI_Sprites/btn_small_red_disabled.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_red_normal.png",
+      "w": 464,
+      "h": 228
+    },
+    {
+      "file": "UI_Sprites/btn_small_red_pressed.png",
+      "w": 464,
+      "h": 224
+    },
+    {
+      "file": "UI_Sprites/card_setting_row.png",
+      "w": 864,
+      "h": 248
+    },
+    {
+      "file": "UI_Sprites/digit_0.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_1.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_2.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_3.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_4.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_5.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_6.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_7.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_8.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/digit_9.png",
+      "w": 64,
+      "h": 88
+    },
+    {
+      "file": "UI_Sprites/heart_big.png",
+      "w": 352,
+      "h": 362
+    },
+    {
+      "file": "UI_Sprites/hud_level_label_bg.png",
+      "w": 392,
+      "h": 138
+    },
+    {
+      "file": "UI_Sprites/hud_pill_dark.png",
+      "w": 452,
+      "h": 138
+    },
+    {
+      "file": "UI_Sprites/hud_pill_dark_small.png",
+      "w": 352,
+      "h": 126
+    },
+    {
+      "file": "UI_Sprites/hud_pill_dark_tiny.png",
+      "w": 292,
+      "h": 126
+    },
+    {
+      "file": "UI_Sprites/icon_close.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_coin.png",
+      "w": 224,
+      "h": 234
+    },
+    {
+      "file": "UI_Sprites/icon_coin_128.png",
+      "w": 160,
+      "h": 170
+    },
+    {
+      "file": "UI_Sprites/icon_coin_bag.png",
+      "w": 296,
+      "h": 308
+    },
+    {
+      "file": "UI_Sprites/icon_coin_chest.png",
+      "w": 296,
+      "h": 308
+    },
+    {
+      "file": "UI_Sprites/icon_coin_safe.png",
+      "w": 296,
+      "h": 308
+    },
+    {
+      "file": "UI_Sprites/icon_coin_stack.png",
+      "w": 292,
+      "h": 302
+    },
+    {
+      "file": "UI_Sprites/icon_fill.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_gear.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_heart.png",
+      "w": 224,
+      "h": 234
+    },
+    {
+      "file": "UI_Sprites/icon_heart_128.png",
+      "w": 160,
+      "h": 170
+    },
+    {
+      "file": "UI_Sprites/icon_lock.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_loop.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_music.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_next.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_no_ads_tv.png",
+      "w": 296,
+      "h": 310
+    },
+    {
+      "file": "UI_Sprites/icon_pause.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_plus.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_retry.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_shop.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_shuffle.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_vibrate.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/icon_video.png",
+      "w": 192,
+      "h": 192
+    },
+    {
+      "file": "UI_Sprites/lock_chip_plate.png",
+      "w": 292,
+      "h": 132
+    },
+    {
+      "file": "UI_Sprites/lock_node_base.png",
+      "w": 360,
+      "h": 374
+    },
+    {
+      "file": "UI_Sprites/lock_node_label_bg.png",
+      "w": 252,
+      "h": 112
+    },
+    {
+      "file": "UI_Sprites/lock_node_lock.png",
+      "w": 212,
+      "h": 222
+    },
+    {
+      "file": "UI_Sprites/mint_long_disabled.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/mint_long_normal.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/mint_long_pressed.png",
+      "w": 944,
+      "h": 314
+    },
+    {
+      "file": "UI_Sprites/mint_square_disabled.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/mint_square_normal.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/mint_square_pressed.png",
+      "w": 544,
+      "h": 554
+    },
+    {
+      "file": "UI_Sprites/orange_long_disabled.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/orange_long_normal.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/orange_long_pressed.png",
+      "w": 944,
+      "h": 314
+    },
+    {
+      "file": "UI_Sprites/orange_square_disabled.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/orange_square_normal.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/orange_square_pressed.png",
+      "w": 544,
+      "h": 554
+    },
+    {
+      "file": "UI_Sprites/overlay_dim.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "UI_Sprites/panel_modal.png",
+      "w": 916,
+      "h": 794
+    },
+    {
+      "file": "UI_Sprites/panel_result.png",
+      "w": 956,
+      "h": 794
+    },
+    {
+      "file": "UI_Sprites/panel_thick_gold_blue.png",
+      "w": 960,
+      "h": 1140
+    },
+    {
+      "file": "UI_Sprites/pill_bg.png",
+      "w": 392,
+      "h": 162
+    },
+    {
+      "file": "UI_Sprites/pill_bg_disabled.png",
+      "w": 392,
+      "h": 162
+    },
+    {
+      "file": "UI_Sprites/pill_bg_pressed.png",
+      "w": 392,
+      "h": 162
+    },
+    {
+      "file": "UI_Sprites/pill_timer_beige.png",
+      "w": 464,
+      "h": 178
+    },
+    {
+      "file": "UI_Sprites/pink_long_disabled.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/pink_long_normal.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/pink_long_pressed.png",
+      "w": 944,
+      "h": 314
+    },
+    {
+      "file": "UI_Sprites/pink_square_disabled.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/pink_square_normal.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/pink_square_pressed.png",
+      "w": 544,
+      "h": 554
+    },
+    {
+      "file": "UI_Sprites/purple_long_disabled.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/purple_long_normal.png",
+      "w": 944,
+      "h": 318
+    },
+    {
+      "file": "UI_Sprites/purple_long_pressed.png",
+      "w": 944,
+      "h": 314
+    },
+    {
+      "file": "UI_Sprites/purple_square_disabled.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/purple_square_normal.png",
+      "w": 552,
+      "h": 566
+    },
+    {
+      "file": "UI_Sprites/purple_square_pressed.png",
+      "w": 544,
+      "h": 554
+    },
+    {
+      "file": "UI_Sprites/shop_card_beige.png",
+      "w": 1048,
+      "h": 324
+    },
+    {
+      "file": "UI_Sprites/shop_card_purple.png",
+      "w": 1048,
+      "h": 324
+    },
+    {
+      "file": "UI_Sprites/shop_card_yellow.png",
+      "w": 1048,
+      "h": 324
+    },
+    {
+      "file": "UI_Sprites/shop_group_bar.png",
+      "w": 752,
+      "h": 138
+    },
+    {
+      "file": "UI_Sprites/shop_topbar_scallop_tile_512x128.png",
+      "w": 512,
+      "h": 128
+    },
+    {
+      "file": "UI_Sprites/tag_fast_danger_bg.png",
+      "w": 362,
+      "h": 120
+    },
+    {
+      "file": "UI_Sprites/tag_fast_info_bg.png",
+      "w": 362,
+      "h": 120
+    },
+    {
+      "file": "UI_Sprites/tag_small_info_bg.png",
+      "w": 292,
+      "h": 112
+    },
+    {
+      "file": "UI_Sprites/toggle_full_off.png",
+      "w": 292,
+      "h": 128
+    },
+    {
+      "file": "UI_Sprites/toggle_full_on.png",
+      "w": 292,
+      "h": 128
+    },
+    {
+      "file": "UI_Sprites/toggle_knob.png",
+      "w": 88,
+      "h": 96
+    },
+    {
+      "file": "UI_Sprites/toggle_track_off.png",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "file": "UI_Sprites/toggle_track_on.png",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "file": "World_Sprites/box_outline_dashed_open_right.png",
+      "w": 552,
+      "h": 562
+    },
+    {
+      "file": "World_Sprites/box_outline_dashed_open_top.png",
+      "w": 552,
+      "h": 562
+    },
+    {
+      "file": "World_Sprites/completed_overlay.png",
+      "w": 520,
+      "h": 520
+    },
+    {
+      "file": "World_Sprites/conveyor_slot.png",
+      "w": 252,
+      "h": 162
+    },
+    {
+      "file": "World_Sprites/lock_marker_color_disc.png",
+      "w": 160,
+      "h": 160
+    },
+    {
+      "file": "World_Sprites/lock_marker_lock_icon.png",
+      "w": 192,
+      "h": 202
+    },
+    {
+      "file": "World_Sprites/lock_marker_plate.png",
+      "w": 296,
+      "h": 308
+    },
+    {
+      "file": "World_Sprites/lock_overlay.png",
+      "w": 556,
+      "h": 568
+    },
+    {
+      "file": "World_Sprites/run_outline_9slice.png",
+      "w": 240,
+      "h": 240
+    },
+    {
+      "file": "Blocks/block_blue.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_cyan.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_green.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_hidden_generic.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_orange.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_purple.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_red.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Blocks/block_yellow.png",
+      "w": 232,
+      "h": 244
+    },
+    {
+      "file": "Preview/preview_gameplay_hud.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Preview/preview_hud_topbar.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Preview/preview_locked_box_marker.png",
+      "w": 1080,
+      "h": 1080
+    },
+    {
+      "file": "Preview/preview_mainmenu.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Preview/preview_more_lives_modal.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Preview/preview_settings_modal.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Preview/preview_shop_screen.png",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "Layout/ui_blueprint.json",
+      "type": "json"
+    },
+    {
+      "file": "Docs/UI_GUIDE.md",
+      "type": "md"
+    },
+    {
+      "file": "UI_Sprites/icon_clock.png",
+      "w": 224,
+      "h": 234
+    },
+    {
+      "file": "UI_Sprites/icon_clock_128.png",
+      "w": 160,
+      "h": 170
+    }
+  ]
+}

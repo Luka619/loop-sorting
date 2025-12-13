@@ -3,20 +3,24 @@
   "layout": {
     "referenceWidth": 1080,
     "referenceHeight": 1920,
-    "reservedTop": 0.0,
-    "reservedBottom": 0.0,
+    "reservedTop": 0.065,
+    "reservedBottom": 0.11,
     "modules": {
-      "counter": { "x": 24, "y": 24, "w": 320, "h": 110 },
-      "speed": { "x": 692, "y": 24, "w": 170, "h": 170 },
-      "settings": { "x": 886, "y": 24, "w": 170, "h": 170 }
+      "shop": { "x": 24, "y": 24, "w": 88, "h": 88 },
+      "counter": { "x": 124, "y": 24, "w": 180, "h": 88 },
+      "level": { "x": 320, "y": 24, "w": 180, "h": 88 },
+      "lives": { "x": 510, "y": 24, "w": 168, "h": 88 },
+      "coins": { "x": 690, "y": 24, "w": 160, "h": 88 },
+      "speed": { "x": 868, "y": 24, "w": 88, "h": 88 },
+      "settings": { "x": 968, "y": 24, "w": 88, "h": 88 }
     },
     "boosters": {
       "anchorX": 0.5,
-      "anchorY": 0.06,
-      "offsetX": 150,
+      "anchorY": 0.07,
+      "offsetX": 120,
       "offsetY": 0,
-      "width": 250,
-      "height": 250
+      "width": 180,
+      "height": 180
     }
   },
   "nineSliceRules": [
@@ -63,6 +67,10 @@
     { "key": "ui.icon.next", "path": "UI_Sprites/icon_next.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.retry", "path": "UI_Sprites/icon_retry.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.lock", "path": "UI_Sprites/icon_lock.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.plus", "path": "UI_Sprites/icon_plus.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.coin", "path": "UI_Sprites/icon_coin.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.heart", "path": "UI_Sprites/icon_heart.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.shop", "path": "UI_Sprites/icon_shop.png", "pixelsPerUnit": 100, "applyNineSlice": false },
 
     { "key": "ui.badge.bg", "path": "UI_Sprites/badge_red_bg.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.digit.0", "path": "UI_Sprites/digit_0.png", "pixelsPerUnit": 100, "applyNineSlice": false },
@@ -83,6 +91,8 @@
     { "key": "ui.overlay_dim", "path": "UI_Sprites/overlay_dim.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.panel_modal", "path": "UI_Sprites/panel_modal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.panel_result", "path": "UI_Sprites/panel_result.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.panel_shop", "path": "UI_Sprites/panel_shop.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.shop.item_bg", "path": "UI_Sprites/shop_item_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
 
     { "key": "ui.toggle.track_on", "path": "UI_Sprites/toggle_track_on.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.toggle.track_off", "path": "UI_Sprites/toggle_track_off.png", "pixelsPerUnit": 100, "applyNineSlice": false },

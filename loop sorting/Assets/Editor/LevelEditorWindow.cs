@@ -583,6 +583,10 @@ public class LevelEditorWindow : EditorWindow
         }
 
         var counterBg = Map(uiLayout.counter);
+        var levelLabel = Map(uiLayout.level);
+        var shopBtn = Map(uiLayout.shop);
+        var coinsPill = Map(uiLayout.coins);
+        var livesPill = Map(uiLayout.lives);
         var speedBtn = Map(uiLayout.speed);
         var settingsBtn = Map(uiLayout.settings);
         var boosterFill = Map(AnchorRect(
@@ -599,6 +603,10 @@ public class LevelEditorWindow : EditorWindow
             uiLayout.boosterSize.x, uiLayout.boosterSize.y));
 
         DrawRectOutline(counterBg, new Color(0.4f, 0.9f, 0.7f, 0.35f), 2f);
+        DrawRectOutline(levelLabel, new Color(1f, 1f, 1f, 0.20f), 2f);
+        DrawRectOutline(shopBtn, new Color(0.9f, 0.8f, 0.2f, 0.25f), 2f);
+        DrawRectOutline(coinsPill, new Color(1f, 0.85f, 0.2f, 0.22f), 2f);
+        DrawRectOutline(livesPill, new Color(1f, 0.4f, 0.4f, 0.22f), 2f);
         DrawRectOutline(speedBtn, new Color(0.8f, 0.8f, 1f, 0.35f), 2f);
         DrawRectOutline(settingsBtn, new Color(0.8f, 0.8f, 1f, 0.35f), 2f);
         DrawRectOutline(boosterFill, new Color(0.4f, 0.9f, 0.7f, 0.25f), 2f);

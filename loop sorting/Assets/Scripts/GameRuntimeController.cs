@@ -99,6 +99,9 @@ namespace LoopSorting
         private TMP_Text _shopTitle;
         private TMP_Text _shopCoinValue;
         private TMP_Text _shopLifeValue;
+        private ScrollRect _shopScroll;
+        private Image _shopScrollFadeTop;
+        private Image _shopScrollFadeBottom;
         private RectTransform _shopContentRoot;
         private GameObject _boosterPanel;
         private Button _boosterFillButton;
@@ -2466,6 +2469,9 @@ namespace LoopSorting
             _shopTitle = null;
             _shopCoinValue = null;
             _shopLifeValue = null;
+            _shopScroll = null;
+            _shopScrollFadeTop = null;
+            _shopScrollFadeBottom = null;
             _shopContentRoot = null;
             _boosterPanel = null;
             _boosterFillButton = null;
@@ -3151,7 +3157,7 @@ namespace LoopSorting
         private void EnsureShopUI()
         {
             if (_uiCanvas == null) return;
-            if (_shopPanel != null && _shopContentRoot != null) return;
+            if (_shopPanel != null && _shopContentRoot != null && _shopScroll != null) return;
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
@@ -3233,15 +3239,90 @@ namespace LoopSorting
             var coinsStrip = CreateCurrencyStrip(panelGO.transform, "CoinsStrip", new Vector2(-220f, -150f), hasKit ? "ui.icon.coin" : null, out _shopCoinValue);
             var livesStrip = CreateCurrencyStrip(panelGO.transform, "LivesStrip", new Vector2(220f, -150f), hasKit ? "ui.icon.heart" : null, out _shopLifeValue);
 
-            // Content root for item cards
+            // Scroll list (v04_3 spec): ScrollRect -> Viewport (RectMask2D) -> Content (VerticalLayoutGroup + ContentSizeFitter)
+            var scrollGO = new GameObject("ShopScrollList");
+            scrollGO.transform.SetParent(panelGO.transform, false);
+            var scrollRect = scrollGO.AddComponent<RectTransform>();
+            scrollRect.anchorMin = new Vector2(0.5f, 0f);
+            scrollRect.anchorMax = new Vector2(0.5f, 0f);
+            scrollRect.pivot = new Vector2(0.5f, 0f);
+            scrollRect.anchoredPosition = new Vector2(0f, 80f);
+            scrollRect.sizeDelta = new Vector2(920f, 880f);
+
+            _shopScroll = scrollGO.AddComponent<ScrollRect>();
+            _shopScroll.horizontal = false;
+            _shopScroll.vertical = true;
+            _shopScroll.movementType = ScrollRect.MovementType.Elastic;
+            _shopScroll.inertia = true;
+            _shopScroll.decelerationRate = 0.135f;
+            _shopScroll.scrollSensitivity = 25f;
+
+            var viewportGO = new GameObject("Viewport");
+            viewportGO.transform.SetParent(scrollGO.transform, false);
+            var viewportRect = viewportGO.AddComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+            var viewportImg = viewportGO.AddComponent<Image>();
+            viewportImg.raycastTarget = true;
+            viewportImg.color = new Color(1f, 1f, 1f, 0.001f);
+            viewportGO.AddComponent<RectMask2D>();
+            _shopScroll.viewport = viewportRect;
+
             var contentGO = new GameObject("Content");
-            contentGO.transform.SetParent(panelGO.transform, false);
+            contentGO.transform.SetParent(viewportGO.transform, false);
             _shopContentRoot = contentGO.AddComponent<RectTransform>();
-            _shopContentRoot.anchorMin = new Vector2(0.5f, 0f);
-            _shopContentRoot.anchorMax = new Vector2(0.5f, 0f);
-            _shopContentRoot.pivot = new Vector2(0.5f, 0f);
-            _shopContentRoot.anchoredPosition = new Vector2(0f, 80f);
-            _shopContentRoot.sizeDelta = new Vector2(920f, 880f);
+            _shopContentRoot.anchorMin = new Vector2(0f, 1f);
+            _shopContentRoot.anchorMax = new Vector2(1f, 1f);
+            _shopContentRoot.pivot = new Vector2(0.5f, 1f);
+            _shopContentRoot.anchoredPosition = Vector2.zero;
+            _shopContentRoot.sizeDelta = new Vector2(0f, 0f);
+
+            var layout = contentGO.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 28f;
+            layout.padding = new RectOffset(0, 0, 24, 60);
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childForceExpandWidth = true;
+            layout.childControlHeight = false;
+            layout.childForceExpandHeight = false;
+
+            var fitter = contentGO.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            _shopScroll.content = _shopContentRoot;
+
+            // Optional scroll fades (visual only).
+            if (hasKit)
+            {
+                var fadeTopGO = new GameObject("FadeTop");
+                fadeTopGO.transform.SetParent(scrollGO.transform, false);
+                _shopScrollFadeTop = fadeTopGO.AddComponent<Image>();
+                _shopScrollFadeTop.raycastTarget = false;
+                _shopScrollFadeTop.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_scroll_fade_top.png", pixelsPerUnit: 100f, applyNineSlice: false);
+                _shopScrollFadeTop.color = Color.white;
+                var fadeTopRect = fadeTopGO.GetComponent<RectTransform>();
+                fadeTopRect.anchorMin = new Vector2(0f, 1f);
+                fadeTopRect.anchorMax = new Vector2(1f, 1f);
+                fadeTopRect.pivot = new Vector2(0.5f, 1f);
+                fadeTopRect.anchoredPosition = Vector2.zero;
+                fadeTopRect.sizeDelta = new Vector2(0f, 140f);
+
+                var fadeBottomGO = new GameObject("FadeBottom");
+                fadeBottomGO.transform.SetParent(scrollGO.transform, false);
+                _shopScrollFadeBottom = fadeBottomGO.AddComponent<Image>();
+                _shopScrollFadeBottom.raycastTarget = false;
+                _shopScrollFadeBottom.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_scroll_fade_bottom.png", pixelsPerUnit: 100f, applyNineSlice: false);
+                _shopScrollFadeBottom.color = Color.white;
+                var fadeBottomRect = fadeBottomGO.GetComponent<RectTransform>();
+                fadeBottomRect.anchorMin = new Vector2(0f, 0f);
+                fadeBottomRect.anchorMax = new Vector2(1f, 0f);
+                fadeBottomRect.pivot = new Vector2(0.5f, 0f);
+                fadeBottomRect.anchoredPosition = Vector2.zero;
+                fadeBottomRect.sizeDelta = new Vector2(0f, 160f);
+            }
 
             _shopPanel.SetActive(false);
         }
@@ -3318,17 +3399,24 @@ namespace LoopSorting
 
             if (_shopTitle != null) _shopTitle.text = tab == ShopTab.Coins ? "SHOP" : "MORE LIVES";
 
-            // Very simple placeholder items: clicking grants currency.
             if (tab == ShopTab.Coins)
             {
-                AddShopItem(_shopContentRoot, "Coins_1000", "1000 COINS", "+1000", () => { _coins += 1000; RefreshEconomyHUD(); });
-                AddShopItem(_shopContentRoot, "Coins_5000", "5000 COINS", "+5000", () => { _coins += 5000; RefreshEconomyHUD(); });
-                AddShopItem(_shopContentRoot, "Coins_10000", "10000 COINS", "+10000", () => { _coins += 10000; RefreshEconomyHUD(); });
+                AddShopSectionHeader(_shopContentRoot, "COINS");
+                AddShopCoinPackRow(_shopContentRoot, "Coins_1000", "1000 COINS", "+1000", () => { _coins += 1000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_5000", "5000 COINS", "+5000", () => { _coins += 5000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_10000", "10000 COINS", "+10000", () => { _coins += 10000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
             }
             else
             {
-                AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _lives += 1; RefreshEconomyHUD(); });
-                AddShopItem(_shopContentRoot, "Lives_5", "REFILL 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); });
+                AddShopSectionHeader(_shopContentRoot, "LIVES");
+                AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _lives += 1; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopItem(_shopContentRoot, "Lives_5", "REFILL 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+            }
+
+            if (_shopScroll != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                _shopScroll.verticalNormalizedPosition = 1f;
             }
         }
 
@@ -3339,20 +3427,21 @@ namespace LoopSorting
             var itemGO = new GameObject(name);
             itemGO.transform.SetParent(parent, false);
             var rect = itemGO.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 1f);
-            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.sizeDelta = new Vector2(920f, 190f);
+            rect.sizeDelta = new Vector2(0f, 260f);
 
-            // Stack items vertically with spacing.
-            int idx = parent.childCount - 1;
-            rect.anchoredPosition = new Vector2(0f, -idx * 210f);
+            var le = itemGO.AddComponent<LayoutElement>();
+            le.preferredHeight = 260f;
 
             var img = itemGO.AddComponent<Image>();
             img.raycastTarget = true;
             if (hasKit)
             {
+                // Prefer card background for lives; coins are rendered as rows by AddShopCoinPackRow().
                 img.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.shop.item_bg");
+                if (img.sprite == null) img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige.png");
                 if (img.sprite == null) img.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
@@ -3386,6 +3475,134 @@ namespace LoopSorting
             tRect.sizeDelta = new Vector2(560f, 120f);
 
             // Price button background (visual only; the whole card is clickable).
+            if (hasKit)
+            {
+                var priceBgGO = new GameObject("PriceBG");
+                priceBgGO.transform.SetParent(itemGO.transform, false);
+                var priceImg = priceBgGO.AddComponent<Image>();
+                priceImg.raycastTarget = false;
+                priceImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.button.price_green.normal");
+                priceImg.type = priceImg.sprite != null && priceImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                priceImg.color = Color.white;
+                var pRect = priceBgGO.GetComponent<RectTransform>();
+                pRect.anchorMin = new Vector2(1f, 0.5f);
+                pRect.anchorMax = new Vector2(1f, 0.5f);
+                pRect.pivot = new Vector2(1f, 0.5f);
+                pRect.anchoredPosition = new Vector2(-60f, 0f);
+                pRect.sizeDelta = new Vector2(240f, 120f);
+            }
+
+            var rightGO = new GameObject("Right");
+            rightGO.transform.SetParent(itemGO.transform, false);
+            var rightText = rightGO.AddComponent<TextMeshProUGUI>();
+            rightText.raycastTarget = false;
+            rightText.text = rightLabel;
+            rightText.alignment = TextAlignmentOptions.Center;
+            rightText.fontSize = 52;
+            rightText.color = Color.white;
+            var rRect = rightGO.GetComponent<RectTransform>();
+            rRect.anchorMin = new Vector2(1f, 0.5f);
+            rRect.anchorMax = new Vector2(1f, 0.5f);
+            rRect.pivot = new Vector2(1f, 0.5f);
+            rRect.anchoredPosition = new Vector2(-70f, 0f);
+            rRect.sizeDelta = new Vector2(220f, 120f);
+        }
+
+        private void AddShopSectionHeader(RectTransform parent, string title)
+        {
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            var go = new GameObject($"Section_{title}");
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, 96f);
+
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = 96f;
+
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            if (hasKit)
+            {
+                img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar.png");
+                img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = new Color(0f, 0f, 0f, 0.35f);
+            }
+
+            var textGO = new GameObject("Text");
+            textGO.transform.SetParent(go.transform, false);
+            var tmp = textGO.AddComponent<TextMeshProUGUI>();
+            tmp.raycastTarget = false;
+            tmp.text = title;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = 48;
+            tmp.color = Color.white;
+            var tRect = tmp.GetComponent<RectTransform>();
+            tRect.anchorMin = Vector2.zero;
+            tRect.anchorMax = Vector2.one;
+            tRect.offsetMin = Vector2.zero;
+            tRect.offsetMax = Vector2.zero;
+        }
+
+        private void AddShopCoinPackRow(RectTransform parent, string name, string title, string rightLabel, Action onClick)
+        {
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            var itemGO = new GameObject(name);
+            itemGO.transform.SetParent(parent, false);
+            var rect = itemGO.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, 200f);
+
+            var le = itemGO.AddComponent<LayoutElement>();
+            le.preferredHeight = 200f;
+
+            var img = itemGO.AddComponent<Image>();
+            img.raycastTarget = true;
+            if (hasKit)
+            {
+                img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow.png");
+                img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = new Color(0.15f, 0.15f, 0.15f, 0.9f);
+            }
+
+            var btn = itemGO.AddComponent<Button>();
+            btn.transition = Selectable.Transition.ColorTint;
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(1f, 1f, 1f, 0.95f);
+            colors.pressedColor = new Color(0.9f, 0.9f, 0.9f, 0.95f);
+            btn.colors = colors;
+            if (onClick != null) btn.onClick.AddListener(() => onClick());
+
+            var titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(itemGO.transform, false);
+            var titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            titleText.raycastTarget = false;
+            titleText.text = title;
+            titleText.alignment = TextAlignmentOptions.MidlineLeft;
+            titleText.fontSize = 56;
+            titleText.color = Color.white;
+            var tRect = titleGO.GetComponent<RectTransform>();
+            tRect.anchorMin = new Vector2(0f, 0.5f);
+            tRect.anchorMax = new Vector2(0f, 0.5f);
+            tRect.pivot = new Vector2(0f, 0.5f);
+            tRect.anchoredPosition = new Vector2(70f, 0f);
+            tRect.sizeDelta = new Vector2(560f, 120f);
+
+            // Price background (visual only; row click triggers action).
             if (hasKit)
             {
                 var priceBgGO = new GameObject("PriceBG");

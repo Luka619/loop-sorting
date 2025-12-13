@@ -21,19 +21,19 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -6, y: 4}
-    - {x: 6, y: 4}
-    - {x: 6, y: 1}
-    - {x: -6, y: 1}
-    - {x: -6, y: -2}
-    - {x: 6, y: -2}
+    - {x: -3, y: 5}
+    - {x: 6, y: 5}
+    - {x: 6, y: 0.5}
+    - {x: -2.5, y: 0.5}
+    - {x: -2.5, y: -3.5}
+    - {x: 6, y: -3.5}
     - {x: 6, y: -5}
     loop: 0
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -3, y: 2.5}
-    size: {x: 0.9, y: 3}
+    position: {x: -1.3717942, y: 2.867521}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 10
@@ -51,8 +51,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 3, y: 2.5}
-    size: {x: 0.9, y: 3}
+    position: {x: 3.01282, y: 2.8283477}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 10
@@ -70,11 +70,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: -3, y: 1.75}
-    size: {x: 1.8, y: 1.5}
+    position: {x: -1.0822699, y: -1.3992503}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 6
-    rows: 5
+    columns: 3
+    rows: 10
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -89,11 +89,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 4
-    position: {x: 3, y: 1.75}
-    size: {x: 1.8, y: 1.5}
+    position: {x: 3.1495726, y: -1.3497146}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 6
-    rows: 5
+    columns: 3
+    rows: 10
     opening: 3
     autoAlignSlot: 1
     colorCounts: []

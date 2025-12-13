@@ -34,10 +34,10 @@ MonoBehaviour:
   boxes:
   - name: Box 1
     position: {x: 0, y: 3.5}
-    size: {x: 0.9, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 2
     autoAlignSlot: 1
     colorCounts:
@@ -56,10 +56,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 2
     position: {x: 3.5, y: 0}
-    size: {x: 3, y: 0.9}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts:
@@ -77,11 +77,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: 0, y: -3.5}
-    size: {x: 0.9, y: 3}
+    position: {x: 3.1324785, y: -3.2321928}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -99,8 +99,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 4
-    position: {x: -2, y: -4.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: -0.37606835, y: -3.6113954}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -121,12 +121,12 @@ MonoBehaviour:
     locked: 1
     unlockColor: 2
   - name: Box 5
-    position: {x: -1.1, y: 2}
-    size: {x: 1.8, y: 1.5}
+    position: {x: -3.762393, y: 1.35755}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
-    opening: 0
+    opening: 1
     autoAlignSlot: 1
     colorCounts:
     - color: 5
@@ -143,12 +143,12 @@ MonoBehaviour:
     locked: 1
     unlockColor: 2
   - name: Box 6
-    position: {x: 1.1, y: 2}
-    size: {x: 1.8, y: 1.5}
+    position: {x: 3.2410257, y: 1.9943022}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
-    opening: 1
+    opening: 0
     autoAlignSlot: 1
     colorCounts: []
     initialBlocks: 
@@ -156,11 +156,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 7
-    position: {x: 0.5, y: -2}
-    size: {x: 3, y: 0.9}
+    position: {x: -0.15384614, y: -0.3703699}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts: []

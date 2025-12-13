@@ -32,8 +32,8 @@ MonoBehaviour:
     width: 20
   boxes:
   - name: Box 1
-    position: {x: 0, y: 3.5}
-    size: {x: 0.9, y: 3}
+    position: {x: -0.051282056, y: 2.8589742}
+    size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 10
@@ -55,10 +55,10 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 2
     position: {x: 0, y: -3.5}
-    size: {x: 0.9, y: 3}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -76,11 +76,11 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 3
-    position: {x: -4.5, y: 0}
-    size: {x: 3, y: 0.9}
+    position: {x: -3.448718, y: -0.051282056}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 0
     autoAlignSlot: 1
     colorCounts:
@@ -98,11 +98,11 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 4
-    position: {x: 4.5, y: 0}
-    size: {x: 3, y: 0.9}
+    position: {x: 3.5769231, y: -0.025641028}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts:
@@ -120,8 +120,8 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 5
-    position: {x: -4, y: 4.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: -3.4358974, y: 3.4333332}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -142,8 +142,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: 4, y: 4.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: 3.051282, y: 3.305128}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -164,8 +164,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 7
-    position: {x: -4, y: -4.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: -3.179487, y: -3.1256406}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -177,8 +177,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 8
-    position: {x: 4, y: -4.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: 3.153846, y: -3.228205}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6

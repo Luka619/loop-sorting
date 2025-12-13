@@ -42,10 +42,10 @@ MonoBehaviour:
       count: 9
       hidden: 0
     - color: 2
-      count: 12
+      count: 9
       hidden: 0
     - color: 0
-      count: 9
+      count: 12
       hidden: 0
     initialBlocks: 
     beltSlotIndex: 17

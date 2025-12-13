@@ -32,11 +32,11 @@ MonoBehaviour:
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -2, y: -2.5}
-    size: {x: 0.9, y: 3}
+    position: {x: -1.6923077, y: -2.2179487}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -54,11 +54,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 2, y: -2.5}
-    size: {x: 0.9, y: 3}
+    position: {x: 1.1282051, y: -2.4230769}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 10
+    columns: 5
+    rows: 6
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -76,11 +76,11 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 3
-    position: {x: -4.5, y: -1}
-    size: {x: 3, y: 0.9}
+    position: {x: -3.9871795, y: -0.8461538}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 0
     autoAlignSlot: 1
     colorCounts:
@@ -98,11 +98,11 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 4
-    position: {x: -4.5, y: 2}
-    size: {x: 3, y: 0.9}
+    position: {x: -4.0897436, y: 1.3076923}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 0
     autoAlignSlot: 1
     colorCounts:
@@ -120,11 +120,11 @@ MonoBehaviour:
     locked: 1
     unlockColor: 0
   - name: Box 5
-    position: {x: 4.5, y: -2}
-    size: {x: 3, y: 0.9}
+    position: {x: 3.8333335, y: -2.7692308}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts:
@@ -142,8 +142,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: 2, y: 3.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: 0.20512804, y: 2.458974}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -164,8 +164,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 7
-    position: {x: -2, y: 3.1}
-    size: {x: 1.5, y: 1.8}
+    position: {x: -2.0769234, y: 2.5358973}
+    size: {x: 1.5, y: 1.8000001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -177,8 +177,8 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 8
-    position: {x: 1.1, y: 0}
-    size: {x: 1.8, y: 1.5}
+    position: {x: 0.5615385, y: 0.53846157}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
@@ -190,11 +190,11 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 9
-    position: {x: 4.5, y: 0}
-    size: {x: 3, y: 0.9}
+    position: {x: 4.653846, y: -1.0512822}
+    size: {x: 1.8000001, y: 1.5}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
-    rows: 3
+    columns: 6
+    rows: 5
     opening: 1
     autoAlignSlot: 1
     colorCounts: []

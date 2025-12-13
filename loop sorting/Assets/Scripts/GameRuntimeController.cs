@@ -138,6 +138,14 @@ namespace LoopSorting
         private const int InitialCoins = 810;
         private const int InitialLives = 5;
 
+        private SfxPlayer _sfx;
+        private bool _sfxHasSnapshot;
+        private bool _sfxPrevFastForward;
+        private readonly List<int> _sfxPrevContainerCounts = new List<int>();
+        private readonly List<bool> _sfxPrevLockedStates = new List<bool>();
+        private readonly List<bool> _sfxPrevCompletedStates = new List<bool>();
+        private int _conveyorTickSfxCountdown;
+
         public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : _speedMultiplier;
 
         private readonly HashSet<int> _beltSpawnAnimating = new HashSet<int>();
@@ -147,6 +155,17 @@ namespace LoopSorting
         {
             // Stop coroutines
             StopAllCoroutines();
+
+            // Clear HUD runtime overlays that are level-specific but live under a persistent HUD canvas.
+            if (_uiCanvas != null)
+            {
+                var hudRoot = _uiCanvas.transform.Find("HUDRoot");
+                if (hudRoot != null)
+                {
+                    var existingLayer = hudRoot.Find("LockChipLayer");
+                    if (existingLayer != null) DestroyImmediate(existingLayer.gameObject);
+                }
+            }
 
             // Destroy child objects under controller (conveyors, containers, slot markers, background, UI spawned under this transform)
             for (int i = transform.childCount - 1; i >= 0; i--)
@@ -181,13 +200,24 @@ namespace LoopSorting
             _beltSpawnAnimating.Clear();
             _beltSpawnCoroutines.Clear();
             _conveyorBelt = null;
+            _conveyorTickSfxCountdown = 0;
 
             _coins = InitialCoins;
             _lives = InitialLives;
 
-            _hudRootRect = null;
             _lockChipLayer = null;
             _lockChipByBox.Clear();
+
+            ResetSfxSnapshot();
+        }
+
+        private void ResetSfxSnapshot()
+        {
+            _sfxHasSnapshot = false;
+            _sfxPrevFastForward = false;
+            _sfxPrevContainerCounts.Clear();
+            _sfxPrevLockedStates.Clear();
+            _sfxPrevCompletedStates.Clear();
         }
 
         [ContextMenu("Debug/Log Box Ports Now")]
@@ -257,6 +287,9 @@ namespace LoopSorting
 
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
             EnsureEventSystem();
+            EnsureSfx();
+            PlaySfx(SfxId.LevelStart);
+            _conveyorTickSfxCountdown = 2 + _rng.Next(2); // 2~3 ticks
 
             BuildConveyor(layout);
             BuildContainers(layout);
@@ -270,6 +303,7 @@ namespace LoopSorting
             EnsureSettingsUI();
             SyncContainersVisuals();
             SyncBeltVisuals();
+            CaptureSfxSnapshot();
         }
 
         private void RefreshLevelHudLabel()
@@ -306,6 +340,7 @@ namespace LoopSorting
         private void ShowMainMenu()
         {
             EnsureEventSystem();
+            EnsureSfx();
             EnsureMainMenuUI();
             if (_mainMenuCanvas != null) _mainMenuCanvas.gameObject.SetActive(true);
             if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(false);
@@ -430,7 +465,11 @@ namespace LoopSorting
             playTextRect.offsetMax = Vector2.zero;
 
             _mainMenuPlayButton.onClick.RemoveAllListeners();
-            _mainMenuPlayButton.onClick.AddListener(StartPendingGame);
+            _mainMenuPlayButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiConfirm);
+                StartPendingGame();
+            });
 
             // Title
             var titleGO = new GameObject("Title");
@@ -501,6 +540,7 @@ namespace LoopSorting
 
         private void CycleSpeed()
         {
+            PlaySfx(SfxId.UiClick);
             if (speedSteps == null || speedSteps.Length == 0)
             {
                 _speedMultiplier = 1f;
@@ -532,6 +572,138 @@ namespace LoopSorting
             _eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
             _eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             DontDestroyOnLoad(_eventSystem);
+        }
+
+        private void EnsureSfx()
+        {
+            if (_sfx == null)
+            {
+                _sfx = GetComponent<SfxPlayer>();
+                if (_sfx == null)
+                {
+                    _sfx = gameObject.AddComponent<SfxPlayer>();
+                }
+            }
+
+            _sfx.SetEnabled(soundEnabled);
+        }
+
+        private void UpdateConveyorLoopSfx()
+        {
+            if (_sfx == null) return;
+            if (!soundEnabled) { _sfx.StopLoop(); return; }
+
+            // Only run loop SFX during active gameplay.
+            if (_game == null || _gameOver)
+            {
+                _sfx.StopLoop();
+                return;
+            }
+
+            float pitch = _fullBeltFastForward ? 1.15f : 1f;
+            if (!_fullBeltFastForward && _speedMultiplier >= 4.99f) pitch = 1.12f;
+
+            _sfx.StartLoop(SfxId.ConveyorLoop, volumeMultiplier: 1f, pitch: pitch);
+        }
+
+        private void PlaySfx(SfxId id, float volumeMultiplier = 1f)
+        {
+            if (!soundEnabled)
+            {
+                return;
+            }
+
+            EnsureSfx();
+            _sfx.Play(id, volumeMultiplier);
+        }
+
+        private void CaptureSfxSnapshot()
+        {
+            if (_game == null)
+            {
+                ResetSfxSnapshot();
+                return;
+            }
+
+            _sfxPrevFastForward = _fullBeltFastForward;
+
+            int n = _game.Containers.Count;
+            while (_sfxPrevContainerCounts.Count < n) _sfxPrevContainerCounts.Add(0);
+            while (_sfxPrevLockedStates.Count < n) _sfxPrevLockedStates.Add(false);
+            while (_sfxPrevCompletedStates.Count < n) _sfxPrevCompletedStates.Add(false);
+
+            for (int i = 0; i < n; i++)
+            {
+                _sfxPrevContainerCounts[i] = _game.Containers[i].Count;
+                _sfxPrevLockedStates[i] = i < _boxLocked.Count && _boxLocked[i];
+                _sfxPrevCompletedStates[i] = i < _boxCompleted.Count && _boxCompleted[i];
+            }
+
+            _sfxHasSnapshot = true;
+        }
+
+        private void EmitSfxFromStateChanges()
+        {
+            if (_game == null)
+            {
+                return;
+            }
+
+            if (!_sfxHasSnapshot)
+            {
+                CaptureSfxSnapshot();
+                return;
+            }
+
+            int inserts = 0;
+            int completions = 0;
+            int unlocks = 0;
+
+            int n = _game.Containers.Count;
+            for (int i = 0; i < n; i++)
+            {
+                int countNow = _game.Containers[i].Count;
+                int countPrev = i < _sfxPrevContainerCounts.Count ? _sfxPrevContainerCounts[i] : 0;
+                if (countNow > countPrev)
+                {
+                    inserts += (countNow - countPrev);
+                }
+
+                bool lockedNow = i < _boxLocked.Count && _boxLocked[i];
+                bool lockedPrev = i < _sfxPrevLockedStates.Count && _sfxPrevLockedStates[i];
+                if (lockedPrev && !lockedNow)
+                {
+                    unlocks++;
+                }
+
+                bool completedNow = i < _boxCompleted.Count && _boxCompleted[i];
+                bool completedPrev = i < _sfxPrevCompletedStates.Count && _sfxPrevCompletedStates[i];
+                if (!completedPrev && completedNow)
+                {
+                    completions++;
+                }
+            }
+
+            if (inserts > 0)
+            {
+                float vol = 1f + Mathf.Min(0.6f, inserts * 0.08f);
+                PlaySfx(SfxId.BlockInsert, vol);
+            }
+            if (completions > 0)
+            {
+                PlaySfx(SfxId.BoxComplete);
+            }
+            if (unlocks > 0)
+            {
+                PlaySfx(SfxId.BoxUnlock);
+            }
+            if (!_sfxPrevFastForward && _fullBeltFastForward)
+            {
+                PlaySfx(SfxId.ConveyorSpeedup);
+                PlaySfx(SfxId.ConveyorFullWarning);
+            }
+
+            CaptureSfxSnapshot();
         }
 
         private void EnsureBackground()
@@ -616,6 +788,7 @@ namespace LoopSorting
         private void ToggleSettingsPanel(bool show)
         {
             if (_settingsPanel == null) return;
+            PlaySfx(show ? SfxId.UiPopupOpen : SfxId.UiPopupClose);
             _settingsPanel.SetActive(show);
             if (show)
             {
@@ -788,6 +961,7 @@ namespace LoopSorting
                 UpdateLocks();
                 UpdateCompletionStates();
                 UpdateBeltCounter();
+                EmitSfxFromStateChanges();
                 if (_game.Conveyor.BlockCount == 0) break;
                 yield return new WaitForSeconds(conveyorTickSeconds / Mathf.Max(0.0001f, _speedMultiplier));
             }
@@ -798,6 +972,7 @@ namespace LoopSorting
             if (_game == null || _inputLocked) yield break;
             _inputLocked = true;
             SetInteractableForBooster(false);
+            PlaySfx(SfxId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             _speedMultiplier = 5f;
@@ -807,7 +982,9 @@ namespace LoopSorting
             {
                 yield return StartCoroutine(NormalizeBeltStateAnimated());
             }
-            ApplyBoosterFillColor();
+            bool ok = ApplyBoosterFillColor();
+            PlaySfx(ok ? SfxId.BoosterFillSort : SfxId.BoosterFail);
+            EmitSfxFromStateChanges();
 
             _speedMultiplier = prevSpeed;
             RefreshFastTag();
@@ -820,6 +997,7 @@ namespace LoopSorting
             if (_game == null || _inputLocked) yield break;
             _inputLocked = true;
             SetInteractableForBooster(false);
+            PlaySfx(SfxId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             _speedMultiplier = 5f;
@@ -829,7 +1007,9 @@ namespace LoopSorting
             {
                 yield return StartCoroutine(NormalizeBeltStateAnimated());
             }
-            ApplyBoosterShuffle();
+            bool ok = ApplyBoosterShuffle();
+            PlaySfx(ok ? SfxId.BoosterShuffle : SfxId.BoosterFail);
+            EmitSfxFromStateChanges();
 
             _speedMultiplier = prevSpeed;
             RefreshFastTag();
@@ -845,9 +1025,9 @@ namespace LoopSorting
             if (_speedButton != null) _speedButton.interactable = val;
         }
 
-        private void ApplyBoosterFillColor()
+        private bool ApplyBoosterFillColor()
         {
-            if (_game == null) return;
+            if (_game == null) return false;
 
             // find completed colors (only unlocked containers)
             var completedColors = new HashSet<BlockColor>();
@@ -900,7 +1080,7 @@ namespace LoopSorting
                     candidates.Add(kv.Key);
                 }
             }
-            if (candidates.Count == 0) return;
+            if (candidates.Count == 0) return false;
 
             var targetColor = candidates[_rng.Next(candidates.Count)];
 
@@ -924,7 +1104,7 @@ namespace LoopSorting
                     targetIdx = i;
                 }
             }
-            if (targetIdx < 0) return;
+            if (targetIdx < 0) return false;
 
             // collect target color blocks from all UNLOCKED containers (keep conveyor intact)
             var sourceBlocks = new List<Block>();
@@ -941,7 +1121,7 @@ namespace LoopSorting
             if (sourceBlocks.Count < required)
             {
                 Build(_currentLayout);
-                return;
+                return false;
             }
 
             // collect displaced non-target from target container so they won't disappear
@@ -985,6 +1165,7 @@ namespace LoopSorting
             UpdateLocks();
             UpdateCompletionStates();
             CheckEndConditions();
+            return true;
         }
 
         private List<List<Block>> BuildBlockRuns(IReadOnlyList<Block> blocks)
@@ -1011,9 +1192,9 @@ namespace LoopSorting
             return runs;
         }
 
-        private void ApplyBoosterShuffle()
+        private bool ApplyBoosterShuffle()
         {
-            if (_game == null) return;
+            if (_game == null) return false;
 
             var completedColors = new HashSet<BlockColor>();
             var completedContainers = new HashSet<int>();
@@ -1043,7 +1224,7 @@ namespace LoopSorting
 
             // conveyor: keep as-is (do not disturb existing belt blocks)
 
-            if (chunks.Count == 0) return;
+            if (chunks.Count == 0) return false;
 
             // shuffle chunks
             for (int i = chunks.Count - 1; i > 0; i--)
@@ -1108,6 +1289,7 @@ namespace LoopSorting
             UpdateLocks();
             UpdateCompletionStates();
             CheckEndConditions();
+            return true;
         }
 
         private void Update()
@@ -1116,6 +1298,8 @@ namespace LoopSorting
             {
                 return;
             }
+
+            UpdateConveyorLoopSfx();
 
             float effectiveSpeed = _fullBeltFastForward ? 5f : _speedMultiplier;
             _tickTimer += Time.deltaTime * effectiveSpeed;
@@ -1128,12 +1312,19 @@ namespace LoopSorting
                 _tickTimer = 0f;
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
                 _game.TickConveyor(blocked);
+                _conveyorTickSfxCountdown--;
+                if (_conveyorTickSfxCountdown <= 0)
+                {
+                    PlaySfx(SfxId.ConveyorTick);
+                    _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 2~3 ticks
+                }
                 SyncBeltVisuals();
                 SyncContainersVisuals();
                 UpdateLocks();
                 UpdateCompletionStates();
                 UpdateBeltCounter();
                 HandleFullBeltFastForwardAfterTick();
+                EmitSfxFromStateChanges();
                 CheckEndConditions();
             }
         }
@@ -1215,12 +1406,15 @@ namespace LoopSorting
             if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex]) return;
             if (containerIndex < _boxLocked.Count && _boxLocked[containerIndex])
             {
+                PlaySfx(SfxId.BoxLockedThunk);
                 return;
             }
             if (!container.TryPeek(out var first))
             {
                 return;
             }
+
+            PlaySfx(SfxId.BoxSelect);
 
             // show outline for the pending run
             int pending = 0;
@@ -1909,6 +2103,7 @@ namespace LoopSorting
                     _boxViews[i].SetLocked(finalLocked, unlockColor);
                 }
             }
+
         }
 
         private void CheckEndConditions()
@@ -1975,6 +2170,8 @@ namespace LoopSorting
         private void ShowResult(bool win)
         {
             _gameOver = true;
+            PlaySfx(SfxId.UiPopupOpen);
+            PlaySfx(win ? SfxId.LevelWin : SfxId.LevelLose);
             EnsureResultPanel();
             _resultPanel.SetActive(true);
             _resultText.text = win ? "VICTORY" : "FAILED";
@@ -2000,6 +2197,7 @@ namespace LoopSorting
 
         private void OnPrimaryClicked()
         {
+            PlaySfx(SfxId.UiConfirm);
             if (_resultPanel != null) _resultPanel.SetActive(false);
             if (_flow != null && _flow.levels.Count > 0 && _primaryLabel != null && _primaryLabel.text == "NEXT")
             {
@@ -2017,6 +2215,8 @@ namespace LoopSorting
 
         private void OnSecondaryClicked()
         {
+            bool isClose = _secondaryLabel != null && _secondaryLabel.text == "CLOSE";
+            PlaySfx(isClose ? SfxId.UiCancel : SfxId.UiClick);
             if (_resultPanel != null) _resultPanel.SetActive(false);
             RestartCurrent();
         }
@@ -2124,6 +2324,7 @@ namespace LoopSorting
             var container = _game.Containers[containerIndex];
             // This container cannot accept incoming blocks while releasing.
             container.SetBusy(true);
+            PlaySfx(SfxId.RunShipStart);
             // Determine how many consecutive blocks of the same color are at the front.
             int pending = 0;
             for (int i = 0; i < container.Count; i++)
@@ -2152,6 +2353,7 @@ namespace LoopSorting
                 var result = _game.TryReleaseFromContainer(containerIndex);
                 if (result == ReleaseResult.BeltBlocked)
                 {
+                    PlaySfx(SfxId.BlockReject);
                     // Slot is occupied, wait and retry next frame/interval. Belt moves independently.
                     yield return new WaitForSeconds(releaseBlockedRetry / Mathf.Max(0.0001f, _speedMultiplier));
                     safety++;
@@ -2163,6 +2365,7 @@ namespace LoopSorting
                 }
 
                 pending--;
+                PlaySfx(SfxId.BlockEject);
 
                 SyncBeltVisuals();
                 SyncContainersVisuals();
@@ -2193,6 +2396,11 @@ namespace LoopSorting
         {
             if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterFillButton != null && _boosterShuffleButton != null)
             {
+                if (_hudRootRect == null)
+                {
+                    var hudRoot = _uiCanvas.transform.Find("HUDRoot");
+                    if (hudRoot != null) _hudRootRect = hudRoot.GetComponent<RectTransform>();
+                }
                 return;
             }
 
@@ -2201,6 +2409,9 @@ namespace LoopSorting
             {
                 Destroy(_uiCanvas.gameObject);
                 _uiCanvas = null;
+                _hudRootRect = null;
+                _lockChipLayer = null;
+                _lockChipByBox.Clear();
             }
 
             beltCounterUI = null;
@@ -2247,6 +2458,7 @@ namespace LoopSorting
             rootRect.anchorMax = Vector2.one;
             rootRect.offsetMin = Vector2.zero;
             rootRect.offsetMax = Vector2.zero;
+            _hudRootRect = rootRect;
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
             var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
@@ -2395,7 +2607,11 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null,
                 icon: hasKit ? "ui.icon.shop" : null);
-            _shopButton.onClick.AddListener(() => OpenShop(ShopTab.Coins));
+            _shopButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                OpenShop(ShopTab.Coins);
+            });
 
             // Coins + lives (top-right): value pill + "+" that opens shop.
             CreateCurrencyPill(
@@ -2407,7 +2623,11 @@ namespace LoopSorting
                 iconKey: hasKit ? "ui.icon.coin" : null,
                 out _coinText,
                 out _coinPlusButton);
-            _coinPlusButton.onClick.AddListener(() => OpenShop(ShopTab.Coins));
+            _coinPlusButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                OpenShop(ShopTab.Coins);
+            });
 
             CreateCurrencyPill(
                 parent: root.transform,
@@ -2418,7 +2638,11 @@ namespace LoopSorting
                 iconKey: hasKit ? "ui.icon.heart" : null,
                 out _lifeText,
                 out _lifePlusButton);
-            _lifePlusButton.onClick.AddListener(() => OpenShop(ShopTab.Lives));
+            _lifePlusButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                OpenShop(ShopTab.Lives);
+            });
 
             RefreshEconomyHUD();
 
@@ -2767,6 +2991,7 @@ namespace LoopSorting
             _soundToggle.onValueChanged.AddListener(val =>
             {
                 soundEnabled = val;
+                EnsureSfx();
                 UpdateToggleVisual(soundTrack, soundKnob, val);
             });
             UpdateToggleVisual(soundTrack, soundKnob, soundEnabled);
@@ -2882,6 +3107,7 @@ namespace LoopSorting
             if (_shopPanel != null) _shopPanel.SetActive(true);
             if (_settingsPanel != null) _settingsPanel.SetActive(false);
             if (_resultPanel != null) _resultPanel.SetActive(false);
+            PlaySfx(SfxId.UiPopupOpen);
         }
 
         private void EnsureShopUI()
@@ -2959,7 +3185,11 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.close_red.pressed" : null,
                 disabled: hasKit ? "ui.button.close_red.disabled" : null,
                 icon: null);
-            closeBtn.onClick.AddListener(() => _shopPanel.SetActive(false));
+            closeBtn.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiPopupClose);
+                _shopPanel.SetActive(false);
+            });
 
             // Currency strip
             var coinsStrip = CreateCurrencyStrip(panelGO.transform, "CoinsStrip", new Vector2(-220f, -150f), hasKit ? "ui.icon.coin" : null, out _shopCoinValue);

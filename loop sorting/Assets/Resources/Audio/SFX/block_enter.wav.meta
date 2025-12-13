@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2e8b010fa0644f0ebcb4dbd959e05cc5
+AudioImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultSettings:
+    loadType: 0
+    sampleRateSetting: 0
+    sampleRateOverride: 44100
+    compressionFormat: 1
+    quality: 1
+    conversionMode: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -23,6 +23,7 @@ namespace LoopSorting
         private GameObject _lockOverlay;
         private GameObject _lockBadge;
         private GameObject _lockMarkerPlate;
+        private GameObject _lockMarkerColorHalo;
         private GameObject _lockMarkerDisc;
         private GameObject _lockMarkerIcon;
         private bool _locked;
@@ -720,6 +721,14 @@ namespace LoopSorting
                 var discCol = _lockMarkerDisc.GetComponent<Collider>();
                 if (discCol != null) GameObject.Destroy(discCol);
 
+                // Always-visible color halo behind the (possibly textured) disc so unlockColor is readable even if the disc texture can't tint.
+                _lockMarkerColorHalo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _lockMarkerColorHalo.name = "MarkerColorHalo";
+                _lockMarkerColorHalo.transform.SetParent(_lockBadge.transform, false);
+                _lockMarkerColorHalo.transform.localPosition = new Vector3(0f, 0f, -0.005f);
+                var haloCol = _lockMarkerColorHalo.GetComponent<Collider>();
+                if (haloCol != null) GameObject.Destroy(haloCol);
+
                 _lockMarkerIcon = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 _lockMarkerIcon.name = "MarkerLockIcon";
                 _lockMarkerIcon.transform.SetParent(_lockBadge.transform, false);
@@ -752,6 +761,7 @@ namespace LoopSorting
 
                 // Fallback materials if textures aren't available (avoid pink default).
                 EnsureUnlitColorMaterial(_lockMarkerPlate, Color.white, LockBadgeQueue);
+                EnsureUnlitColorMaterial(_lockMarkerColorHalo, Color.white, LockBadgeQueue + 1);
                 EnsureUnlitColorMaterial(_lockMarkerDisc, Color.white, LockBadgeQueue + 1);
                 EnsureUnlitColorMaterial(_lockMarkerIcon, Color.white, LockBadgeQueue + 2);
             }
@@ -778,9 +788,22 @@ namespace LoopSorting
             {
                 _lockMarkerPlate.transform.localScale = new Vector3(plateWidth, plateHeight, 1f);
             }
+            if (_lockMarkerColorHalo != null)
+            {
+                float halo = plateWidth * 0.78f;
+                _lockMarkerColorHalo.transform.localScale = new Vector3(halo, halo, 1f);
+                var haloR = _lockMarkerColorHalo.GetComponent<Renderer>();
+                if (haloR != null && haloR.sharedMaterial != null)
+                {
+                    var c = BlockVisual.ToUnityColor(unlockColor);
+                    c.a = 1f;
+                    haloR.sharedMaterial.color = c;
+                }
+            }
             if (_lockMarkerDisc != null)
             {
-                float disc = plateWidth * 0.52f;
+                // Make the tinted disc slightly larger than the lock icon so a colored edge is visible.
+                float disc = plateWidth * 0.68f;
                 _lockMarkerDisc.transform.localScale = new Vector3(disc, disc, 1f);
                 var discR = _lockMarkerDisc.GetComponent<Renderer>();
                 if (discR != null && discR.sharedMaterial != null)

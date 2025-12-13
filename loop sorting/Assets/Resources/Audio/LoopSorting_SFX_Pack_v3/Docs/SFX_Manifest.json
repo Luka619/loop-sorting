@@ -1,0 +1,506 @@
+[
+  {
+    "event": "block.eject",
+    "file": "SFX/Gameplay/block_eject_01.wav",
+    "variant": 1,
+    "priority": 50,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.eject",
+    "file": "SFX/Gameplay/block_eject_02.wav",
+    "variant": 2,
+    "priority": 50,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.eject",
+    "file": "SFX/Gameplay/block_eject_03.wav",
+    "variant": 3,
+    "priority": 50,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.insert",
+    "file": "SFX/Gameplay/block_insert_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.insert",
+    "file": "SFX/Gameplay/block_insert_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.insert",
+    "file": "SFX/Gameplay/block_insert_03.wav",
+    "variant": 3,
+    "priority": 55,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.land",
+    "file": "SFX/Gameplay/block_land_01.wav",
+    "variant": 1,
+    "priority": 35,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.land",
+    "file": "SFX/Gameplay/block_land_02.wav",
+    "variant": 2,
+    "priority": 35,
+    "polyphony": 6,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject",
+    "file": "SFX/Gameplay/block_reject_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject",
+    "file": "SFX/Gameplay/block_reject_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.busy",
+    "file": "SFX/Gameplay/block_reject_busy_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.busy",
+    "file": "SFX/Gameplay/block_reject_busy_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.full",
+    "file": "SFX/Gameplay/block_reject_full_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.full",
+    "file": "SFX/Gameplay/block_reject_full_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.locked",
+    "file": "SFX/Gameplay/block_reject_locked_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.locked",
+    "file": "SFX/Gameplay/block_reject_locked_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.mismatch",
+    "file": "SFX/Gameplay/block_reject_mismatch_01.wav",
+    "variant": 1,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.reject.mismatch",
+    "file": "SFX/Gameplay/block_reject_mismatch_02.wav",
+    "variant": 2,
+    "priority": 55,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "block.skip_empty_box",
+    "file": "SFX/Gameplay/block_skip_empty_box.wav",
+    "variant": 1,
+    "priority": 30,
+    "polyphony": 2,
+    "cooldown_ms": 50,
+    "notes": ""
+  },
+  {
+    "event": "booster.activate",
+    "file": "SFX/Boosters/booster_activate.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "booster.fail",
+    "file": "SFX/Boosters/booster_fail.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "booster.fill",
+    "file": "SFX/Boosters/booster_fill.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "booster.shuffle",
+    "file": "SFX/Boosters/booster_shuffle.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "booster.ui.close",
+    "file": "SFX/Boosters/booster_ui_close.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "booster.ui.open",
+    "file": "SFX/Boosters/booster_ui_open.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "box.busy.denied",
+    "file": "SFX/Gameplay/box_busy_denied.wav",
+    "variant": 1,
+    "priority": 45,
+    "polyphony": 2,
+    "cooldown_ms": 100,
+    "notes": ""
+  },
+  {
+    "event": "box.complete",
+    "file": "SFX/Gameplay/box_complete.wav",
+    "variant": 1,
+    "priority": 85,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "box.locked.denied",
+    "file": "SFX/Gameplay/box_locked_thunk.wav",
+    "variant": 1,
+    "priority": 45,
+    "polyphony": 2,
+    "cooldown_ms": 100,
+    "notes": ""
+  },
+  {
+    "event": "box.select",
+    "file": "SFX/Gameplay/box_select.wav",
+    "variant": 1,
+    "priority": 40,
+    "polyphony": 2,
+    "cooldown_ms": 30,
+    "notes": ""
+  },
+  {
+    "event": "box.select",
+    "file": "SFX/Gameplay/box_select_02.wav",
+    "variant": 2,
+    "priority": 40,
+    "polyphony": 2,
+    "cooldown_ms": 30,
+    "notes": ""
+  },
+  {
+    "event": "box.unlock",
+    "file": "SFX/Gameplay/box_unlock.wav",
+    "variant": 1,
+    "priority": 85,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.full.fail",
+    "file": "SFX/Conveyor/belt_full_fail.wav",
+    "variant": 1,
+    "priority": 90,
+    "polyphony": 1,
+    "cooldown_ms": 500,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.full.warning",
+    "file": "SFX/Conveyor/belt_full_warning.wav",
+    "variant": 1,
+    "priority": 80,
+    "polyphony": 1,
+    "cooldown_ms": 500,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.loop",
+    "file": "SFX/Conveyor/conveyor_loop.wav",
+    "variant": 1,
+    "priority": 5,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.speeddown",
+    "file": "SFX/Conveyor/conveyor_speeddown.wav",
+    "variant": 1,
+    "priority": 45,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.speedup",
+    "file": "SFX/Conveyor/conveyor_speedup.wav",
+    "variant": 1,
+    "priority": 45,
+    "polyphony": 1,
+    "cooldown_ms": 200,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.tick",
+    "file": "SFX/Conveyor/conveyor_tick_01.wav",
+    "variant": 1,
+    "priority": 10,
+    "polyphony": 1,
+    "cooldown_ms": 80,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.tick",
+    "file": "SFX/Conveyor/conveyor_tick_02.wav",
+    "variant": 2,
+    "priority": 10,
+    "polyphony": 1,
+    "cooldown_ms": 80,
+    "notes": ""
+  },
+  {
+    "event": "conveyor.tick",
+    "file": "SFX/Conveyor/conveyor_tick_03.wav",
+    "variant": 3,
+    "priority": 10,
+    "polyphony": 1,
+    "cooldown_ms": 80,
+    "notes": ""
+  },
+  {
+    "event": "hidden.reveal",
+    "file": "SFX/Gameplay/hidden_reveal.wav",
+    "variant": 1,
+    "priority": 60,
+    "polyphony": 2,
+    "cooldown_ms": 50,
+    "notes": ""
+  },
+  {
+    "event": "level.lose",
+    "file": "SFX/States/lose_jingle.wav",
+    "variant": 1,
+    "priority": 100,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "level.next",
+    "file": "SFX/States/level_next.wav",
+    "variant": 1,
+    "priority": 60,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "level.retry",
+    "file": "SFX/States/level_retry.wav",
+    "variant": 1,
+    "priority": 60,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "level.start",
+    "file": "SFX/States/level_start.wav",
+    "variant": 1,
+    "priority": 70,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "level.win",
+    "file": "SFX/States/win_jingle.wav",
+    "variant": 1,
+    "priority": 100,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "run.ship.end",
+    "file": "SFX/Gameplay/run_ship_end.wav",
+    "variant": 1,
+    "priority": 50,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "run.ship.start",
+    "file": "SFX/Gameplay/run_ship_start.wav",
+    "variant": 1,
+    "priority": 50,
+    "polyphony": 1,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.cancel",
+    "file": "SFX/UI/ui_cancel.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.click",
+    "file": "SFX/UI/ui_click_01.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.click",
+    "file": "SFX/UI/ui_click_02.wav",
+    "variant": 2,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.click",
+    "file": "SFX/UI/ui_click_03.wav",
+    "variant": 3,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.confirm",
+    "file": "SFX/UI/ui_confirm.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.denied",
+    "file": "SFX/UI/ui_denied.wav",
+    "variant": 1,
+    "priority": 35,
+    "polyphony": 2,
+    "cooldown_ms": 80,
+    "notes": ""
+  },
+  {
+    "event": "ui.hover",
+    "file": "SFX/UI/ui_hover.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.popup.close",
+    "file": "SFX/UI/ui_popup_close.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  },
+  {
+    "event": "ui.popup.open",
+    "file": "SFX/UI/ui_popup_open.wav",
+    "variant": 1,
+    "priority": 25,
+    "polyphony": 4,
+    "cooldown_ms": 0,
+    "notes": ""
+  }
+]

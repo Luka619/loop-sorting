@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 namespace LoopSorting
@@ -29,6 +30,13 @@ namespace LoopSorting
         private bool _locked;
         private bool _completed;
         private GameObject _completedOverlay;
+        private GameObject _completedFrameGlow;
+        private GameObject _completedGlass;
+        private GameObject _completedBadge;
+        private GameObject _completedBurst;
+        private Coroutine _completedFxRoutine;
+
+        private const float CompletedNineSliceBorderFrac = 0.14f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
@@ -848,44 +856,407 @@ namespace LoopSorting
 
         public void SetCompleted(bool val)
         {
+            bool wasCompleted = _completed;
             _completed = val;
-            if (_completedOverlay == null)
-            {
-                _completedOverlay = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _completedOverlay.name = "CompletedOverlay";
-                _completedOverlay.transform.SetParent(transform, false);
-                _completedOverlay.transform.localPosition = new Vector3(0f, 0f, CompletedOverlayZ); // above blocks, below lock
-                var rend = _completedOverlay.GetComponent<Renderer>();
-                if (rend != null)
-                {
-                    if (LoopSortingUIKit.IsAvailable())
-                    {
-                        var tex = LoopSortingUIKit.LoadTextureByKey("world.completed_overlay");
-                        if (tex != null)
-                        {
-                            rend.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, CompletedQueue);
-                        }
-                    }
 
-                    if (rend.sharedMaterial == null)
+            // Once a box is completed, the dashed operable outline is no longer needed.
+            SetBoxOutlineVisible(!val);
+            if (val) HideFrontOutline();
+
+            EnsureCompletedOverlayBuilt();
+            if (_completedOverlay == null) return;
+
+            if (!val)
+            {
+                if (wasCompleted && _completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
+                _completedFxRoutine = null;
+                _completedOverlay.SetActive(false);
+                return;
+            }
+
+            _completedOverlay.SetActive(true);
+            UpdateCompletedOverlayVisuals();
+
+            if (!wasCompleted)
+            {
+                if (_completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
+                _completedFxRoutine = StartCoroutine(PlayCompletedFx());
+            }
+        }
+
+        private void SetBoxOutlineVisible(bool visible)
+        {
+            if (_boxOutlineSegments == null) return;
+            for (int i = 0; i < _boxOutlineSegments.Count; i++)
+            {
+                var seg = _boxOutlineSegments[i];
+                if (seg == null) continue;
+                if (seg.gameObject != null) seg.gameObject.SetActive(visible);
+            }
+        }
+
+        private void EnsureCompletedOverlayBuilt()
+        {
+            if (_completedOverlay != null) return;
+
+            _completedOverlay = new GameObject("CompletedOverlay");
+            _completedOverlay.transform.SetParent(transform, false);
+            _completedOverlay.transform.localPosition = new Vector3(0f, 0f, CompletedOverlayZ); // above blocks, below lock
+            _completedOverlay.transform.localRotation = Quaternion.identity;
+            _completedOverlay.transform.localScale = Vector3.one;
+
+            _completedFrameGlow = CreateNineSliceLayer(_completedOverlay.transform, "FrameGlow", z: 0f);
+            _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: -0.01f);
+
+            _completedBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _completedBadge.name = "Badge";
+            _completedBadge.transform.SetParent(_completedOverlay.transform, false);
+            _completedBadge.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+            RemoveCollider(_completedBadge);
+
+            // Textures live under the active UI kit resources root.
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                var frameTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_frame_glow_512.png");
+                var glassTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_glass_overlay_512.png");
+                var badgeTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_badge_check_256.png");
+
+                if (frameTex != null)
+                {
+                    var r = _completedFrameGlow.GetComponent<Renderer>();
+                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(frameTex, Color.white, CompletedQueue);
+                }
+                if (glassTex != null)
+                {
+                    var r = _completedGlass.GetComponent<Renderer>();
+                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(glassTex, Color.white, CompletedQueue + 1);
+                }
+                if (badgeTex != null)
+                {
+                    var r = _completedBadge.GetComponent<Renderer>();
+                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(badgeTex, Color.white, CompletedQueue + 2);
+                }
+            }
+
+            // Fallback so we never show magenta.
+            EnsureUnlitColorMaterial(_completedFrameGlow, new Color(1f, 1f, 1f, 0.35f), CompletedQueue);
+            EnsureUnlitColorMaterial(_completedGlass, new Color(1f, 1f, 1f, 0.25f), CompletedQueue + 1);
+            EnsureUnlitColorMaterial(_completedBadge, new Color(1f, 1f, 1f, 1f), CompletedQueue + 2);
+
+            _completedOverlay.SetActive(false);
+        }
+
+        private void UpdateCompletedOverlayVisuals()
+        {
+            var boxTint = GetCompletedTintColor();
+
+            // Scale a bit larger so the frame reads like an outer glow (and doesn't fight the dashed box outline).
+            float sx = _boxSize.x * 1.12f;
+            float sy = _boxSize.y * 1.12f;
+            if (_completedFrameGlow != null) UpdateNineSliceMesh(_completedFrameGlow, sx, sy, CompletedNineSliceBorderFrac);
+
+            // Keep glass slightly inside to avoid adding another strong border.
+            float gx = _boxSize.x * 0.98f;
+            float gy = _boxSize.y * 0.98f;
+            if (_completedGlass != null) UpdateNineSliceMesh(_completedGlass, gx, gy, CompletedNineSliceBorderFrac);
+
+            // For very wide/tall boxes, use the 1024 textures to keep edge quality when stretched.
+            bool useHiRes = ShouldUseHiResCompletedTextures();
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                if (_completedFrameGlow != null)
+                {
+                    var r = _completedFrameGlow.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
                     {
-                        var mat = new Material(Shader.Find("Unlit/Color"))
-                        {
-                            color = new Color(0.2f, 0.8f, 0.2f, 0.35f)
-                        };
-                        mat.renderQueue = CompletedQueue;
-                        rend.sharedMaterial = mat;
+                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                            ? "World_Sprites/box_completed_frame_glow_1024.png"
+                            : "World_Sprites/box_completed_frame_glow_512.png");
+                        if (tex != null) r.sharedMaterial.mainTexture = tex;
                     }
                 }
-                var col = _completedOverlay.GetComponent<Collider>();
-                if (col != null) GameObject.Destroy(col);
+
+                if (_completedGlass != null)
+                {
+                    var r = _completedGlass.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                            ? "World_Sprites/box_completed_glass_overlay_1024.png"
+                            : "World_Sprites/box_completed_glass_overlay_512.png");
+                        if (tex != null) r.sharedMaterial.mainTexture = tex;
+                    }
+                }
             }
 
-            if (_completedOverlay != null)
+            float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
+            float badgeSize = badgeBase * 0.28f;
+            if (_completedBadge != null)
             {
-                _completedOverlay.transform.localScale = new Vector3(_boxSize.x * 1.02f, _boxSize.y * 1.02f, 1f);
+                _completedBadge.transform.localScale = new Vector3(badgeSize, badgeSize, 1f);
+                _completedBadge.transform.localPosition = new Vector3(_boxSize.x * 0.54f, _boxSize.y * 0.54f, -0.02f);
             }
-            _completedOverlay.SetActive(val);
+
+            // Tint: glow uses the box color, glass is subtle, badge stays mostly white.
+            if (_completedFrameGlow != null)
+            {
+                var r = _completedFrameGlow.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = boxTint * 0.78f;
+                    c.a = 0.5f;
+                    r.sharedMaterial.color = c;
+                }
+            }
+            if (_completedGlass != null)
+            {
+                var r = _completedGlass.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = Color.white;
+                    c.a = 0.12f;
+                    r.sharedMaterial.color = c;
+                }
+            }
+            if (_completedBadge != null)
+            {
+                var r = _completedBadge.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = Color.white;
+                    c.a = 0.9f;
+                    r.sharedMaterial.color = c;
+                }
+            }
+        }
+
+        private bool ShouldUseHiResCompletedTextures()
+        {
+            float maxDim = Mathf.Max(_boxSize.x, _boxSize.y);
+            float minDim = Mathf.Max(0.0001f, Mathf.Min(_boxSize.x, _boxSize.y));
+            float aspect = maxDim / minDim;
+
+            // Prefer hi-res when the texture will be stretched significantly.
+            return aspect >= 1.8f || maxDim >= 3.0f;
+        }
+
+        private static GameObject CreateNineSliceLayer(Transform parent, string name, float z)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, 0f, z);
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+
+            go.AddComponent<MeshFilter>();
+            go.AddComponent<MeshRenderer>();
+            return go;
+        }
+
+        private static void UpdateNineSliceMesh(GameObject go, float width, float height, float borderFrac)
+        {
+            if (go == null) return;
+            var mf = go.GetComponent<MeshFilter>();
+            if (mf == null) return;
+
+            width = Mathf.Max(0.001f, width);
+            height = Mathf.Max(0.001f, height);
+
+            // Keep corners square by basing corner size on the smaller dimension.
+            float corner = Mathf.Min(width, height) * Mathf.Clamp01(borderFrac);
+            float hw = width * 0.5f;
+            float hh = height * 0.5f;
+            corner = Mathf.Min(corner, hw, hh);
+
+            float x0 = -hw;
+            float x1 = -hw + corner;
+            float x2 = hw - corner;
+            float x3 = hw;
+
+            float y0 = -hh;
+            float y1 = -hh + corner;
+            float y2 = hh - corner;
+            float y3 = hh;
+
+            float u0 = 0f;
+            float u1 = borderFrac;
+            float u2 = 1f - borderFrac;
+            float u3 = 1f;
+
+            float v0 = 0f;
+            float v1 = borderFrac;
+            float v2 = 1f - borderFrac;
+            float v3 = 1f;
+
+            var mesh = mf.sharedMesh;
+            if (mesh == null)
+            {
+                mesh = new Mesh { name = $"{go.name}_NineSlice" };
+                mf.sharedMesh = mesh;
+            }
+            else
+            {
+                mesh.Clear();
+            }
+
+            // 4x4 grid => 16 verts.
+            var verts = new Vector3[16];
+            var uvs = new Vector2[16];
+            float[] xs = { x0, x1, x2, x3 };
+            float[] ys = { y0, y1, y2, y3 };
+            float[] us = { u0, u1, u2, u3 };
+            float[] vs = { v0, v1, v2, v3 };
+
+            int vi = 0;
+            for (int y = 0; y < 4; y++)
+            {
+                for (int x = 0; x < 4; x++)
+                {
+                    verts[vi] = new Vector3(xs[x], ys[y], 0f);
+                    uvs[vi] = new Vector2(us[x], vs[y]);
+                    vi++;
+                }
+            }
+
+            // 3x3 cells => 9 quads => 18 tris => 54 indices.
+            var indices = new int[54];
+            int ti = 0;
+            for (int cy = 0; cy < 3; cy++)
+            {
+                for (int cx = 0; cx < 3; cx++)
+                {
+                    int i00 = cy * 4 + cx;
+                    int i10 = cy * 4 + (cx + 1);
+                    int i01 = (cy + 1) * 4 + cx;
+                    int i11 = (cy + 1) * 4 + (cx + 1);
+
+                    indices[ti++] = i00;
+                    indices[ti++] = i01;
+                    indices[ti++] = i11;
+
+                    indices[ti++] = i00;
+                    indices[ti++] = i11;
+                    indices[ti++] = i10;
+                }
+            }
+
+            mesh.vertices = verts;
+            mesh.uv = uvs;
+            mesh.triangles = indices;
+            mesh.RecalculateBounds();
+        }
+
+        private Color GetCompletedTintColor()
+        {
+            for (int i = 0; i < _slotColors.Count; i++)
+            {
+                if (_slotColors[i].HasValue)
+                {
+                    var c = BlockVisual.ToUnityColor(_slotColors[i].Value);
+                    c.a = 1f;
+                    return c;
+                }
+            }
+            return Color.white;
+        }
+
+        private IEnumerator PlayCompletedFx()
+        {
+            // Badge pop: 0 -> 1.08 -> 1.0 in ~0.22s.
+            float t = 0f;
+            float dur = 0.22f;
+            if (_completedBadge != null)
+            {
+                _completedBadge.transform.localScale = Vector3.zero;
+            }
+
+            // Burst sheet (8 frames, 4x2) over ~0.35s.
+            CreateCompletedBurst();
+
+            while (t < dur)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / dur);
+                float s = u < 0.7f ? Mathf.Lerp(0f, 1.08f, u / 0.7f) : Mathf.Lerp(1.08f, 1f, (u - 0.7f) / 0.3f);
+                if (_completedBadge != null)
+                {
+                    float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
+                    float badgeSize = badgeBase * 0.34f;
+                    _completedBadge.transform.localScale = new Vector3(badgeSize * s, badgeSize * s, 1f);
+                }
+                yield return null;
+            }
+
+            // Cleanup burst a moment later (animation handles its own frames).
+            yield return new WaitForSeconds(0.45f);
+            if (_completedBurst != null)
+            {
+                Destroy(_completedBurst);
+                _completedBurst = null;
+            }
+        }
+
+        private void CreateCompletedBurst()
+        {
+            if (_completedOverlay == null) return;
+            if (_completedBurst != null) Destroy(_completedBurst);
+
+            var tex = LoopSortingUIKit.IsAvailable()
+                ? LoopSortingUIKit.LoadTexture("World_Sprites/vfx_complete_burst_sheet_8f_512x256.png")
+                : null;
+            if (tex == null) return;
+
+            _completedBurst = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _completedBurst.name = "CompletedBurst";
+            _completedBurst.transform.SetParent(_completedOverlay.transform, false);
+            _completedBurst.transform.localPosition = new Vector3(0f, 0f, -0.03f);
+            RemoveCollider(_completedBurst);
+
+            float baseSize = Mathf.Min(_boxSize.x, _boxSize.y) * 0.95f * 2f;
+            _completedBurst.transform.localScale = new Vector3(baseSize, baseSize, 1f);
+
+            var r = _completedBurst.GetComponent<Renderer>();
+            if (r == null) return;
+
+            var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, CompletedQueue + 3);
+            // 4x2 sheet: each frame is 1/4 by 1/2.
+            mat.mainTextureScale = new Vector2(0.25f, 0.5f);
+            mat.mainTextureOffset = new Vector2(0f, 0.5f);
+            r.sharedMaterial = mat;
+
+            StartCoroutine(AnimateBurstSheet(r, mat));
+        }
+
+        private IEnumerator AnimateBurstSheet(Renderer r, Material mat)
+        {
+            if (r == null || mat == null) yield break;
+
+            float total = 0.38f;
+            int frames = 8;
+            float frameDur = total / frames;
+            var tint = GetCompletedTintColor();
+            tint.a = 1f;
+
+            for (int i = 0; i < frames; i++)
+            {
+                int col = i % 4;
+                int row = i < 4 ? 1 : 0; // top row first (y=0.5), then bottom row (y=0)
+                mat.mainTextureOffset = new Vector2(col * 0.25f, row * 0.5f);
+
+                float a = i < frames - 2 ? 1f : Mathf.Lerp(1f, 0f, (i - (frames - 2)) / 2f);
+                var c = tint;
+                c.a = a;
+                mat.color = c;
+
+                yield return new WaitForSeconds(frameDur);
+            }
+        }
+
+        private static void RemoveCollider(GameObject quad)
+        {
+            if (quad == null) return;
+            var col = quad.GetComponent<Collider>();
+            if (col != null) GameObject.Destroy(col);
         }
 
         private static List<Vector2Int> BuildCellOrder(int cols, int rows, OpeningSide opening)

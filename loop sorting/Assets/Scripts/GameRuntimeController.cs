@@ -141,6 +141,7 @@ namespace LoopSorting
         private SfxPlayer _sfx;
         private bool _sfxHasSnapshot;
         private bool _sfxPrevFastForward;
+        private bool _sfxSuppressSpeeddownOnce;
         private readonly List<int> _sfxPrevContainerCounts = new List<int>();
         private readonly List<bool> _sfxPrevLockedStates = new List<bool>();
         private readonly List<bool> _sfxPrevCompletedStates = new List<bool>();
@@ -215,6 +216,7 @@ namespace LoopSorting
         {
             _sfxHasSnapshot = false;
             _sfxPrevFastForward = false;
+            _sfxSuppressSpeeddownOnce = false;
             _sfxPrevContainerCounts.Clear();
             _sfxPrevLockedStates.Clear();
             _sfxPrevCompletedStates.Clear();
@@ -289,7 +291,7 @@ namespace LoopSorting
             EnsureEventSystem();
             EnsureSfx();
             PlaySfx(SfxId.LevelStart);
-            _conveyorTickSfxCountdown = 2 + _rng.Next(2); // 2~3 ticks
+            _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
 
             BuildConveyor(layout);
             BuildContainers(layout);
@@ -702,6 +704,17 @@ namespace LoopSorting
                 PlaySfx(SfxId.ConveyorSpeedup);
                 PlaySfx(SfxId.ConveyorFullWarning);
             }
+            if (_sfxPrevFastForward && !_fullBeltFastForward)
+            {
+                if (_sfxSuppressSpeeddownOnce)
+                {
+                    _sfxSuppressSpeeddownOnce = false;
+                }
+                else
+                {
+                    PlaySfx(SfxId.ConveyorSpeeddown);
+                }
+            }
 
             CaptureSfxSnapshot();
         }
@@ -975,6 +988,10 @@ namespace LoopSorting
             PlaySfx(SfxId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
+            if (!_fullBeltFastForward)
+            {
+                PlaySfx(SfxId.ConveyorSpeedup);
+            }
             _speedMultiplier = 5f;
             RefreshFastTag();
 
@@ -987,6 +1004,10 @@ namespace LoopSorting
             EmitSfxFromStateChanges();
 
             _speedMultiplier = prevSpeed;
+            if (!_fullBeltFastForward && prevSpeed < 4.99f)
+            {
+                PlaySfx(SfxId.ConveyorSpeeddown);
+            }
             RefreshFastTag();
             SetInteractableForBooster(true);
             _inputLocked = false;
@@ -1000,6 +1021,10 @@ namespace LoopSorting
             PlaySfx(SfxId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
+            if (!_fullBeltFastForward)
+            {
+                PlaySfx(SfxId.ConveyorSpeedup);
+            }
             _speedMultiplier = 5f;
             RefreshFastTag();
 
@@ -1012,6 +1037,10 @@ namespace LoopSorting
             EmitSfxFromStateChanges();
 
             _speedMultiplier = prevSpeed;
+            if (!_fullBeltFastForward && prevSpeed < 4.99f)
+            {
+                PlaySfx(SfxId.ConveyorSpeeddown);
+            }
             RefreshFastTag();
             SetInteractableForBooster(true);
             _inputLocked = false;
@@ -1316,7 +1345,7 @@ namespace LoopSorting
                 if (_conveyorTickSfxCountdown <= 0)
                 {
                     PlaySfx(SfxId.ConveyorTick);
-                    _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 2~3 ticks
+                    _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
                 }
                 SyncBeltVisuals();
                 SyncContainersVisuals();
@@ -1348,6 +1377,8 @@ namespace LoopSorting
                 if (_fullBeltStepsRemaining <= 0)
                 {
                     // Still full after one full loop: fail the level.
+                    PlaySfx(SfxId.ConveyorFullFail);
+                    _sfxSuppressSpeeddownOnce = true;
                     ShowResult(false);
                     StopFullBeltFastForward();
                 }
@@ -2204,12 +2235,14 @@ namespace LoopSorting
                 int next = _flowIndex + 1;
                 if (next < _flow.levels.Count)
                 {
+                    PlaySfx(SfxId.LevelNext);
                     _flowIndex = next;
                     _gameOver = false;
                     Build(_flow, _flowIndex);
                     return;
                 }
             }
+            PlaySfx(SfxId.LevelRetry);
             RestartCurrent();
         }
 
@@ -2218,6 +2251,10 @@ namespace LoopSorting
             bool isClose = _secondaryLabel != null && _secondaryLabel.text == "CLOSE";
             PlaySfx(isClose ? SfxId.UiCancel : SfxId.UiClick);
             if (_resultPanel != null) _resultPanel.SetActive(false);
+            if (!isClose)
+            {
+                PlaySfx(SfxId.LevelRetry);
+            }
             RestartCurrent();
         }
 
@@ -2381,6 +2418,7 @@ namespace LoopSorting
                 safety++;
             }
 
+            PlaySfx(SfxId.RunShipEnd);
             _isReleasing = false;
             _activeReleasePort = null;
             container.SetBusy(false);
@@ -4070,6 +4108,7 @@ namespace LoopSorting
                 finalGo.transform.position = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
             }
 
+            PlaySfx(SfxId.BlockLand);
             _beltSpawnAnimating.Remove(beltIndex);
             _beltSpawnCoroutines.Remove(beltIndex);
         }

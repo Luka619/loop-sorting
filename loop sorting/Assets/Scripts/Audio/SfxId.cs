@@ -9,14 +9,23 @@ namespace LoopSorting
         UiPopupOpen,
         UiPopupClose,
         UiDenied,
+        UiHover,
 
         // Gameplay
         BoxSelect,
         BoxLockedThunk,
+        BoxBusyDenied,
         RunShipStart,
+        RunShipEnd,
         BlockEject,
+        BlockLand,
         BlockInsert,
         BlockReject,
+        BlockRejectLocked,
+        BlockRejectBusy,
+        BlockRejectFull,
+        BlockRejectMismatch,
+        BlockSkipEmptyBox,
         BoxComplete,
         BoxUnlock,
         HiddenReveal,
@@ -25,16 +34,22 @@ namespace LoopSorting
         ConveyorTick,
         ConveyorLoop,
         ConveyorSpeedup,
+        ConveyorSpeeddown,
         ConveyorFullWarning,
+        ConveyorFullFail,
 
         // Boosters
         BoosterActivate,
         BoosterFillSort,
         BoosterShuffle,
         BoosterFail,
+        BoosterUiOpen,
+        BoosterUiClose,
 
         // Level states
         LevelStart,
+        LevelNext,
+        LevelRetry,
         LevelWin,
         LevelLose
     }

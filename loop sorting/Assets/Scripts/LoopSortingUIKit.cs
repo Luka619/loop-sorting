@@ -115,7 +115,7 @@ namespace LoopSorting
             }
         }
 
-        private const string DefaultResourcesRoot = "loop_sorting_ui_components_v02_bright";
+        private const string DefaultResourcesRoot = "loop_sorting_ui_components_v04_1_meta_pack";
         private const string ConfigResourcePath = "LoopSortingUIKitConfig";
 
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
@@ -375,19 +375,19 @@ namespace LoopSorting
                 resourcesRoot = DefaultResourcesRoot,
                 layout = new LayoutFile
                 {
-                     referenceWidth = 1080f,
-                     referenceHeight = 1920f,
-                    reservedTop = 0.065f,
+                    referenceWidth = 1080f,
+                    referenceHeight = 1920f,
+                    reservedTop = 0.09f,
                     reservedBottom = 0.11f,
                     modules = new LayoutModulesFile
                     {
-                        shop = new RectFile { x = 24f, y = 24f, w = 88f, h = 88f },
-                        counter = new RectFile { x = 124f, y = 24f, w = 180f, h = 88f },
-                        level = new RectFile { x = 320f, y = 24f, w = 180f, h = 88f },
-                        lives = new RectFile { x = 510f, y = 24f, w = 168f, h = 88f },
-                        coins = new RectFile { x = 690f, y = 24f, w = 160f, h = 88f },
-                        speed = new RectFile { x = 868f, y = 24f, w = 88f, h = 88f },
-                        settings = new RectFile { x = 968f, y = 24f, w = 88f, h = 88f },
+                        shop = new RectFile { x = 24f, y = 20f, w = 84f, h = 84f },
+                        counter = new RectFile { x = 120f, y = 20f, w = 220f, h = 84f },
+                        level = new RectFile { x = 380f, y = 20f, w = 320f, h = 84f },
+                        speed = new RectFile { x = 876f, y = 20f, w = 84f, h = 84f },
+                        settings = new RectFile { x = 972f, y = 20f, w = 84f, h = 84f },
+                        lives = new RectFile { x = 600f, y = 120f, w = 220f, h = 78f },
+                        coins = new RectFile { x = 836f, y = 120f, w = 220f, h = 78f },
                     },
                     boosters = new BoosterLayoutFile
                     {

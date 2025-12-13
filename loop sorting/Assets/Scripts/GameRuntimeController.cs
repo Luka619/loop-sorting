@@ -2143,7 +2143,7 @@ namespace LoopSorting
             float counterY = uiLayout.counter.y;
 
             var counterIconGO = new GameObject("Icon");
-            counterIconGO.transform.SetParent(counterRoot.transform, false);
+            counterIconGO.transform.SetParent(counterBgGO.transform, false);
             var counterIcon = counterIconGO.AddComponent<Image>();
             counterIcon.raycastTarget = false;
             if (hasKit)
@@ -2152,40 +2152,69 @@ namespace LoopSorting
                 counterIcon.color = Color.white;
             }
             var counterIconRect = counterIcon.GetComponent<RectTransform>();
-            counterIconRect.anchorMin = new Vector2(0f, 1f);
-            counterIconRect.anchorMax = new Vector2(0f, 1f);
-            counterIconRect.pivot = new Vector2(0f, 1f);
-            counterIconRect.anchoredPosition = new Vector2(counterX + 20f, -(counterY + 2f));
-            counterIconRect.sizeDelta = new Vector2(84f, 84f);
+            counterIconRect.anchorMin = new Vector2(0f, 0.5f);
+            counterIconRect.anchorMax = new Vector2(0f, 0.5f);
+            counterIconRect.pivot = new Vector2(0f, 0.5f);
+            counterIconRect.anchoredPosition = new Vector2(18f, 0f);
+            counterIconRect.sizeDelta = new Vector2(Mathf.Min(84f, uiLayout.counter.height * 0.78f), Mathf.Min(84f, uiLayout.counter.height * 0.78f));
 
             var counterValueGO = new GameObject("Value");
-            counterValueGO.transform.SetParent(counterRoot.transform, false);
+            counterValueGO.transform.SetParent(counterBgGO.transform, false);
             var counterValue = counterValueGO.AddComponent<TextMeshProUGUI>();
             counterValue.raycastTarget = false;
             counterValue.text = "-";
             counterValue.alignment = TextAlignmentOptions.MidlineLeft;
             counterValue.fontSize = 64;
+            counterValue.enableWordWrapping = false;
             counterValue.color = Color.white;
             var counterValueRect = counterValue.GetComponent<RectTransform>();
-            counterValueRect.anchorMin = new Vector2(0f, 1f);
-            counterValueRect.anchorMax = new Vector2(0f, 1f);
-            counterValueRect.pivot = new Vector2(0f, 1f);
-            counterValueRect.anchoredPosition = new Vector2(counterX + 110f, -(counterY + 2f));
-            counterValueRect.sizeDelta = new Vector2(150f, 84f);
+            counterValueRect.anchorMin = new Vector2(0f, 0f);
+            counterValueRect.anchorMax = new Vector2(1f, 1f);
+            counterValueRect.offsetMin = new Vector2(110f, 0f);
+            counterValueRect.offsetMax = new Vector2(-14f, 0f);
 
             beltCounterUI = counterValueGO.AddComponent<BeltCounterUI>();
 
             // Level label (top-center)
             var levelGO = new GameObject("LevelLabel");
             levelGO.transform.SetParent(root.transform, false);
-            _levelHudText = levelGO.AddComponent<TextMeshProUGUI>();
+            var levelRectRoot = levelGO.AddComponent<RectTransform>();
+            PlaceTopCenter(levelRectRoot, uiLayout.level, uiLayout.referenceWidth);
+
+            var levelBg = levelGO.AddComponent<Image>();
+            levelBg.raycastTarget = false;
+            if (hasKit)
+            {
+                levelBg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.hud.level_bg");
+                if (levelBg.sprite != null)
+                {
+                    levelBg.type = levelBg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    levelBg.color = Color.white;
+                }
+                else
+                {
+                    levelBg.color = new Color(0f, 0f, 0f, 0f);
+                }
+            }
+            else
+            {
+                levelBg.color = new Color(0f, 0f, 0f, 0.25f);
+            }
+
+            var levelTextGO = new GameObject("Text");
+            levelTextGO.transform.SetParent(levelGO.transform, false);
+            _levelHudText = levelTextGO.AddComponent<TextMeshProUGUI>();
             _levelHudText.raycastTarget = false;
             _levelHudText.text = $"LEVEL {(_flow != null ? (_flowIndex + 1) : 1)}";
             _levelHudText.alignment = TextAlignmentOptions.Center;
-            _levelHudText.fontSize = 56;
+            _levelHudText.fontSize = 52;
+            _levelHudText.enableWordWrapping = false;
             _levelHudText.color = Color.white;
-            var levelRect = _levelHudText.GetComponent<RectTransform>();
-            PlaceTopCenter(levelRect, uiLayout.level, uiLayout.referenceWidth);
+            var levelTextRect = _levelHudText.GetComponent<RectTransform>();
+            levelTextRect.anchorMin = Vector2.zero;
+            levelTextRect.anchorMax = Vector2.one;
+            levelTextRect.offsetMin = new Vector2(16f, 0f);
+            levelTextRect.offsetMax = new Vector2(-16f, 0f);
 
             // Shop button (top-left under pause area, uses placeholder icon if missing)
             _shopButton = CreateIconButton(
@@ -2511,17 +2540,18 @@ namespace LoopSorting
             var panelGO = new GameObject("Panel");
             panelGO.transform.SetParent(_settingsPanel.transform, false);
             var panelRect = panelGO.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.55f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.55f);
+            panelRect.anchorMin = new Vector2(0.5f, 0.52f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.52f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
             panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = new Vector2(860f, 720f);
+            panelRect.sizeDelta = new Vector2(960f, 820f);
 
             var panelImg = panelGO.AddComponent<Image>();
             panelImg.raycastTarget = false;
             if (hasKit)
             {
-                panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_thick");
+                if (panelImg.sprite == null) panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
                 panelImg.type = panelImg.sprite != null && panelImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 panelImg.color = Color.white;
             }
@@ -2531,37 +2561,37 @@ namespace LoopSorting
             }
 
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(_settingsPanel.transform, false);
+            titleGO.transform.SetParent(panelGO.transform, false);
             var titleText = titleGO.AddComponent<TextMeshProUGUI>();
             titleText.raycastTarget = false;
             titleText.text = "SETTINGS";
             titleText.alignment = TextAlignmentOptions.Center;
-            titleText.fontSize = 60;
+            titleText.fontSize = 68;
             titleText.color = Color.white;
             var titleRect = titleText.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0.5f, 0.75f);
-            titleRect.anchorMax = new Vector2(0.5f, 0.75f);
-            titleRect.pivot = new Vector2(0.5f, 0.5f);
-            titleRect.anchoredPosition = Vector2.zero;
-            titleRect.sizeDelta = new Vector2(600f, 120f);
+            titleRect.anchorMin = new Vector2(0.5f, 1f);
+            titleRect.anchorMax = new Vector2(0.5f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.anchoredPosition = new Vector2(0f, -70f);
+            titleRect.sizeDelta = new Vector2(700f, 120f);
 
             var closeBtn = CreateIconButton(
-                parent: _settingsPanel.transform,
+                parent: panelGO.transform,
                 name: "CloseButton",
-                anchor: new Vector2(0.5f, 0.55f),
-                anchoredPos: new Vector2(360f, 260f),
-                size: new Vector2(140f, 140f),
-                normal: hasKit ? "ui.button.mint_square.normal" : null,
-                pressed: hasKit ? "ui.button.mint_square.pressed" : null,
-                disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.close" : null);
+                anchor: new Vector2(1f, 1f),
+                anchoredPos: new Vector2(-96f, -96f),
+                size: new Vector2(160f, 160f),
+                normal: hasKit ? "ui.button.close_red.normal" : null,
+                pressed: hasKit ? "ui.button.close_red.pressed" : null,
+                disabled: hasKit ? "ui.button.close_red.disabled" : null,
+                icon: null);
             closeBtn.onClick.AddListener(() => ToggleSettingsPanel(false));
 
             _soundToggle = CreateToggleRow(
-                parent: _settingsPanel.transform,
+                parent: panelGO.transform,
                 name: "RowSound",
-                anchor: new Vector2(0.5f, 0.55f),
-                anchoredPos: new Vector2(0f, 80f),
+                anchor: new Vector2(0.5f, 0.5f),
+                anchoredPos: new Vector2(0f, 140f),
                 label: "SOUND",
                 initial: soundEnabled,
                 out var soundTrack,
@@ -2574,10 +2604,10 @@ namespace LoopSorting
             UpdateToggleVisual(soundTrack, soundKnob, soundEnabled);
 
             _vibrationToggle = CreateToggleRow(
-                parent: _settingsPanel.transform,
+                parent: panelGO.transform,
                 name: "RowVibration",
-                anchor: new Vector2(0.5f, 0.55f),
-                anchoredPos: new Vector2(0f, -40f),
+                anchor: new Vector2(0.5f, 0.5f),
+                anchoredPos: new Vector2(0f, 10f),
                 label: "VIBRATION",
                 initial: vibrationEnabled,
                 out var vibTrack,
@@ -2588,6 +2618,70 @@ namespace LoopSorting
                 UpdateToggleVisual(vibTrack, vibKnob, val);
             });
             UpdateToggleVisual(vibTrack, vibKnob, vibrationEnabled);
+
+            Button CreateSettingsActionButton(string name, Vector2 anchoredPos, string normalKey, string pressedKey, string disabledKey, string label)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(panelGO.transform, false);
+                var rect = go.AddComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = anchoredPos;
+                rect.sizeDelta = new Vector2(380f, 180f);
+
+                var img = go.AddComponent<Image>();
+                var btn = go.AddComponent<Button>();
+                ApplyUIKitButtonSprites(btn, img, hasKit ? normalKey : null, hasKit ? pressedKey : null, hasKit ? disabledKey : null);
+
+                var txtGO = new GameObject("Label");
+                txtGO.transform.SetParent(go.transform, false);
+                var txt = txtGO.AddComponent<TextMeshProUGUI>();
+                txt.raycastTarget = false;
+                txt.text = label;
+                txt.alignment = TextAlignmentOptions.Center;
+                txt.fontSize = 48;
+                txt.color = Color.white;
+                var tRect = txt.GetComponent<RectTransform>();
+                tRect.anchorMin = Vector2.zero;
+                tRect.anchorMax = Vector2.one;
+                tRect.offsetMin = Vector2.zero;
+                tRect.offsetMax = Vector2.zero;
+
+                return btn;
+            }
+
+            // Bottom actions (placeholders; wired to real behaviors where available).
+            var restoreBtn = CreateSettingsActionButton(
+                "RestorePurchases",
+                anchoredPos: new Vector2(-210f, -210f),
+                normalKey: "ui.button.small_blue.normal",
+                pressedKey: "ui.button.small_blue.pressed",
+                disabledKey: "ui.button.small_blue.disabled",
+                label: "RESTORE");
+            restoreBtn.onClick.AddListener(() => Debug.Log("Restore Purchases (placeholder)"));
+
+            var supportBtn = CreateSettingsActionButton(
+                "Support",
+                anchoredPos: new Vector2(210f, -210f),
+                normalKey: "ui.button.small_green.normal",
+                pressedKey: "ui.button.small_green.pressed",
+                disabledKey: "ui.button.small_green.disabled",
+                label: "SUPPORT");
+            supportBtn.onClick.AddListener(() => Debug.Log("Support (placeholder)"));
+
+            var retryBtn = CreateSettingsActionButton(
+                "RetryLevel",
+                anchoredPos: new Vector2(0f, -390f),
+                normalKey: "ui.button.small_red.normal",
+                pressedKey: "ui.button.small_red.pressed",
+                disabledKey: "ui.button.small_red.disabled",
+                label: "RETRY");
+            retryBtn.onClick.AddListener(() =>
+            {
+                ToggleSettingsPanel(false);
+                RestartCurrent();
+            });
 
             _settingsPanel.SetActive(false);
         }
@@ -2691,12 +2785,12 @@ namespace LoopSorting
                 parent: panelGO.transform,
                 name: "CloseButton",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-60f, -60f),
-                size: new Vector2(140f, 140f),
-                normal: hasKit ? "ui.button.mint_square.normal" : null,
-                pressed: hasKit ? "ui.button.mint_square.pressed" : null,
-                disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.close" : null);
+                anchoredPos: new Vector2(-96f, -96f),
+                size: new Vector2(160f, 160f),
+                normal: hasKit ? "ui.button.close_red.normal" : null,
+                pressed: hasKit ? "ui.button.close_red.pressed" : null,
+                disabled: hasKit ? "ui.button.close_red.disabled" : null,
+                icon: null);
             closeBtn.onClick.AddListener(() => _shopPanel.SetActive(false));
 
             // Currency strip
@@ -2855,6 +2949,24 @@ namespace LoopSorting
             tRect.anchoredPosition = new Vector2(70f, 0f);
             tRect.sizeDelta = new Vector2(560f, 120f);
 
+            // Price button background (visual only; the whole card is clickable).
+            if (hasKit)
+            {
+                var priceBgGO = new GameObject("PriceBG");
+                priceBgGO.transform.SetParent(itemGO.transform, false);
+                var priceImg = priceBgGO.AddComponent<Image>();
+                priceImg.raycastTarget = false;
+                priceImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.button.price_green.normal");
+                priceImg.type = priceImg.sprite != null && priceImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                priceImg.color = Color.white;
+                var pRect = priceBgGO.GetComponent<RectTransform>();
+                pRect.anchorMin = new Vector2(1f, 0.5f);
+                pRect.anchorMax = new Vector2(1f, 0.5f);
+                pRect.pivot = new Vector2(1f, 0.5f);
+                pRect.anchoredPosition = new Vector2(-60f, 0f);
+                pRect.sizeDelta = new Vector2(240f, 120f);
+            }
+
             var rightGO = new GameObject("Right");
             rightGO.transform.SetParent(itemGO.transform, false);
             var rightText = rightGO.AddComponent<TextMeshProUGUI>();
@@ -2937,6 +3049,7 @@ namespace LoopSorting
             tmp.text = "0";
             tmp.alignment = TextAlignmentOptions.MidlineRight;
             tmp.fontSize = 56;
+            tmp.enableWordWrapping = false;
             tmp.color = Color.white;
             var vRect = tmp.GetComponent<RectTransform>();
             vRect.anchorMin = new Vector2(0f, 0f);

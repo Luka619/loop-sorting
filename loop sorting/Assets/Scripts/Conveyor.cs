@@ -3,6 +3,32 @@ using System.Collections.Generic;
 
 namespace LoopSorting
 {
+    public enum ConveyorPortOutcome
+    {
+        Inserted,
+        RejectedLocked,
+        RejectedBusy,
+        RejectedFull,
+        RejectedMismatch,
+        SkippedEmptyBoxPreferredTarget
+    }
+
+    public readonly struct ConveyorPortEvent
+    {
+        public int BeltIndex { get; }
+        public Container Container { get; }
+        public Block Block { get; }
+        public ConveyorPortOutcome Outcome { get; }
+
+        public ConveyorPortEvent(int beltIndex, Container container, Block block, ConveyorPortOutcome outcome)
+        {
+            BeltIndex = beltIndex;
+            Container = container;
+            Block = block;
+            Outcome = outcome;
+        }
+    }
+
     public sealed class Conveyor
     {
         private readonly Block?[] _slots;
@@ -93,6 +119,11 @@ namespace LoopSorting
 
         public void Advance(int? blockedPort = null)
         {
+            Advance(blockedPort, events: null);
+        }
+
+        public void Advance(int? blockedPort, List<ConveyorPortEvent> events)
+        {
             int? blockIndex = blockedPort;
             bool blockActive = blockIndex.HasValue && _slots[blockIndex.Value].HasValue;
 
@@ -157,17 +188,48 @@ namespace LoopSorting
                 }
 
                 var container = port.Value;
-                // New rule: a block should not enter an empty container if there exists any other
-                // non-empty, non-full container whose front color matches this block.
-                if (container.IsEmpty && ExistsPreferredNonEmptyTarget(container, slot.Value))
-                {
-                    continue;
-                }
-                if (!container.TryPush(slot.Value))
+                if (container == null)
                 {
                     continue;
                 }
 
+                // New rule: a block should not enter an empty container if there exists any other
+                // non-empty, non-full container whose front color matches this block.
+                if (container.IsEmpty && ExistsPreferredNonEmptyTarget(container, slot.Value))
+                {
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, slot.Value, ConveyorPortOutcome.SkippedEmptyBoxPreferredTarget));
+                    continue;
+                }
+
+                var block = slot.Value;
+                if (container.Locked)
+                {
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.RejectedLocked));
+                    continue;
+                }
+                if (container.Busy)
+                {
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.RejectedBusy));
+                    continue;
+                }
+                if (container.Count >= container.Capacity)
+                {
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.RejectedFull));
+                    continue;
+                }
+                if (container.Count > 0 && container.Blocks[0].Color != block.Color)
+                {
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.RejectedMismatch));
+                    continue;
+                }
+                if (!container.TryPush(block))
+                {
+                    // Should not happen given checks above, but keep it safe.
+                    events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.RejectedMismatch));
+                    continue;
+                }
+
+                events?.Add(new ConveyorPortEvent(beltIndex, container, block, ConveyorPortOutcome.Inserted));
                 _slots[beltIndex] = null;
             }
         }

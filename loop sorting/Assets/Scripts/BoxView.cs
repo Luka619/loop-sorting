@@ -7,11 +7,16 @@ namespace LoopSorting
     [RequireComponent(typeof(BoxCollider))]
     public class BoxView : MonoBehaviour
     {
+        private static Texture2D _mouthFlashTexture;
+
         public int ContainerIndex { get; private set; }
         public GameRuntimeController Controller { get; private set; }
 
         private readonly List<GameObject> _blockVisuals = new List<GameObject>();
         private readonly List<BlockColor?> _slotColors = new List<BlockColor?>();
+        // "Authored" hidden state coming from gameplay data (Block.Hidden). Never modified by reveal rules.
+        private readonly List<bool> _slotAuthoredHidden = new List<bool>();
+        // Final hidden state after applying run-based reveal rules. Used for visuals.
         private readonly List<bool> _slotHidden = new List<bool>();
         private int _columns = 1;
         private int _rows = 1;
@@ -38,6 +43,8 @@ namespace LoopSorting
         private Coroutine _completedFxRoutine;
 
         private const float CompletedNineSliceBorderFrac = 0.14f;
+        private const float LockNineSliceBorderFrac = 0.14f;
+        private const float LockOverlayScale = 0.985f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
@@ -45,6 +52,19 @@ namespace LoopSorting
         private readonly Dictionary<int, Vector3> _slotFinalLocalPos = new Dictionary<int, Vector3>();
         private Vector3 _mouthLocalPos;
         private Vector3 _mouthLocalNormal;
+        private Vector3 _baseLocalPos;
+        private Vector3 _baseLocalScale;
+        private Coroutine _tapRoutine;
+        private Coroutine _denyRoutine;
+        private Coroutine _shuffleRoutine;
+        private Coroutine _lockAnimRoutine;
+        private Coroutine _mouthFlashRoutine;
+        private GameObject _mouthFlash;
+        private GameObject _mouthIndicator;
+        private Coroutine _mouthRippleRoutine;
+        private GameObject _mouthRipple;
+        private Coroutine _mouthSquashRoutine;
+        private Vector3 _mouthIndicatorBaseScale = Vector3.one;
 
         // Render / layering guideline (smaller Z = closer to camera):
         // Blocks:            z = 0
@@ -76,11 +96,15 @@ namespace LoopSorting
             _opening = opening;
             _cellOrder = BuildCellOrder(_columns, _rows, _opening);
             _slotColors.Clear();
+            _slotAuthoredHidden.Clear();
             _slotHidden.Clear();
             _incomingCoroutines.Clear();
             _incomingAnimatingSlots.Clear();
             _slotFinalLocalPos.Clear();
             CacheMouth();
+            _baseLocalPos = transform.localPosition;
+            _baseLocalScale = transform.localScale;
+            EnsureMouthIndicator();
 
             var collider = GetComponent<BoxCollider>();
             collider.size = new Vector3(size.x, size.y, 0.3f);
@@ -116,6 +140,7 @@ namespace LoopSorting
                         int idx = _tmpIndices[i];
                         CancelIncoming(idx);
                         _slotColors[idx] = null;
+                        _slotAuthoredHidden[idx] = false;
                         _slotHidden[idx] = false;
                     }
                 }
@@ -154,6 +179,7 @@ namespace LoopSorting
                     if (slot >= 0 && slot < _slotColors.Count && !_slotColors[slot].HasValue)
                     {
                         _slotColors[slot] = blocks[0].Color;
+                        _slotAuthoredHidden[slot] = blocks[0].Hidden;
                         _slotHidden[slot] = blocks[0].Hidden;
                         animateInsert = true;
                         animateSlot = slot;
@@ -171,6 +197,7 @@ namespace LoopSorting
                     {
                         CancelIncoming(slot);
                         _slotColors[slot] = null;
+                        _slotAuthoredHidden[slot] = false;
                         _slotHidden[slot] = false;
                     }
                     else
@@ -188,7 +215,7 @@ namespace LoopSorting
                         if (slot < 0 || slot >= _slotColors.Count) { matches = false; break; }
                         if (!_slotColors[slot].HasValue) { matches = false; break; }
                         if (_slotColors[slot].Value != blocks[i].Color) { matches = false; break; }
-                        if (_slotHidden[slot] != blocks[i].Hidden) { matches = false; break; }
+                        if (_slotAuthoredHidden[slot] != blocks[i].Hidden) { matches = false; break; }
                     }
                     if (!matches)
                     {
@@ -204,13 +231,16 @@ namespace LoopSorting
                 if (_slotColors[i].HasValue) _tmpIndices.Add(i);
             }
 
+            bool revealTriggered = false;
+            BlockColor revealColor = default;
+
             // Enforce run-based hidden logic: same-color consecutive blocks share hidden state;
             // if the run touches the outermost position, reveal the whole run.
             for (int i = 0; i < _tmpIndices.Count;)
             {
                 int idx = _tmpIndices[i];
                 var color = _slotColors[idx].Value;
-                bool runHidden = _slotHidden[idx];
+                bool runHidden = _slotAuthoredHidden[idx];
                 if (i == 0)
                 {
                     runHidden = false; // front run always revealed
@@ -221,6 +251,11 @@ namespace LoopSorting
                 {
                     int idx2 = _tmpIndices[j];
                     if (_slotColors[idx2].Value != color) break;
+                    if (!_locked && !_completed && i == 0 && _slotHidden[idx2] && !runHidden)
+                    {
+                        revealTriggered = true;
+                        revealColor = color;
+                    }
                     _slotHidden[idx2] = runHidden;
                     j++;
                 }
@@ -228,6 +263,12 @@ namespace LoopSorting
             }
 
             RefreshVisuals();
+
+            if (revealTriggered)
+            {
+                Controller?.OnHiddenReveal(ContainerIndex, revealColor);
+                PlayMouthFlash(BlockVisual.ToUnityColor(revealColor), sizeFactor: 1.25f, seconds: 0.22f);
+            }
 
             if (animateInsert && animateSlot >= 0)
             {
@@ -241,6 +282,7 @@ namespace LoopSorting
             {
                 if (_slotColors[i].HasValue) CancelIncoming(i);
                 _slotColors[i] = null;
+                _slotAuthoredHidden[i] = false;
                 _slotHidden[i] = false;
             }
 
@@ -251,6 +293,7 @@ namespace LoopSorting
                 int slot = start + i;
                 if (slot < 0 || slot >= _slotColors.Count) break;
                 _slotColors[slot] = blocks[i].Color;
+                _slotAuthoredHidden[slot] = blocks[i].Hidden;
                 _slotHidden[slot] = blocks[i].Hidden;
             }
         }
@@ -280,6 +323,7 @@ namespace LoopSorting
             while (_slotColors.Count < _capacity)
             {
                 _slotColors.Add(null);
+                _slotAuthoredHidden.Add(false);
                 _slotHidden.Add(false);
             }
             while (_slotColors.Count > _capacity)
@@ -287,6 +331,7 @@ namespace LoopSorting
                 int lastIdx = _slotColors.Count - 1;
                 CancelIncoming(lastIdx);
                 _slotColors.RemoveAt(_slotColors.Count - 1);
+                _slotAuthoredHidden.RemoveAt(_slotAuthoredHidden.Count - 1);
                 _slotHidden.RemoveAt(_slotHidden.Count - 1);
             }
         }
@@ -677,12 +722,11 @@ namespace LoopSorting
 
         public void SetLocked(bool val, BlockColor unlockColor = BlockColor.Red)
         {
+            bool wasLocked = _locked;
             _locked = val;
             if (_lockOverlay == null)
             {
-                _lockOverlay = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockOverlay.name = "LockOverlay";
-                _lockOverlay.transform.SetParent(transform, false);
+                _lockOverlay = CreateNineSliceLayer(transform, "LockOverlay", z: LockOverlayZ);
                 _lockOverlay.transform.localPosition = new Vector3(0f, 0f, LockOverlayZ); // in front of blocks
                 var rend = _lockOverlay.GetComponent<Renderer>();
                 if (rend != null)
@@ -706,8 +750,6 @@ namespace LoopSorting
                         rend.sharedMaterial = mat;
                     }
                 }
-                var col = _lockOverlay.GetComponent<Collider>();
-                if (col != null) GameObject.Destroy(col);
 
                 // Marker root sits above overlay (do not parent under overlay to avoid double Z offsets).
                 _lockBadge = new GameObject("LockMarker");
@@ -837,8 +879,534 @@ namespace LoopSorting
                 _lockMarkerIcon.transform.localScale = new Vector3(iconW, iconH, 1f);
             }
 
-            if (_lockOverlay != null) _lockOverlay.SetActive(val);
-            if (_lockBadge != null) _lockBadge.SetActive(val);
+            if (_lockAnimRoutine != null) StopCoroutine(_lockAnimRoutine);
+            _lockAnimRoutine = null;
+            UpdateMouthIndicatorVisibility();
+
+            if (_lockOverlay != null)
+            {
+                // Lock overlay texture is authored with thick borders; use a 9-slice mesh so it doesn't look stretched.
+                UpdateNineSliceMesh(_lockOverlay, _boxSize.x * LockOverlayScale, _boxSize.y * LockOverlayScale, LockNineSliceBorderFrac);
+            }
+
+            if (val)
+            {
+                if (_lockOverlay != null) _lockOverlay.SetActive(true);
+                if (_lockBadge != null) _lockBadge.SetActive(true);
+                SetLockVisualAlpha(wasLocked ? 1f : 0f);
+                if (!wasLocked)
+                {
+                    _lockAnimRoutine = StartCoroutine(AnimateLockAlpha(from: 0f, to: 1f, seconds: 0.16f));
+                }
+            }
+            else
+            {
+                if (wasLocked)
+                {
+                    if (_lockOverlay != null) _lockOverlay.SetActive(true);
+                    if (_lockBadge != null) _lockBadge.SetActive(true);
+                    SetLockVisualAlpha(1f);
+                    _lockAnimRoutine = StartCoroutine(AnimateUnlock(from: 1f, to: 0f, seconds: 0.18f));
+                }
+                else
+                {
+                    if (_lockOverlay != null) _lockOverlay.SetActive(false);
+                    if (_lockBadge != null) _lockBadge.SetActive(false);
+                }
+            }
+        }
+
+        public void PlayTapFeedback()
+        {
+            if (_tapRoutine != null) StopCoroutine(_tapRoutine);
+            _tapRoutine = StartCoroutine(MotionUtil.ScalePunch(transform, _baseLocalScale, punchScale: 0.06f, seconds: 0.14f));
+        }
+
+        public void PlayDeniedFeedback()
+        {
+            if (_denyRoutine != null) StopCoroutine(_denyRoutine);
+            _denyRoutine = StartCoroutine(MotionUtil.ShakeLocalPosition(transform, _baseLocalPos, amplitude: Mathf.Max(0.04f, _boxSize.x * 0.04f), seconds: 0.18f, shakes: 8));
+            PlayMouthFlash(new Color(1f, 0.3f, 0.3f, 1f), sizeFactor: 1.0f, seconds: 0.18f);
+        }
+
+        public void PlayInfoHint(Color color, float sizeFactor = 1.1f, float seconds = 0.18f)
+        {
+            PlayMouthFlash(color, sizeFactor, seconds);
+        }
+
+        public void PlayMouthRipple(Color color, float seconds = 0.14f)
+        {
+            EnsureMouthRipple();
+            if (_mouthRipple == null) return;
+            if (_mouthRippleRoutine != null) StopCoroutine(_mouthRippleRoutine);
+            _mouthRippleRoutine = StartCoroutine(AnimateMouthRipple(color, seconds));
+        }
+
+        public void PlayMouthSquash(Color color, float seconds = 0.14f)
+        {
+            EnsureMouthIndicator();
+            if (_mouthIndicator == null) return;
+            if (_mouthSquashRoutine != null) StopCoroutine(_mouthSquashRoutine);
+            _mouthSquashRoutine = StartCoroutine(AnimateMouthSquash(color, seconds));
+        }
+
+        public void PlayShuffleJiggle(float seconds = 0.85f)
+        {
+            if (_shuffleRoutine != null) StopCoroutine(_shuffleRoutine);
+            _shuffleRoutine = StartCoroutine(AnimateShuffleJiggle(seconds));
+        }
+
+        public void PlayPortRejectFeedback(ConveyorPortOutcome outcome)
+        {
+            if (outcome == ConveyorPortOutcome.SkippedEmptyBoxPreferredTarget) return;
+
+            Color c = new Color(1f, 0.35f, 0.35f, 1f);
+            switch (outcome)
+            {
+                case ConveyorPortOutcome.RejectedLocked: c = new Color(0.8f, 0.8f, 0.9f, 1f); break;
+                case ConveyorPortOutcome.RejectedBusy: c = new Color(0.75f, 0.75f, 0.75f, 1f); break;
+                case ConveyorPortOutcome.RejectedFull: c = new Color(1f, 0.72f, 0.25f, 1f); break;
+                case ConveyorPortOutcome.RejectedMismatch: c = new Color(1f, 0.35f, 0.35f, 1f); break;
+            }
+            PlayMouthFlash(c, sizeFactor: 1.05f, seconds: 0.16f);
+        }
+
+        private IEnumerator AnimateShuffleJiggle(float seconds)
+        {
+            seconds = Mathf.Clamp(seconds, 0.55f, 1.15f);
+            var basePos = _baseLocalPos;
+
+            float lift = Mathf.Clamp(Mathf.Min(_boxSize.x, _boxSize.y) * 0.06f, 0.06f, 0.14f);
+            float wiggle = Mathf.Clamp(_boxSize.x * 0.03f, 0.03f, 0.10f);
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+
+                // Ease up then down.
+                float up = u < 0.35f
+                    ? MotionUtil.EaseOutCubic(u / 0.35f)
+                    : 1f - MotionUtil.EaseOutCubic((u - 0.35f) / 0.65f);
+                float y = lift * up;
+
+                // Small horizontal wiggle while lifted.
+                float s = Mathf.Sin(u * Mathf.PI * 10f) * wiggle * up;
+                transform.localPosition = basePos + new Vector3(s, y, 0f);
+                yield return null;
+            }
+
+            transform.localPosition = basePos;
+        }
+
+        private static void EnsureMouthFlashTexture()
+        {
+            if (_mouthFlashTexture != null) return;
+
+            const int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, mipChain: false, linear: true);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+
+            float cx = (size - 1) * 0.5f;
+            float cy = (size - 1) * 0.5f;
+            float inv = 1f / Mathf.Max(1f, cx);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - cx) * inv;
+                    float dy = (y - cy) * inv;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    // Soft radial falloff: center strong, edges fade out smoothly.
+                    float a = Mathf.Clamp01(1f - r);
+                    a = a * a * a; // cubic
+                    // Add a subtle hot core so it reads as a glow rather than a flat blob.
+                    float core = Mathf.Clamp01(1f - r * 2.2f);
+                    core = core * core;
+                    float alpha = Mathf.Clamp01(a * 0.85f + core * 0.25f);
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+
+            tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+            _mouthFlashTexture = tex;
+        }
+
+        private void EnsureMouthFlash()
+        {
+            if (_mouthFlash != null) return;
+
+            EnsureMouthFlashTexture();
+
+            _mouthFlash = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _mouthFlash.name = "MouthFlash";
+            _mouthFlash.transform.SetParent(transform, false);
+            RemoveCollider(_mouthFlash);
+
+            var shader =
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Particles/Additive") ??
+                Shader.Find("Legacy Shaders/Particles/Additive") ??
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Unlit/Color");
+
+            var mat = new Material(shader);
+            if (_mouthFlashTexture != null)
+            {
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                else mat.mainTexture = _mouthFlashTexture;
+            }
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 2950;
+
+            var r = _mouthFlash.GetComponent<Renderer>();
+            if (r != null) r.sharedMaterial = mat;
+
+            _mouthFlash.SetActive(false);
+        }
+
+        private void EnsureMouthIndicator()
+        {
+            EnsureMouthFlashTexture();
+
+            if (_mouthIndicator == null)
+            {
+                _mouthIndicator = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _mouthIndicator.name = "MouthIndicator";
+                _mouthIndicator.transform.SetParent(transform, false);
+                RemoveCollider(_mouthIndicator);
+
+                var shader =
+                    Shader.Find("Unlit/Transparent") ??
+                    Shader.Find("Unlit/Texture") ??
+                    Shader.Find("Particles/Additive") ??
+                    Shader.Find("Legacy Shaders/Particles/Additive") ??
+                    Shader.Find("Unlit/Color");
+
+                var mat = new Material(shader);
+                if (_mouthFlashTexture != null)
+                {
+                    if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                    else mat.mainTexture = _mouthFlashTexture;
+                }
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                mat.renderQueue = 2915; // above blocks, below most overlays
+
+                var r = _mouthIndicator.GetComponent<Renderer>();
+                if (r != null) r.sharedMaterial = mat;
+            }
+
+            // Placement/scale: a subtle "portal" at the box opening so players know where the entry check happens.
+            if (_mouthIndicator != null)
+            {
+                _mouthIndicator.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
+                _mouthIndicator.transform.localRotation = Quaternion.identity;
+
+                float edge = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? _boxSize.y : _boxSize.x;
+                float width = Mathf.Clamp(edge * 0.52f, 0.18f, 1.35f);
+                float thickness = Mathf.Clamp(Mathf.Min(_boxSize.x, _boxSize.y) * 0.10f, 0.06f, 0.18f);
+
+                float sx = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? thickness : width;
+                float sy = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? width : thickness;
+                _mouthIndicator.transform.localScale = new Vector3(sx, sy, 1f);
+                _mouthIndicatorBaseScale = _mouthIndicator.transform.localScale;
+
+                var r = _mouthIndicator.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = Color.white;
+                    c.a = 0.14f;
+                    r.sharedMaterial.color = c;
+                }
+            }
+
+            UpdateMouthIndicatorVisibility();
+        }
+
+        private void UpdateMouthIndicatorVisibility()
+        {
+            if (_mouthIndicator == null) return;
+            _mouthIndicator.SetActive(!_locked && !_completed);
+        }
+
+        public Vector3 GetMouthWorldPosition()
+        {
+            return transform.TransformPoint(_mouthLocalPos);
+        }
+
+        public Vector3 GetMouthWorldNormal()
+        {
+            return transform.TransformDirection(_mouthLocalNormal).normalized;
+        }
+
+        private void EnsureMouthRipple()
+        {
+            if (_mouthRipple != null) return;
+
+            EnsureMouthFlashTexture();
+
+            _mouthRipple = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _mouthRipple.name = "MouthRipple";
+            _mouthRipple.transform.SetParent(transform, false);
+            RemoveCollider(_mouthRipple);
+
+            var shader =
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Particles/Additive") ??
+                Shader.Find("Legacy Shaders/Particles/Additive") ??
+                Shader.Find("Unlit/Color");
+
+            var mat = new Material(shader);
+            if (_mouthFlashTexture != null)
+            {
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                else mat.mainTexture = _mouthFlashTexture;
+            }
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 2925;
+
+            var r = _mouthRipple.GetComponent<Renderer>();
+            if (r != null) r.sharedMaterial = mat;
+
+            _mouthRipple.SetActive(false);
+        }
+
+        private IEnumerator AnimateMouthRipple(Color color, float seconds)
+        {
+            if (_mouthRipple == null) yield break;
+            seconds = Mathf.Clamp(seconds, 0.10f, 0.22f);
+
+            float edge = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? _boxSize.y : _boxSize.x;
+            float width = Mathf.Clamp(edge * 0.58f, 0.20f, 1.45f);
+            float thickness = Mathf.Clamp(Mathf.Min(_boxSize.x, _boxSize.y) * 0.16f, 0.08f, 0.26f);
+            float sx = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? thickness : width;
+            float sy = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? width : thickness;
+
+            var r = _mouthRipple.GetComponent<Renderer>();
+            if (r != null && r.sharedMaterial != null)
+            {
+                var c = color;
+                c.a = 0f;
+                r.sharedMaterial.color = c;
+            }
+
+            _mouthRipple.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.07f);
+            _mouthRipple.transform.localRotation = Quaternion.identity;
+            _mouthRipple.transform.localScale = new Vector3(sx * 0.75f, sy * 0.75f, 1f);
+            _mouthRipple.SetActive(true);
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float e = MotionUtil.EaseOutCubic(u);
+                float fade = 1f - MotionUtil.EaseOutCubic(u);
+
+                float s = Mathf.Lerp(0.75f, 1.25f, e);
+                _mouthRipple.transform.localScale = new Vector3(sx * s, sy * s, 1f);
+
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = color;
+                    c.a = 0.55f * fade * Mathf.Clamp01(color.a);
+                    r.sharedMaterial.color = c;
+                }
+
+                yield return null;
+            }
+
+            _mouthRipple.SetActive(false);
+        }
+
+        private IEnumerator AnimateMouthSquash(Color color, float seconds)
+        {
+            if (_mouthIndicator == null) yield break;
+            seconds = Mathf.Clamp(seconds, 0.10f, 0.22f);
+
+            var r = _mouthIndicator.GetComponent<Renderer>();
+            Color baseColor = Color.white;
+            if (r != null && r.sharedMaterial != null) baseColor = r.sharedMaterial.color;
+
+            // Thickness axis depends on opening orientation (indicator is a strip across the mouth).
+            bool leftRight = _opening == OpeningSide.Left || _opening == OpeningSide.Right;
+            float t0 = leftRight ? _mouthIndicatorBaseScale.x : _mouthIndicatorBaseScale.y;
+            float w0 = leftRight ? _mouthIndicatorBaseScale.y : _mouthIndicatorBaseScale.x;
+
+            float tMin = t0 * 0.55f;
+            float tMax = t0 * 1.18f;
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+
+                // 0..0.35: squash; 0.35..0.7: overshoot; 0.7..1: settle
+                float thickness;
+                if (u < 0.35f)
+                {
+                    float a = MotionUtil.EaseOutCubic(u / 0.35f);
+                    thickness = Mathf.Lerp(t0, tMin, a);
+                }
+                else if (u < 0.7f)
+                {
+                    float a = MotionUtil.EaseOutCubic((u - 0.35f) / 0.35f);
+                    thickness = Mathf.Lerp(tMin, tMax, a);
+                }
+                else
+                {
+                    float a = MotionUtil.EaseOutCubic((u - 0.7f) / 0.3f);
+                    thickness = Mathf.Lerp(tMax, t0, a);
+                }
+
+                if (leftRight)
+                {
+                    _mouthIndicator.transform.localScale = new Vector3(thickness, w0, 1f);
+                }
+                else
+                {
+                    _mouthIndicator.transform.localScale = new Vector3(w0, thickness, 1f);
+                }
+
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = baseColor;
+                    // Slight brighten during impact; use input alpha as intensity gate.
+                    float impact = 1f - Mathf.Abs(u - 0.35f) / 0.35f;
+                    impact = Mathf.Clamp01(impact);
+                    c.a = Mathf.Lerp(baseColor.a, 0.26f, impact) * Mathf.Clamp01(color.a);
+                    r.sharedMaterial.color = c;
+                }
+
+                yield return null;
+            }
+
+            // Restore.
+            _mouthIndicator.transform.localScale = _mouthIndicatorBaseScale;
+            if (r != null && r.sharedMaterial != null) r.sharedMaterial.color = baseColor;
+        }
+
+        private void PlayMouthFlash(Color color, float sizeFactor, float seconds)
+        {
+            EnsureMouthFlash();
+            if (_mouthFlash == null) return;
+            if (_mouthFlashRoutine != null) StopCoroutine(_mouthFlashRoutine);
+            _mouthFlashRoutine = StartCoroutine(AnimateMouthFlash(color, sizeFactor, seconds));
+        }
+
+        private IEnumerator AnimateMouthFlash(Color color, float sizeFactor, float seconds)
+        {
+            if (_mouthFlash == null) yield break;
+            seconds = Mathf.Max(0.05f, seconds);
+
+            _mouthFlash.SetActive(true);
+
+            float baseSize = Mathf.Min(_boxSize.x, _boxSize.y) * 0.38f;
+            float s0 = Mathf.Max(0.08f, baseSize * 0.35f);
+            float s1 = Mathf.Max(0.10f, baseSize * sizeFactor);
+
+            _mouthFlash.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.03f + new Vector3(0f, 0f, -0.10f);
+            _mouthFlash.transform.localRotation = Quaternion.identity;
+
+            var r = _mouthFlash.GetComponent<Renderer>();
+            if (r != null && r.sharedMaterial != null)
+            {
+                var c = color;
+                c.a = 0f;
+                r.sharedMaterial.color = c;
+            }
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float pop = MotionUtil.EaseOutCubic(u);
+                float fade = 1f - MotionUtil.EaseOutCubic(u);
+                float s = Mathf.Lerp(s0, s1, pop);
+                _mouthFlash.transform.localScale = new Vector3(s, s, 1f);
+                if (r != null && r.sharedMaterial != null)
+                {
+                    var c = color;
+                    c.a = (0.7f * fade) * Mathf.Clamp01(color.a);
+                    r.sharedMaterial.color = c;
+                }
+                yield return null;
+            }
+
+            _mouthFlash.SetActive(false);
+        }
+
+        private void SetLockVisualAlpha(float a)
+        {
+            SetQuadAlpha(_lockOverlay, a);
+            SetQuadAlpha(_lockMarkerPlate, a);
+            SetQuadAlpha(_lockMarkerColorHalo, a);
+            SetQuadAlpha(_lockMarkerDisc, a);
+            SetQuadAlpha(_lockMarkerIcon, a);
+        }
+
+        private static void SetQuadAlpha(GameObject go, float a)
+        {
+            if (go == null) return;
+            var r = go.GetComponent<Renderer>();
+            if (r == null || r.sharedMaterial == null) return;
+            var c = r.sharedMaterial.color;
+            c.a = Mathf.Clamp01(a);
+            r.sharedMaterial.color = c;
+        }
+
+        private IEnumerator AnimateLockAlpha(float from, float to, float seconds)
+        {
+            if (_lockBadge != null) _lockBadge.transform.localScale = Vector3.one * 0.92f;
+            float t = 0f;
+            seconds = Mathf.Max(0.05f, seconds);
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float e = MotionUtil.EaseOutCubic(u);
+                float a = Mathf.Lerp(from, to, e);
+                SetLockVisualAlpha(a);
+                if (_lockBadge != null)
+                {
+                    float s = Mathf.Lerp(0.92f, 1f, MotionUtil.EaseOutBack(u));
+                    _lockBadge.transform.localScale = Vector3.one * s;
+                }
+                yield return null;
+            }
+            SetLockVisualAlpha(to);
+            if (_lockBadge != null) _lockBadge.transform.localScale = Vector3.one;
+        }
+
+        private IEnumerator AnimateUnlock(float from, float to, float seconds)
+        {
+            float t = 0f;
+            seconds = Mathf.Max(0.05f, seconds);
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float e = MotionUtil.EaseOutCubic(u);
+                float a = Mathf.Lerp(from, to, e);
+                SetLockVisualAlpha(a);
+                if (_lockBadge != null)
+                {
+                    float s = Mathf.Lerp(1f, 0.9f, e);
+                    _lockBadge.transform.localScale = Vector3.one * s;
+                }
+                yield return null;
+            }
+
+            SetLockVisualAlpha(to);
+            if (_lockOverlay != null) _lockOverlay.SetActive(false);
+            if (_lockBadge != null) _lockBadge.SetActive(false);
+            if (_lockBadge != null) _lockBadge.transform.localScale = Vector3.one;
         }
 
         private static void EnsureUnlitColorMaterial(GameObject quad, Color color, int renderQueue)
@@ -863,6 +1431,7 @@ namespace LoopSorting
             // Once a box is completed, the dashed operable outline is no longer needed.
             SetBoxOutlineVisible(!val);
             if (val) HideFrontOutline();
+            UpdateMouthIndicatorVisibility();
 
             EnsureCompletedOverlayBuilt();
             if (_completedOverlay == null) return;

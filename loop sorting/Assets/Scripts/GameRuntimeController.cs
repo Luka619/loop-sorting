@@ -66,6 +66,16 @@ namespace LoopSorting
         private Dictionary<int, GameObject> _beltBlockVisuals = new Dictionary<int, GameObject>();
         private List<BoxView> _boxViews = new List<BoxView>();
         private Dictionary<int, int> _containerToBelt = new Dictionary<int, int>();
+        private readonly Dictionary<Container, int> _containerIndexByRef = new Dictionary<Container, int>();
+        private readonly List<ConveyorPortEvent> _portEvents = new List<ConveyorPortEvent>(32);
+        private readonly Dictionary<GameObject, Coroutine> _uiPanelRoutines = new Dictionary<GameObject, Coroutine>();
+        private readonly Dictionary<int, Vector3> _beltBlockOffsets = new Dictionary<int, Vector3>();
+        private readonly Dictionary<int, Coroutine> _beltBlockOffsetCoroutines = new Dictionary<int, Coroutine>();
+        private readonly HashSet<int> _beltInsertAnimating = new HashSet<int>();
+        private readonly Dictionary<int, Coroutine> _beltInsertCoroutines = new Dictionary<int, Coroutine>();
+        private Coroutine _emptyDeferredHintRoutine;
+        private LineRenderer _emptyDeferredLine;
+        private RejectFeedbackGate _rejectGate;
         private List<BoxSpec> _boxSpecs = new List<BoxSpec>();
         private List<bool> _boxLocked = new List<bool>();
         private List<bool> _boxCompleted = new List<bool>();
@@ -805,12 +815,96 @@ namespace LoopSorting
         {
             if (_settingsPanel == null) return;
             PlaySfx(show ? SfxId.UiPopupOpen : SfxId.UiPopupClose);
-            _settingsPanel.SetActive(show);
+            AnimateUiPanel(_settingsPanel, show);
             if (show)
             {
                 if (_vibrationToggle != null) _vibrationToggle.isOn = vibrationEnabled;
                 if (_soundToggle != null) _soundToggle.isOn = soundEnabled;
             }
+        }
+
+        public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
+        {
+            if (_gameOver) return;
+            PlaySfx(SfxId.HiddenReveal);
+            if (containerIndex >= 0 && containerIndex < _boxViews.Count)
+            {
+                _boxViews[containerIndex].PlayTapFeedback();
+            }
+        }
+
+        private void AnimateUiPanel(GameObject panel, bool show, float seconds = 0.18f)
+        {
+            if (panel == null) return;
+
+            if (_uiPanelRoutines.TryGetValue(panel, out var existing) && existing != null)
+            {
+                StopCoroutine(existing);
+            }
+            _uiPanelRoutines.Remove(panel);
+
+            var cg = MotionUtil.EnsureCanvasGroup(panel);
+            if (cg == null)
+            {
+                panel.SetActive(show);
+                return;
+            }
+
+            if (show)
+            {
+                panel.SetActive(true);
+                panel.transform.localScale = Vector3.one * 0.92f;
+                cg.alpha = 0f;
+                cg.blocksRaycasts = true;
+                cg.interactable = true;
+                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelIn(panel, cg, seconds));
+            }
+            else
+            {
+                cg.blocksRaycasts = false;
+                cg.interactable = false;
+                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelOut(panel, cg, seconds));
+            }
+        }
+
+        private IEnumerator AnimateUiPanelIn(GameObject panel, CanvasGroup cg, float seconds)
+        {
+            if (panel == null || cg == null) yield break;
+            float t = 0f;
+            seconds = Mathf.Max(0.05f, seconds);
+            while (t < seconds)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                cg.alpha = Mathf.Lerp(0f, 1f, MotionUtil.EaseOutCubic(u));
+                float s = Mathf.Lerp(0.92f, 1f, MotionUtil.EaseOutBack(u));
+                panel.transform.localScale = Vector3.one * s;
+                yield return null;
+            }
+            cg.alpha = 1f;
+            panel.transform.localScale = Vector3.one;
+            _uiPanelRoutines.Remove(panel);
+        }
+
+        private IEnumerator AnimateUiPanelOut(GameObject panel, CanvasGroup cg, float seconds)
+        {
+            if (panel == null || cg == null) yield break;
+            float startAlpha = cg.alpha;
+            float t = 0f;
+            seconds = Mathf.Max(0.05f, seconds);
+            while (t < seconds)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                cg.alpha = Mathf.Lerp(startAlpha, 0f, MotionUtil.EaseOutCubic(u));
+                float s = Mathf.Lerp(1f, 0.96f, MotionUtil.EaseOutCubic(u));
+                panel.transform.localScale = Vector3.one * s;
+                yield return null;
+            }
+            cg.alpha = 0f;
+            panel.transform.localScale = Vector3.one;
+            panel.SetActive(false);
+            _uiPanelRoutines.Remove(panel);
         }
 
         private void SyncLockChipsUI()
@@ -1002,7 +1096,11 @@ namespace LoopSorting
             {
                 yield return StartCoroutine(NormalizeBeltStateAnimated());
             }
+
+            var before = CaptureContainerStates();
             bool ok = ApplyBoosterFillColor();
+            var after = CaptureContainerStates();
+            if (ok) StartCoroutine(PlayBoosterFillFx(before, after));
             PlaySfx(ok ? SfxId.BoosterFillSort : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
 
@@ -1035,7 +1133,11 @@ namespace LoopSorting
             {
                 yield return StartCoroutine(NormalizeBeltStateAnimated());
             }
+            var before = CaptureContainerStates();
+            PlayBoosterShufflePreFx();
             bool ok = ApplyBoosterShuffle();
+            var after = CaptureContainerStates();
+            if (ok) StartCoroutine(PlayBoosterShuffleFx(before, after));
             PlaySfx(ok ? SfxId.BoosterShuffle : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
 
@@ -1048,6 +1150,258 @@ namespace LoopSorting
             SetInteractableForBooster(true);
             _inputLocked = false;
         }
+
+        private sealed class ContainerStateSnapshot
+        {
+            public readonly string[] signature;
+            public readonly bool[] uniformFull;
+            public readonly int[,] colorCounts; // [container, colorIndex]
+
+            public ContainerStateSnapshot(string[] signature, bool[] uniformFull, int[,] colorCounts)
+            {
+                this.signature = signature;
+                this.uniformFull = uniformFull;
+                this.colorCounts = colorCounts;
+            }
+        }
+
+        private ContainerStateSnapshot CaptureContainerStates()
+        {
+            if (_game == null)
+            {
+                return new ContainerStateSnapshot(Array.Empty<string>(), Array.Empty<bool>(), new int[0, 0]);
+            }
+
+            int n = _game.Containers.Count;
+            var sig = new string[n];
+            var full = new bool[n];
+            int colors = Enum.GetValues(typeof(BlockColor)).Length;
+            var counts = new int[n, colors];
+            for (int i = 0; i < n; i++)
+            {
+                var c = _game.Containers[i];
+                if (c == null)
+                {
+                    sig[i] = string.Empty;
+                    full[i] = false;
+                    continue;
+                }
+
+                full[i] = c.IsUniformAndFull();
+                sig[i] = BuildContainerSignature(c);
+                for (int j = 0; j < c.Blocks.Count; j++)
+                {
+                    int ci = (int)c.Blocks[j].Color;
+                    if (ci >= 0 && ci < colors) counts[i, ci]++;
+                }
+            }
+
+            return new ContainerStateSnapshot(sig, full, counts);
+        }
+
+        private static string BuildContainerSignature(Container c)
+        {
+            if (c == null || c.Count <= 0) return string.Empty;
+
+            // Compact signature: colors in order + 'H' markers.
+            var sb = new System.Text.StringBuilder(c.Count * 2);
+            for (int i = 0; i < c.Count; i++)
+            {
+                var b = c.Blocks[i];
+                sb.Append((char)('A' + (int)b.Color));
+                if (b.Hidden) sb.Append('H');
+            }
+            return sb.ToString();
+        }
+
+        private List<int> ComputeChangedContainers(ContainerStateSnapshot before, ContainerStateSnapshot after)
+        {
+            var list = new List<int>();
+            if (before == null || after == null) return list;
+
+            int n = Mathf.Min(before.signature.Length, after.signature.Length);
+            for (int i = 0; i < n; i++)
+            {
+                if (!string.Equals(before.signature[i], after.signature[i], StringComparison.Ordinal))
+                {
+                    list.Add(i);
+                }
+            }
+            return list;
+        }
+
+        private IEnumerator PlayBoosterFillFx(ContainerStateSnapshot before, ContainerStateSnapshot after)
+        {
+            if (_game == null) yield break;
+
+            var changed = ComputeChangedContainers(before, after);
+            if (changed.Count == 0) yield break;
+
+            // Prefer a newly-completed box as the "target" of the effect.
+            int target = -1;
+            for (int i = 0; i < after.uniformFull.Length; i++)
+            {
+                bool now = after.uniformFull[i];
+                bool prev = i < before.uniformFull.Length && before.uniformFull[i];
+                if (now && !prev)
+                {
+                    target = i;
+                    break;
+                }
+            }
+            if (target < 0) target = changed[0];
+
+            // Pick highlight color from target's front block if possible.
+            Color tint = Color.white;
+            if (target >= 0 && target < _game.Containers.Count)
+            {
+                var c = _game.Containers[target];
+                if (c != null && c.Count > 0)
+                {
+                    tint = BlockVisual.ToUnityColor(c.Blocks[0].Color);
+                }
+            }
+            tint.a = 1f;
+
+            yield return StartCoroutine(PlayTransferTokenFx(before, after, maxTokens: 26));
+        }
+
+        private void PlayBoosterShufflePreFx()
+        {
+            if (_game == null) return;
+            for (int i = 0; i < _game.Containers.Count && i < _boxViews.Count; i++)
+            {
+                if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
+                if (_boxViews[i] == null) continue;
+                _boxViews[i].PlayShuffleJiggle(0.85f);
+            }
+        }
+
+        private IEnumerator PlayBoosterShuffleFx(ContainerStateSnapshot before, ContainerStateSnapshot after)
+        {
+            var changed = ComputeChangedContainers(before, after);
+            if (changed.Count == 0) yield break;
+
+            yield return StartCoroutine(PlayTransferTokenFx(before, after, maxTokens: 32));
+        }
+
+        private IEnumerator PlayTransferTokenFx(ContainerStateSnapshot before, ContainerStateSnapshot after, int maxTokens)
+        {
+            if (_game == null) yield break;
+            if (before?.colorCounts == null || after?.colorCounts == null) yield break;
+            if (_boxViews == null || _boxViews.Count == 0) yield break;
+
+            int n = Mathf.Min(before.colorCounts.GetLength(0), after.colorCounts.GetLength(0));
+            int colors = Mathf.Min(before.colorCounts.GetLength(1), after.colorCounts.GetLength(1));
+            if (n <= 0 || colors <= 0) yield break;
+
+            // Build per-color donor/receiver lists based on count deltas.
+            var tokenSpecs = new List<(BlockColor color, int from, int to)>(64);
+
+            for (int ci = 0; ci < colors; ci++)
+            {
+                var donors = new List<(int idx, int count)>();
+                var receivers = new List<(int idx, int count)>();
+                for (int i = 0; i < n; i++)
+                {
+                    int delta = after.colorCounts[i, ci] - before.colorCounts[i, ci];
+                    if (delta > 0) receivers.Add((i, delta));
+                    else if (delta < 0) donors.Add((i, -delta));
+                }
+
+                int di = 0, ri = 0;
+                while (di < donors.Count && ri < receivers.Count)
+                {
+                    var d = donors[di];
+                    var r = receivers[ri];
+                    int take = Mathf.Min(d.count, r.count);
+                    for (int k = 0; k < take; k++)
+                    {
+                        tokenSpecs.Add(((BlockColor)ci, d.idx, r.idx));
+                    }
+                    d.count -= take;
+                    r.count -= take;
+                    donors[di] = d;
+                    receivers[ri] = r;
+                    if (d.count <= 0) di++;
+                    if (r.count <= 0) ri++;
+                }
+            }
+
+            if (tokenSpecs.Count == 0) yield break;
+
+            // Cap the number of tokens to avoid overwhelming visuals on large moves.
+            if (maxTokens > 0 && tokenSpecs.Count > maxTokens)
+            {
+                // Keep a deterministic subset: take evenly spaced samples.
+                var sampled = new List<(BlockColor color, int from, int to)>(maxTokens);
+                for (int i = 0; i < maxTokens; i++)
+                {
+                    int idx = Mathf.RoundToInt((float)i / Mathf.Max(1, maxTokens - 1) * (tokenSpecs.Count - 1));
+                    sampled.Add(tokenSpecs[idx]);
+                }
+                tokenSpecs = sampled;
+            }
+
+            float baseDelay = 0.012f;
+            float dur = 0.36f;
+            for (int i = 0; i < tokenSpecs.Count; i++)
+            {
+                var spec = tokenSpecs[i];
+                if (spec.from < 0 || spec.from >= _boxViews.Count) continue;
+                if (spec.to < 0 || spec.to >= _boxViews.Count) continue;
+                if (_boxViews[spec.from] == null || _boxViews[spec.to] == null) continue;
+
+                var start = _boxViews[spec.from].GetMouthWorldPosition();
+                var end = _boxViews[spec.to].GetMouthWorldPosition();
+                StartCoroutine(AnimateTransferToken(spec.color, start, end, dur, delay: baseDelay * i));
+            }
+
+            yield return new WaitForSeconds(dur + baseDelay * tokenSpecs.Count);
+        }
+
+        private IEnumerator AnimateTransferToken(BlockColor color, Vector3 start, Vector3 end, float seconds, float delay)
+        {
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+
+            var go = BlockVisual.CreateBlock(color);
+            go.name = $"TransferToken_{color}";
+            go.transform.SetParent(transform, true);
+            go.transform.position = start + new Vector3(0f, 0f, beltBlockZOffset);
+
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+            float baseSize = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
+            float s0 = baseSize * 0.32f;
+            go.transform.localScale = new Vector3(s0, s0, s0 * 0.6f);
+
+            Vector3 mid = (start + end) * 0.5f + Vector3.up * Mathf.Clamp(spacing * 0.65f, 0.25f, 0.75f);
+
+            float t = 0f;
+            seconds = Mathf.Clamp(seconds, 0.22f, 0.55f);
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float e = MotionUtil.EaseOutCubic(u);
+
+                // Quadratic Bezier.
+                Vector3 a = Vector3.LerpUnclamped(start, mid, e);
+                Vector3 b = Vector3.LerpUnclamped(mid, end, e);
+                Vector3 p = Vector3.LerpUnclamped(a, b, e);
+                p.z = beltBlockZOffset;
+                go.transform.position = p;
+
+                // Slight scale down at the end so it feels like it merges.
+                float shrink = u > 0.75f ? Mathf.Lerp(1f, 0.7f, (u - 0.75f) / 0.25f) : 1f;
+                go.transform.localScale = new Vector3(s0, s0, s0 * 0.6f) * shrink;
+                yield return null;
+            }
+
+            Destroy(go);
+        }
+
+        // (Removed) Booster beam line: keep only token transfers for booster readability.
 
         private void SetInteractableForBooster(bool val)
         {
@@ -1332,6 +1686,10 @@ namespace LoopSorting
             }
 
             UpdateConveyorLoopSfx();
+            if (_gameOver)
+            {
+                return;
+            }
 
             float effectiveSpeed = _fullBeltFastForward ? 5f : _speedMultiplier;
             _tickTimer += Time.deltaTime * effectiveSpeed;
@@ -1343,7 +1701,9 @@ namespace LoopSorting
             {
                 _tickTimer = 0f;
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
-                _game.TickConveyor(blocked);
+                _portEvents.Clear();
+                _game.TickConveyor(blocked, _portEvents);
+                ProcessConveyorPortEvents(_portEvents);
                 _conveyorTickSfxCountdown--;
                 if (_conveyorTickSfxCountdown <= 0)
                 {
@@ -1358,6 +1718,392 @@ namespace LoopSorting
                 HandleFullBeltFastForwardAfterTick();
                 EmitSfxFromStateChanges();
                 CheckEndConditions();
+            }
+        }
+
+        private void ProcessConveyorPortEvents(List<ConveyorPortEvent> events)
+        {
+            if (events == null || events.Count == 0) return;
+            _rejectGate ??= new RejectFeedbackGate();
+
+            ConveyorPortOutcome? bestSfxOutcome = null;
+            int bestSfxContainerIndex = -1;
+
+            for (int i = 0; i < events.Count; i++)
+            {
+                var e = events[i];
+                int containerIndex = -1;
+                if (e.Container != null && !_containerIndexByRef.TryGetValue(e.Container, out containerIndex))
+                {
+                    containerIndex = -1;
+                }
+
+                // Visual feedback: bounce the belt block on hard rejects (no flashing box).
+                if (e.Outcome == ConveyorPortOutcome.RejectedLocked ||
+                    e.Outcome == ConveyorPortOutcome.RejectedBusy ||
+                    e.Outcome == ConveyorPortOutcome.RejectedFull ||
+                    e.Outcome == ConveyorPortOutcome.RejectedMismatch)
+                {
+                    if (containerIndex >= 0 && containerIndex < _boxViews.Count)
+                    {
+                        var c = BlockVisual.ToUnityColor(e.Block.Color);
+                        c.a = 1f;
+                        _boxViews[containerIndex].PlayMouthSquash(c, seconds: 0.14f);
+                    }
+                    ConsiderForBestSfx(e.Outcome, containerIndex, ref bestSfxOutcome, ref bestSfxContainerIndex);
+                }
+                else if (e.Outcome == ConveyorPortOutcome.Inserted)
+                {
+                    StartBeltBlockEnterBoxAnimation(e.BeltIndex, containerIndex, e.Block);
+                    if (containerIndex >= 0 && containerIndex < _boxViews.Count)
+                    {
+                        _boxViews[containerIndex].PlayMouthSquash(Color.white, seconds: 0.12f);
+                    }
+                }
+                else if (e.Outcome == ConveyorPortOutcome.SkippedEmptyBoxPreferredTarget)
+                {
+                    // Empty-deferred is not a failure: show an info-only routing hint (no SFX).
+                    if (containerIndex >= 0)
+                    {
+                        ShowEmptyDeferredHint(containerIndex, e.Block);
+                    }
+                }
+            }
+
+            if (bestSfxOutcome.HasValue && _rejectGate.ShouldPlay(bestSfxOutcome.Value, bestSfxContainerIndex))
+            {
+                PlaySfx(MapRejectOutcomeToSfx(bestSfxOutcome.Value));
+            }
+        }
+
+        private static void ConsiderForBestSfx(
+            ConveyorPortOutcome outcome,
+            int containerIndex,
+            ref ConveyorPortOutcome? best,
+            ref int bestContainerIndex)
+        {
+            int Priority(ConveyorPortOutcome o) => o switch
+            {
+                ConveyorPortOutcome.RejectedLocked => 4,
+                ConveyorPortOutcome.RejectedBusy => 3,
+                ConveyorPortOutcome.RejectedFull => 2,
+                ConveyorPortOutcome.RejectedMismatch => 1,
+                _ => 0,
+            };
+
+            if (!best.HasValue || Priority(outcome) > Priority(best.Value))
+            {
+                best = outcome;
+                bestContainerIndex = containerIndex;
+            }
+        }
+
+        private static SfxId MapRejectOutcomeToSfx(ConveyorPortOutcome outcome)
+        {
+            return outcome switch
+            {
+                ConveyorPortOutcome.RejectedLocked => SfxId.BlockRejectLocked,
+                ConveyorPortOutcome.RejectedBusy => SfxId.BlockRejectBusy,
+                ConveyorPortOutcome.RejectedFull => SfxId.BlockRejectFull,
+                ConveyorPortOutcome.RejectedMismatch => SfxId.BlockRejectMismatch,
+                _ => SfxId.BlockReject
+            };
+        }
+
+        private void StartBeltBlockRejectBounce(int beltIndex, int containerIndex)
+        {
+            if (beltIndex < 0) return;
+            if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null) return;
+
+            Vector3 dir = Vector3.up;
+            if (containerIndex >= 0 && containerIndex < _boxSpecs.Count && _boxSpecs[containerIndex] != null)
+            {
+                dir = OpeningToWorldNormal(_boxSpecs[containerIndex].opening);
+            }
+
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+            float amp = Mathf.Clamp(spacing * 0.18f, 0.06f, 0.14f);
+
+            StartBeltBlockOffsetAnimation(beltIndex, dir.normalized * amp, 0.14f);
+        }
+
+        private void StartBeltBlockEnterBoxAnimation(int beltIndex, int containerIndex, Block block)
+        {
+            if (beltIndex < 0) return;
+            if (containerIndex < 0 || containerIndex >= _boxViews.Count) return;
+
+            if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null)
+            {
+                // If visual hasn't been built yet (rare timing), create one so we can animate it.
+                EnsureBlockVisual(beltIndex, block);
+                _beltBlockVisuals.TryGetValue(beltIndex, out go);
+            }
+            if (go == null) return;
+
+            if (_beltInsertCoroutines.TryGetValue(beltIndex, out var existing) && existing != null)
+            {
+                StopCoroutine(existing);
+            }
+            _beltInsertCoroutines.Remove(beltIndex);
+            _beltInsertAnimating.Add(beltIndex);
+            _beltInsertCoroutines[beltIndex] = StartCoroutine(AnimateBeltEnterBox(beltIndex, containerIndex));
+        }
+
+        private IEnumerator AnimateBeltEnterBox(int beltIndex, int containerIndex)
+        {
+            if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null) yield break;
+            if (containerIndex < 0 || containerIndex >= _boxViews.Count) yield break;
+
+            var view = _boxViews[containerIndex];
+            if (view == null) yield break;
+
+            Vector3 from = go.transform.position;
+            Vector3 baseScale = go.transform.localScale;
+            Vector3 mouth = view.GetMouthWorldPosition() + view.GetMouthWorldNormal() * 0.02f + new Vector3(0f, 0f, beltBlockZOffset);
+
+            float dur = Mathf.Clamp(conveyorTickSeconds * 0.45f, 0.08f, 0.18f);
+            float t = 0f;
+            while (t < dur)
+            {
+                if (go == null) break;
+                t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
+                float u = Mathf.Clamp01(t / dur);
+                float e = MotionUtil.EaseOutCubic(u);
+                go.transform.position = Vector3.LerpUnclamped(from, mouth, e);
+                // slight shrink to imply "getting swallowed"
+                float s = Mathf.Lerp(1f, 0.6f, e);
+                go.transform.localScale = baseScale * s;
+                yield return null;
+            }
+
+            // Cleanup: remove this belt visual now that it entered the box.
+            if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null)
+            {
+                Destroy(finalGo);
+                _beltBlockVisuals.Remove(beltIndex);
+            }
+            _beltInsertAnimating.Remove(beltIndex);
+            _beltInsertCoroutines.Remove(beltIndex);
+        }
+
+        private static Vector3 OpeningToWorldNormal(OpeningSide opening)
+        {
+            return opening switch
+            {
+                OpeningSide.Top => Vector3.up,
+                OpeningSide.Bottom => Vector3.down,
+                OpeningSide.Left => Vector3.left,
+                OpeningSide.Right => Vector3.right,
+                _ => Vector3.up
+            };
+        }
+
+        private void StartBeltBlockOffsetAnimation(int beltIndex, Vector3 peakOffset, float seconds)
+        {
+            if (_beltBlockOffsetCoroutines.TryGetValue(beltIndex, out var existing) && existing != null)
+            {
+                StopCoroutine(existing);
+            }
+            _beltBlockOffsetCoroutines.Remove(beltIndex);
+
+            _beltBlockOffsets[beltIndex] = Vector3.zero;
+            _beltBlockOffsetCoroutines[beltIndex] = StartCoroutine(AnimateBeltBlockOffset(beltIndex, peakOffset, seconds));
+        }
+
+        private IEnumerator AnimateBeltBlockOffset(int beltIndex, Vector3 peakOffset, float seconds)
+        {
+            seconds = Mathf.Clamp(seconds, 0.08f, 0.22f);
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
+                float u = Mathf.Clamp01(t / seconds);
+                // quick push then settle: sin curve (0..pi)
+                float s = Mathf.Sin(u * Mathf.PI);
+                _beltBlockOffsets[beltIndex] = peakOffset * s;
+                yield return null;
+            }
+            _beltBlockOffsets[beltIndex] = Vector3.zero;
+            _beltBlockOffsetCoroutines.Remove(beltIndex);
+        }
+
+        private Vector3 GetBeltBlockOffset(int beltIndex)
+        {
+            return _beltBlockOffsets.TryGetValue(beltIndex, out var o) ? o : Vector3.zero;
+        }
+
+        private void ShowEmptyDeferredHint(int emptyBoxIndex, Block block)
+        {
+            if (_game == null) return;
+            if (emptyBoxIndex < 0 || emptyBoxIndex >= _game.Containers.Count) return;
+
+            int target = FindPreferredNonEmptyTargetIndex(block, excludeIndex: emptyBoxIndex);
+            if (target < 0) return;
+
+            var color = BlockVisual.ToUnityColor(block.Color);
+            color.a = 0.35f; // treat alpha as intensity for hint
+
+            if (target >= 0 && target < _boxViews.Count)
+            {
+                _boxViews[target].PlayInfoHint(color, sizeFactor: 1.10f, seconds: 0.18f);
+            }
+
+            EnsureEmptyDeferredLine();
+            if (_emptyDeferredLine == null) return;
+
+            var from = _boxViews[emptyBoxIndex] != null ? _boxViews[emptyBoxIndex].transform.position : Vector3.zero;
+            var to = _boxViews[target] != null ? _boxViews[target].transform.position : Vector3.zero;
+            from.z = to.z = 0.02f; // slightly above gameplay plane
+
+            if (_emptyDeferredHintRoutine != null) StopCoroutine(_emptyDeferredHintRoutine);
+            _emptyDeferredHintRoutine = StartCoroutine(AnimateEmptyDeferredLine(from, to, color, 0.15f));
+        }
+
+        private int FindPreferredNonEmptyTargetIndex(Block block, int excludeIndex)
+        {
+            if (_game == null) return -1;
+
+            int best = -1;
+            int bestCount = -1;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                if (i == excludeIndex) continue;
+                var c = _game.Containers[i];
+                if (c == null) continue;
+                if (c.Count <= 0) continue;
+                if (!c.CanAccept(block)) continue;
+                if (c.Count > bestCount)
+                {
+                    bestCount = c.Count;
+                    best = i;
+                }
+            }
+            return best;
+        }
+
+        private void EnsureEmptyDeferredLine()
+        {
+            if (_emptyDeferredLine != null) return;
+
+            var go = new GameObject("EmptyDeferredHintLine");
+            go.transform.SetParent(transform, false);
+            _emptyDeferredLine = go.AddComponent<LineRenderer>();
+            _emptyDeferredLine.useWorldSpace = true;
+            _emptyDeferredLine.positionCount = 2;
+            _emptyDeferredLine.startWidth = 0.03f;
+            _emptyDeferredLine.endWidth = 0.01f;
+            _emptyDeferredLine.numCapVertices = 0;
+            _emptyDeferredLine.numCornerVertices = 0;
+            _emptyDeferredLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _emptyDeferredLine.receiveShadows = false;
+
+            var shader = Shader.Find("Unlit/Color");
+            var mat = new Material(shader);
+            mat.renderQueue = 2920;
+            _emptyDeferredLine.sharedMaterial = mat;
+            _emptyDeferredLine.enabled = false;
+        }
+
+        private IEnumerator AnimateEmptyDeferredLine(Vector3 from, Vector3 to, Color color, float seconds)
+        {
+            if (_emptyDeferredLine == null) yield break;
+            seconds = Mathf.Clamp(seconds, 0.10f, 0.22f);
+
+            _emptyDeferredLine.enabled = true;
+            _emptyDeferredLine.SetPosition(0, from);
+            _emptyDeferredLine.SetPosition(1, to);
+
+            var mat = _emptyDeferredLine.sharedMaterial;
+            if (mat != null)
+            {
+                var c = color;
+                c.a = 0f;
+                mat.color = c;
+            }
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float a = MotionUtil.EaseOutCubic(u);
+                if (mat != null)
+                {
+                    var c = color;
+                    c.a = Mathf.Clamp01(color.a) * (u < 0.25f ? (u / 0.25f) : (1f - a));
+                    mat.color = c;
+                }
+                yield return null;
+            }
+
+            _emptyDeferredLine.enabled = false;
+        }
+
+        private sealed class RejectFeedbackGate
+        {
+            private float _lastPlayTime = -999f;
+            private ConveyorPortOutcome? _lastOutcome;
+            private int _sameOutcomeCount;
+            private readonly HashSet<int> _playedLockedBoxOnce = new HashSet<int>();
+            private readonly HashSet<int> _playedBusyBoxOnce = new HashSet<int>();
+
+            public void ResetForNewLevel()
+            {
+                _lastPlayTime = -999f;
+                _lastOutcome = null;
+                _sameOutcomeCount = 0;
+                _playedLockedBoxOnce.Clear();
+                _playedBusyBoxOnce.Clear();
+            }
+
+            public bool ShouldPlay(ConveyorPortOutcome outcome, int containerIndex)
+            {
+                float now = Time.unscaledTime;
+
+                const float minInterval = 0.30f;
+                if (now - _lastPlayTime < minInterval)
+                {
+                    return false;
+                }
+
+                if (outcome == ConveyorPortOutcome.RejectedLocked)
+                {
+                    if (containerIndex >= 0 && _playedLockedBoxOnce.Contains(containerIndex)) return false;
+                    if (containerIndex >= 0) _playedLockedBoxOnce.Add(containerIndex);
+                    MarkPlayed(now, outcome);
+                    return true;
+                }
+
+                if (outcome == ConveyorPortOutcome.RejectedBusy)
+                {
+                    if (containerIndex >= 0 && _playedBusyBoxOnce.Contains(containerIndex)) return false;
+                    if (containerIndex >= 0) _playedBusyBoxOnce.Add(containerIndex);
+                    MarkPlayed(now, outcome);
+                    return true;
+                }
+
+                // Full / mismatch: play on reason change; otherwise play occasionally with a higher threshold.
+                if (_lastOutcome.HasValue && _lastOutcome.Value == outcome)
+                {
+                    _sameOutcomeCount++;
+                    const int streakThreshold = 6;
+                    const float repeatInterval = 0.65f;
+                    if (_sameOutcomeCount < streakThreshold) return false;
+                    if (now - _lastPlayTime < repeatInterval) return false;
+                    MarkPlayed(now, outcome);
+                    _sameOutcomeCount = 0;
+                    return true;
+                }
+
+                _sameOutcomeCount = 0;
+                MarkPlayed(now, outcome);
+                return true;
+            }
+
+            private void MarkPlayed(float now, ConveyorPortOutcome outcome)
+            {
+                _lastPlayTime = now;
+                _lastOutcome = outcome;
             }
         }
 
@@ -1437,18 +2183,27 @@ namespace LoopSorting
             }
 
             var container = _game.Containers[containerIndex];
-            if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex]) return;
+            if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex])
+            {
+                PlaySfx(SfxId.UiDenied);
+                if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayDeniedFeedback();
+                return;
+            }
             if (containerIndex < _boxLocked.Count && _boxLocked[containerIndex])
             {
                 PlaySfx(SfxId.BoxLockedThunk);
+                if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayDeniedFeedback();
                 return;
             }
             if (!container.TryPeek(out var first))
             {
+                PlaySfx(SfxId.UiDenied);
+                if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayDeniedFeedback();
                 return;
             }
 
             PlaySfx(SfxId.BoxSelect);
+            if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayTapFeedback();
 
             // show outline for the pending run
             int pending = 0;
@@ -1965,6 +2720,17 @@ namespace LoopSorting
             }
 
             _game = new LoopSortingGame(_beltSlots.Count, containers, containerToBelt, _beltCapacity);
+            _containerIndexByRef.Clear();
+            for (int i = 0; i < containers.Count; i++)
+            {
+                if (containers[i] != null) _containerIndexByRef[containers[i]] = i;
+            }
+            _rejectGate ??= new RejectFeedbackGate();
+            _rejectGate.ResetForNewLevel();
+            _beltBlockOffsets.Clear();
+            _beltBlockOffsetCoroutines.Clear();
+            _beltInsertAnimating.Clear();
+            _beltInsertCoroutines.Clear();
             UpdateBeltCounter();
             UpdateLocks();
             UpdateCompletionStates();
@@ -2002,6 +2768,10 @@ namespace LoopSorting
                 var slot = _game.Conveyor.GetSlot(idx);
                 if (!slot.HasValue)
                 {
+                    if (_beltInsertAnimating.Contains(idx))
+                    {
+                        continue;
+                    }
                     StopBeltSpawnAnimation(idx);
                     Destroy(kv.Value);
                     toRemove.Add(idx);
@@ -2207,7 +2977,7 @@ namespace LoopSorting
             PlaySfx(SfxId.UiPopupOpen);
             PlaySfx(win ? SfxId.LevelWin : SfxId.LevelLose);
             EnsureResultPanel();
-            _resultPanel.SetActive(true);
+            AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
             _resultText.text = win ? "VICTORY" : "FAILED";
             if (_primaryLabel != null) _primaryLabel.text = win ? "NEXT" : "RETRY";
             if (_secondaryLabel != null) _secondaryLabel.text = win ? "RETRY" : "CLOSE";
@@ -3148,7 +3918,7 @@ namespace LoopSorting
             EnsureShopUI();
             RefreshEconomyHUD();
             PopulateShop(tab);
-            if (_shopPanel != null) _shopPanel.SetActive(true);
+            if (_shopPanel != null) AnimateUiPanel(_shopPanel, true, seconds: 0.20f);
             if (_settingsPanel != null) _settingsPanel.SetActive(false);
             if (_resultPanel != null) _resultPanel.SetActive(false);
             PlaySfx(SfxId.UiPopupOpen);
@@ -3232,7 +4002,7 @@ namespace LoopSorting
             closeBtn.onClick.AddListener(() =>
             {
                 PlaySfx(SfxId.UiPopupClose);
-                _shopPanel.SetActive(false);
+                AnimateUiPanel(_shopPanel, false, seconds: 0.18f);
             });
 
             // Currency strip
@@ -4230,8 +5000,9 @@ namespace LoopSorting
                 if (go == null) continue;
                 if (idx < 0 || idx >= _slotCurrentPositions.Count) continue;
                 if (_beltSpawnAnimating.Contains(idx)) continue;
+                if (_beltInsertAnimating.Contains(idx)) continue;
 
-                var pos = _slotCurrentPositions[idx] + new Vector3(0f, 0f, beltBlockZOffset);
+                var pos = _slotCurrentPositions[idx] + GetBeltBlockOffset(idx) + new Vector3(0f, 0f, beltBlockZOffset);
                 go.transform.position = pos;
             }
         }
@@ -4316,13 +5087,14 @@ namespace LoopSorting
                 t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
                 float u = Mathf.Clamp01(t / duration);
                 var end = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
+                end += GetBeltBlockOffset(beltIndex);
                 go.transform.position = Vector3.Lerp(start, end, u);
                 yield return null;
             }
 
             if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null && beltIndex >= 0 && beltIndex < _slotCurrentPositions.Count)
             {
-                finalGo.transform.position = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
+                finalGo.transform.position = _slotCurrentPositions[beltIndex] + GetBeltBlockOffset(beltIndex) + new Vector3(0f, 0f, beltBlockZOffset);
             }
 
             PlaySfx(SfxId.BlockLand);

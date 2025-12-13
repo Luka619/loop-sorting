@@ -86,6 +86,11 @@ namespace LoopSorting
             _conveyor.Advance(blockedPort);
         }
 
+        public void TickConveyor(int? blockedPort, List<ConveyorPortEvent> events)
+        {
+            _conveyor.Advance(blockedPort, events);
+        }
+
         public bool IsSolved(bool requireFull = false)
         {
             if (requireFull)

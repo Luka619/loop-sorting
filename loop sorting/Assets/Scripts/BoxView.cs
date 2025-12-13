@@ -27,6 +27,11 @@ namespace LoopSorting
         private GameObject _completedOverlay;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
+        private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
+        private readonly HashSet<int> _incomingAnimatingSlots = new HashSet<int>();
+        private readonly Dictionary<int, Vector3> _slotFinalLocalPos = new Dictionary<int, Vector3>();
+        private Vector3 _mouthLocalPos;
+        private Vector3 _mouthLocalNormal;
 
         // Render / layering guideline (smaller Z = closer to camera):
         // Blocks:            z = 0
@@ -41,6 +46,8 @@ namespace LoopSorting
         private const int LockBadgeQueue = 3200;
         private const float OutlineZ = -0.12f;
         private const float BoxOutlineZ = -0.35f;
+        private const float IncomingMinSeconds = 0.06f;
+        private const float IncomingMaxSeconds = 0.22f;
 
         public void Init(int containerIndex, GameRuntimeController controller, Vector2 size, int columns, int rows, Vector2 blockSize, OpeningSide opening)
         {
@@ -55,6 +62,10 @@ namespace LoopSorting
             _cellOrder = BuildCellOrder(_columns, _rows, _opening);
             _slotColors.Clear();
             _slotHidden.Clear();
+            _incomingCoroutines.Clear();
+            _incomingAnimatingSlots.Clear();
+            _slotFinalLocalPos.Clear();
+            CacheMouth();
 
             var collider = GetComponent<BoxCollider>();
             collider.size = new Vector3(size.x, size.y, 0.3f);
@@ -67,6 +78,7 @@ namespace LoopSorting
         public void SyncBlocks(IReadOnlyList<Block> blocks)
         {
             EnsureSlotCapacity();
+            if (blocks == null) blocks = new List<Block>();
 
             _tmpIndices.Clear();
             for (int i = 0; i < _slotColors.Count; i++)
@@ -77,40 +89,104 @@ namespace LoopSorting
             int oldCount = _tmpIndices.Count;
             int newCount = Mathf.Min(blocks.Count, _capacity);
 
-            if (newCount < oldCount)
+            bool animateInsert = false;
+            int animateSlot = -1;
+
+            if (newCount == 0)
             {
-                int removeCount = oldCount - newCount;
-                for (int r = 0; r < removeCount && _tmpIndices.Count > 0; r++)
+                if (oldCount > 0)
                 {
-                    int idx = _tmpIndices[0];
-                    _tmpIndices.RemoveAt(0);
-                    _slotColors[idx] = null;
-                    _slotHidden[idx] = false;
+                    for (int i = 0; i < _tmpIndices.Count; i++)
+                    {
+                        int idx = _tmpIndices[i];
+                        CancelIncoming(idx);
+                        _slotColors[idx] = null;
+                        _slotHidden[idx] = false;
+                    }
                 }
             }
-            else if (newCount > oldCount)
+            else if (oldCount == 0)
             {
-                int addCount = newCount - oldCount;
-                for (int a = 0; a < addCount; a++)
+                // Initial fill: pack to the inner side (end) so the empty space stays near the opening.
+                RebuildFromBlocks(blocks, newCount);
+            }
+            else
+            {
+                int expectedStartOld = _capacity - oldCount;
+                int expectedStartNew = _capacity - newCount;
+                int currentStart = _tmpIndices[0];
+
+                // If the occupied range is not a contiguous tail, do a full rebuild.
+                bool contiguousTail = currentStart == expectedStartOld;
+                if (contiguousTail)
                 {
-                    int targetSlot = FindFirstEmptyFromInner();
-                    if (targetSlot < 0) break;
-                    _slotColors[targetSlot] = blocks[oldCount + a].Color;
-                    _slotHidden[targetSlot] = blocks[oldCount + a].Hidden;
+                    for (int i = 0; i < oldCount; i++)
+                    {
+                        if (expectedStartOld + i >= _slotColors.Count) { contiguousTail = false; break; }
+                        if (!_slotColors[expectedStartOld + i].HasValue) { contiguousTail = false; break; }
+                    }
+                }
+
+                int delta = newCount - oldCount;
+                if (!contiguousTail || delta > 1 || delta < -1)
+                {
+                    RebuildFromBlocks(blocks, newCount);
+                }
+                else if (delta == 1)
+                {
+                    // One block inserted at the front (mouth side). Place it in the next outer slot of the packed tail.
+                    int slot = expectedStartNew;
+                    if (slot >= 0 && slot < _slotColors.Count && !_slotColors[slot].HasValue)
+                    {
+                        _slotColors[slot] = blocks[0].Color;
+                        _slotHidden[slot] = blocks[0].Hidden;
+                        animateInsert = true;
+                        animateSlot = slot;
+                    }
+                    else
+                    {
+                        RebuildFromBlocks(blocks, newCount);
+                    }
+                }
+                else if (delta == -1)
+                {
+                    // One block removed from the front. Clear the current outermost occupied slot.
+                    int slot = expectedStartOld;
+                    if (slot >= 0 && slot < _slotColors.Count && _slotColors[slot].HasValue)
+                    {
+                        CancelIncoming(slot);
+                        _slotColors[slot] = null;
+                        _slotHidden[slot] = false;
+                    }
+                    else
+                    {
+                        RebuildFromBlocks(blocks, newCount);
+                    }
+                }
+                else
+                {
+                    // Same count: verify the packed tail still matches; otherwise rebuild (e.g., boosters).
+                    bool matches = true;
+                    for (int i = 0; i < newCount; i++)
+                    {
+                        int slot = expectedStartNew + i;
+                        if (slot < 0 || slot >= _slotColors.Count) { matches = false; break; }
+                        if (!_slotColors[slot].HasValue) { matches = false; break; }
+                        if (_slotColors[slot].Value != blocks[i].Color) { matches = false; break; }
+                        if (_slotHidden[slot] != blocks[i].Hidden) { matches = false; break; }
+                    }
+                    if (!matches)
+                    {
+                        RebuildFromBlocks(blocks, newCount);
+                    }
                 }
             }
 
-            // Refresh occupied list and update colors in place (outer->inner order).
+            // Refresh occupied list for hidden-run enforcement.
             _tmpIndices.Clear();
             for (int i = 0; i < _slotColors.Count; i++)
             {
                 if (_slotColors[i].HasValue) _tmpIndices.Add(i);
-            }
-            int seqLen = Mathf.Min(_tmpIndices.Count, newCount);
-            for (int i = 0; i < seqLen; i++)
-            {
-                _slotColors[_tmpIndices[i]] = blocks[i].Color;
-                _slotHidden[_tmpIndices[i]] = blocks[i].Hidden;
             }
 
             // Enforce run-based hidden logic: same-color consecutive blocks share hidden state;
@@ -137,6 +213,31 @@ namespace LoopSorting
             }
 
             RefreshVisuals();
+
+            if (animateInsert && animateSlot >= 0)
+            {
+                StartIncomingAnimation(animateSlot);
+            }
+        }
+
+        private void RebuildFromBlocks(IReadOnlyList<Block> blocks, int newCount)
+        {
+            for (int i = 0; i < _slotColors.Count; i++)
+            {
+                if (_slotColors[i].HasValue) CancelIncoming(i);
+                _slotColors[i] = null;
+                _slotHidden[i] = false;
+            }
+
+            int count = Mathf.Min(newCount, _capacity);
+            int start = Mathf.Clamp(_capacity - count, 0, _capacity);
+            for (int i = 0; i < count; i++)
+            {
+                int slot = start + i;
+                if (slot < 0 || slot >= _slotColors.Count) break;
+                _slotColors[slot] = blocks[i].Color;
+                _slotHidden[slot] = blocks[i].Hidden;
+            }
         }
 
         private void OnMouseUpAsButton()
@@ -168,6 +269,8 @@ namespace LoopSorting
             }
             while (_slotColors.Count > _capacity)
             {
+                int lastIdx = _slotColors.Count - 1;
+                CancelIncoming(lastIdx);
                 _slotColors.RemoveAt(_slotColors.Count - 1);
                 _slotHidden.RemoveAt(_slotHidden.Count - 1);
             }
@@ -218,7 +321,12 @@ namespace LoopSorting
             var origin = new Vector2(-_boxSize.x * 0.5f + cellSize.x * 0.5f, _boxSize.y * 0.5f - cellSize.y * 0.5f);
             var pos = origin + new Vector2(col * cellSize.x, -row * cellSize.y);
 
-            _blockVisuals[slotIndex].transform.localPosition = new Vector3(pos.x, pos.y, 0f);
+            var finalPos = new Vector3(pos.x, pos.y, 0f);
+            _slotFinalLocalPos[slotIndex] = finalPos;
+            if (!_incomingAnimatingSlots.Contains(slotIndex))
+            {
+                _blockVisuals[slotIndex].transform.localPosition = finalPos;
+            }
             var fitScale = new Vector3(
                 Mathf.Min(_blockSize.x, cellSize.x * 0.9f),
                 Mathf.Min(_blockSize.y, cellSize.y * 0.9f),
@@ -232,6 +340,86 @@ namespace LoopSorting
                 var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
                 renderer.sharedMaterial.color = matColor;
             }
+        }
+
+        private void CacheMouth()
+        {
+            Vector2 normal = Vector2.down;
+            switch (_opening)
+            {
+                case OpeningSide.Top: normal = Vector2.up; break;
+                case OpeningSide.Bottom: normal = Vector2.down; break;
+                case OpeningSide.Left: normal = Vector2.left; break;
+                case OpeningSide.Right: normal = Vector2.right; break;
+            }
+
+            var half = _boxSize * 0.5f;
+            float dist = (normal == Vector2.left || normal == Vector2.right) ? half.x : half.y;
+            _mouthLocalNormal = new Vector3(normal.x, normal.y, 0f);
+            _mouthLocalPos = _mouthLocalNormal * dist;
+        }
+
+        private void CancelIncoming(int slotIndex)
+        {
+            _incomingAnimatingSlots.Remove(slotIndex);
+            if (_incomingCoroutines.TryGetValue(slotIndex, out var co) && co != null)
+            {
+                StopCoroutine(co);
+            }
+            _incomingCoroutines.Remove(slotIndex);
+        }
+
+        private void StartIncomingAnimation(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= _blockVisuals.Count) return;
+            var go = _blockVisuals[slotIndex];
+            if (go == null) return;
+            if (!_slotFinalLocalPos.TryGetValue(slotIndex, out var end)) return;
+
+            CancelIncoming(slotIndex);
+            _incomingAnimatingSlots.Add(slotIndex);
+
+            float cell = Mathf.Min(_boxSize.x / Mathf.Max(1, _columns), _boxSize.y / Mathf.Max(1, _rows));
+            float pad = Mathf.Max(0.05f, cell * 0.7f);
+            var start = _mouthLocalPos + _mouthLocalNormal * pad;
+
+            go.transform.localPosition = start;
+            var co = StartCoroutine(AnimateIncoming(slotIndex, start, end));
+            _incomingCoroutines[slotIndex] = co;
+        }
+
+        private global::System.Collections.IEnumerator AnimateIncoming(int slotIndex, Vector3 start, Vector3 end)
+        {
+            float duration = 0.12f;
+            if (Controller != null)
+            {
+                duration = Mathf.Clamp(Controller.conveyorTickSeconds * 0.55f, IncomingMinSeconds, IncomingMaxSeconds);
+            }
+            duration = Mathf.Max(0.0001f, duration);
+
+            float t = 0f;
+            while (t < duration)
+            {
+                if (slotIndex < 0 || slotIndex >= _blockVisuals.Count) break;
+                var go = _blockVisuals[slotIndex];
+                if (go == null) break;
+
+                float speed = 1f;
+                if (Controller != null) speed = Mathf.Max(0.0001f, Controller.EffectiveSpeedMultiplier);
+
+                t += Time.deltaTime * speed;
+                float u = Mathf.Clamp01(t / duration);
+                go.transform.localPosition = Vector3.Lerp(start, end, u);
+                yield return null;
+            }
+
+            if (slotIndex >= 0 && slotIndex < _blockVisuals.Count && _blockVisuals[slotIndex] != null)
+            {
+                _blockVisuals[slotIndex].transform.localPosition = end;
+            }
+
+            _incomingAnimatingSlots.Remove(slotIndex);
+            _incomingCoroutines.Remove(slotIndex);
         }
 
         public void ShowFrontOutline(int runCount, bool show)
@@ -583,14 +771,7 @@ namespace LoopSorting
             return order;
         }
 
-        private int FindFirstEmptyFromInner()
-        {
-            for (int i = _slotColors.Count - 1; i >= 0; i--)
-            {
-                if (!_slotColors[i].HasValue) return i;
-            }
-            return -1;
-        }
+
 
     }
 }

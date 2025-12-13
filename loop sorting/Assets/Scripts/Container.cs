@@ -79,7 +79,7 @@ namespace LoopSorting
         }
 
         /// <summary>
-        /// Append blocks (inner-first) up to capacity.
+        /// Append blocks in list order (outer-to-inner) up to capacity.
         /// </summary>
         public void AddBlocks(IEnumerable<Block> blocks)
         {
@@ -144,8 +144,9 @@ namespace LoopSorting
                 return false;
             }
 
-            // Insert at the end to fill inner-most first.
-            _blocks.Add(block);
+            // Insert at the front (mouth-side) so blocks never pass through deeper blocks.
+            // This prevents creating split patterns like A-B-A when pushing an A into a box whose front is A.
+            _blocks.Insert(0, block);
             return true;
         }
 

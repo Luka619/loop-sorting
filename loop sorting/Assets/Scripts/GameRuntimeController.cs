@@ -97,6 +97,8 @@ namespace LoopSorting
         private bool _fullBeltFastForward;
         private int _fullBeltStepsRemaining;
 
+        public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : _speedMultiplier;
+
         private void ClearRuntime()
         {
             // Stop coroutines

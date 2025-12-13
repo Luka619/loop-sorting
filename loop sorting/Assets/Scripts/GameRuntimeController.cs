@@ -99,6 +99,9 @@ namespace LoopSorting
 
         public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : _speedMultiplier;
 
+        private readonly HashSet<int> _beltSpawnAnimating = new HashSet<int>();
+        private readonly Dictionary<int, Coroutine> _beltSpawnCoroutines = new Dictionary<int, Coroutine>();
+
         private void ClearRuntime()
         {
             // Stop coroutines
@@ -134,6 +137,8 @@ namespace LoopSorting
             _gameOver = false;
             _fullBeltFastForward = false;
             _fullBeltStepsRemaining = 0;
+            _beltSpawnAnimating.Clear();
+            _beltSpawnCoroutines.Clear();
         }
 
         public void Build(LevelLayout layout)
@@ -882,6 +887,7 @@ namespace LoopSorting
                 var slot = _game.Conveyor.GetSlot(idx);
                 if (!slot.HasValue)
                 {
+                    StopBeltSpawnAnimation(idx);
                     Destroy(kv.Value);
                     toRemove.Add(idx);
                 }
@@ -1231,6 +1237,7 @@ namespace LoopSorting
 
                 SyncBeltVisuals();
                 SyncContainersVisuals();
+                StartBeltSpawnFromBox(containerIndex, peek);
 
                 // Keep the operable outline in sync with the remaining run.
                 if (containerIndex < _boxViews.Count)
@@ -1635,6 +1642,7 @@ namespace LoopSorting
                 var go = kv.Value;
                 if (go == null) continue;
                 if (idx < 0 || idx >= _slotCurrentPositions.Count) continue;
+                if (_beltSpawnAnimating.Contains(idx)) continue;
 
                 var pos = _slotCurrentPositions[idx] + new Vector3(0f, 0f, beltBlockZOffset);
                 go.transform.position = pos;
@@ -1659,6 +1667,83 @@ namespace LoopSorting
             {
                 renderer.sharedMaterial.color = BlockVisual.ToUnityColor(block.Color);
             }
+        }
+
+        private void StartBeltSpawnFromBox(int containerIndex, Block released)
+        {
+            if (_currentLayout == null || _beltSlots == null || _beltSlots.Count == 0) return;
+            if (containerIndex < 0 || containerIndex >= _boxSpecs.Count) return;
+            if (!_containerToBelt.TryGetValue(containerIndex, out var beltIndex)) return;
+            if (beltIndex < 0 || beltIndex >= _beltSlots.Count) return;
+
+            if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null)
+            {
+                EnsureBlockVisual(beltIndex, released);
+                _beltBlockVisuals.TryGetValue(beltIndex, out go);
+            }
+            if (go == null) return;
+
+            var spec = _boxSpecs[containerIndex];
+            var size = LayoutUtils.ComputeBoxSize(spec, _currentLayout.blockSize);
+            var mouth2 = LayoutUtils.ComputeMouth(spec, size);
+            var mouth = new Vector3(mouth2.x, mouth2.y, 0f);
+
+            Vector2 n2 = Vector2.down;
+            switch (spec.opening)
+            {
+                case OpeningSide.Top: n2 = Vector2.up; break;
+                case OpeningSide.Bottom: n2 = Vector2.down; break;
+                case OpeningSide.Left: n2 = Vector2.left; break;
+                case OpeningSide.Right: n2 = Vector2.right; break;
+            }
+            var normal = new Vector3(n2.x, n2.y, 0f);
+
+            float unit = _currentLayout.blockSize > 0 ? _currentLayout.blockSize : 0.6f;
+            float pad = Mathf.Max(0.05f, unit * 0.6f);
+
+            var start = mouth - normal * pad + new Vector3(0f, 0f, beltBlockZOffset);
+            go.transform.position = start;
+
+            StopBeltSpawnAnimation(beltIndex);
+            _beltSpawnAnimating.Add(beltIndex);
+            _beltSpawnCoroutines[beltIndex] = StartCoroutine(AnimateBeltSpawn(beltIndex, start));
+        }
+
+        private void StopBeltSpawnAnimation(int beltIndex)
+        {
+            if (_beltSpawnCoroutines.TryGetValue(beltIndex, out var co) && co != null)
+            {
+                StopCoroutine(co);
+            }
+            _beltSpawnCoroutines.Remove(beltIndex);
+            _beltSpawnAnimating.Remove(beltIndex);
+        }
+
+        private IEnumerator AnimateBeltSpawn(int beltIndex, Vector3 start)
+        {
+            float duration = Mathf.Clamp(conveyorTickSeconds * 0.55f, 0.06f, 0.22f);
+            duration = Mathf.Max(0.0001f, duration);
+
+            float t = 0f;
+            while (t < duration)
+            {
+                if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null) break;
+                if (beltIndex < 0 || beltIndex >= _slotCurrentPositions.Count) break;
+
+                t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
+                float u = Mathf.Clamp01(t / duration);
+                var end = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
+                go.transform.position = Vector3.Lerp(start, end, u);
+                yield return null;
+            }
+
+            if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null && beltIndex >= 0 && beltIndex < _slotCurrentPositions.Count)
+            {
+                finalGo.transform.position = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
+            }
+
+            _beltSpawnAnimating.Remove(beltIndex);
+            _beltSpawnCoroutines.Remove(beltIndex);
         }
 
         private void SetSlotCurrent(int index, Vector3 pos)

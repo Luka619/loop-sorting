@@ -103,8 +103,8 @@
 
     { "key": "ui.icon.gear", "path": "UI_Sprites/icon_gear.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.close", "path": "UI_Sprites/icon_close.png", "pixelsPerUnit": 100, "applyNineSlice": false },
-    { "key": "ui.icon.sort", "path": "UI_Sprites/icon_sort_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
-    { "key": "ui.icon.shuffle", "path": "UI_Sprites/icon_shuffle_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.sort", "path": "conveyor_belt_texture_v02_candy/icon_sort_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.shuffle", "path": "conveyor_belt_texture_v02_candy/icon_shuffle_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.next", "path": "UI_Sprites/icon_next.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.retry", "path": "UI_Sprites/icon_retry.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.lock", "path": "UI_Sprites/icon_lock.png", "pixelsPerUnit": 100, "applyNineSlice": false },

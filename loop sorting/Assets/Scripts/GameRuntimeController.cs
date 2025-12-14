@@ -236,7 +236,8 @@ namespace LoopSorting
         }
 
         private SfxPlayer _sfx;
-        private MusicPlayer _music;
+        private BgmPlayer _bgm;
+        private bool _bgmPressure;
         private bool _sfxHasSnapshot;
         private bool _sfxPrevFastForward;
         private bool _sfxSuppressSpeeddownOnce;
@@ -778,18 +779,56 @@ namespace LoopSorting
 
         private void EnsureMusic()
         {
-            if (_music == null)
+            EnsureBgm();
+        }
+
+        private void EnsureBgm()
+        {
+            if (_bgm == null)
             {
-                _music = GetComponentInChildren<MusicPlayer>(includeInactive: true);
-                if (_music == null)
+                _bgm = GetComponentInChildren<BgmPlayer>(includeInactive: true);
+                if (_bgm == null)
                 {
-                    var musicGO = new GameObject("Music");
-                    musicGO.transform.SetParent(transform, false);
-                    _music = musicGO.AddComponent<MusicPlayer>();
+                    var bgmGO = new GameObject("BGM");
+                    bgmGO.transform.SetParent(transform, false);
+                    _bgm = bgmGO.AddComponent<BgmPlayer>();
                 }
             }
 
-            _music.SetEnabled(musicEnabled);
+            _bgm.SetEnabled(musicEnabled);
+
+            if (!musicEnabled)
+            {
+                _bgmPressure = false;
+                return;
+            }
+
+            // Ensure a base loop is active (Menu when not in gameplay; GameplayBase otherwise).
+            if (_game == null || _gameOver)
+            {
+                _bgmPressure = false;
+                _bgm.PlayLoop(BgmLoopId.Menu, fadeSeconds: 0f);
+                return;
+            }
+
+            UpdateBgmPressureAfterTick(force: true);
+        }
+
+        private void UpdateBgmPressureAfterTick(bool force = false)
+        {
+            if (!musicEnabled || _bgm == null || _game == null || _gameOver)
+            {
+                return;
+            }
+
+            bool wantPressure = _fullBeltFastForward || _speedMultiplier >= 4.99f;
+            if (!force && wantPressure == _bgmPressure)
+            {
+                return;
+            }
+
+            _bgmPressure = wantPressure;
+            _bgm.PlayLoop(wantPressure ? BgmLoopId.GameplayPressure : BgmLoopId.GameplayBase, fadeSeconds: force ? 0f : 0.4f);
         }
 
         private void UpdateConveyorLoopSfx()
@@ -884,7 +923,7 @@ namespace LoopSorting
                 return;
             }
 
-            if (soundEnabled)
+            if (musicEnabled)
             {
                 EnsureBgm();
             }
@@ -926,18 +965,18 @@ namespace LoopSorting
             if (completions > 0)
             {
                 PlaySfx(SfxId.BoxComplete);
-                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoxComplete);
+                if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoxComplete);
             }
             if (unlocks > 0)
             {
                 PlaySfx(SfxId.BoxUnlock);
-                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Unlock);
+                if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Unlock);
             }
             if (!_sfxPrevFastForward && _fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
                 PlaySfx(SfxId.ConveyorFullWarning);
-                if (soundEnabled && _bgm != null)
+                if (musicEnabled && _bgm != null)
                 {
                     _bgmPressure = true;
                     _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.6f);
@@ -953,7 +992,7 @@ namespace LoopSorting
                 else
                 {
                     PlaySfx(SfxId.ConveyorSpeeddown);
-                    if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
+                    if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
                 }
             }
 
@@ -1472,13 +1511,13 @@ namespace LoopSorting
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
             EnsureBgm();
-            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
+            if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
-                if (soundEnabled && _bgm != null)
+                if (musicEnabled && _bgm != null)
                 {
                     _bgmPressure = true;
                     _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
@@ -1502,11 +1541,11 @@ namespace LoopSorting
             if (ok) ConsumeBooster(BoosterType.Sort, 1);
 
             _speedMultiplier = prevSpeed;
-            if (!_fullBeltFastForward && prevSpeed < 4.99f)
-            {
-                PlaySfx(SfxId.ConveyorSpeeddown);
-                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
-            }
+                if (!_fullBeltFastForward && prevSpeed < 4.99f)
+                {
+                    PlaySfx(SfxId.ConveyorSpeeddown);
+                    if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
+                }
             UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
@@ -1520,13 +1559,13 @@ namespace LoopSorting
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
             EnsureBgm();
-            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
+            if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
-                if (soundEnabled && _bgm != null)
+                if (musicEnabled && _bgm != null)
                 {
                     _bgmPressure = true;
                     _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
@@ -1550,11 +1589,11 @@ namespace LoopSorting
             if (ok) ConsumeBooster(BoosterType.Shuffle, 1);
 
             _speedMultiplier = prevSpeed;
-            if (!_fullBeltFastForward && prevSpeed < 4.99f)
-            {
-                PlaySfx(SfxId.ConveyorSpeeddown);
-                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
-            }
+                if (!_fullBeltFastForward && prevSpeed < 4.99f)
+                {
+                    PlaySfx(SfxId.ConveyorSpeeddown);
+                    if (musicEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
+                }
             UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
@@ -3426,7 +3465,7 @@ namespace LoopSorting
             PlaySfx(SfxId.UiPopupOpen);
             PlaySfx(win ? SfxId.LevelWin : SfxId.LevelLose);
             EnsureBgm();
-            if (soundEnabled && _bgm != null)
+            if (musicEnabled && _bgm != null)
             {
                 _bgm.PlayStinger(win ? BgmStingerId.Win : BgmStingerId.Lose);
                 _bgm.FadeOutLoops(fadeSeconds: 0.9f);

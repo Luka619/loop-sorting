@@ -271,8 +271,51 @@ namespace LoopSorting
             var direct = Resources.Load<Sprite>($"{GetResourcesRoot()}/{normalized}");
             if (direct != null)
             {
-                SpriteCache[cacheKey] = direct;
-                return direct;
+                if (!applyNineSlice)
+                {
+                    SpriteCache[cacheKey] = direct;
+                    return direct;
+                }
+
+                // If the sprite is imported without 9-slice borders, recreate it at runtime with config borders.
+                // This keeps UI consistent even when assets are imported as Sprites in Unity with default (zero) borders.
+                Vector4 sliceBorder = Vector4.zero; // Unity order: left, bottom, right, top
+                string fileName = Path.GetFileName(relativePath.Replace('\\', '/'));
+                var rules = GetNineSliceRules();
+                for (int i = 0; i < rules.Length; i++)
+                {
+                    if (rules[i].Matches(fileName))
+                    {
+                        sliceBorder = rules[i].BorderUnity;
+                        break;
+                    }
+                }
+
+                if (sliceBorder.sqrMagnitude <= 0.0001f || direct.border.sqrMagnitude > 0.0001f)
+                {
+                    SpriteCache[cacheKey] = direct;
+                    return direct;
+                }
+
+                var directTex = direct.texture;
+                if (directTex == null)
+                {
+                    SpriteCache[cacheKey] = direct;
+                    return direct;
+                }
+
+                var recreated = Sprite.Create(
+                    directTex,
+                    direct.rect,
+                    new Vector2(0.5f, 0.5f),
+                    Mathf.Max(1f, pixelsPerUnit),
+                    0,
+                    SpriteMeshType.FullRect,
+                    sliceBorder);
+
+                recreated.name = $"{GetResourcesRoot()}/{normalized}";
+                SpriteCache[cacheKey] = recreated;
+                return recreated;
             }
 
             var tex = LoadTexture(normalized);

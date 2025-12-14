@@ -356,6 +356,10 @@ namespace LoopSorting
         {
             EnsureEventSystem();
             EnsureSfx();
+
+            // Build shared HUD canvas (hidden) so the Settings modal can be opened from the main menu.
+            EnsureCounterUI();
+            EnsureSettingsUI();
             EnsureMainMenuUI();
             if (_mainMenuCanvas != null) _mainMenuCanvas.gameObject.SetActive(true);
             if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(false);
@@ -437,17 +441,65 @@ namespace LoopSorting
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
 
-            // Soft dim to reduce background noise behind UI.
-            var overlayGO = new GameObject("Overlay");
-            overlayGO.transform.SetParent(canvasGO.transform, false);
-            var overlay = overlayGO.AddComponent<Image>();
-            overlay.raycastTarget = false;
-            overlay.color = new Color(0f, 0f, 0f, 0.18f);
-            var overlayRect = overlayGO.GetComponent<RectTransform>();
-            overlayRect.anchorMin = Vector2.zero;
-            overlayRect.anchorMax = Vector2.one;
-            overlayRect.offsetMin = Vector2.zero;
-            overlayRect.offsetMax = Vector2.zero;
+            static void ApplyTmpOutlineUnderlay(
+                TMP_Text tmp,
+                float outlineWidth,
+                Color outlineColor,
+                Color underlayColor,
+                Vector2 underlayOffset,
+                float underlaySoftness,
+                float underlayDilate)
+            {
+                if (tmp == null) return;
+                if (tmp.fontMaterial == null) return;
+
+                // Clone material so we don't mutate shared TMP materials globally.
+                var mat = new Material(tmp.fontMaterial);
+                tmp.fontMaterial = mat;
+
+                if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
+                {
+                    mat.EnableKeyword("OUTLINE_ON");
+                    mat.SetFloat(ShaderUtilities.ID_OutlineWidth, Mathf.Clamp01(outlineWidth));
+                }
+                if (mat.HasProperty(ShaderUtilities.ID_OutlineColor))
+                {
+                    mat.SetColor(ShaderUtilities.ID_OutlineColor, outlineColor);
+                }
+
+                if (mat.HasProperty(ShaderUtilities.ID_UnderlayColor))
+                {
+                    mat.EnableKeyword("UNDERLAY_ON");
+                    mat.SetColor(ShaderUtilities.ID_UnderlayColor, underlayColor);
+                }
+                if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetX)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, underlayOffset.x);
+                if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetY)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, underlayOffset.y);
+                if (mat.HasProperty(ShaderUtilities.ID_UnderlaySoftness)) mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, Mathf.Clamp01(underlaySoftness));
+                if (mat.HasProperty(ShaderUtilities.ID_UnderlayDilate)) mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, Mathf.Clamp(underlayDilate, -1f, 1f));
+
+                tmp.UpdateMeshPadding();
+            }
+
+            // Settings (top-right) - matches UI kit blueprint.
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                var settingsBtn = CreateIconButton(
+                    parent: canvasGO.transform,
+                    name: "SettingsButton",
+                    anchor: new Vector2(1f, 1f),
+                    anchoredPos: new Vector2(-80f, -80f),
+                    size: new Vector2(180f, 180f),
+                    normal: "ui.button.mint_square.normal",
+                    pressed: "ui.button.mint_square.pressed",
+                    disabled: "ui.button.mint_square.disabled",
+                    icon: "ui.icon.gear");
+                settingsBtn.onClick.RemoveAllListeners();
+                settingsBtn.onClick.AddListener(() =>
+                {
+                    EnsureSettingsUI();
+                    ToggleSettingsPanel(true);
+                });
+            }
 
             var playGO = new GameObject("PlayButton");
             playGO.transform.SetParent(canvasGO.transform, false);
@@ -456,7 +508,7 @@ namespace LoopSorting
             playRect.anchorMax = new Vector2(0.5f, 0.34f);
             playRect.pivot = new Vector2(0.5f, 0.5f);
             playRect.anchoredPosition = Vector2.zero;
-            playRect.sizeDelta = new Vector2(860f, 240f);
+            playRect.sizeDelta = new Vector2(900f, 260f);
 
             var playImg = playGO.AddComponent<Image>();
             _mainMenuPlayButton = playGO.AddComponent<Button>();
@@ -471,8 +523,16 @@ namespace LoopSorting
             playText.raycastTarget = false;
             playText.text = "PLAY";
             playText.alignment = TextAlignmentOptions.Center;
-            playText.fontSize = 76;
+            playText.fontSize = 84;
             playText.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                playText,
+                outlineWidth: 0.22f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.35f,
+                underlayDilate: 0.05f);
             var playTextRect = playText.GetComponent<RectTransform>();
             playTextRect.anchorMin = Vector2.zero;
             playTextRect.anchorMax = Vector2.one;
@@ -494,29 +554,21 @@ namespace LoopSorting
             title.text = "LOOP\nSORTING";
             title.alignment = TextAlignmentOptions.Center;
             title.fontSize = 96;
-            title.color = new Color(0.06f, 0.06f, 0.08f, 0.78f);
+            title.color = Color.white;
             var titleRect = titleGO.GetComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0.5f, 0.8f);
             titleRect.anchorMax = new Vector2(0.5f, 0.8f);
             titleRect.pivot = new Vector2(0.5f, 0.5f);
             titleRect.anchoredPosition = new Vector2(0f, -80f);
             titleRect.sizeDelta = new Vector2(700f, 260f);
-
-            // Simple shadow (duplicate behind).
-            var titleShadowGO = new GameObject("TitleShadow");
-            titleShadowGO.transform.SetParent(canvasGO.transform, false);
-            var titleShadow = titleShadowGO.AddComponent<TextMeshProUGUI>();
-            titleShadow.raycastTarget = false;
-            titleShadow.text = title.text;
-            titleShadow.alignment = title.alignment;
-            titleShadow.fontSize = title.fontSize;
-            titleShadow.color = new Color(0f, 0f, 0f, 0.18f);
-            var shadowRect = titleShadowGO.GetComponent<RectTransform>();
-            shadowRect.anchorMin = titleRect.anchorMin;
-            shadowRect.anchorMax = titleRect.anchorMax;
-            shadowRect.pivot = titleRect.pivot;
-            shadowRect.anchoredPosition = titleRect.anchoredPosition + new Vector2(0f, -6f);
-            shadowRect.sizeDelta = titleRect.sizeDelta;
+            ApplyTmpOutlineUnderlay(
+                title,
+                outlineWidth: 0.18f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -4f),
+                underlaySoftness: 0.38f,
+                underlayDilate: 0.06f);
 
             // Level pill (optional but matches UI kit blueprint)
             if (LoopSortingUIKit.IsAvailable())
@@ -524,8 +576,8 @@ namespace LoopSorting
                 var levelPillGO = new GameObject("LevelPill");
                 levelPillGO.transform.SetParent(canvasGO.transform, false);
                 var pillRect = levelPillGO.AddComponent<RectTransform>();
-                pillRect.anchorMin = new Vector2(0.5f, 0.52f);
-                pillRect.anchorMax = new Vector2(0.5f, 0.52f);
+                pillRect.anchorMin = new Vector2(0.5f, 0.55f);
+                pillRect.anchorMax = new Vector2(0.5f, 0.55f);
                 pillRect.pivot = new Vector2(0.5f, 0.5f);
                 pillRect.anchoredPosition = Vector2.zero;
                 pillRect.sizeDelta = new Vector2(380f, 90f);
@@ -535,7 +587,7 @@ namespace LoopSorting
                 pillBg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_small.info");
                 pillBg.color = Color.white;
                 pillBg.type = pillBg.sprite != null && pillBg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-
+                
                 var pillTextGO = new GameObject("Text");
                 pillTextGO.transform.SetParent(levelPillGO.transform, false);
                 var pillText = pillTextGO.AddComponent<TextMeshProUGUI>();
@@ -545,6 +597,14 @@ namespace LoopSorting
                 pillText.alignment = TextAlignmentOptions.Center;
                 pillText.fontSize = 44;
                 pillText.color = new Color(0.12f, 0.12f, 0.12f, 1f);
+                ApplyTmpOutlineUnderlay(
+                    pillText,
+                    outlineWidth: 0.12f,
+                    outlineColor: new Color(1f, 1f, 1f, 0.55f),
+                    underlayColor: new Color(0f, 0f, 0f, 0.12f),
+                    underlayOffset: new Vector2(1f, -2f),
+                    underlaySoftness: 0.28f,
+                    underlayDilate: 0.02f);
                 var pillTextRect = pillTextGO.GetComponent<RectTransform>();
                 pillTextRect.anchorMin = Vector2.zero;
                 pillTextRect.anchorMax = Vector2.one;
@@ -573,7 +633,29 @@ namespace LoopSorting
         {
             if (_speedButtonLabel == null) return;
             float val = _speedMultiplier;
-            _speedButtonLabel.text = $"{val:0.##}x";
+            _speedButtonLabel.text = FormatSpeedLabel(val);
+        }
+
+        private static string FormatSpeedLabel(float speed)
+        {
+            // Avoid long decimals in the tiny square button; show tiered labels:
+            // 1x, 2x, 3x correspond to 1.0, 1.5, 2.0.
+            if (Mathf.Abs(speed - 1f) < 0.01f) return "1x";
+            if (Mathf.Abs(speed - 1.5f) < 0.01f) return "2x";
+            if (Mathf.Abs(speed - 2f) < 0.01f) return "3x";
+
+            // Fallback for other steps (e.g., 4x/5x).
+            if (speed >= 0f && speed <= 99f)
+            {
+                float rounded = Mathf.Round(speed * 10f) / 10f;
+                if (Mathf.Abs(rounded - Mathf.Round(rounded)) < 0.001f)
+                {
+                    return $"{Mathf.RoundToInt(rounded)}x";
+                }
+                return $"{rounded:0.#}x";
+            }
+
+            return $"{speed:0.#}x";
         }
 
         private void EnsureEventSystem()
@@ -3024,10 +3106,27 @@ namespace LoopSorting
             bool isClose = _secondaryLabel != null && _secondaryLabel.text == "CLOSE";
             PlaySfx(isClose ? SfxId.UiCancel : SfxId.UiClick);
             if (_resultPanel != null) _resultPanel.SetActive(false);
-            if (!isClose)
+            if (isClose)
             {
-                PlaySfx(SfxId.LevelRetry);
+                // "CLOSE" on lose returns to main menu (keeping the current level as pending selection).
+                if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
+                {
+                    _pendingFlow = _flow;
+                    _pendingFlowIndex = Mathf.Clamp(_flowIndex, 0, Mathf.Max(0, _flow.levels.Count - 1));
+                    _pendingLevel = null;
+                }
+                else
+                {
+                    _pendingLevel = _currentLayout;
+                    _pendingFlow = null;
+                    _pendingFlowIndex = 0;
+                }
+
+                ShowMainMenu();
+                return;
             }
+
+            PlaySfx(SfxId.LevelRetry);
             RestartCurrent();
         }
 
@@ -3515,8 +3614,10 @@ namespace LoopSorting
             gearRect.anchorMin = new Vector2(0.5f, 0.5f);
             gearRect.anchorMax = new Vector2(0.5f, 0.5f);
             gearRect.pivot = new Vector2(0.5f, 0.5f);
-            gearRect.anchoredPosition = new Vector2(0f, 10f);
-            gearRect.sizeDelta = new Vector2(200f, 200f);
+            float settingsSide = Mathf.Max(1f, Mathf.Min(uiLayout.settings.width, uiLayout.settings.height));
+            float gearSide = Mathf.Clamp(settingsSide * 0.68f, 24f, 9999f);
+            gearRect.anchoredPosition = new Vector2(0f, gearSide * 0.05f);
+            gearRect.sizeDelta = new Vector2(gearSide, gearSide);
 
             _settingsButton.onClick.AddListener(() => ToggleSettingsPanel(true));
 
@@ -3907,10 +4008,31 @@ namespace LoopSorting
 
         private void RefreshEconomyHUD()
         {
-            if (_coinText != null) _coinText.text = _coins.ToString();
+            if (_coinText != null) _coinText.text = FormatCurrencyValue(_coins);
             if (_lifeText != null) _lifeText.text = _lives.ToString();
             if (_shopCoinValue != null) _shopCoinValue.text = _coins.ToString();
             if (_shopLifeValue != null) _shopLifeValue.text = _lives.ToString();
+        }
+
+        private static string FormatCurrencyValue(int value)
+        {
+            if (value < 0) return value.ToString();
+            if (value <= 9_999_999) return value.ToString(); // up to 7 digits: keep full for readability
+
+            // Compact notation for large values to keep text inside pills (K/M/B).
+            if (value < 1_000_000_000)
+            {
+                return FormatCompact(value, 1_000_000, "M", decimals: value < 100_000_000 ? 1 : 0);
+            }
+            return FormatCompact(value, 1_000_000_000, "B", decimals: 1);
+        }
+
+        private static string FormatCompact(int value, int unit, string suffix, int decimals)
+        {
+            float scaled = value / (float)unit;
+            decimals = Mathf.Clamp(decimals, 0, 2);
+            string fmt = decimals == 0 ? "0" : (decimals == 1 ? "0.#" : "0.##");
+            return scaled.ToString(fmt, System.Globalization.CultureInfo.InvariantCulture) + suffix;
         }
 
         private void OpenShop(ShopTab tab)
@@ -4471,8 +4593,13 @@ namespace LoopSorting
             tmp.raycastTarget = false;
             tmp.text = "0";
             tmp.alignment = TextAlignmentOptions.MidlineRight;
-            tmp.fontSize = 56;
+            float maxSize = Mathf.Clamp(height * 0.72f, 34f, 56f);
+            tmp.fontSize = maxSize;
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMax = maxSize;
+            tmp.fontSizeMin = Mathf.Clamp(maxSize * 0.55f, 20f, maxSize);
             tmp.enableWordWrapping = false;
+            tmp.overflowMode = TextOverflowModes.Overflow;
             tmp.color = Color.white;
             var vRect = tmp.GetComponent<RectTransform>();
             vRect.anchorMin = new Vector2(0f, 0f);

@@ -44,7 +44,7 @@ namespace LoopSorting
 
         private const float CompletedNineSliceBorderFrac = 0.14f;
         private const float LockNineSliceBorderFrac = 0.14f;
-        private const float LockOverlayScale = 0.985f;
+        private const float LockOverlayScale = 0.7f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();

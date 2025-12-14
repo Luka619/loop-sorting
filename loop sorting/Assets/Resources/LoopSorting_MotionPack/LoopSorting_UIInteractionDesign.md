@@ -16,7 +16,7 @@
 ### 0.2 位置与资源来源
 - UI 布局参考分辨率：`1080x1920`，CanvasScaler=`ScaleWithScreenSize`，`matchWidthOrHeight=0.5`
 - HUD 模块矩形来自：`Assets/Resources/LoopSortingUIKitConfig.json`（layout.modules）
-- UI 组件与九宫格规范参考：`Assets/Resources/loop_sorting_ui_components_v04_1_meta_pack/Docs/UI_GUIDE.md`
+- UI 组件与九宫格规范参考：`Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Docs/UI_GUIDE.md`
 - 动效语法/节奏参考：`Assets/Resources/LoopSorting_MotionPack/LoopSorting_MotionDesign.md`
 
 ---

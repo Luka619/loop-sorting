@@ -615,10 +615,18 @@ namespace LoopSorting
                 _frontOutline = go.AddComponent<LineRenderer>();
                 _frontOutline.useWorldSpace = false;
                 _frontOutline.loop = true;
-                _frontOutline.sharedMaterial = new Material(Shader.Find("Unlit/Color"))
+                var shader =
+                    Shader.Find("Unlit/Color") ??
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
+                if (shader != null)
                 {
-                    color = Color.black
-                };
+                    _frontOutline.sharedMaterial = new Material(shader)
+                    {
+                        color = Color.black
+                    };
+                }
                 _frontOutline.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 _frontOutline.receiveShadows = false;
                 _frontOutline.numCapVertices = 2;
@@ -704,12 +712,20 @@ namespace LoopSorting
                 lr.positionCount = 2;
                 lr.SetPosition(0, segStart);
                 lr.SetPosition(1, segEnd);
-                var mat = new Material(Shader.Find("Unlit/Color"))
+                var shader =
+                    Shader.Find("Unlit/Color") ??
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
+                if (shader != null)
                 {
-                    color = Color.white,
-                };
-                mat.renderQueue = 3300;
-                lr.sharedMaterial = mat;
+                    var mat = new Material(shader)
+                    {
+                        color = Color.white,
+                    };
+                    mat.renderQueue = 3300;
+                    lr.sharedMaterial = mat;
+                }
                 lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lr.receiveShadows = false;
                 lr.numCapVertices = 0;
@@ -815,17 +831,29 @@ namespace LoopSorting
                     if (plateTex != null)
                     {
                         var r = _lockMarkerPlate.GetComponent<Renderer>();
-                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(plateTex, Color.white, LockBadgeQueue);
+                        if (r != null)
+                        {
+                            var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(plateTex, Color.white, LockBadgeQueue);
+                            if (mat != null) r.sharedMaterial = mat;
+                        }
                     }
                     if (discTex != null)
                     {
                         var r = _lockMarkerDisc.GetComponent<Renderer>();
-                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(discTex, Color.white, LockBadgeQueue + 1);
+                        if (r != null)
+                        {
+                            var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(discTex, Color.white, LockBadgeQueue + 1);
+                            if (mat != null) r.sharedMaterial = mat;
+                        }
                     }
                     if (iconTex != null)
                     {
                         var r = _lockMarkerIcon.GetComponent<Renderer>();
-                        if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(iconTex, Color.white, LockBadgeQueue + 2);
+                        if (r != null)
+                        {
+                            var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(iconTex, Color.white, LockBadgeQueue + 2);
+                            if (mat != null) r.sharedMaterial = mat;
+                        }
                     }
                 }
 
@@ -1084,19 +1112,25 @@ namespace LoopSorting
                 Shader.Find("Legacy Shaders/Particles/Additive") ??
                 Shader.Find("Unlit/Transparent") ??
                 Shader.Find("Unlit/Texture") ??
-                Shader.Find("Unlit/Color");
+                Shader.Find("Unlit/Color") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
 
-            var mat = new Material(shader);
-            if (_mouthFlashTexture != null)
+            if (shader != null)
             {
-                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
-                else mat.mainTexture = _mouthFlashTexture;
-            }
-            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
-            mat.renderQueue = 2950;
+                var mat = new Material(shader);
+                if (_mouthFlashTexture != null)
+                {
+                    if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                    else mat.mainTexture = _mouthFlashTexture;
+                }
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                mat.renderQueue = 2950;
 
-            var r = _mouthFlash.GetComponent<Renderer>();
-            if (r != null) r.sharedMaterial = mat;
+                var r = _mouthFlash.GetComponent<Renderer>();
+                if (r != null) r.sharedMaterial = mat;
+            }
 
             _mouthFlash.SetActive(false);
         }
@@ -1117,19 +1151,25 @@ namespace LoopSorting
                     Shader.Find("Unlit/Texture") ??
                     Shader.Find("Particles/Additive") ??
                     Shader.Find("Legacy Shaders/Particles/Additive") ??
-                    Shader.Find("Unlit/Color");
+                    Shader.Find("Unlit/Color") ??
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
 
-                var mat = new Material(shader);
-                if (_mouthFlashTexture != null)
+                if (shader != null)
                 {
-                    if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
-                    else mat.mainTexture = _mouthFlashTexture;
-                }
-                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
-                mat.renderQueue = 2915; // above blocks, below most overlays
+                    var mat = new Material(shader);
+                    if (_mouthFlashTexture != null)
+                    {
+                        if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                        else mat.mainTexture = _mouthFlashTexture;
+                    }
+                    if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                    mat.renderQueue = 2915; // above blocks, below most overlays
 
-                var r = _mouthIndicator.GetComponent<Renderer>();
-                if (r != null) r.sharedMaterial = mat;
+                    var r = _mouthIndicator.GetComponent<Renderer>();
+                    if (r != null) r.sharedMaterial = mat;
+                }
             }
 
             // Placement/scale: a subtle "portal" at the box opening so players know where the entry check happens.
@@ -1191,19 +1231,25 @@ namespace LoopSorting
                 Shader.Find("Unlit/Texture") ??
                 Shader.Find("Particles/Additive") ??
                 Shader.Find("Legacy Shaders/Particles/Additive") ??
-                Shader.Find("Unlit/Color");
+                Shader.Find("Unlit/Color") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
 
-            var mat = new Material(shader);
-            if (_mouthFlashTexture != null)
+            if (shader != null)
             {
-                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
-                else mat.mainTexture = _mouthFlashTexture;
-            }
-            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
-            mat.renderQueue = 2925;
+                var mat = new Material(shader);
+                if (_mouthFlashTexture != null)
+                {
+                    if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
+                    else mat.mainTexture = _mouthFlashTexture;
+                }
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                mat.renderQueue = 2925;
 
-            var r = _mouthRipple.GetComponent<Renderer>();
-            if (r != null) r.sharedMaterial = mat;
+                var r = _mouthRipple.GetComponent<Renderer>();
+                if (r != null) r.sharedMaterial = mat;
+            }
 
             _mouthRipple.SetActive(false);
         }
@@ -1457,6 +1503,15 @@ namespace LoopSorting
             var r = quad.GetComponent<Renderer>();
             if (r == null) return;
 
+            // If a textured material is already assigned, keep it (this function is meant as a fallback to avoid magenta).
+            if (r.sharedMaterial != null && r.sharedMaterial.mainTexture != null)
+            {
+                r.sharedMaterial.color = color;
+                r.sharedMaterial.renderQueue = renderQueue;
+                if (r.sharedMaterial.HasProperty("_ZWrite")) r.sharedMaterial.SetInt("_ZWrite", 0);
+                return;
+            }
+
             // Primitives come with Unity's shared default material; always replace it so per-box tinting doesn't leak across instances.
             if (r.sharedMaterial != null &&
                 r.sharedMaterial.shader != null &&
@@ -1472,7 +1527,14 @@ namespace LoopSorting
                 return;
             }
 
-            var mat = new Material(Shader.Find("Unlit/Color"))
+            var shader =
+                Shader.Find("Unlit/Color") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+            if (shader == null) return;
+
+            var mat = new Material(shader)
             {
                 color = color
             };
@@ -1543,35 +1605,44 @@ namespace LoopSorting
             _completedOverlay.transform.localScale = Vector3.one;
 
             _completedFrameGlow = CreateNineSliceLayer(_completedOverlay.transform, "FrameGlow", z: 0f);
-            _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: -0.01f);
+            _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: 0.01f);
 
             _completedBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
             _completedBadge.name = "Badge";
             _completedBadge.transform.SetParent(_completedOverlay.transform, false);
-            _completedBadge.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+            _completedBadge.transform.localPosition = new Vector3(0f, 0f, 0.02f);
             RemoveCollider(_completedBadge);
 
             // Textures live under the active UI kit resources root.
-            if (LoopSortingUIKit.IsAvailable())
-            {
-                var frameTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_frame_glow_512.png");
-                var glassTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_glass_overlay_512.png");
-                var badgeTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_badge_check_256.png");
+            var frameTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_frame_glow_512.png");
+            var glassTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_glass_overlay_512.png");
+            var badgeTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_badge_check_256.png");
 
-                if (frameTex != null)
+            if (frameTex != null)
+            {
+                var r = _completedFrameGlow.GetComponent<Renderer>();
+                if (r != null)
                 {
-                    var r = _completedFrameGlow.GetComponent<Renderer>();
-                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(frameTex, Color.white, CompletedQueue);
+                    var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(frameTex, Color.white, CompletedQueue);
+                    if (mat != null) r.sharedMaterial = mat;
                 }
-                if (glassTex != null)
+            }
+            if (glassTex != null)
+            {
+                var r = _completedGlass.GetComponent<Renderer>();
+                if (r != null)
                 {
-                    var r = _completedGlass.GetComponent<Renderer>();
-                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(glassTex, Color.white, CompletedQueue + 1);
+                    var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(glassTex, Color.white, CompletedQueue + 1);
+                    if (mat != null) r.sharedMaterial = mat;
                 }
-                if (badgeTex != null)
+            }
+            if (badgeTex != null)
+            {
+                var r = _completedBadge.GetComponent<Renderer>();
+                if (r != null)
                 {
-                    var r = _completedBadge.GetComponent<Renderer>();
-                    if (r != null) r.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(badgeTex, Color.white, CompletedQueue + 2);
+                    var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(badgeTex, Color.white, CompletedQueue + 2);
+                    if (mat != null) r.sharedMaterial = mat;
                 }
             }
 
@@ -1599,30 +1670,27 @@ namespace LoopSorting
 
             // For very wide/tall boxes, use the 1024 textures to keep edge quality when stretched.
             bool useHiRes = ShouldUseHiResCompletedTextures();
-            if (LoopSortingUIKit.IsAvailable())
+            if (_completedFrameGlow != null)
             {
-                if (_completedFrameGlow != null)
+                var r = _completedFrameGlow.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
                 {
-                    var r = _completedFrameGlow.GetComponent<Renderer>();
-                    if (r != null && r.sharedMaterial != null)
-                    {
-                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
-                            ? "World_Sprites/box_completed_frame_glow_1024.png"
-                            : "World_Sprites/box_completed_frame_glow_512.png");
-                        if (tex != null) r.sharedMaterial.mainTexture = tex;
-                    }
+                    var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                        ? "World_Sprites/box_completed_frame_glow_1024.png"
+                        : "World_Sprites/box_completed_frame_glow_512.png");
+                    if (tex != null) r.sharedMaterial.mainTexture = tex;
                 }
+            }
 
-                if (_completedGlass != null)
+            if (_completedGlass != null)
+            {
+                var r = _completedGlass.GetComponent<Renderer>();
+                if (r != null && r.sharedMaterial != null)
                 {
-                    var r = _completedGlass.GetComponent<Renderer>();
-                    if (r != null && r.sharedMaterial != null)
-                    {
-                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
-                            ? "World_Sprites/box_completed_glass_overlay_1024.png"
-                            : "World_Sprites/box_completed_glass_overlay_512.png");
-                        if (tex != null) r.sharedMaterial.mainTexture = tex;
-                    }
+                    var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                        ? "World_Sprites/box_completed_glass_overlay_1024.png"
+                        : "World_Sprites/box_completed_glass_overlay_512.png");
+                    if (tex != null) r.sharedMaterial.mainTexture = tex;
                 }
             }
 
@@ -1631,7 +1699,7 @@ namespace LoopSorting
             if (_completedBadge != null)
             {
                 _completedBadge.transform.localScale = new Vector3(badgeSize, badgeSize, 1f);
-                _completedBadge.transform.localPosition = new Vector3(_boxSize.x * 0.54f, _boxSize.y * 0.54f, -0.02f);
+                _completedBadge.transform.localPosition = new Vector3(_boxSize.x * 0.54f, _boxSize.y * 0.54f, 0.02f);
             }
 
             // Tint: glow uses the box color, glass is subtle, badge stays mostly white.
@@ -1997,7 +2065,12 @@ namespace LoopSorting
                 Shader.Find("Particles/Additive") ??
                 Shader.Find("Legacy Shaders/Particles/Additive") ??
                 Shader.Find("Unlit/Transparent") ??
-                Shader.Find("Unlit/Texture");
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+
+            if (shader == null) return null;
 
             var mat = new Material(shader);
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);

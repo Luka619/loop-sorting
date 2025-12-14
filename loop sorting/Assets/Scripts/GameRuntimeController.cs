@@ -884,6 +884,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (soundEnabled)
+            {
+                EnsureBgm();
+            }
+
             int inserts = 0;
             int completions = 0;
             int unlocks = 0;
@@ -921,15 +926,23 @@ namespace LoopSorting
             if (completions > 0)
             {
                 PlaySfx(SfxId.BoxComplete);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoxComplete);
             }
             if (unlocks > 0)
             {
                 PlaySfx(SfxId.BoxUnlock);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Unlock);
             }
             if (!_sfxPrevFastForward && _fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
                 PlaySfx(SfxId.ConveyorFullWarning);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.6f);
+                    _bgm.PlayStinger(BgmStingerId.FullWarning);
+                }
             }
             if (_sfxPrevFastForward && !_fullBeltFastForward)
             {
@@ -940,6 +953,7 @@ namespace LoopSorting
                 else
                 {
                     PlaySfx(SfxId.ConveyorSpeeddown);
+                    if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
                 }
             }
 
@@ -995,13 +1009,23 @@ namespace LoopSorting
                 tex.Apply();
             }
 
-            var mat = new Material(Shader.Find("Unlit/Texture"));
-            mat.mainTexture = tex;
-            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
-            mat.SetInt("_ZWrite", 0);
-            mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-            var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = mat;
+            var shader =
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.mainTexture = tex;
+                mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = mat;
+            }
 
             // Disable collider
             var col = _backgroundQuad.GetComponent<Collider>();
@@ -1447,11 +1471,19 @@ namespace LoopSorting
             _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
+                    _bgm.PlayStinger(BgmStingerId.Speedup);
+                }
             }
             _speedMultiplier = 5f;
             RefreshFastTag();
@@ -1473,7 +1505,9 @@ namespace LoopSorting
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
             {
                 PlaySfx(SfxId.ConveyorSpeeddown);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
             }
+            UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
             if (!_gameOver) _inputLocked = false;
@@ -1485,11 +1519,19 @@ namespace LoopSorting
             _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
+                    _bgm.PlayStinger(BgmStingerId.Speedup);
+                }
             }
             _speedMultiplier = 5f;
             RefreshFastTag();
@@ -1511,7 +1553,9 @@ namespace LoopSorting
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
             {
                 PlaySfx(SfxId.ConveyorSpeeddown);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
             }
+            UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
             if (!_gameOver) _inputLocked = false;
@@ -2082,6 +2126,7 @@ namespace LoopSorting
                 UpdateCompletionStates();
                 UpdateBeltCounter();
                 HandleFullBeltFastForwardAfterTick();
+                UpdateBgmPressureAfterTick();
                 EmitSfxFromStateChanges();
                 CheckEndConditions();
             }
@@ -2363,10 +2408,17 @@ namespace LoopSorting
             _emptyDeferredLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _emptyDeferredLine.receiveShadows = false;
 
-            var shader = Shader.Find("Unlit/Color");
-            var mat = new Material(shader);
-            mat.renderQueue = 2920;
-            _emptyDeferredLine.sharedMaterial = mat;
+            var shader =
+                Shader.Find("Unlit/Color") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.renderQueue = 2920;
+                _emptyDeferredLine.sharedMaterial = mat;
+            }
             _emptyDeferredLine.enabled = false;
         }
 
@@ -2785,6 +2837,12 @@ namespace LoopSorting
                 Shader.Find("Sprites/Default") ??
                 Shader.Find("UI/Default") ??
                 Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                // Can't create a custom material; return null so callers can fall back gracefully.
+                return null;
+            }
+
             var mat = new Material(shader);
             mat.renderQueue = 1800;
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
@@ -3367,6 +3425,12 @@ namespace LoopSorting
             _gameOver = true;
             PlaySfx(SfxId.UiPopupOpen);
             PlaySfx(win ? SfxId.LevelWin : SfxId.LevelLose);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null)
+            {
+                _bgm.PlayStinger(win ? BgmStingerId.Win : BgmStingerId.Lose);
+                _bgm.FadeOutLoops(fadeSeconds: 0.9f);
+            }
             EnsureResultPanel();
             AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
             _resultText.text = win ? "VICTORY" : "FAILED";
@@ -6082,13 +6146,22 @@ namespace LoopSorting
                     if (slotTex != null)
                     {
                         var c = new Color(1f, 1f, 1f, Mathf.Clamp01(slotMarkerColor.a));
-                        renderer.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, c, 2900);
+                        var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, c, 2900);
+                        if (mat != null) renderer.sharedMaterial = mat;
                     }
                     else
                     {
-                        var mat = new Material(Shader.Find("Unlit/Color"));
-                        mat.color = slotMarkerColor;
-                        renderer.sharedMaterial = mat;
+                        var shader =
+                            Shader.Find("Unlit/Color") ??
+                            Shader.Find("Sprites/Default") ??
+                            Shader.Find("UI/Default") ??
+                            Shader.Find("Standard");
+                        if (shader != null)
+                        {
+                            var mat = new Material(shader);
+                            mat.color = slotMarkerColor;
+                            renderer.sharedMaterial = mat;
+                        }
                     }
                 }
                 var col = marker.GetComponent<Collider>();

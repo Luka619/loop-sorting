@@ -1,0 +1,160 @@
+{
+  "format": {
+    "sr": 44100,
+    "bit_depth": 16,
+    "channels": 2
+  },
+  "tempo_bpm": 100,
+  "time_signature": "4/4",
+  "loops": {
+    "menu": {
+      "file": "BGM/Loops/Menu/bgm_menu_loop.wav",
+      "bars": 16,
+      "duration_s": 38.4,
+      "loop_start_frame": 0,
+      "loop_end_frame": 1693440
+    },
+    "gameplay_base": {
+      "file": "BGM/Loops/Gameplay/bgm_gameplay_base_loop.wav",
+      "bars": 24,
+      "duration_s": 57.6,
+      "loop_start_frame": 0,
+      "loop_end_frame": 2540160
+    },
+    "gameplay_pressure": {
+      "file": "BGM/Loops/Gameplay/bgm_gameplay_pressure_loop.wav",
+      "bars": 24,
+      "duration_s": 57.6,
+      "loop_start_frame": 0,
+      "loop_end_frame": 2540160
+    }
+  },
+  "adaptive_design": {
+    "recommended": "Vertical layering (stems) or crossfade between base/pressure loops.",
+    "pressure_thresholds": {
+      "belt_fill_ratio_enter": 0.75,
+      "belt_fill_ratio_exit": 0.6,
+      "full_detected": "trigger stinger_full_warning + enable pressure"
+    },
+    "speedup": {
+      "on_enter_5x": "trigger stinger_speedup + enable pressure",
+      "on_exit_5x": "trigger stinger_speeddown + disable pressure if fill ratio low"
+    },
+    "mixing": {
+      "bgm_bus": "BGM",
+      "recommended_gain_db": -12,
+      "sidechain_duck_db": -6,
+      "duck_time_ms": 400
+    }
+  },
+  "assets": {
+    "BGM/Loops/Menu/bgm_menu_loop.wav": {
+      "frames": 1693440,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 38.4
+    },
+    "BGM/Loops/Gameplay/bgm_gameplay_base_loop.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Loops/Gameplay/bgm_gameplay_pressure_loop.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Stems/Gameplay/gameplay_pad.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Stems/Gameplay/gameplay_arp.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Stems/Gameplay/gameplay_perc.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Stems/Gameplay/gameplay_pressure.wav": {
+      "frames": 2540160,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 57.6
+    },
+    "BGM/Stems/Menu/menu_pad.wav": {
+      "frames": 1693440,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 38.4
+    },
+    "BGM/Stems/Menu/menu_arp.wav": {
+      "frames": 1693440,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 38.4
+    },
+    "BGM/Stems/Menu/menu_perc.wav": {
+      "frames": 1693440,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 38.4
+    },
+    "BGM/Stingers/stinger_unlock.wav": {
+      "frames": 47628,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 1.08
+    },
+    "BGM/Stingers/stinger_box_complete.wav": {
+      "frames": 52920,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 1.2
+    },
+    "BGM/Stingers/stinger_win.wav": {
+      "frames": 69678,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 1.58
+    },
+    "BGM/Stingers/stinger_lose.wav": {
+      "frames": 61740,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 1.4
+    },
+    "BGM/Stingers/stinger_full_warning.wav": {
+      "frames": 33516,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 0.76
+    },
+    "BGM/Stingers/stinger_speedup.wav": {
+      "frames": 30870,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 0.7
+    },
+    "BGM/Stingers/stinger_speeddown.wav": {
+      "frames": 30870,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 0.7
+    },
+    "BGM/Stingers/stinger_booster_activate.wav": {
+      "frames": 29106,
+      "sr": 44100,
+      "channels": 2,
+      "duration_s": 0.66
+    }
+  }
+}

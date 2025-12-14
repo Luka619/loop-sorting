@@ -21,18 +21,19 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -6, y: -4}
+    - {x: -1, y: -4}
     - {x: 6, y: -4}
     - {x: 6, y: 0}
     - {x: 2, y: 0}
-    - {x: 2, y: 4}
-    - {x: -6, y: 4}
+    - {x: 2, y: 7}
+    - {x: -6, y: 7}
     - {x: -6, y: -4}
+    - {x: -1, y: -4}
     loop: 1
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -1.6923077, y: -2.2179487}
+    position: {x: -1.5, y: -2}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -54,7 +55,7 @@ MonoBehaviour:
     locked: 1
     unlockColor: 4
   - name: Box 2
-    position: {x: 1.1282051, y: -2.4230769}
+    position: {x: 0.5, y: -2}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -76,7 +77,7 @@ MonoBehaviour:
     locked: 1
     unlockColor: 4
   - name: Box 3
-    position: {x: -3.9871795, y: -0.8461538}
+    position: {x: -4, y: -1.5}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
@@ -120,7 +121,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 5
-    position: {x: 3.8333335, y: -2.7692308}
+    position: {x: 3.5, y: -3}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
@@ -142,7 +143,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: 0.20512804, y: 2.458974}
+    position: {x: 0, y: 4.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -164,7 +165,7 @@ MonoBehaviour:
     locked: 1
     unlockColor: 4
   - name: Box 7
-    position: {x: -2.0769234, y: 2.5358973}
+    position: {x: -3.5, y: 4.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -177,7 +178,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 8
-    position: {x: 0.5615385, y: 0}
+    position: {x: -0.5, y: 1.5}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
@@ -190,7 +191,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 9
-    position: {x: 4.653846, y: -1.0512822}
+    position: {x: 3.5, y: -1}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10

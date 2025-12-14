@@ -43,8 +43,8 @@ namespace LoopSorting
         private Coroutine _completedFxRoutine;
 
         private const float CompletedNineSliceBorderFrac = 0.14f;
-        private const float LockNineSliceBorderFrac = 0.14f;
-        private const float LockOverlayScale = 0.7f;
+        private const float LockNineSliceBorderFrac = 0.09f;
+        private const float LockOverlayScale = 1.0f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
@@ -726,31 +726,50 @@ namespace LoopSorting
             _locked = val;
             if (_lockOverlay == null)
             {
-                _lockOverlay = CreateNineSliceLayer(transform, "LockOverlay", z: LockOverlayZ);
-                _lockOverlay.transform.localPosition = new Vector3(0f, 0f, LockOverlayZ); // in front of blocks
-                var rend = _lockOverlay.GetComponent<Renderer>();
-                if (rend != null)
-                {
-                    if (LoopSortingUIKit.IsAvailable())
-                    {
-                        var tex = LoopSortingUIKit.LoadTextureByKey("world.lock_overlay");
-                        if (tex != null)
-                        {
-                            rend.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(tex, Color.white, LockOverlayQueue);
-                        }
-                    }
+                // Prefer Unity's native 9-slice (SpriteRenderer + Sliced) for lock overlay.
+                var overlayGO = new GameObject("LockOverlay");
+                overlayGO.transform.SetParent(transform, false);
+                overlayGO.transform.localPosition = new Vector3(0f, 0f, LockOverlayZ); // in front of blocks
+                overlayGO.transform.localRotation = Quaternion.identity;
+                overlayGO.transform.localScale = Vector3.one;
+                _lockOverlay = overlayGO;
 
-                    if (rend.sharedMaterial == null)
+                var sr = overlayGO.AddComponent<SpriteRenderer>();
+                sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                sr.receiveShadows = false;
+                sr.color = Color.white;
+                sr.sortingOrder = LockOverlayQueue;
+
+                if (LoopSortingUIKit.IsAvailable())
+                {
+                    // Use a higher PPU so the 9-slice borders stay small in world units (prevents corner stretching on small boxes).
+                    var sprite = LoopSortingUIKit.LoadSprite("World_Sprites/lock_overlay.png", pixelsPerUnit: 500f, applyNineSlice: true);
+                    if (sprite != null)
                     {
-                        var mat = new Material(Shader.Find("Unlit/Color"))
-                        {
-                            color = new Color(0.5f, 0.5f, 0.5f, 0.9f)
-                        };
-                        mat.renderQueue = LockOverlayQueue;
-                        rend.sharedMaterial = mat;
+                        sr.sprite = sprite;
+                        sr.drawMode = sprite.border.sqrMagnitude > 0.0001f ? SpriteDrawMode.Sliced : SpriteDrawMode.Simple;
                     }
                 }
 
+                // Fallback if sprite isn't available for some reason.
+                if (sr.sprite == null)
+                {
+                    var tex = LoopSortingUIKit.IsAvailable() ? LoopSortingUIKit.LoadTextureByKey("world.lock_overlay") : null;
+                    if (tex != null)
+                    {
+                        sr.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+                        sr.drawMode = SpriteDrawMode.Simple;
+                    }
+                }
+
+                // Material: keep it unlit-ish and force queue ordering to match the rest of our world overlays.
+                var shader = Shader.Find("Sprites/Default");
+                if (shader != null)
+                {
+                    var mat = new Material(shader);
+                    mat.renderQueue = LockOverlayQueue;
+                    sr.sharedMaterial = mat;
+                }
                 // Marker root sits above overlay (do not parent under overlay to avoid double Z offsets).
                 _lockBadge = new GameObject("LockMarker");
                 _lockBadge.transform.SetParent(transform, false);
@@ -817,12 +836,6 @@ namespace LoopSorting
                 EnsureUnlitColorMaterial(_lockMarkerIcon, Color.white, LockBadgeQueue + 2);
             }
 
-            // Keep scales in sync in case the box is rebuilt with a different size.
-            if (_lockOverlay != null)
-            {
-                _lockOverlay.transform.localScale = new Vector3(_boxSize.x * 1.05f, _boxSize.y * 1.05f, 1f);
-            }
-
             float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
             float plateWidth = badgeBase * 0.42f;
             float plateHeight = plateWidth;
@@ -885,8 +898,28 @@ namespace LoopSorting
 
             if (_lockOverlay != null)
             {
-                // Lock overlay texture is authored with thick borders; use a 9-slice mesh so it doesn't look stretched.
-                UpdateNineSliceMesh(_lockOverlay, _boxSize.x * LockOverlayScale, _boxSize.y * LockOverlayScale, LockNineSliceBorderFrac);
+                float w = _boxSize.x * LockOverlayScale;
+                float h = _boxSize.y * LockOverlayScale;
+
+                var sr = _lockOverlay.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null && sr.drawMode == SpriteDrawMode.Sliced)
+                {
+                    sr.size = new Vector2(w, h);
+                    _lockOverlay.transform.localScale = Vector3.one;
+                }
+                else if (sr != null && sr.sprite != null)
+                {
+                    // Simple sprite fallback: scale to target size.
+                    var b = sr.sprite.bounds;
+                    float sx = b.size.x > 0.0001f ? w / b.size.x : 1f;
+                    float sy = b.size.y > 0.0001f ? h / b.size.y : 1f;
+                    _lockOverlay.transform.localScale = new Vector3(sx, sy, 1f);
+                }
+                else
+                {
+                    // Legacy mesh fallback.
+                    UpdateNineSliceMesh(_lockOverlay, w, h, LockNineSliceBorderFrac);
+                }
             }
 
             if (val)
@@ -1354,11 +1387,20 @@ namespace LoopSorting
         private static void SetQuadAlpha(GameObject go, float a)
         {
             if (go == null) return;
+            a = Mathf.Clamp01(a);
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                var spriteColor = sr.color;
+                spriteColor.a = a;
+                sr.color = spriteColor;
+                return;
+            }
             var r = go.GetComponent<Renderer>();
             if (r == null || r.sharedMaterial == null) return;
-            var c = r.sharedMaterial.color;
-            c.a = Mathf.Clamp01(a);
-            r.sharedMaterial.color = c;
+            var materialColor = r.sharedMaterial.color;
+            materialColor.a = a;
+            r.sharedMaterial.color = materialColor;
         }
 
         private IEnumerator AnimateLockAlpha(float from, float to, float seconds)
@@ -1414,7 +1456,22 @@ namespace LoopSorting
             if (quad == null) return;
             var r = quad.GetComponent<Renderer>();
             if (r == null) return;
-            if (r.sharedMaterial != null) return;
+
+            // Primitives come with Unity's shared default material; always replace it so per-box tinting doesn't leak across instances.
+            if (r.sharedMaterial != null &&
+                r.sharedMaterial.shader != null &&
+                r.sharedMaterial.shader.name == "Unlit/Color" &&
+                r.sharedMaterial.renderQueue == renderQueue)
+            {
+                var existing = r.sharedMaterial.color;
+                existing.r = color.r;
+                existing.g = color.g;
+                existing.b = color.b;
+                existing.a = color.a;
+                r.sharedMaterial.color = existing;
+                return;
+            }
+
             var mat = new Material(Shader.Find("Unlit/Color"))
             {
                 color = color

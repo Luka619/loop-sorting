@@ -143,6 +143,9 @@ namespace LoopSorting
         private TMP_Text _primaryLabel;
         private TMP_Text _secondaryLabel;
         private bool _gameOver;
+        private Coroutine _endSequenceRoutine;
+        private const float WinEndSequenceDelaySeconds = 0.75f;
+        private const float LoseEndSequenceDelaySeconds = 0.60f;
         private bool _fullBeltFastForward;
         private int _fullBeltStepsRemaining;
         private Image _resultPrimaryIcon;
@@ -209,6 +212,8 @@ namespace LoopSorting
             _tickTimer = 0f;
             _beltSpacingUsed = 0f;
             _gameOver = false;
+            _inputLocked = false;
+            _endSequenceRoutine = null;
             _fullBeltFastForward = false;
             _fullBeltStepsRemaining = 0;
             _beltSpawnAnimating.Clear();
@@ -1193,7 +1198,7 @@ namespace LoopSorting
             }
             RefreshFastTag();
             SetInteractableForBooster(true);
-            _inputLocked = false;
+            if (!_gameOver) _inputLocked = false;
         }
 
         private IEnumerator BoosterShuffleSequence()
@@ -1230,7 +1235,7 @@ namespace LoopSorting
             }
             RefreshFastTag();
             SetInteractableForBooster(true);
-            _inputLocked = false;
+            if (!_gameOver) _inputLocked = false;
         }
 
         private sealed class ContainerStateSnapshot
@@ -2210,7 +2215,7 @@ namespace LoopSorting
                     // Still full after one full loop: fail the level.
                     PlaySfx(SfxId.ConveyorFullFail);
                     _sfxSuppressSpeeddownOnce = true;
-                    ShowResult(false);
+                    BeginEndSequence(win: false, delaySeconds: LoseEndSequenceDelaySeconds);
                     StopFullBeltFastForward();
                 }
                 return;
@@ -3017,7 +3022,7 @@ namespace LoopSorting
             }
             if (win)
             {
-                ShowResult(true);
+                BeginEndSequence(win: true, delaySeconds: WinEndSequenceDelaySeconds);
                 return;
             }
 
@@ -3051,6 +3056,31 @@ namespace LoopSorting
                 }
             }
             return false;
+        }
+
+        private void BeginEndSequence(bool win, float delaySeconds)
+        {
+            if (_endSequenceRoutine != null) return;
+
+            // Freeze gameplay immediately so the state doesn't keep changing while we play the final feedback.
+            _gameOver = true;
+            _inputLocked = true;
+            _isReleasing = false;
+            StopFullBeltFastForward();
+
+            _endSequenceRoutine = StartCoroutine(PlayEndSequenceThenShowResult(win, delaySeconds));
+        }
+
+        private IEnumerator PlayEndSequenceThenShowResult(bool win, float delaySeconds)
+        {
+            delaySeconds = Mathf.Max(0f, delaySeconds);
+            if (delaySeconds > 0f)
+            {
+                yield return new WaitForSeconds(delaySeconds);
+            }
+
+            ShowResult(win);
+            _endSequenceRoutine = null;
         }
 
         private void ShowResult(bool win)

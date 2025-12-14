@@ -455,6 +455,7 @@ namespace LoopSorting
                     new NineSliceRuleFile { pattern = "panel_result.png", border = new[] {120,120,120,120} },
                     new NineSliceRuleFile { pattern = "tag_fast_*", border = new[] {60,60,40,40} },
                     new NineSliceRuleFile { pattern = "tag_small_*", border = new[] {50,50,30,30} },
+                    new NineSliceRuleFile { pattern = "lock_overlay.png", border = new[] {60,60,60,60} },
                 },
                 sprites = new[]
                 {

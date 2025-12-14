@@ -44,6 +44,7 @@ namespace LoopSorting
         [Header("Settings")]
         public bool vibrationEnabled = true;
         public bool soundEnabled = true;
+        public bool musicEnabled = true;
         [Header("UI")]
         public BeltCounterUI beltCounterUI;
         [Header("Debug/Visuals")]
@@ -95,8 +96,19 @@ namespace LoopSorting
         private TMP_Text _speedButtonLabel;
         private Button _settingsButton;
         private GameObject _settingsPanel;
+        private Toggle _musicToggle;
         private Toggle _vibrationToggle;
         private Toggle _soundToggle;
+        private Image _settingsMusicToggleImage;
+        private Button _settingsMusicToggleButton;
+        private Image _settingsSfxToggleImage;
+        private Button _settingsSfxToggleButton;
+        private Image _settingsVibrationToggleImage;
+        private Button _settingsVibrationToggleButton;
+        private Button _settingsCloseButton;
+        private Image _settingsCloseImage;
+        private Button _settingsRetryButton;
+        private Image _settingsRetryImage;
         private int _coins = 810;
         private int _lives = 5;
         private Button _shopButton;
@@ -114,9 +126,9 @@ namespace LoopSorting
         private Image _shopScrollFadeBottom;
         private RectTransform _shopContentRoot;
         private GameObject _boosterPanel;
-        private Button _boosterFillButton;
+        private Button _boosterSortButton;
         private Button _boosterShuffleButton;
-        private int _boosterFillCount = InitialBoosterCount;
+        private int _boosterSortCount = InitialBoosterCount;
         private int _boosterShuffleCount = InitialBoosterCount;
         private GameObject _boosterPurchasePanel;
         private Button _boosterPurchaseCloseButton;
@@ -182,6 +194,7 @@ namespace LoopSorting
         private const int InitialCoins = 810;
         private const int InitialLives = 5;
         private static readonly Dictionary<string, Sprite> BoosterPurchaseSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, Sprite> SettingsPageSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
         private static BoosterPurchaseManifest _boosterPurchaseManifestCache;
 
         [Serializable]
@@ -213,7 +226,7 @@ namespace LoopSorting
 
         private enum BoosterType
         {
-            Fill,
+            Sort,
             Shuffle
         }
 
@@ -223,6 +236,7 @@ namespace LoopSorting
         }
 
         private SfxPlayer _sfx;
+        private MusicPlayer _music;
         private bool _sfxHasSnapshot;
         private bool _sfxPrevFastForward;
         private bool _sfxSuppressSpeeddownOnce;
@@ -291,7 +305,7 @@ namespace LoopSorting
 
             _coins = InitialCoins;
             _lives = InitialLives;
-            _boosterFillCount = InitialBoosterCount;
+            _boosterSortCount = InitialBoosterCount;
             _boosterShuffleCount = InitialBoosterCount;
 
             _lockChipLayer = null;
@@ -378,6 +392,7 @@ namespace LoopSorting
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
             EnsureEventSystem();
             EnsureSfx();
+            EnsureMusic();
             PlaySfx(SfxId.LevelStart);
             _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
 
@@ -431,6 +446,7 @@ namespace LoopSorting
         {
             EnsureEventSystem();
             EnsureSfx();
+            EnsureMusic();
 
             // Build shared HUD canvas (hidden) so the Settings modal can be opened from the main menu.
             EnsureCounterUI();
@@ -760,6 +776,22 @@ namespace LoopSorting
             _sfx.SetEnabled(soundEnabled);
         }
 
+        private void EnsureMusic()
+        {
+            if (_music == null)
+            {
+                _music = GetComponentInChildren<MusicPlayer>(includeInactive: true);
+                if (_music == null)
+                {
+                    var musicGO = new GameObject("Music");
+                    musicGO.transform.SetParent(transform, false);
+                    _music = musicGO.AddComponent<MusicPlayer>();
+                }
+            }
+
+            _music.SetEnabled(musicEnabled);
+        }
+
         private void UpdateConveyorLoopSfx()
         {
             if (_sfx == null) return;
@@ -780,6 +812,7 @@ namespace LoopSorting
 
         private void PlaySfx(SfxId id, float volumeMultiplier = 1f)
         {
+            TryVibrateForSfx(id);
             if (!soundEnabled)
             {
                 return;
@@ -787,6 +820,30 @@ namespace LoopSorting
 
             EnsureSfx();
             _sfx.Play(id, volumeMultiplier);
+        }
+
+        private void TryVibrateForSfx(SfxId id)
+        {
+            if (!vibrationEnabled) return;
+
+            switch (id)
+            {
+                case SfxId.UiDenied:
+                case SfxId.BlockReject:
+                case SfxId.BlockRejectLocked:
+                case SfxId.BlockRejectBusy:
+                case SfxId.BlockRejectFull:
+                case SfxId.BlockRejectMismatch:
+                case SfxId.BoxComplete:
+                case SfxId.BoxUnlock:
+                case SfxId.BoosterActivate:
+                case SfxId.BoosterFail:
+                case SfxId.ConveyorFullFail:
+                case SfxId.LevelWin:
+                case SfxId.LevelLose:
+                    Handheld.Vibrate();
+                    break;
+            }
         }
 
         private void CaptureSfxSnapshot()
@@ -975,9 +1032,65 @@ namespace LoopSorting
             AnimateUiPanel(_settingsPanel, show);
             if (show)
             {
-                if (_vibrationToggle != null) _vibrationToggle.isOn = vibrationEnabled;
-                if (_soundToggle != null) _soundToggle.isOn = soundEnabled;
+                RefreshSettingsToggleVisuals();
             }
+        }
+
+        private void HideSettingsPanelImmediate()
+        {
+            if (_settingsPanel == null) return;
+
+            if (_uiPanelRoutines.TryGetValue(_settingsPanel, out var routine) && routine != null)
+            {
+                StopCoroutine(routine);
+            }
+            _uiPanelRoutines.Remove(_settingsPanel);
+
+            var cg = MotionUtil.EnsureCanvasGroup(_settingsPanel);
+            if (cg != null)
+            {
+                cg.alpha = 0f;
+                cg.blocksRaycasts = false;
+                cg.interactable = false;
+            }
+
+            _settingsPanel.SetActive(false);
+        }
+
+        private void RefreshSettingsToggleVisuals()
+        {
+            if (_settingsMusicToggleButton != null && _settingsMusicToggleImage != null)
+            {
+                ApplySettingsToggleSprites(_settingsMusicToggleButton, _settingsMusicToggleImage, musicEnabled);
+            }
+
+            if (_settingsSfxToggleButton != null && _settingsSfxToggleImage != null)
+            {
+                ApplySettingsToggleSprites(_settingsSfxToggleButton, _settingsSfxToggleImage, soundEnabled);
+            }
+
+            if (_settingsVibrationToggleButton != null && _settingsVibrationToggleImage != null)
+            {
+                ApplySettingsToggleSprites(_settingsVibrationToggleButton, _settingsVibrationToggleImage, vibrationEnabled);
+            }
+        }
+
+        private void ApplySettingsToggleSprites(Button button, Image image, bool isOn)
+        {
+            if (button == null || image == null) return;
+
+            string normalKey = isOn ? "toggle_on" : "toggle_off";
+            string pressedKey = isOn ? "toggle_on_pressed" : "toggle_off_pressed";
+            var normal = TryLoadSettingsPageSprite(normalKey);
+            var pressed = TryLoadSettingsPageSprite(pressedKey);
+            if (normal != null) image.sprite = normal;
+
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.image = image;
+            button.spriteState = new SpriteState
+            {
+                pressedSprite = pressed
+            };
         }
 
         public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
@@ -1247,9 +1360,9 @@ namespace LoopSorting
                 return;
             }
 
-            if (type == BoosterType.Fill)
+            if (type == BoosterType.Sort)
             {
-                StartCoroutine(BoosterFillSequence());
+                StartCoroutine(BoosterSortSequence());
             }
             else
             {
@@ -1259,16 +1372,16 @@ namespace LoopSorting
 
         private int GetBoosterCount(BoosterType type)
         {
-            return type == BoosterType.Fill ? _boosterFillCount : _boosterShuffleCount;
+            return type == BoosterType.Sort ? _boosterSortCount : _boosterShuffleCount;
         }
 
         private void AddBooster(BoosterType type, int delta)
         {
             if (delta == 0) return;
 
-            if (type == BoosterType.Fill)
+            if (type == BoosterType.Sort)
             {
-                _boosterFillCount = Mathf.Clamp(_boosterFillCount + delta, 0, 99);
+                _boosterSortCount = Mathf.Clamp(_boosterSortCount + delta, 0, 99);
             }
             else
             {
@@ -1288,7 +1401,7 @@ namespace LoopSorting
         private void RefreshBoosterBadges()
         {
             if (!LoopSortingUIKit.IsAvailable()) return;
-            if (_boosterFillButton != null) SetBoosterBadgeCount(_boosterFillButton.transform, _boosterFillCount);
+            if (_boosterSortButton != null) SetBoosterBadgeCount(_boosterSortButton.transform, _boosterSortCount);
             if (_boosterShuffleButton != null) SetBoosterBadgeCount(_boosterShuffleButton.transform, _boosterShuffleCount);
         }
 
@@ -1328,7 +1441,7 @@ namespace LoopSorting
             }
         }
 
-        private IEnumerator BoosterFillSequence()
+        private IEnumerator BoosterSortSequence()
         {
             if (_game == null || _inputLocked) yield break;
             _inputLocked = true;
@@ -1349,12 +1462,12 @@ namespace LoopSorting
             }
 
             var before = CaptureContainerStates();
-            bool ok = ApplyBoosterFillColor();
+            bool ok = ApplyBoosterSortColor();
             var after = CaptureContainerStates();
-            if (ok) StartCoroutine(PlayBoosterFillFx(before, after));
+            if (ok) StartCoroutine(PlayBoosterSortFx(before, after));
             PlaySfx(ok ? SfxId.BoosterFillSort : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
-            if (ok) ConsumeBooster(BoosterType.Fill, 1);
+            if (ok) ConsumeBooster(BoosterType.Sort, 1);
 
             _speedMultiplier = prevSpeed;
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
@@ -1483,7 +1596,7 @@ namespace LoopSorting
             return list;
         }
 
-        private IEnumerator PlayBoosterFillFx(ContainerStateSnapshot before, ContainerStateSnapshot after)
+        private IEnumerator PlayBoosterSortFx(ContainerStateSnapshot before, ContainerStateSnapshot after)
         {
             if (_game == null) yield break;
 
@@ -1658,13 +1771,13 @@ namespace LoopSorting
 
         private void SetInteractableForBooster(bool val)
         {
-            if (_boosterFillButton != null) _boosterFillButton.interactable = val;
+            if (_boosterSortButton != null) _boosterSortButton.interactable = val;
             if (_boosterShuffleButton != null) _boosterShuffleButton.interactable = val;
             if (_settingsButton != null) _settingsButton.interactable = val;
             if (_speedButton != null) _speedButton.interactable = val;
         }
 
-        private bool ApplyBoosterFillColor()
+        private bool ApplyBoosterSortColor()
         {
             if (_game == null) return false;
 
@@ -1695,13 +1808,13 @@ namespace LoopSorting
                 }
             }
 
-            // Filter: only colors that can fully fill at least one unlocked container.
+            // Filter: only colors that can fully Sort at least one unlocked container.
             var candidates = new List<BlockColor>();
             foreach (var kv in colorCounts)
             {
                 if (completedColors.Contains(kv.Key)) continue;
-                // check if any eligible container can be fully filled by available blocks
-                bool canFill = false;
+                // check if any eligible container can be fully Sorted by available blocks
+                bool canSort = false;
                 for (int i = 0; i < _game.Containers.Count; i++)
                 {
                     if (i < _boxLocked.Count && _boxLocked[i]) continue;
@@ -1710,11 +1823,11 @@ namespace LoopSorting
                     if (cont.IsUniformAndFull()) continue;
                     if (kv.Value >= cont.Capacity)
                     {
-                        canFill = true;
+                        canSort = true;
                         break;
                     }
                 }
-                if (canFill)
+                if (canSort)
                 {
                     candidates.Add(kv.Key);
                 }
@@ -1732,7 +1845,7 @@ namespace LoopSorting
                 if (i < _boxCompleted.Count && _boxCompleted[i]) continue;
                 var c = _game.Containers[i];
                 if (c.IsUniformAndFull()) continue;
-                // only consider containers we can actually fill
+                // only consider containers we can actually Sort
                 int available = colorCounts[targetColor];
                 if (available < c.Capacity) continue;
                 int count = 0;
@@ -1755,7 +1868,7 @@ namespace LoopSorting
                 sourceBlocks.AddRange(rem);
             }
 
-            // must have enough to fill target container; otherwise abort without changes
+            // must have enough to Sort target container; otherwise abort without changes
             int required = _game.Containers[targetIdx].Capacity;
             if (sourceBlocks.Count < required)
             {
@@ -1766,17 +1879,17 @@ namespace LoopSorting
             // collect displaced non-target from target container so they won't disappear
             var displaced = _game.Containers[targetIdx].RemoveBlocksWhere(b => b.Color != targetColor);
 
-            // fill target container with targetColor up to capacity
+            // Sort target container with targetColor up to capacity
             int cap = _game.Containers[targetIdx].Capacity;
-            var fillList = new List<Block>();
+            var SortList = new List<Block>();
             for (int i = 0; i < cap; i++)
             {
-                fillList.Add(sourceBlocks[0]);
+                SortList.Add(sourceBlocks[0]);
                 sourceBlocks.RemoveAt(0);
             }
-            _game.Containers[targetIdx].ClearAndAdd(fillList);
+            _game.Containers[targetIdx].ClearAndAdd(SortList);
 
-            // put displaced + leftover target blocks back into containers (fill other unfinished containers)
+            // put displaced + leftover target blocks back into containers (Sort other unfinished containers)
             var leftovers = new List<Block>();
             leftovers.AddRange(displaced);
             leftovers.AddRange(sourceBlocks);
@@ -2556,7 +2669,7 @@ namespace LoopSorting
 
             float spacing = slotSpacing > 0.0001f ? slotSpacing : (_beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing);
             float requestedWidth = path != null ? path.width : 1f;
-            // Keep belt width visually reasonable relative to slot spacing (prevents "screen-filling" ribbon).
+            // Keep belt width visually reasonable relative to slot spacing (prevents "screen-Sorting" ribbon).
             float beltWidth = Mathf.Clamp(requestedWidth, spacing * 0.8f, spacing * 1.6f);
 
             bool loop = path != null && path.loop;
@@ -3401,17 +3514,17 @@ namespace LoopSorting
             if (spec.colorCounts == null) yield break;
 
             var list = new List<Block>(capacity);
-            int filled = 0;
+            int Sorted = 0;
             // colorCounts are authored outer->inner (index 0 is the outermost / mouth-facing layer).
             // Keep the same order at runtime so the editor preview and gameplay match.
-            for (int idx = 0; idx < spec.colorCounts.Count && filled < capacity; idx++)
+            for (int idx = 0; idx < spec.colorCounts.Count && Sorted < capacity; idx++)
             {
                 var cc = spec.colorCounts[idx];
                 int cnt = Mathf.Max(0, cc.count);
-                for (int i = 0; i < cnt && filled < capacity; i++)
+                for (int i = 0; i < cnt && Sorted < capacity; i++)
                 {
                     list.Add(new Block(cc.color, cc.hidden));
-                    filled++;
+                    Sorted++;
                 }
             }
 
@@ -3500,7 +3613,7 @@ namespace LoopSorting
 
         private void EnsureCounterUI()
         {
-            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterFillButton != null && _boosterShuffleButton != null)
+            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
             {
                 if (_hudRootRect == null)
                 {
@@ -3539,7 +3652,7 @@ namespace LoopSorting
             _shopScrollFadeBottom = null;
             _shopContentRoot = null;
             _boosterPanel = null;
-            _boosterFillButton = null;
+            _boosterSortButton = null;
             _boosterShuffleButton = null;
             _fastTag = null;
             _fastTagBg = null;
@@ -3869,19 +3982,19 @@ namespace LoopSorting
             boosterRootRect.offsetMin = Vector2.zero;
             boosterRootRect.offsetMax = Vector2.zero;
 
-            _boosterFillButton = CreateBoosterButton(
+            _boosterSortButton = CreateBoosterButton(
                 _boosterPanel.transform,
-                name: "BoosterFill",
+                name: "BoosterSort",
                 anchor: uiLayout.boosterAnchor,
                 anchoredPos: new Vector2(-uiLayout.boosterOffset.x, uiLayout.boosterOffset.y),
                 size: uiLayout.boosterSize,
                 normal: hasKit ? "ui.button.mint_square.normal" : null,
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.fill" : null,
-                label: "SORT");
-            _boosterFillButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Fill));
-            if (hasKit) AttachBoosterBadge(_boosterFillButton.transform, _boosterFillCount);
+                icon: hasKit ? "ui.icon.sort" : null);
+            RemoveButtonFrame(_boosterSortButton);
+            _boosterSortButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Sort));
+            if (hasKit) AttachBoosterBadge(_boosterSortButton.transform, _boosterSortCount);
 
             _boosterShuffleButton = CreateBoosterButton(
                 _boosterPanel.transform,
@@ -3892,8 +4005,8 @@ namespace LoopSorting
                 normal: hasKit ? "ui.button.purple_square.normal" : null,
                 pressed: hasKit ? "ui.button.purple_square.pressed" : null,
                 disabled: hasKit ? "ui.button.purple_square.disabled" : null,
-                icon: hasKit ? "ui.icon.shuffle" : null,
-                label: "SHUFFLE");
+                icon: hasKit ? "ui.icon.shuffle" : null);
+            RemoveButtonFrame(_boosterShuffleButton);
             _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
             if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
 
@@ -4017,12 +4130,22 @@ namespace LoopSorting
         private void EnsureSettingsUI()
         {
             if (_uiCanvas == null) return;
-            if (_settingsPanel != null && _vibrationToggle != null && _soundToggle != null) return;
+            if (_settingsPanel != null) return;
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
             _settingsPanel = new GameObject("SettingsPanel");
             _settingsPanel.transform.SetParent(_uiCanvas.transform, false);
+            _settingsMusicToggleImage = null;
+            _settingsMusicToggleButton = null;
+            _settingsSfxToggleImage = null;
+            _settingsSfxToggleButton = null;
+            _settingsVibrationToggleImage = null;
+            _settingsVibrationToggleButton = null;
+            _settingsCloseButton = null;
+            _settingsCloseImage = null;
+            _settingsRetryButton = null;
+            _settingsRetryImage = null;
 
             var dim = _settingsPanel.AddComponent<Image>();
             dim.raycastTarget = true;
@@ -4041,152 +4164,184 @@ namespace LoopSorting
             overlayRect.offsetMin = Vector2.zero;
             overlayRect.offsetMax = Vector2.zero;
 
-            var panelGO = new GameObject("Panel");
-            panelGO.transform.SetParent(_settingsPanel.transform, false);
-            var panelRect = panelGO.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.52f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.52f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = new Vector2(960f, 820f);
-
-            var panelImg = panelGO.AddComponent<Image>();
-            panelImg.raycastTarget = false;
-            if (hasKit)
+            Sprite settingsSprite = Resources.Load<Sprite>("setting_page");
+            if (settingsSprite == null)
             {
-                panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_thick");
-                if (panelImg.sprite == null) panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
-                panelImg.type = panelImg.sprite != null && panelImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                panelImg.color = Color.white;
-            }
-            else
-            {
-                panelImg.color = new Color(0.12f, 0.12f, 0.12f, 0.95f);
+                var settingsTex = Resources.Load<Texture2D>("setting_page");
+                if (settingsTex != null)
+                {
+                    settingsSprite = Sprite.Create(
+                        settingsTex,
+                        new Rect(0, 0, settingsTex.width, settingsTex.height),
+                        new Vector2(0.5f, 0.5f),
+                        100f);
+                    settingsSprite.name = "setting_page";
+                }
             }
 
-            var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(panelGO.transform, false);
-            var titleText = titleGO.AddComponent<TextMeshProUGUI>();
-            titleText.raycastTarget = false;
-            titleText.text = "SETTINGS";
-            titleText.alignment = TextAlignmentOptions.Center;
-            titleText.fontSize = 68;
-            titleText.color = Color.white;
-            var titleRect = titleText.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0.5f, 1f);
-            titleRect.anchorMax = new Vector2(0.5f, 1f);
-            titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -70f);
-            titleRect.sizeDelta = new Vector2(700f, 120f);
+            var popupGO = new GameObject("Popup");
+            popupGO.transform.SetParent(_settingsPanel.transform, false);
+            var popupRect = popupGO.AddComponent<RectTransform>();
+            popupRect.anchorMin = new Vector2(0.5f, 0.5f);
+            popupRect.anchorMax = new Vector2(0.5f, 0.5f);
+            popupRect.pivot = new Vector2(0.5f, 0.5f);
+            popupRect.anchoredPosition = new Vector2(0f, 40f);
 
-            var closeBtn = CreateIconButton(
-                parent: panelGO.transform,
-                name: "CloseButton",
-                anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-96f, -96f),
-                size: new Vector2(160f, 160f),
-                normal: hasKit ? "ui.button.close_red.normal" : null,
-                pressed: hasKit ? "ui.button.close_red.pressed" : null,
-                disabled: hasKit ? "ui.button.close_red.disabled" : null,
-                icon: null);
-            closeBtn.onClick.AddListener(() => ToggleSettingsPanel(false));
-
-            _soundToggle = CreateToggleRow(
-                parent: panelGO.transform,
-                name: "RowSound",
-                anchor: new Vector2(0.5f, 0.5f),
-                anchoredPos: new Vector2(0f, 140f),
-                label: "SOUND",
-                initial: soundEnabled,
-                out var soundTrack,
-                out var soundKnob);
-            _soundToggle.onValueChanged.AddListener(val =>
+            float popupWidth = 900f;
+            float popupHeight = 1230f;
+            if (settingsSprite != null && settingsSprite.rect.width > 0.01f)
             {
-                soundEnabled = val;
-                EnsureSfx();
-                UpdateToggleVisual(soundTrack, soundKnob, val);
-            });
-            UpdateToggleVisual(soundTrack, soundKnob, soundEnabled);
+                float aspect = settingsSprite.rect.height / settingsSprite.rect.width;
+                popupHeight = popupWidth * aspect;
+            }
+            popupRect.sizeDelta = new Vector2(popupWidth, popupHeight);
 
-            _vibrationToggle = CreateToggleRow(
-                parent: panelGO.transform,
-                name: "RowVibration",
-                anchor: new Vector2(0.5f, 0.5f),
-                anchoredPos: new Vector2(0f, 10f),
-                label: "VIBRATION",
-                initial: vibrationEnabled,
-                out var vibTrack,
-                out var vibKnob);
-            _vibrationToggle.onValueChanged.AddListener(val =>
+            var bgImg = popupGO.AddComponent<Image>();
+            bgImg.raycastTarget = false;
+            bgImg.sprite = settingsSprite;
+            bgImg.color = Color.white;
+            bgImg.type = Image.Type.Simple;
+            bgImg.preserveAspect = true;
+
+            static bool TryExtractInt(string json, string pattern, out int value)
             {
-                vibrationEnabled = val;
-                UpdateToggleVisual(vibTrack, vibKnob, val);
-            });
-            UpdateToggleVisual(vibTrack, vibKnob, vibrationEnabled);
+                value = 0;
+                var m = System.Text.RegularExpressions.Regex.Match(json, pattern, System.Text.RegularExpressions.RegexOptions.Singleline);
+                if (!m.Success || m.Groups.Count < 2) return false;
+                return int.TryParse(m.Groups[1].Value, out value);
+            }
 
-            Button CreateSettingsActionButton(string name, Vector2 anchoredPos, string normalKey, string pressedKey, string disabledKey, string label)
+            static bool TryExtractRect(string json, string key, out RectInt rect)
+            {
+                rect = new RectInt();
+                var m = System.Text.RegularExpressions.Regex.Match(
+                    json,
+                    $"\"{System.Text.RegularExpressions.Regex.Escape(key)}\"\\s*:\\s*\\{{[^}}]*?\"x\"\\s*:\\s*(\\d+)\\s*,[^}}]*?\"y\"\\s*:\\s*(\\d+)\\s*,[^}}]*?\"w\"\\s*:\\s*(\\d+)\\s*,[^}}]*?\"h\"\\s*:\\s*(\\d+)",
+                    System.Text.RegularExpressions.RegexOptions.Singleline);
+
+                if (!m.Success || m.Groups.Count < 5) return false;
+                if (!int.TryParse(m.Groups[1].Value, out int x)) return false;
+                if (!int.TryParse(m.Groups[2].Value, out int y)) return false;
+                if (!int.TryParse(m.Groups[3].Value, out int w)) return false;
+                if (!int.TryParse(m.Groups[4].Value, out int h)) return false;
+                rect = new RectInt(x, y, w, h);
+                return true;
+            }
+
+            int sourceW = 902;
+            int sourceH = 1233;
+            RectInt rectClose = new RectInt(761, 2, 143, 144);
+            RectInt rectRetry = new RectInt(119, 929, 632, 244);
+            RectInt rectMusic = new RectInt(572, 384, 221, 132);
+            RectInt rectSfx = new RectInt(572, 562, 221, 132);
+            RectInt rectVibration = new RectInt(572, 750, 221, 131);
+
+            var manifest = Resources.Load<TextAsset>("setting_page_assets/assets_manifest");
+            if (manifest != null && !string.IsNullOrWhiteSpace(manifest.text))
+            {
+                TryExtractInt(manifest.text, "\"source_size\"\\s*:\\s*\\[\\s*(\\d+)\\s*,", out sourceW);
+                TryExtractInt(manifest.text, "\"source_size\"\\s*:\\s*\\[\\s*\\d+\\s*,\\s*(\\d+)\\s*\\]", out sourceH);
+
+                TryExtractRect(manifest.text, "btn_close", out rectClose);
+                TryExtractRect(manifest.text, "btn_retry", out rectRetry);
+                TryExtractRect(manifest.text, "toggle_music", out rectMusic);
+                TryExtractRect(manifest.text, "toggle_sound_effects", out rectSfx);
+                TryExtractRect(manifest.text, "toggle_vibration", out rectVibration);
+            }
+
+            void PlaceRect(RectTransform rect, RectInt srcRect)
+            {
+                float cx = srcRect.x + srcRect.width * 0.5f;
+                float cy = srcRect.y + srcRect.height * 0.5f;
+                float nx = sourceW > 0 ? (cx / sourceW) : 0.5f;
+                float ny = sourceH > 0 ? (1f - (cy / sourceH)) : 0.5f;
+
+                rect.anchoredPosition = new Vector2((nx - 0.5f) * popupWidth, (ny - 0.5f) * popupHeight);
+                rect.sizeDelta = new Vector2(
+                    (sourceW > 0 ? (srcRect.width / (float)sourceW) : 0.2f) * popupWidth,
+                    (sourceH > 0 ? (srcRect.height / (float)sourceH) : 0.1f) * popupHeight);
+            }
+
+            void CreateOverlayButton(string name, RectInt srcRect, out Button button, out Image image)
             {
                 var go = new GameObject(name);
-                go.transform.SetParent(panelGO.transform, false);
+                go.transform.SetParent(popupGO.transform, false);
                 var rect = go.AddComponent<RectTransform>();
                 rect.anchorMin = new Vector2(0.5f, 0.5f);
                 rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = anchoredPos;
-                rect.sizeDelta = new Vector2(380f, 180f);
+                PlaceRect(rect, srcRect);
 
-                var img = go.AddComponent<Image>();
-                var btn = go.AddComponent<Button>();
-                ApplyUIKitButtonSprites(btn, img, hasKit ? normalKey : null, hasKit ? pressedKey : null, hasKit ? disabledKey : null);
+                image = go.AddComponent<Image>();
+                image.raycastTarget = true;
+                image.color = Color.white;
+                image.preserveAspect = true;
 
-                var txtGO = new GameObject("Label");
-                txtGO.transform.SetParent(go.transform, false);
-                var txt = txtGO.AddComponent<TextMeshProUGUI>();
-                txt.raycastTarget = false;
-                txt.text = label;
-                txt.alignment = TextAlignmentOptions.Center;
-                txt.fontSize = 48;
-                txt.color = Color.white;
-                var tRect = txt.GetComponent<RectTransform>();
-                tRect.anchorMin = Vector2.zero;
-                tRect.anchorMax = Vector2.one;
-                tRect.offsetMin = Vector2.zero;
-                tRect.offsetMax = Vector2.zero;
-
-                return btn;
+                button = go.AddComponent<Button>();
+                button.targetGraphic = image;
+                button.transition = Selectable.Transition.SpriteSwap;
             }
 
-            // Bottom actions (placeholders; wired to real behaviors where available).
-            var restoreBtn = CreateSettingsActionButton(
-                "RestorePurchases",
-                anchoredPos: new Vector2(-210f, -210f),
-                normalKey: "ui.button.small_blue.normal",
-                pressedKey: "ui.button.small_blue.pressed",
-                disabledKey: "ui.button.small_blue.disabled",
-                label: "RESTORE");
-            restoreBtn.onClick.AddListener(() => Debug.Log("Restore Purchases (placeholder)"));
-
-            var supportBtn = CreateSettingsActionButton(
-                "Support",
-                anchoredPos: new Vector2(210f, -210f),
-                normalKey: "ui.button.small_green.normal",
-                pressedKey: "ui.button.small_green.pressed",
-                disabledKey: "ui.button.small_green.disabled",
-                label: "SUPPORT");
-            supportBtn.onClick.AddListener(() => Debug.Log("Support (placeholder)"));
-
-            var retryBtn = CreateSettingsActionButton(
-                "RetryLevel",
-                anchoredPos: new Vector2(0f, -390f),
-                normalKey: "ui.button.small_red.normal",
-                pressedKey: "ui.button.small_red.pressed",
-                disabledKey: "ui.button.small_red.disabled",
-                label: "RETRY");
-            retryBtn.onClick.AddListener(() =>
+            CreateOverlayButton("CloseButton", rectClose, out _settingsCloseButton, out _settingsCloseImage);
+            if (_settingsCloseImage != null)
             {
-                ToggleSettingsPanel(false);
+                _settingsCloseImage.sprite = null;
+                _settingsCloseImage.color = new Color(1f, 1f, 1f, 0f);
+            }
+            if (_settingsCloseButton != null)
+            {
+                _settingsCloseButton.transition = Selectable.Transition.None;
+            }
+            _settingsCloseButton.onClick.AddListener(() => ToggleSettingsPanel(false));
+
+            CreateOverlayButton("RetryButton", rectRetry, out _settingsRetryButton, out _settingsRetryImage);
+            if (_settingsRetryImage != null)
+            {
+                _settingsRetryImage.sprite = null;
+                _settingsRetryImage.color = new Color(1f, 1f, 1f, 0f);
+            }
+            if (_settingsRetryButton != null)
+            {
+                _settingsRetryButton.transition = Selectable.Transition.None;
+            }
+            _settingsRetryButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.LevelRetry);
+                HideSettingsPanelImmediate();
                 RestartCurrent();
             });
+
+            CreateOverlayButton("ToggleMusic", rectMusic, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
+            _settingsMusicToggleButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                musicEnabled = !musicEnabled;
+                EnsureMusic();
+                RefreshSettingsToggleVisuals();
+            });
+
+            CreateOverlayButton("ToggleSfx", rectSfx, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
+            _settingsSfxToggleButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                soundEnabled = !soundEnabled;
+                EnsureSfx();
+                RefreshSettingsToggleVisuals();
+            });
+
+            CreateOverlayButton("ToggleVibration", rectVibration, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
+            _settingsVibrationToggleButton.onClick.AddListener(() =>
+            {
+                PlaySfx(SfxId.UiClick);
+                vibrationEnabled = !vibrationEnabled;
+                if (vibrationEnabled)
+                {
+                    Handheld.Vibrate();
+                }
+                RefreshSettingsToggleVisuals();
+            });
+
+            RefreshSettingsToggleVisuals();
 
             _settingsPanel.SetActive(false);
         }
@@ -4580,10 +4735,10 @@ namespace LoopSorting
             {
                 var icon = isShuffle
                     ? TryLoadBoosterPurchaseSprite("icon_booster_shuffle")
-                    : (TryLoadBoosterPurchaseSprite("icon_booster_sort") ?? TryLoadBoosterPurchaseSprite("icon_booster_fill"));
+                    : (TryLoadBoosterPurchaseSprite("icon_booster_sort") ?? TryLoadBoosterPurchaseSprite("icon_booster_Sort"));
                 if (icon == null && hasKit)
                 {
-                    icon = LoopSortingUIKit.LoadSpriteByKey(isShuffle ? "ui.icon.shuffle" : "ui.icon.fill");
+                    icon = LoopSortingUIKit.LoadSpriteByKey(isShuffle ? "ui.icon.shuffle" : "ui.icon.sort");
                 }
                 _boosterPurchaseIcon.sprite = icon;
                 _boosterPurchaseIcon.color = icon != null ? Color.white : new Color(0f, 0f, 0f, 0.15f);
@@ -4767,6 +4922,41 @@ namespace LoopSorting
 
             var created = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
             BoosterPurchaseSpriteCache[key] = created;
+            return created;
+        }
+
+        private static Sprite TryLoadSettingsPageSprite(string fileNameOrKey)
+        {
+            if (string.IsNullOrWhiteSpace(fileNameOrKey)) return null;
+            string key = fileNameOrKey.Trim();
+            if (key.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                key = key.Substring(0, key.Length - 4);
+            }
+
+            if (SettingsPageSpriteCache.TryGetValue(key, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            Sprite TryLoadSprite(string path) => Resources.Load<Sprite>(path);
+            Texture2D TryLoadTexture(string path) => Resources.Load<Texture2D>(path);
+
+            var s = TryLoadSprite($"setting_page_assets/{key}") ?? TryLoadSprite(key);
+            if (s != null)
+            {
+                SettingsPageSpriteCache[key] = s;
+                return s;
+            }
+
+            var tex = TryLoadTexture($"setting_page_assets/{key}") ?? TryLoadTexture(key);
+            if (tex == null)
+            {
+                return null;
+            }
+
+            var created = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            SettingsPageSpriteCache[key] = created;
             return created;
         }
 
@@ -5108,7 +5298,7 @@ namespace LoopSorting
             {
                 AddShopSectionHeader(_shopContentRoot, "LIVES");
                 AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _lives += 1; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
-                AddShopItem(_shopContentRoot, "Lives_5", "REFILL 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopItem(_shopContentRoot, "Lives_5", "REFill 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
             }
 
             if (_shopScroll != null)
@@ -5468,6 +5658,27 @@ namespace LoopSorting
             button.spriteState = state;
         }
 
+        private static void RemoveButtonFrame(Button button)
+        {
+            if (button == null) return;
+
+            var img = button.GetComponent<Image>();
+            if (img != null)
+            {
+                img.sprite = null;
+                img.type = Image.Type.Simple;
+                img.color = new Color(1f, 1f, 1f, 0f);
+            }
+
+            // Prevent SpriteSwap from re-applying the framed sprites on press/highlight.
+            button.transition = Selectable.Transition.None;
+            var state = button.spriteState;
+            state.highlightedSprite = null;
+            state.pressedSprite = null;
+            state.disabledSprite = null;
+            button.spriteState = state;
+        }
+
         private Button CreateIconButton(
             Transform parent,
             string name,
@@ -5661,8 +5872,7 @@ namespace LoopSorting
             string normal,
             string pressed,
             string disabled,
-            string icon,
-            string label)
+            string icon)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -5695,22 +5905,6 @@ namespace LoopSorting
                 iconRect.sizeDelta = new Vector2(iconSide, iconSide);
             }
 
-            var labelGO = new GameObject("Label");
-            labelGO.transform.SetParent(go.transform, false);
-            var tmp = labelGO.AddComponent<TextMeshProUGUI>();
-            tmp.raycastTarget = false;
-            tmp.text = label;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.fontSize = Mathf.RoundToInt(Mathf.Clamp(size.y * 0.14f, 40f, 52f));
-            tmp.color = Color.white;
-            var labelRect = tmp.GetComponent<RectTransform>();
-            labelRect.anchorMin = new Vector2(0.5f, 0f);
-            labelRect.anchorMax = new Vector2(0.5f, 0f);
-            labelRect.pivot = new Vector2(0.5f, 0f);
-            float labelY = Mathf.Clamp(size.y * 0.10f, 24f, 40f);
-            labelRect.anchoredPosition = new Vector2(0f, labelY);
-            labelRect.sizeDelta = new Vector2(Mathf.Clamp(size.x * 0.55f, 200f, 260f), Mathf.Clamp(size.y * 0.18f, 60f, 90f));
-
             return btn;
         }
 
@@ -5720,9 +5914,9 @@ namespace LoopSorting
             Vector2 anchor,
             Vector2 anchoredPos,
             string label,
+            string icon,
             bool initial,
-            out Image trackImage,
-            out RectTransform knobRect)
+            out Image toggleImage)
         {
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
@@ -5733,10 +5927,50 @@ namespace LoopSorting
             rowRect.anchorMax = anchor;
             rowRect.pivot = new Vector2(0.5f, 0.5f);
             rowRect.anchoredPosition = anchoredPos;
-            rowRect.sizeDelta = new Vector2(760f, 120f);
+            rowRect.sizeDelta = new Vector2(820f, 160f);
 
-            var toggle = rowGO.AddComponent<Toggle>();
-            toggle.isOn = initial;
+            var rowBg = rowGO.AddComponent<Image>();
+            rowBg.raycastTarget = true;
+            if (hasKit)
+            {
+                var bgSprite = LoopSortingUIKit.LoadSpriteByKey("ui.card.setting_row");
+                if (bgSprite != null)
+                {
+                    rowBg.sprite = bgSprite;
+                    rowBg.type = bgSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    rowBg.color = Color.white;
+                }
+                else
+                {
+                    rowBg.color = new Color(1f, 1f, 1f, 0.9f);
+                }
+            }
+            else
+            {
+                rowBg.color = new Color(1f, 1f, 1f, 0.9f);
+            }
+
+            var labelColor = new Color(0.35f, 0.22f, 0.12f, 1f);
+
+            float labelStartX = 70f;
+
+            if (!string.IsNullOrEmpty(icon) && hasKit)
+            {
+                var iconGO = new GameObject("Icon");
+                iconGO.transform.SetParent(rowGO.transform, false);
+                var iconImg = iconGO.AddComponent<Image>();
+                iconImg.raycastTarget = false;
+                iconImg.sprite = LoopSortingUIKit.LoadSpriteByKey(icon);
+                iconImg.color = labelColor;
+                var iconRect = iconGO.GetComponent<RectTransform>();
+                iconRect.anchorMin = new Vector2(0f, 0.5f);
+                iconRect.anchorMax = new Vector2(0f, 0.5f);
+                iconRect.pivot = new Vector2(0f, 0.5f);
+                iconRect.anchoredPosition = new Vector2(54f, 0f);
+                iconRect.sizeDelta = new Vector2(96f, 96f);
+
+                labelStartX = 170f;
+            }
 
             var labelGO = new GameObject("Label");
             labelGO.transform.SetParent(rowGO.transform, false);
@@ -5744,69 +5978,64 @@ namespace LoopSorting
             labelText.raycastTarget = false;
             labelText.text = label;
             labelText.alignment = TextAlignmentOptions.MidlineLeft;
-            labelText.fontSize = 48;
-            labelText.color = Color.white;
+            labelText.fontSize = 64;
+            labelText.color = labelColor;
+            labelText.enableWordWrapping = true;
+            labelText.overflowMode = TextOverflowModes.Overflow;
             var labelRect = labelGO.GetComponent<RectTransform>();
             labelRect.anchorMin = new Vector2(0f, 0.5f);
             labelRect.anchorMax = new Vector2(0f, 0.5f);
             labelRect.pivot = new Vector2(0f, 0.5f);
-            labelRect.anchoredPosition = new Vector2(40f, 0f);
-            labelRect.sizeDelta = new Vector2(300f, 80f);
+            labelRect.anchoredPosition = new Vector2(labelStartX, 0f);
+            labelRect.sizeDelta = new Vector2(420f, 120f);
 
-            var trackGO = new GameObject("ToggleTrack");
-            trackGO.transform.SetParent(rowGO.transform, false);
-            trackImage = trackGO.AddComponent<Image>();
-            trackImage.raycastTarget = true;
-            if (hasKit)
-            {
-                trackImage.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.toggle.track_on");
-                trackImage.color = Color.white;
-            }
-            else
-            {
-                trackImage.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
-            }
-            var trackRect = trackGO.GetComponent<RectTransform>();
-            trackRect.anchorMin = new Vector2(1f, 0.5f);
-            trackRect.anchorMax = new Vector2(1f, 0.5f);
-            trackRect.pivot = new Vector2(1f, 0.5f);
-            trackRect.anchoredPosition = new Vector2(-40f, 0f);
-            trackRect.sizeDelta = new Vector2(220f, 60f);
+            var toggleGO = new GameObject("Toggle");
+            toggleGO.transform.SetParent(rowGO.transform, false);
+            var toggleRect = toggleGO.AddComponent<RectTransform>();
+            toggleRect.anchorMin = new Vector2(1f, 0.5f);
+            toggleRect.anchorMax = new Vector2(1f, 0.5f);
+            toggleRect.pivot = new Vector2(1f, 0.5f);
+            toggleRect.anchoredPosition = new Vector2(-54f, 0f);
+            toggleRect.sizeDelta = new Vector2(300f, 110f);
 
-            var knobGO = new GameObject("ToggleKnob");
-            knobGO.transform.SetParent(rowGO.transform, false);
-            var knobImg = knobGO.AddComponent<Image>();
-            knobImg.raycastTarget = false;
-            if (hasKit)
-            {
-                knobImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.toggle.knob");
-                knobImg.color = Color.white;
-            }
-            knobRect = knobGO.GetComponent<RectTransform>();
-            knobRect.anchorMin = new Vector2(1f, 0.5f);
-            knobRect.anchorMax = new Vector2(1f, 0.5f);
-            knobRect.pivot = new Vector2(1f, 0.5f);
-            knobRect.sizeDelta = new Vector2(64f, 64f);
-            knobRect.anchoredPosition = new Vector2(-130f, 0f);
+            toggleImage = toggleGO.AddComponent<Image>();
+            toggleImage.raycastTarget = true;
+            toggleImage.preserveAspect = true;
 
-            toggle.targetGraphic = trackImage;
-            toggle.graphic = knobImg;
+            var toggle = toggleGO.AddComponent<Toggle>();
+            toggle.isOn = initial;
+            toggle.transition = Selectable.Transition.None;
+            toggle.targetGraphic = toggleImage;
+            toggle.graphic = toggleImage;
 
+            var rowBtn = rowGO.AddComponent<Button>();
+            rowBtn.transition = Selectable.Transition.None;
+            rowBtn.onClick.AddListener(() => toggle.isOn = !toggle.isOn);
+
+            UpdateToggleVisual(toggleImage, initial);
             return toggle;
         }
 
-        private void UpdateToggleVisual(Image track, RectTransform knob, bool isOn)
+        private void UpdateToggleVisual(Image toggleImage, bool isOn)
         {
-            if (track != null && LoopSortingUIKit.IsAvailable())
+            if (toggleImage == null) return;
+
+            if (LoopSortingUIKit.IsAvailable())
             {
-                track.sprite = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.track_on" : "ui.toggle.track_off");
-                track.color = Color.white;
+                var sprite = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.full_on" : "ui.toggle.full_off");
+                if (sprite == null)
+                {
+                    sprite = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.track_on" : "ui.toggle.track_off");
+                }
+                if (sprite != null)
+                {
+                    toggleImage.sprite = sprite;
+                }
+                toggleImage.color = Color.white;
+                return;
             }
 
-            if (knob != null)
-            {
-                knob.anchoredPosition = new Vector2(isOn ? -130f : -190f, 0f);
-            }
+            toggleImage.color = isOn ? new Color(0.2f, 0.75f, 0.2f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);
         }
 
         private void BuildSlotMarkers()

@@ -453,6 +453,7 @@ namespace LoopSorting
                     new NineSliceRuleFile { pattern = "pill_bg*", border = new[] {90,90,60,60} },
                     new NineSliceRuleFile { pattern = "panel_modal.png", border = new[] {120,120,120,120} },
                     new NineSliceRuleFile { pattern = "panel_result.png", border = new[] {120,120,120,120} },
+                    new NineSliceRuleFile { pattern = "card_setting_row.png", border = new[] {70,70,50,50} },
                     new NineSliceRuleFile { pattern = "tag_fast_*", border = new[] {60,60,40,40} },
                     new NineSliceRuleFile { pattern = "tag_small_*", border = new[] {50,50,30,30} },
                     new NineSliceRuleFile { pattern = "lock_overlay.png", border = new[] {60,60,60,60} },
@@ -479,12 +480,18 @@ namespace LoopSorting
                     new SpriteEntry { key = "ui.button.orange_long.pressed", path = "UI_Sprites/orange_long_pressed.png", pixelsPerUnit = 100f, applyNineSlice = true },
                     new SpriteEntry { key = "ui.button.orange_long.disabled", path = "UI_Sprites/orange_long_disabled.png", pixelsPerUnit = 100f, applyNineSlice = true },
 
+                    new SpriteEntry { key = "ui.button.orange_square.normal", path = "UI_Sprites/orange_square_normal.png", pixelsPerUnit = 100f, applyNineSlice = true },
+                    new SpriteEntry { key = "ui.button.orange_square.pressed", path = "UI_Sprites/orange_square_pressed.png", pixelsPerUnit = 100f, applyNineSlice = true },
+                    new SpriteEntry { key = "ui.button.orange_square.disabled", path = "UI_Sprites/orange_square_disabled.png", pixelsPerUnit = 100f, applyNineSlice = true },
+
                     new SpriteEntry { key = "ui.icon.gear", path = "UI_Sprites/icon_gear.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.icon.close", path = "UI_Sprites/icon_close.png", pixelsPerUnit = 100f, applyNineSlice = false },
-                    new SpriteEntry { key = "ui.icon.fill", path = "UI_Sprites/icon_fill.png", pixelsPerUnit = 100f, applyNineSlice = false },
-                    new SpriteEntry { key = "ui.icon.shuffle", path = "UI_Sprites/icon_shuffle.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.icon.sort", path = "UI_Sprites/icon_sort_noframe.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.icon.shuffle", path = "UI_Sprites/icon_shuffle_noframe.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.icon.next", path = "UI_Sprites/icon_next.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.icon.retry", path = "UI_Sprites/icon_retry.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.icon.music", path = "UI_Sprites/icon_music.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.icon.vibrate", path = "UI_Sprites/icon_vibrate.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.icon.lock", path = "UI_Sprites/icon_lock.png", pixelsPerUnit = 100f, applyNineSlice = false },
 
                     new SpriteEntry { key = "ui.badge.bg", path = "UI_Sprites/badge_red_bg.png", pixelsPerUnit = 100f, applyNineSlice = false },
@@ -506,10 +513,13 @@ namespace LoopSorting
                     new SpriteEntry { key = "ui.overlay_dim", path = "UI_Sprites/overlay_dim.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.panel_modal", path = "UI_Sprites/panel_modal.png", pixelsPerUnit = 100f, applyNineSlice = true },
                     new SpriteEntry { key = "ui.panel_result", path = "UI_Sprites/panel_result.png", pixelsPerUnit = 100f, applyNineSlice = true },
+                    new SpriteEntry { key = "ui.card.setting_row", path = "UI_Sprites/card_setting_row.png", pixelsPerUnit = 100f, applyNineSlice = true },
 
                     new SpriteEntry { key = "ui.toggle.track_on", path = "UI_Sprites/toggle_track_on.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.toggle.track_off", path = "UI_Sprites/toggle_track_off.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.toggle.knob", path = "UI_Sprites/toggle_knob.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.toggle.full_on", path = "UI_Sprites/toggle_full_on.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.toggle.full_off", path = "UI_Sprites/toggle_full_off.png", pixelsPerUnit = 100f, applyNineSlice = false },
                 },
                 textures = new[]
                 {

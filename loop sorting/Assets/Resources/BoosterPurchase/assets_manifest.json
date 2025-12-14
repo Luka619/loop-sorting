@@ -1,0 +1,113 @@
+{
+  "source_image": "d12eca0b-4a47-4c4d-bd15-1f3a26b92168.png",
+  "source_size": [
+    1024,
+    1536
+  ],
+  "assets": {
+    "btn_close": {
+      "file": "btn_close.png",
+      "box": [
+        845,
+        114,
+        955,
+        222
+      ],
+      "size": [
+        110,
+        108
+      ]
+    },
+    "header_title_shuffle": {
+      "file": "header_title_shuffle.png",
+      "box": [
+        90,
+        90,
+        970,
+        420
+      ],
+      "size": [
+        880,
+        330
+      ]
+    },
+    "title_shuffle_text": {
+      "file": "title_shuffle_text.png",
+      "box": [
+        90,
+        90,
+        970,
+        420
+      ],
+      "size": [
+        880,
+        330
+      ]
+    },
+    "icon_booster_shuffle": {
+      "file": "icon_booster_shuffle.png",
+      "box": [
+        300,
+        430,
+        724,
+        840
+      ],
+      "size": [
+        424,
+        410
+      ]
+    },
+    "btn_buy_coins_80": {
+      "file": "btn_buy_coins_80.png",
+      "box": [
+        130,
+        1055,
+        500,
+        1290
+      ],
+      "size": [
+        370,
+        235
+      ]
+    },
+    "icon_coin": {
+      "file": "icon_coin.png",
+      "box_in_coin_button": [
+        19,
+        21,
+        351,
+        215
+      ],
+      "size": [
+        332,
+        194
+      ]
+    },
+    "btn_watch_ad_free": {
+      "file": "btn_watch_ad_free.png",
+      "box": [
+        520,
+        1055,
+        900,
+        1290
+      ],
+      "size": [
+        380,
+        235
+      ]
+    },
+    "popup_shuffle_full": {
+      "file": "popup_shuffle_full.png",
+      "box": [
+        70,
+        70,
+        954,
+        1395
+      ],
+      "size": [
+        884,
+        1325
+      ]
+    }
+  }
+}

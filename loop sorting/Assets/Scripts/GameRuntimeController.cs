@@ -116,6 +116,31 @@ namespace LoopSorting
         private GameObject _boosterPanel;
         private Button _boosterFillButton;
         private Button _boosterShuffleButton;
+        private int _boosterFillCount = InitialBoosterCount;
+        private int _boosterShuffleCount = InitialBoosterCount;
+        private GameObject _boosterPurchasePanel;
+        private Button _boosterPurchaseCloseButton;
+        private Image _boosterPurchaseCloseImage;
+        private Button _boosterPurchaseCoinsButton;
+        private Image _boosterPurchaseCoinsImage;
+        private TMP_Text _boosterPurchaseCoinsLabel;
+        private Image _boosterPurchaseCoinsPriceCover;
+        private Button _boosterPurchaseAdButton;
+        private Image _boosterPurchaseAdImage;
+        private TMP_Text _boosterPurchaseAdLabel;
+        private TMP_Text _boosterPurchaseTitleText;
+        private TMP_Text _boosterPurchaseSubtitleText;
+        private Image _boosterPurchaseBackground;
+        private Image _boosterPurchaseHeader;
+        private Image _boosterPurchaseIcon;
+        private BoosterType _boosterPurchaseType;
+        private RectTransform _boosterPurchasePopupRect;
+        private RectTransform _boosterPurchaseHeaderRect;
+        private RectTransform _boosterPurchaseIconRect;
+        private RectTransform _boosterPurchaseCloseRect;
+        private RectTransform _boosterPurchaseSubtitleRect;
+        private RectTransform _boosterPurchaseCoinsRect;
+        private RectTransform _boosterPurchaseAdRect;
         private GameObject _fastTag;
         private Image _fastTagBg;
         private TMP_Text _fastTagText;
@@ -150,9 +175,52 @@ namespace LoopSorting
         private int _fullBeltStepsRemaining;
         private Image _resultPrimaryIcon;
         private Image _resultSecondaryIcon;
-        private const int InitialBoosterCount = 99;
+        private const int InitialBoosterCount = 0;
+        private const int SortPurchaseCoinsPrice = 300;
+        private const int ShufflePurchaseCoinsPrice = 400;
+        private const int BoosterPurchaseGrantCount = 1;
         private const int InitialCoins = 810;
         private const int InitialLives = 5;
+        private static readonly Dictionary<string, Sprite> BoosterPurchaseSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
+        private static BoosterPurchaseManifest _boosterPurchaseManifestCache;
+
+        [Serializable]
+        private sealed class BoosterPurchaseManifest
+        {
+            public int[] source_size;
+            public BoosterPurchaseManifestAssets assets;
+        }
+
+        [Serializable]
+        private sealed class BoosterPurchaseManifestAssets
+        {
+            public BoosterPurchaseManifestAsset btn_close;
+            public BoosterPurchaseManifestAsset header_title_shuffle;
+            public BoosterPurchaseManifestAsset title_shuffle_text;
+            public BoosterPurchaseManifestAsset icon_booster_shuffle;
+            public BoosterPurchaseManifestAsset btn_buy_coins_80;
+            public BoosterPurchaseManifestAsset btn_watch_ad_free;
+            public BoosterPurchaseManifestAsset popup_shuffle_full;
+        }
+
+        [Serializable]
+        private sealed class BoosterPurchaseManifestAsset
+        {
+            public string file;
+            public int[] box; // [x1,y1,x2,y2] in source image pixels, origin at top-left
+            public int[] size; // [w,h]
+        }
+
+        private enum BoosterType
+        {
+            Fill,
+            Shuffle
+        }
+
+        private static int GetBoosterCoinPrice(BoosterType type)
+        {
+            return type == BoosterType.Shuffle ? ShufflePurchaseCoinsPrice : SortPurchaseCoinsPrice;
+        }
 
         private SfxPlayer _sfx;
         private bool _sfxHasSnapshot;
@@ -223,6 +291,8 @@ namespace LoopSorting
 
             _coins = InitialCoins;
             _lives = InitialLives;
+            _boosterFillCount = InitialBoosterCount;
+            _boosterShuffleCount = InitialBoosterCount;
 
             _lockChipLayer = null;
             _lockChipByBox.Clear();
@@ -1164,6 +1234,100 @@ namespace LoopSorting
             }
         }
 
+        private void HandleBoosterButtonClick(BoosterType type)
+        {
+            if (_game == null || _gameOver || _inputLocked)
+            {
+                return;
+            }
+
+            if (GetBoosterCount(type) <= 0)
+            {
+                OpenBoosterPurchase(type);
+                return;
+            }
+
+            if (type == BoosterType.Fill)
+            {
+                StartCoroutine(BoosterFillSequence());
+            }
+            else
+            {
+                StartCoroutine(BoosterShuffleSequence());
+            }
+        }
+
+        private int GetBoosterCount(BoosterType type)
+        {
+            return type == BoosterType.Fill ? _boosterFillCount : _boosterShuffleCount;
+        }
+
+        private void AddBooster(BoosterType type, int delta)
+        {
+            if (delta == 0) return;
+
+            if (type == BoosterType.Fill)
+            {
+                _boosterFillCount = Mathf.Clamp(_boosterFillCount + delta, 0, 99);
+            }
+            else
+            {
+                _boosterShuffleCount = Mathf.Clamp(_boosterShuffleCount + delta, 0, 99);
+            }
+
+            RefreshBoosterBadges();
+        }
+
+        private void ConsumeBooster(BoosterType type, int amount)
+        {
+            amount = Mathf.Max(0, amount);
+            if (amount == 0) return;
+            AddBooster(type, -amount);
+        }
+
+        private void RefreshBoosterBadges()
+        {
+            if (!LoopSortingUIKit.IsAvailable()) return;
+            if (_boosterFillButton != null) SetBoosterBadgeCount(_boosterFillButton.transform, _boosterFillCount);
+            if (_boosterShuffleButton != null) SetBoosterBadgeCount(_boosterShuffleButton.transform, _boosterShuffleCount);
+        }
+
+        private void SetBoosterBadgeCount(Transform buttonTransform, int count)
+        {
+            if (buttonTransform == null) return;
+            if (!LoopSortingUIKit.IsAvailable()) return;
+
+            var badge = buttonTransform.Find("Badge");
+            if (badge == null)
+            {
+                AttachBoosterBadge(buttonTransform, count);
+                return;
+            }
+
+            count = Mathf.Clamp(count, 0, 99);
+            int tens = count / 10;
+            int ones = count % 10;
+            bool showTens = count >= 10;
+
+            var tensImg = badge.Find("DigitTens")?.GetComponent<Image>();
+            var onesImg = badge.Find("DigitOnes")?.GetComponent<Image>();
+            if (tensImg != null)
+            {
+                tensImg.sprite = LoopSortingUIKit.LoadSpriteByKey($"ui.digit.{tens}");
+                tensImg.gameObject.SetActive(showTens);
+            }
+            if (onesImg != null)
+            {
+                onesImg.sprite = LoopSortingUIKit.LoadSpriteByKey($"ui.digit.{ones}");
+                var onesRect = onesImg.GetComponent<RectTransform>();
+                if (onesRect != null)
+                {
+                    float digitW = onesRect.sizeDelta.x;
+                    onesRect.anchoredPosition = showTens ? new Vector2(digitW * 0.35f, 0f) : Vector2.zero;
+                }
+            }
+        }
+
         private IEnumerator BoosterFillSequence()
         {
             if (_game == null || _inputLocked) yield break;
@@ -1190,6 +1354,7 @@ namespace LoopSorting
             if (ok) StartCoroutine(PlayBoosterFillFx(before, after));
             PlaySfx(ok ? SfxId.BoosterFillSort : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
+            if (ok) ConsumeBooster(BoosterType.Fill, 1);
 
             _speedMultiplier = prevSpeed;
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
@@ -1227,6 +1392,7 @@ namespace LoopSorting
             if (ok) StartCoroutine(PlayBoosterShuffleFx(before, after));
             PlaySfx(ok ? SfxId.BoosterShuffle : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
+            if (ok) ConsumeBooster(BoosterType.Shuffle, 1);
 
             _speedMultiplier = prevSpeed;
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
@@ -3713,9 +3879,9 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null,
                 icon: hasKit ? "ui.icon.fill" : null,
-                label: "FILL");
-            _boosterFillButton.onClick.AddListener(() => StartCoroutine(BoosterFillSequence()));
-            if (hasKit) AttachBoosterBadge(_boosterFillButton.transform, InitialBoosterCount);
+                label: "SORT");
+            _boosterFillButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Fill));
+            if (hasKit) AttachBoosterBadge(_boosterFillButton.transform, _boosterFillCount);
 
             _boosterShuffleButton = CreateBoosterButton(
                 _boosterPanel.transform,
@@ -3728,11 +3894,12 @@ namespace LoopSorting
                 disabled: hasKit ? "ui.button.purple_square.disabled" : null,
                 icon: hasKit ? "ui.icon.shuffle" : null,
                 label: "SHUFFLE");
-            _boosterShuffleButton.onClick.AddListener(() => StartCoroutine(BoosterShuffleSequence()));
-            if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, InitialBoosterCount);
+            _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
+            if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
 
             EnsureResultPanel();
             EnsureShopUI();
+            EnsureBoosterPurchaseUI();
         }
 
         private void EnsureResultPanel()
@@ -4022,6 +4189,615 @@ namespace LoopSorting
             });
 
             _settingsPanel.SetActive(false);
+        }
+
+        private void EnsureBoosterPurchaseUI()
+        {
+            if (_uiCanvas == null) return;
+            if (_boosterPurchasePanel != null && _boosterPurchaseCloseButton != null && _boosterPurchaseCoinsButton != null && _boosterPurchaseAdButton != null)
+            {
+                return;
+            }
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            if (_boosterPurchasePanel != null)
+            {
+                Destroy(_boosterPurchasePanel);
+            }
+
+            _boosterPurchasePanel = new GameObject("BoosterPurchasePanel");
+            _boosterPurchasePanel.transform.SetParent(_uiCanvas.transform, false);
+
+            var dim = _boosterPurchasePanel.AddComponent<Image>();
+            dim.raycastTarget = true;
+            if (hasKit)
+            {
+                dim.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.overlay_dim");
+                dim.color = Color.white;
+            }
+            else
+            {
+                dim.color = new Color(0f, 0f, 0f, 0.55f);
+            }
+
+            var overlayRect = _boosterPurchasePanel.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+
+            var popupGO = new GameObject("Popup");
+            popupGO.transform.SetParent(_boosterPurchasePanel.transform, false);
+            _boosterPurchasePopupRect = popupGO.AddComponent<RectTransform>();
+            _boosterPurchasePopupRect.anchorMin = new Vector2(0.5f, 0.5f);
+            _boosterPurchasePopupRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _boosterPurchasePopupRect.pivot = new Vector2(0.5f, 0.5f);
+            _boosterPurchasePopupRect.anchoredPosition = new Vector2(0f, 40f);
+            _boosterPurchasePopupRect.sizeDelta = new Vector2(900f, 1420f);
+
+            _boosterPurchaseBackground = popupGO.AddComponent<Image>();
+            _boosterPurchaseBackground.raycastTarget = false;
+            _boosterPurchaseBackground.color = Color.white;
+            if (hasKit)
+            {
+                var bg = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                if (bg != null)
+                {
+                    _boosterPurchaseBackground.sprite = bg;
+                    _boosterPurchaseBackground.type = bg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                }
+                else
+                {
+                    _boosterPurchaseBackground.color = new Color(1f, 1f, 1f, 0.92f);
+                }
+            }
+            else
+            {
+                _boosterPurchaseBackground.color = new Color(1f, 1f, 1f, 0.92f);
+            }
+
+            var headerGO = new GameObject("Header");
+            headerGO.transform.SetParent(popupGO.transform, false);
+            _boosterPurchaseHeaderRect = headerGO.AddComponent<RectTransform>();
+            _boosterPurchaseHeaderRect.anchorMin = new Vector2(0.5f, 1f);
+            _boosterPurchaseHeaderRect.anchorMax = new Vector2(0.5f, 1f);
+            _boosterPurchaseHeaderRect.pivot = new Vector2(0.5f, 1f);
+            _boosterPurchaseHeaderRect.anchoredPosition = new Vector2(0f, -90f);
+            _boosterPurchaseHeaderRect.sizeDelta = new Vector2(820f, 220f);
+            _boosterPurchaseHeader = headerGO.AddComponent<Image>();
+            _boosterPurchaseHeader.raycastTarget = false;
+            _boosterPurchaseHeader.color = Color.white;
+
+            var titleGO = new GameObject("TitleText");
+            titleGO.transform.SetParent(headerGO.transform, false);
+            _boosterPurchaseTitleText = titleGO.AddComponent<TextMeshProUGUI>();
+            _boosterPurchaseTitleText.raycastTarget = false;
+            _boosterPurchaseTitleText.text = "BOOSTER";
+            _boosterPurchaseTitleText.alignment = TextAlignmentOptions.Center;
+            _boosterPurchaseTitleText.fontSize = 96;
+            _boosterPurchaseTitleText.color = new Color(1f, 1f, 1f, 0.98f);
+            var titleRect = titleGO.GetComponent<RectTransform>();
+            titleRect.anchorMin = Vector2.zero;
+            titleRect.anchorMax = Vector2.one;
+            titleRect.offsetMin = Vector2.zero;
+            titleRect.offsetMax = Vector2.zero;
+
+            var closeGO = new GameObject("CloseButton");
+            closeGO.transform.SetParent(popupGO.transform, false);
+            _boosterPurchaseCloseRect = closeGO.AddComponent<RectTransform>();
+            _boosterPurchaseCloseRect.anchorMin = new Vector2(1f, 1f);
+            _boosterPurchaseCloseRect.anchorMax = new Vector2(1f, 1f);
+            _boosterPurchaseCloseRect.pivot = new Vector2(1f, 1f);
+            _boosterPurchaseCloseRect.anchoredPosition = new Vector2(-40f, -40f);
+            _boosterPurchaseCloseRect.sizeDelta = new Vector2(140f, 140f);
+            _boosterPurchaseCloseImage = closeGO.AddComponent<Image>();
+            _boosterPurchaseCloseImage.raycastTarget = true;
+            _boosterPurchaseCloseImage.color = Color.white;
+            _boosterPurchaseCloseButton = closeGO.AddComponent<Button>();
+            _boosterPurchaseCloseButton.onClick.AddListener(() => CloseBoosterPurchase());
+
+            var closeSprite = TryLoadBoosterPurchaseSprite("btn_close");
+            if (closeSprite != null)
+            {
+                _boosterPurchaseCloseImage.sprite = closeSprite;
+                _boosterPurchaseCloseImage.type = closeSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+            }
+            else if (hasKit)
+            {
+                _boosterPurchaseCloseImage.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.button.close_red.normal");
+                _boosterPurchaseCloseImage.type = Image.Type.Simple;
+            }
+            else
+            {
+                _boosterPurchaseCloseImage.color = new Color(0.9f, 0.25f, 0.25f, 0.95f);
+            }
+
+            var iconGO = new GameObject("BoosterIcon");
+            iconGO.transform.SetParent(popupGO.transform, false);
+            _boosterPurchaseIconRect = iconGO.AddComponent<RectTransform>();
+            _boosterPurchaseIconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseIconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseIconRect.pivot = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseIconRect.anchoredPosition = new Vector2(0f, 120f);
+            _boosterPurchaseIconRect.sizeDelta = new Vector2(420f, 420f);
+            _boosterPurchaseIcon = iconGO.AddComponent<Image>();
+            _boosterPurchaseIcon.raycastTarget = false;
+            _boosterPurchaseIcon.color = Color.white;
+
+            var subtitleGO = new GameObject("Subtitle");
+            subtitleGO.transform.SetParent(popupGO.transform, false);
+            _boosterPurchaseSubtitleRect = subtitleGO.AddComponent<RectTransform>();
+            _boosterPurchaseSubtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseSubtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseSubtitleRect.pivot = new Vector2(0.5f, 0.5f);
+            _boosterPurchaseSubtitleRect.anchoredPosition = new Vector2(0f, -220f);
+            _boosterPurchaseSubtitleRect.sizeDelta = new Vector2(820f, 120f);
+            _boosterPurchaseSubtitleText = subtitleGO.AddComponent<TextMeshProUGUI>();
+            _boosterPurchaseSubtitleText.raycastTarget = false;
+            _boosterPurchaseSubtitleText.text = "Purchase Booster";
+            _boosterPurchaseSubtitleText.alignment = TextAlignmentOptions.Center;
+            _boosterPurchaseSubtitleText.fontSize = 64;
+            _boosterPurchaseSubtitleText.color = new Color(0.2f, 0.15f, 0.1f, 1f);
+
+            _boosterPurchaseCoinsButton = CreateBoosterPurchaseActionButton(
+                parent: popupGO.transform,
+                name: "BuyWithCoins",
+                anchoredPos: new Vector2(-210f, -520f),
+                size: new Vector2(380f, 200f),
+                fallbackSpriteKey: hasKit ? "ui.button.orange_long.normal" : null,
+                labelText: "0",
+                out _boosterPurchaseCoinsLabel);
+            _boosterPurchaseCoinsButton.onClick.AddListener(() => PurchaseBoosterWithCoins());
+            _boosterPurchaseCoinsRect = _boosterPurchaseCoinsButton.GetComponent<RectTransform>();
+            _boosterPurchaseCoinsImage = _boosterPurchaseCoinsButton.GetComponent<Image>();
+            if (_boosterPurchaseCoinsLabel != null)
+            {
+                _boosterPurchaseCoinsLabel.outlineWidth = 0.25f;
+                _boosterPurchaseCoinsLabel.outlineColor = new Color(0f, 0f, 0f, 0.65f);
+                _boosterPurchaseCoinsLabel.enableAutoSizing = true;
+                _boosterPurchaseCoinsLabel.fontSizeMax = 78f;
+                _boosterPurchaseCoinsLabel.fontSizeMin = 40f;
+                var labelRect = _boosterPurchaseCoinsLabel.GetComponent<RectTransform>();
+                if (labelRect != null)
+                {
+                    labelRect.anchorMin = Vector2.zero;
+                    labelRect.anchorMax = Vector2.one;
+                    // Leave room for the left-side coin icon inside the baked button art.
+                    labelRect.offsetMin = new Vector2(150f, 0f);
+                    labelRect.offsetMax = new Vector2(-20f, 0f);
+                }
+            }
+            _boosterPurchaseCoinsPriceCover = EnsureBoosterPurchaseCoinsPriceCover(_boosterPurchaseCoinsButton.transform);
+
+            _boosterPurchaseAdButton = CreateBoosterPurchaseActionButton(
+                parent: popupGO.transform,
+                name: "BuyWithAd",
+                anchoredPos: new Vector2(210f, -520f),
+                size: new Vector2(380f, 200f),
+                fallbackSpriteKey: hasKit ? "ui.button.mint_long.normal" : null,
+                labelText: "FREE",
+                out _boosterPurchaseAdLabel);
+            _boosterPurchaseAdButton.onClick.AddListener(() => PurchaseBoosterWithAd());
+            _boosterPurchaseAdRect = _boosterPurchaseAdButton.GetComponent<RectTransform>();
+            _boosterPurchaseAdImage = _boosterPurchaseAdButton.GetComponent<Image>();
+
+            _boosterPurchasePanel.SetActive(false);
+        }
+
+        private static Image EnsureBoosterPurchaseCoinsPriceCover(Transform coinButtonTransform)
+        {
+            if (coinButtonTransform == null) return null;
+
+            var existing = coinButtonTransform.Find("PriceCover");
+            if (existing != null)
+            {
+                return existing.GetComponent<Image>();
+            }
+
+            var go = new GameObject("PriceCover");
+            go.transform.SetParent(coinButtonTransform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.38f, 0.18f);
+            rect.anchorMax = new Vector2(0.95f, 0.82f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            // Approximate the green inside the coin button to cover the baked-in "80".
+            img.color = new Color(0.45f, 0.82f, 0.32f, 1f);
+
+            // Keep behind the label.
+            go.transform.SetAsFirstSibling();
+            go.SetActive(false);
+            return img;
+        }
+
+        private Button CreateBoosterPurchaseActionButton(
+            Transform parent,
+            string name,
+            Vector2 anchoredPos,
+            Vector2 size,
+            string fallbackSpriteKey,
+            string labelText,
+            out TMP_Text label)
+        {
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = size;
+
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = true;
+            img.color = Color.white;
+
+            var btn = go.AddComponent<Button>();
+
+            Sprite authored = name == "BuyWithAd"
+                ? TryLoadBoosterPurchaseSprite("btn_watch_ad_free")
+                : null;
+
+            if (authored != null)
+            {
+                img.sprite = authored;
+                img.type = authored.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+            }
+            else if (hasKit && !string.IsNullOrEmpty(fallbackSpriteKey))
+            {
+                var s = LoopSortingUIKit.LoadSpriteByKey(fallbackSpriteKey);
+                img.sprite = s;
+                img.type = s != null && s.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+            }
+            else
+            {
+                img.color = new Color(0f, 0f, 0f, 0.22f);
+            }
+
+            var txtGO = new GameObject("Label");
+            txtGO.transform.SetParent(go.transform, false);
+            var tmp = txtGO.AddComponent<TextMeshProUGUI>();
+            tmp.raycastTarget = false;
+            tmp.text = labelText;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = 72;
+            tmp.color = Color.white;
+            var tRect = txtGO.GetComponent<RectTransform>();
+            tRect.anchorMin = Vector2.zero;
+            tRect.anchorMax = Vector2.one;
+            tRect.offsetMin = Vector2.zero;
+            tRect.offsetMax = Vector2.zero;
+            label = tmp;
+
+            if (authored != null)
+            {
+                tmp.gameObject.SetActive(false);
+            }
+
+            return btn;
+        }
+
+        private void OpenBoosterPurchase(BoosterType type)
+        {
+            EnsureBoosterPurchaseUI();
+            if (_boosterPurchasePanel == null) return;
+
+            _boosterPurchaseType = type;
+            ConfigureBoosterPurchaseUI(type);
+
+            if (_settingsPanel != null) _settingsPanel.SetActive(false);
+            if (_resultPanel != null) _resultPanel.SetActive(false);
+            if (_shopPanel != null) _shopPanel.SetActive(false);
+
+            AnimateUiPanel(_boosterPurchasePanel, true, seconds: 0.20f);
+            PlaySfx(SfxId.UiPopupOpen);
+        }
+
+        private void CloseBoosterPurchase()
+        {
+            if (_boosterPurchasePanel == null) return;
+            AnimateUiPanel(_boosterPurchasePanel, false, seconds: 0.18f);
+            PlaySfx(SfxId.UiPopupClose);
+        }
+
+        private void ConfigureBoosterPurchaseUI(BoosterType type)
+        {
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+            bool isShuffle = type == BoosterType.Shuffle;
+
+            string title = isShuffle ? "SHUFFLE" : "SORT";
+            if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.text = title;
+            if (_boosterPurchaseSubtitleText != null) _boosterPurchaseSubtitleText.text = $"Purchase {title}";
+
+            // Prefer a full authored popup sprite if available. When using it, hide our sub-elements to avoid double-layering.
+            var fullBg = isShuffle
+                ? TryLoadBoosterPurchaseSprite("popup_shuffle_full")
+                : TryLoadBoosterPurchaseSprite("popup_sort_full");
+            bool useFullPopup = fullBg != null;
+
+            int coinPrice = GetBoosterCoinPrice(type);
+            if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.text = coinPrice.ToString();
+
+            // If a matching coin-price button sprite exists, use it when NOT using a full popup background.
+            if (!useFullPopup && _boosterPurchaseCoinsImage != null)
+            {
+                var coinSprite = TryLoadBoosterPurchaseSprite($"btn_buy_coins_{coinPrice}");
+                if (coinSprite != null)
+                {
+                    _boosterPurchaseCoinsImage.sprite = coinSprite;
+                    _boosterPurchaseCoinsImage.type = coinSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.gameObject.SetActive(false);
+                }
+            }
+
+            if (_boosterPurchaseBackground != null)
+            {
+                if (useFullPopup)
+                {
+                    _boosterPurchaseBackground.sprite = fullBg;
+                    _boosterPurchaseBackground.type = fullBg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    _boosterPurchaseBackground.color = Color.white;
+                }
+                else if (hasKit)
+                {
+                    var bg = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                    if (bg != null)
+                    {
+                        _boosterPurchaseBackground.sprite = bg;
+                        _boosterPurchaseBackground.type = bg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                        _boosterPurchaseBackground.color = Color.white;
+                    }
+                }
+            }
+
+            if (_boosterPurchaseHeader != null)
+            {
+                var headerName = isShuffle ? "header_title_shuffle" : "header_title_sort";
+                var header = TryLoadBoosterPurchaseSprite(headerName);
+                if (!useFullPopup && header != null)
+                {
+                    _boosterPurchaseHeader.sprite = header;
+                    _boosterPurchaseHeader.type = header.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    _boosterPurchaseHeader.gameObject.SetActive(true);
+                    if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.gameObject.SetActive(false);
+                }
+                else
+                {
+                    _boosterPurchaseHeader.sprite = null;
+                    _boosterPurchaseHeader.gameObject.SetActive(!useFullPopup);
+                    if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.gameObject.SetActive(!useFullPopup);
+                }
+            }
+
+            if (_boosterPurchaseIcon != null)
+            {
+                var icon = isShuffle
+                    ? TryLoadBoosterPurchaseSprite("icon_booster_shuffle")
+                    : (TryLoadBoosterPurchaseSprite("icon_booster_sort") ?? TryLoadBoosterPurchaseSprite("icon_booster_fill"));
+                if (icon == null && hasKit)
+                {
+                    icon = LoopSortingUIKit.LoadSpriteByKey(isShuffle ? "ui.icon.shuffle" : "ui.icon.fill");
+                }
+                _boosterPurchaseIcon.sprite = icon;
+                _boosterPurchaseIcon.color = icon != null ? Color.white : new Color(0f, 0f, 0f, 0.15f);
+                _boosterPurchaseIcon.type = icon != null && icon.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                _boosterPurchaseIcon.gameObject.SetActive(!useFullPopup);
+            }
+
+            if (_boosterPurchaseSubtitleText != null)
+            {
+                _boosterPurchaseSubtitleText.gameObject.SetActive(!useFullPopup);
+            }
+
+            bool showDynamicCoinPrice = !useFullPopup;
+
+            // With the "single full popup image" approach, coin price is baked into the PNG.
+            // Hide the dynamic overlay to avoid duplicate numbers.
+            if (_boosterPurchaseCoinsPriceCover != null) _boosterPurchaseCoinsPriceCover.gameObject.SetActive(false);
+            if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.gameObject.SetActive(showDynamicCoinPrice);
+
+            SetPurchaseButtonVisuals(useFullPopup, showDynamicCoinPrice);
+            ApplyBoosterPurchaseLayoutFromManifest(type, useFullPopup, fullBg);
+        }
+
+        private void SetPurchaseButtonVisuals(bool useFullPopup, bool showCoinPriceLabel)
+        {
+            // When the full popup image is used, hide all child visuals and keep only invisible clickable areas.
+            if (_boosterPurchaseCloseImage != null)
+            {
+                if (useFullPopup)
+                {
+                    _boosterPurchaseCloseImage.sprite = null;
+                    _boosterPurchaseCloseImage.color = new Color(1f, 1f, 1f, 0f);
+                }
+                else
+                {
+                    _boosterPurchaseCloseImage.color = Color.white;
+                    if (_boosterPurchaseCloseImage.sprite == null)
+                    {
+                        _boosterPurchaseCloseImage.sprite = TryLoadBoosterPurchaseSprite("btn_close") ?? LoopSortingUIKit.LoadSpriteByKey("ui.button.close_red.normal");
+                    }
+                }
+            }
+
+            if (_boosterPurchaseCoinsImage != null)
+            {
+                _boosterPurchaseCoinsImage.color = useFullPopup ? new Color(1f, 1f, 1f, 0f) : Color.white;
+            }
+            if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.gameObject.SetActive(showCoinPriceLabel);
+
+            if (_boosterPurchaseAdImage != null)
+            {
+                _boosterPurchaseAdImage.color = useFullPopup ? new Color(1f, 1f, 1f, 0f) : Color.white;
+            }
+            if (_boosterPurchaseAdLabel != null) _boosterPurchaseAdLabel.gameObject.SetActive(!useFullPopup);
+        }
+
+        private void ApplyBoosterPurchaseLayoutFromManifest(BoosterType type, bool useFullPopup, Sprite fullPopupSprite)
+        {
+            var manifest = LoadBoosterPurchaseManifest();
+            if (manifest?.assets?.popup_shuffle_full?.size == null || manifest.assets.popup_shuffle_full.box == null)
+            {
+                return;
+            }
+
+            // Use manifest's shuffle popup as the reference layout, and apply it proportionally to any popup image size.
+            var refPopupAsset = manifest.assets.popup_shuffle_full;
+            var refPopupSize = new Vector2(refPopupAsset.size[0], refPopupAsset.size[1]);
+            var refPopupTL = new Vector2(refPopupAsset.box[0], refPopupAsset.box[1]);
+
+            Vector2 targetPopupSize = refPopupSize;
+            if (useFullPopup && fullPopupSprite != null)
+            {
+                targetPopupSize = fullPopupSprite.rect.size;
+            }
+
+            if (_boosterPurchasePopupRect != null && useFullPopup)
+            {
+                _boosterPurchasePopupRect.sizeDelta = targetPopupSize;
+            }
+
+            ApplyRectFromManifestNormalized(_boosterPurchaseCloseRect, manifest.assets.btn_close, refPopupSize, refPopupTL, targetPopupSize);
+            ApplyRectFromManifestNormalized(_boosterPurchaseCoinsRect, manifest.assets.btn_buy_coins_80, refPopupSize, refPopupTL, targetPopupSize);
+            ApplyRectFromManifestNormalized(_boosterPurchaseAdRect, manifest.assets.btn_watch_ad_free, refPopupSize, refPopupTL, targetPopupSize);
+
+            if (!useFullPopup)
+            {
+                ApplyRectFromManifestNormalized(_boosterPurchaseHeaderRect, manifest.assets.header_title_shuffle, refPopupSize, refPopupTL, targetPopupSize);
+                ApplyRectFromManifestNormalized(_boosterPurchaseIconRect, manifest.assets.icon_booster_shuffle, refPopupSize, refPopupTL, targetPopupSize);
+            }
+        }
+
+        private static void ApplyRectFromManifestNormalized(
+            RectTransform target,
+            BoosterPurchaseManifestAsset asset,
+            Vector2 refPopupSize,
+            Vector2 refPopupTopLeftInSource,
+            Vector2 targetPopupSize)
+        {
+            if (target == null) return;
+            if (asset?.box == null || asset.box.Length < 4) return;
+
+            target.anchorMin = new Vector2(0.5f, 0.5f);
+            target.anchorMax = new Vector2(0.5f, 0.5f);
+            target.pivot = new Vector2(0.5f, 0.5f);
+
+            float x1 = asset.box[0] - refPopupTopLeftInSource.x;
+            float y1 = asset.box[1] - refPopupTopLeftInSource.y;
+            float x2 = asset.box[2] - refPopupTopLeftInSource.x;
+            float y2 = asset.box[3] - refPopupTopLeftInSource.y;
+
+            float cx = (x1 + x2) * 0.5f;
+            float cy = (y1 + y2) * 0.5f;
+            float w = Mathf.Abs(x2 - x1);
+            float h = Mathf.Abs(y2 - y1);
+
+            float nx = refPopupSize.x <= 0.0001f ? 0.5f : (cx / refPopupSize.x);
+            float ny = refPopupSize.y <= 0.0001f ? 0.5f : (cy / refPopupSize.y);
+            float nw = refPopupSize.x <= 0.0001f ? 0.1f : (w / refPopupSize.x);
+            float nh = refPopupSize.y <= 0.0001f ? 0.1f : (h / refPopupSize.y);
+
+            // Convert from top-left origin to RectTransform centered coords, scaling to current popup size.
+            target.anchoredPosition = new Vector2((nx - 0.5f) * targetPopupSize.x, (0.5f - ny) * targetPopupSize.y);
+            target.sizeDelta = new Vector2(nw * targetPopupSize.x, nh * targetPopupSize.y);
+        }
+
+        private static BoosterPurchaseManifest LoadBoosterPurchaseManifest()
+        {
+            if (_boosterPurchaseManifestCache != null)
+            {
+                return _boosterPurchaseManifestCache;
+            }
+
+            var text = Resources.Load<TextAsset>("BoosterPurchase/assets_manifest");
+            if (text == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                _boosterPurchaseManifestCache = JsonUtility.FromJson<BoosterPurchaseManifest>(text.text);
+            }
+            catch
+            {
+                _boosterPurchaseManifestCache = null;
+            }
+
+            return _boosterPurchaseManifestCache;
+        }
+
+        private static Sprite TryLoadBoosterPurchaseSprite(string fileNameOrKey)
+        {
+            if (string.IsNullOrWhiteSpace(fileNameOrKey)) return null;
+            string key = fileNameOrKey.Trim();
+            if (key.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                key = key.Substring(0, key.Length - 4);
+            }
+
+            if (BoosterPurchaseSpriteCache.TryGetValue(key, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            Sprite TryLoadSprite(string path) => Resources.Load<Sprite>(path);
+            Texture2D TryLoadTexture(string path) => Resources.Load<Texture2D>(path);
+
+            var s = TryLoadSprite(key) ?? TryLoadSprite($"BoosterPurchase/{key}") ?? TryLoadSprite($"BoosterPurchase/Sprites/{key}");
+            if (s != null)
+            {
+                BoosterPurchaseSpriteCache[key] = s;
+                return s;
+            }
+
+            // Fallback: if PNGs are imported as Texture2D (Texture Type = Default), create a runtime sprite.
+            var tex = TryLoadTexture(key) ?? TryLoadTexture($"BoosterPurchase/{key}") ?? TryLoadTexture($"BoosterPurchase/Sprites/{key}");
+            if (tex == null)
+            {
+                return null;
+            }
+
+            var created = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            BoosterPurchaseSpriteCache[key] = created;
+            return created;
+        }
+
+        private void PurchaseBoosterWithCoins()
+        {
+            if (_gameOver) return;
+
+            int price = GetBoosterCoinPrice(_boosterPurchaseType);
+            if (_coins < price)
+            {
+                PlaySfx(SfxId.UiDenied);
+                CloseBoosterPurchase();
+                OpenShop(ShopTab.Coins);
+                return;
+            }
+
+            _coins -= price;
+            AddBooster(_boosterPurchaseType, BoosterPurchaseGrantCount);
+            RefreshEconomyHUD();
+            PlaySfx(SfxId.UiConfirm);
+            CloseBoosterPurchase();
+        }
+
+        private void PurchaseBoosterWithAd()
+        {
+            if (_gameOver) return;
+
+            // Placeholder: grant immediately. Hook your ad SDK here.
+            AddBooster(_boosterPurchaseType, BoosterPurchaseGrantCount);
+            PlaySfx(SfxId.UiConfirm);
+            CloseBoosterPurchase();
         }
 
         private enum ShopTab

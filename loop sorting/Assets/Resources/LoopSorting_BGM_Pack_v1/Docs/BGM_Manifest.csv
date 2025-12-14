@@ -1,0 +1,19 @@
+event,type,file,notes
+bgm.menu.loop,loop,BGM/Loops/Menu/bgm_menu_loop.wav,主菜单/关卡选择循环。
+bgm.gameplay.base,loop,BGM/Loops/Gameplay/bgm_gameplay_base_loop.wav,常态游玩循环（低压）。
+bgm.gameplay.pressure,loop,BGM/Loops/Gameplay/bgm_gameplay_pressure_loop.wav,压力循环（满槽风险 / 5x 时启用或与 base crossfade）。
+bgm.stem.gameplay.pad,stem,BGM/Stems/Gameplay/gameplay_pad.wav,垫底和声。
+bgm.stem.gameplay.arp,stem,BGM/Stems/Gameplay/gameplay_arp.wav,拨弦/木琴质感的旋律碎片。
+bgm.stem.gameplay.perc,stem,BGM/Stems/Gameplay/gameplay_perc.wav,轻打击。
+bgm.stem.gameplay.pressure,stem,BGM/Stems/Gameplay/gameplay_pressure.wav,额外紧张层（快节奏帽子 + 高音点缀）。
+bgm.stem.menu.pad,stem,BGM/Stems/Menu/menu_pad.wav,菜单垫底。
+bgm.stem.menu.arp,stem,BGM/Stems/Menu/menu_arp.wav,菜单点缀。
+bgm.stem.menu.perc,stem,BGM/Stems/Menu/menu_perc.wav,菜单极轻打击。
+stinger.unlock,stinger,BGM/Stingers/stinger_unlock.wav,锁箱解锁提示（与视觉解锁同步）。
+stinger.box_complete,stinger,BGM/Stingers/stinger_box_complete.wav,箱体完成提示。
+stinger.win,stinger,BGM/Stingers/stinger_win.wav,胜利结算（可在胜利弹窗前或同时播放）。
+stinger.lose,stinger,BGM/Stingers/stinger_lose.wav,失败结算（快进一圈仍满触发）。
+stinger.belt_full_warning,stinger,BGM/Stingers/stinger_full_warning.wav,检测到满槽瞬间警示。
+stinger.speedup,stinger,BGM/Stingers/stinger_speedup.wav,进入 5x 速度过渡（满槽/道具跑圈共用）。
+stinger.speeddown,stinger,BGM/Stingers/stinger_speeddown.wav,退出 5x 恢复常速的缓解提示。
+stinger.booster_activate,stinger,BGM/Stingers/stinger_booster_activate.wav,使用道具、输入暂停的提示。

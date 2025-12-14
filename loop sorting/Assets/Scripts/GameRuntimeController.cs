@@ -44,6 +44,8 @@ namespace LoopSorting
         [Header("Settings")]
         public bool vibrationEnabled = true;
         public bool soundEnabled = true;
+        [Header("BGM")]
+        public BgmPlayer.Implementation bgmImplementation = BgmPlayer.Implementation.VerticalLayering;
         [Header("UI")]
         public BeltCounterUI beltCounterUI;
         [Header("Debug/Visuals")]
@@ -155,6 +157,9 @@ namespace LoopSorting
         private const int InitialLives = 5;
 
         private SfxPlayer _sfx;
+        private HapticsPlayer _haptics;
+        private BgmPlayer _bgm;
+        private bool _bgmPressure;
         private bool _sfxHasSnapshot;
         private bool _sfxPrevFastForward;
         private bool _sfxSuppressSpeeddownOnce;
@@ -308,6 +313,12 @@ namespace LoopSorting
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
             EnsureEventSystem();
             EnsureSfx();
+            EnsureBgm();
+            if (soundEnabled && _bgm != null)
+            {
+                _bgmPressure = false;
+                _bgm.PlayLoop(BgmLoopId.GameplayBase, fadeSeconds: 0.6f);
+            }
             PlaySfx(SfxId.LevelStart);
             _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
 
@@ -361,6 +372,12 @@ namespace LoopSorting
         {
             EnsureEventSystem();
             EnsureSfx();
+            EnsureBgm();
+            if (soundEnabled && _bgm != null)
+            {
+                _bgmPressure = false;
+                _bgm.PlayLoop(BgmLoopId.Menu, fadeSeconds: 0.6f);
+            }
 
             // Build shared HUD canvas (hidden) so the Settings modal can be opened from the main menu.
             EnsureCounterUI();
@@ -690,6 +707,56 @@ namespace LoopSorting
             _sfx.SetEnabled(soundEnabled);
         }
 
+        private void EnsureBgm()
+        {
+            if (_bgm == null)
+            {
+                _bgm = GetComponent<BgmPlayer>();
+                if (_bgm == null)
+                {
+                    _bgm = gameObject.AddComponent<BgmPlayer>();
+                }
+            }
+
+            _bgm.implementation = bgmImplementation;
+            _bgm.SetEnabled(soundEnabled);
+        }
+
+        private void UpdateBgmPressureAfterTick()
+        {
+            if (!soundEnabled) return;
+            if (_bgm == null) return;
+            if (_game == null) return;
+            if (_gameOver) return;
+
+            int total = Mathf.Max(1, _game.Conveyor.Length);
+            int occupied = Mathf.Clamp(_game.Conveyor.BlockCount, 0, total);
+            float fillRatio = (float)occupied / total;
+
+            const float EnterThreshold = 0.75f;
+            const float ExitThreshold = 0.60f;
+
+            bool shouldPressure = _fullBeltFastForward || fillRatio >= EnterThreshold || (_bgmPressure && fillRatio > ExitThreshold);
+            if (shouldPressure == _bgmPressure) return;
+
+            _bgmPressure = shouldPressure;
+            _bgm.PlayLoop(_bgmPressure ? BgmLoopId.GameplayPressure : BgmLoopId.GameplayBase, fadeSeconds: 0.9f);
+        }
+
+        private void EnsureHaptics()
+        {
+            if (_haptics == null)
+            {
+                _haptics = GetComponent<HapticsPlayer>();
+                if (_haptics == null)
+                {
+                    _haptics = gameObject.AddComponent<HapticsPlayer>();
+                }
+            }
+
+            _haptics.SetEnabled(vibrationEnabled);
+        }
+
         private void UpdateConveyorLoopSfx()
         {
             if (_sfx == null) return;
@@ -710,6 +777,12 @@ namespace LoopSorting
 
         private void PlaySfx(SfxId id, float volumeMultiplier = 1f)
         {
+            if (vibrationEnabled)
+            {
+                EnsureHaptics();
+                _haptics.PlayFromSfx(id);
+            }
+
             if (!soundEnabled)
             {
                 return;
@@ -757,6 +830,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (soundEnabled)
+            {
+                EnsureBgm();
+            }
+
             int inserts = 0;
             int completions = 0;
             int unlocks = 0;
@@ -794,15 +872,23 @@ namespace LoopSorting
             if (completions > 0)
             {
                 PlaySfx(SfxId.BoxComplete);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoxComplete);
             }
             if (unlocks > 0)
             {
                 PlaySfx(SfxId.BoxUnlock);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Unlock);
             }
             if (!_sfxPrevFastForward && _fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
                 PlaySfx(SfxId.ConveyorFullWarning);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.6f);
+                    _bgm.PlayStinger(BgmStingerId.FullWarning);
+                }
             }
             if (_sfxPrevFastForward && !_fullBeltFastForward)
             {
@@ -813,6 +899,7 @@ namespace LoopSorting
                 else
                 {
                     PlaySfx(SfxId.ConveyorSpeeddown);
+                    if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
                 }
             }
 
@@ -868,13 +955,23 @@ namespace LoopSorting
                 tex.Apply();
             }
 
-            var mat = new Material(Shader.Find("Unlit/Texture"));
-            mat.mainTexture = tex;
-            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
-            mat.SetInt("_ZWrite", 0);
-            mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-            var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = mat;
+            var shader =
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.mainTexture = tex;
+                mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+                if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = mat;
+            }
 
             // Disable collider
             var col = _backgroundQuad.GetComponent<Collider>();
@@ -1170,11 +1267,19 @@ namespace LoopSorting
             _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
+                    _bgm.PlayStinger(BgmStingerId.Speedup);
+                }
             }
             _speedMultiplier = 5f;
             RefreshFastTag();
@@ -1195,7 +1300,9 @@ namespace LoopSorting
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
             {
                 PlaySfx(SfxId.ConveyorSpeeddown);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
             }
+            UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
             if (!_gameOver) _inputLocked = false;
@@ -1207,11 +1314,19 @@ namespace LoopSorting
             _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.BoosterActivate);
 
             float prevSpeed = _speedMultiplier;
             if (!_fullBeltFastForward)
             {
                 PlaySfx(SfxId.ConveyorSpeedup);
+                if (soundEnabled && _bgm != null)
+                {
+                    _bgmPressure = true;
+                    _bgm.PlayLoop(BgmLoopId.GameplayPressure, fadeSeconds: 0.4f);
+                    _bgm.PlayStinger(BgmStingerId.Speedup);
+                }
             }
             _speedMultiplier = 5f;
             RefreshFastTag();
@@ -1232,7 +1347,9 @@ namespace LoopSorting
             if (!_fullBeltFastForward && prevSpeed < 4.99f)
             {
                 PlaySfx(SfxId.ConveyorSpeeddown);
+                if (soundEnabled && _bgm != null) _bgm.PlayStinger(BgmStingerId.Speeddown);
             }
+            UpdateBgmPressureAfterTick();
             RefreshFastTag();
             SetInteractableForBooster(true);
             if (!_gameOver) _inputLocked = false;
@@ -1803,6 +1920,7 @@ namespace LoopSorting
                 UpdateCompletionStates();
                 UpdateBeltCounter();
                 HandleFullBeltFastForwardAfterTick();
+                UpdateBgmPressureAfterTick();
                 EmitSfxFromStateChanges();
                 CheckEndConditions();
             }
@@ -2084,10 +2202,17 @@ namespace LoopSorting
             _emptyDeferredLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _emptyDeferredLine.receiveShadows = false;
 
-            var shader = Shader.Find("Unlit/Color");
-            var mat = new Material(shader);
-            mat.renderQueue = 2920;
-            _emptyDeferredLine.sharedMaterial = mat;
+            var shader =
+                Shader.Find("Unlit/Color") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.renderQueue = 2920;
+                _emptyDeferredLine.sharedMaterial = mat;
+            }
             _emptyDeferredLine.enabled = false;
         }
 
@@ -2506,6 +2631,12 @@ namespace LoopSorting
                 Shader.Find("Sprites/Default") ??
                 Shader.Find("UI/Default") ??
                 Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                // Can't create a custom material; return null so callers can fall back gracefully.
+                return null;
+            }
+
             var mat = new Material(shader);
             mat.renderQueue = 1800;
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
@@ -3088,6 +3219,12 @@ namespace LoopSorting
             _gameOver = true;
             PlaySfx(SfxId.UiPopupOpen);
             PlaySfx(win ? SfxId.LevelWin : SfxId.LevelLose);
+            EnsureBgm();
+            if (soundEnabled && _bgm != null)
+            {
+                _bgm.PlayStinger(win ? BgmStingerId.Win : BgmStingerId.Lose);
+                _bgm.FadeOutLoops(fadeSeconds: 0.9f);
+            }
             EnsureResultPanel();
             AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
             _resultText.text = win ? "VICTORY" : "FAILED";
@@ -3937,6 +4074,13 @@ namespace LoopSorting
             {
                 soundEnabled = val;
                 EnsureSfx();
+                EnsureBgm();
+                if (val && _bgm != null)
+                {
+                    bool inMenu = _mainMenuCanvas != null && _mainMenuCanvas.gameObject.activeSelf;
+                    _bgmPressure = false;
+                    _bgm.PlayLoop(inMenu ? BgmLoopId.Menu : BgmLoopId.GameplayBase, fadeSeconds: 0.6f);
+                }
                 UpdateToggleVisual(soundTrack, soundKnob, val);
             });
             UpdateToggleVisual(soundTrack, soundKnob, soundEnabled);
@@ -3953,6 +4097,14 @@ namespace LoopSorting
             _vibrationToggle.onValueChanged.AddListener(val =>
             {
                 vibrationEnabled = val;
+                if (_haptics != null || val)
+                {
+                    EnsureHaptics();
+                    if (val)
+                    {
+                        _haptics.Play(HapticsId.UiConfirm);
+                    }
+                }
                 UpdateToggleVisual(vibTrack, vibKnob, val);
             });
             UpdateToggleVisual(vibTrack, vibKnob, vibrationEnabled);
@@ -5077,13 +5229,22 @@ namespace LoopSorting
                     if (slotTex != null)
                     {
                         var c = new Color(1f, 1f, 1f, Mathf.Clamp01(slotMarkerColor.a));
-                        renderer.sharedMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, c, 2900);
+                        var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, c, 2900);
+                        if (mat != null) renderer.sharedMaterial = mat;
                     }
                     else
                     {
-                        var mat = new Material(Shader.Find("Unlit/Color"));
-                        mat.color = slotMarkerColor;
-                        renderer.sharedMaterial = mat;
+                        var shader =
+                            Shader.Find("Unlit/Color") ??
+                            Shader.Find("Sprites/Default") ??
+                            Shader.Find("UI/Default") ??
+                            Shader.Find("Standard");
+                        if (shader != null)
+                        {
+                            var mat = new Material(shader);
+                            mat.color = slotMarkerColor;
+                            renderer.sharedMaterial = mat;
+                        }
                     }
                 }
                 var col = marker.GetComponent<Collider>();

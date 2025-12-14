@@ -115,7 +115,7 @@ namespace LoopSorting
             }
         }
 
-        private const string DefaultResourcesRoot = "loop_sorting_ui_components_v04_1_meta_pack";
+        private const string DefaultResourcesRoot = "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti";
         private const string ConfigResourcePath = "LoopSortingUIKitConfig";
 
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
@@ -356,7 +356,18 @@ namespace LoopSorting
 
         public static Material CreateUnlitTextureMaterial(Texture2D texture, Color color, int renderQueue)
         {
-            var shader = Shader.Find("Unlit/Transparent") ?? Shader.Find("Unlit/Texture");
+            var shader =
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+
+            if (shader == null)
+            {
+                return null;
+            }
+
             var mat = new Material(shader);
             mat.mainTexture = texture;
             mat.color = color;

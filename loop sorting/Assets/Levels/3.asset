@@ -21,16 +21,17 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: 1, y: -2.5}
-    - {x: 8, y: -2.5}
+    - {x: 6, y: 1}
+    - {x: 8, y: 1}
     - {x: 8, y: -8}
     - {x: 1, y: -8}
-    - {x: 1, y: -2.5}
+    - {x: 1, y: 1}
+    - {x: 6, y: 1}
     loop: 1
     width: 20
   boxes:
   - name: Box A
-    position: {x: 4.453544, y: -0.6436217}
+    position: {x: 4.5, y: 3.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3

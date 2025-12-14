@@ -17,21 +17,22 @@ MonoBehaviour:
   smoothCorners: 1
   cornerSmoothTension: 1
   cornerSubdivisions: 10
-  blockSize: 0.3
+  blockSize: 0.33
   conveyors:
   - name: Conveyor
     points:
-    - {x: -2.5, y: -5}
+    - {x: 1, y: -5}
     - {x: 5, y: -5}
     - {x: 5, y: 5}
     - {x: -3, y: 5}
     - {x: -3, y: -5}
+    - {x: 1, y: -5}
     loop: 1
     width: 20
   boxes:
   - name: Box 1
     position: {x: -0.4487179, y: -3.556979}
-    size: {x: 1.5, y: 1.8000001}
+    size: {x: 1.6500001, y: 1.98}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -53,7 +54,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 2
     position: {x: 2.7179484, y: -3.2521353}
-    size: {x: 1.5, y: 1.8000001}
+    size: {x: 1.6500001, y: 1.98}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -75,7 +76,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 3
     position: {x: 0.1880343, y: 3.5968661}
-    size: {x: 1.5, y: 1.8000001}
+    size: {x: 1.6500001, y: 1.98}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 5
     rows: 6
@@ -97,7 +98,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 5
     position: {x: -1.0598292, y: -0.82763356}
-    size: {x: 1.8000001, y: 1.5}
+    size: {x: 1.98, y: 1.6500001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
@@ -119,7 +120,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 6
     position: {x: -0.9829061, y: 1.1438749}
-    size: {x: 1.8000001, y: 1.5}
+    size: {x: 1.98, y: 1.6500001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
@@ -132,7 +133,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 7
     position: {x: 3.6111112, y: 0.2037043}
-    size: {x: 1.8000001, y: 1.5}
+    size: {x: 1.98, y: 1.6500001}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 6
     rows: 5
@@ -145,7 +146,7 @@ MonoBehaviour:
     unlockColor: 0
   - name: Box 7
     position: {x: 2.4871793, y: 3.3874648}
-    size: {x: 1.5, y: 1.8000001}
+    size: {x: 1.6500001, y: 1.98}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 5
     rows: 6

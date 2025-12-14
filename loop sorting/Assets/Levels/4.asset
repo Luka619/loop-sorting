@@ -21,11 +21,12 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: 0.0007890883, y: 3}
+    - {x: -0, y: 0.5}
     - {x: 0, y: -2}
     - {x: 4, y: -2}
     - {x: 4, y: 3}
     - {x: 0, y: 3}
+    - {x: 0, y: 0.5}
     loop: 1
     width: 20
   boxes:

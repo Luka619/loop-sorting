@@ -19,6 +19,7 @@ namespace LoopSorting
         private static GameObject _legoModelPrefab;
         private static Material _legoBaseMaterial;
         private static string _legoShaderKey;
+        private static bool _warnedMissingLegoShader;
         private static int _legoVariant; // 4,3,2
         private static readonly MaterialPropertyBlock SharedPropertyBlock = new MaterialPropertyBlock();
         private static readonly Quaternion LegoFacingRotation = Quaternion.Euler(-90f, 0f, 0f);
@@ -142,28 +143,38 @@ namespace LoopSorting
                     if (shader == null) shader = Shader.Find("Unlit/Color");
                 }
 
-                _legoBaseMaterial = new Material(shader);
-                _legoShaderKey = desiredShader;
-                if (_legoBaseMaterial.HasProperty("_Metallic")) _legoBaseMaterial.SetFloat("_Metallic", 0.05f);
-                if (_legoBaseMaterial.HasProperty("_Glossiness")) _legoBaseMaterial.SetFloat("_Glossiness", 0.6f);
-                if (_legoBaseMaterial.HasProperty("_Smoothness")) _legoBaseMaterial.SetFloat("_Smoothness", 0.6f);
+                if (shader != null)
+                {
+                    _legoBaseMaterial = new Material(shader);
+                    _legoShaderKey = desiredShader;
+                    if (_legoBaseMaterial.HasProperty("_Metallic")) _legoBaseMaterial.SetFloat("_Metallic", 0.05f);
+                    if (_legoBaseMaterial.HasProperty("_Glossiness")) _legoBaseMaterial.SetFloat("_Glossiness", 0.6f);
+                    if (_legoBaseMaterial.HasProperty("_Smoothness")) _legoBaseMaterial.SetFloat("_Smoothness", 0.6f);
 
-                if (_legoBaseMaterial.HasProperty("_AO")) _legoBaseMaterial.SetFloat("_AO", 0.82f);
-                if (_legoBaseMaterial.HasProperty("_AOPower")) _legoBaseMaterial.SetFloat("_AOPower", 2.8f);
-                if (_legoBaseMaterial.HasProperty("_Curv")) _legoBaseMaterial.SetFloat("_Curv", 0.34f);
+                    if (_legoBaseMaterial.HasProperty("_AO")) _legoBaseMaterial.SetFloat("_AO", 0.82f);
+                    if (_legoBaseMaterial.HasProperty("_AOPower")) _legoBaseMaterial.SetFloat("_AOPower", 2.8f);
+                    if (_legoBaseMaterial.HasProperty("_Curv")) _legoBaseMaterial.SetFloat("_Curv", 0.34f);
 
-                // View-facing fake light (N·V): towards camera brighter, sides darker.
-                if (_legoBaseMaterial.HasProperty("_ViewLightStrength")) _legoBaseMaterial.SetFloat("_ViewLightStrength", 0.95f);
-                if (_legoBaseMaterial.HasProperty("_ViewPower")) _legoBaseMaterial.SetFloat("_ViewPower", 1.6f);
-                if (_legoBaseMaterial.HasProperty("_ViewSideMin")) _legoBaseMaterial.SetFloat("_ViewSideMin", 0.62f);
+                    // View-facing fake light (N·V): towards camera brighter, sides darker.
+                    if (_legoBaseMaterial.HasProperty("_ViewLightStrength")) _legoBaseMaterial.SetFloat("_ViewLightStrength", 0.95f);
+                    if (_legoBaseMaterial.HasProperty("_ViewPower")) _legoBaseMaterial.SetFloat("_ViewPower", 1.6f);
+                    if (_legoBaseMaterial.HasProperty("_ViewSideMin")) _legoBaseMaterial.SetFloat("_ViewSideMin", 0.62f);
 
-                if (_legoBaseMaterial.HasProperty("_RimColor")) _legoBaseMaterial.SetColor("_RimColor", new Color(1f, 1f, 1f, 1f));
-                if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 2.6f);
-                if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.35f);
-                if (_legoBaseMaterial.HasProperty("_EdgeDarken")) _legoBaseMaterial.SetFloat("_EdgeDarken", 0.12f);
-                if (_legoBaseMaterial.HasProperty("_Ambient")) _legoBaseMaterial.SetFloat("_Ambient", 1.0f);
-                _legoBaseMaterial.color = Color.white;
+                    if (_legoBaseMaterial.HasProperty("_RimColor")) _legoBaseMaterial.SetColor("_RimColor", new Color(1f, 1f, 1f, 1f));
+                    if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 2.6f);
+                    if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.35f);
+                    if (_legoBaseMaterial.HasProperty("_EdgeDarken")) _legoBaseMaterial.SetFloat("_EdgeDarken", 0.12f);
+                    if (_legoBaseMaterial.HasProperty("_Ambient")) _legoBaseMaterial.SetFloat("_Ambient", 1.0f);
+                    _legoBaseMaterial.color = Color.white;
+                }
+                else if (_legoBaseMaterial == null && !_warnedMissingLegoShader)
+                {
+                    _warnedMissingLegoShader = true;
+                    Debug.LogWarning("BlockVisual: No shader found for Lego materials; blocks will use prefab/default materials.");
+                }
             }
+
+            if (_legoBaseMaterial == null) return;
 
             var renderers = modelRoot.GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < renderers.Length; i++)

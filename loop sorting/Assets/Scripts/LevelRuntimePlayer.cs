@@ -42,7 +42,15 @@ namespace LoopSorting
                 lr.positionCount = conveyor.points.Count;
                 lr.startWidth = conveyor.width;
                 lr.endWidth = conveyor.width;
-                lr.material = new Material(Shader.Find("Sprites/Default"));
+                var shader =
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("Unlit/Color") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
+                if (shader != null)
+                {
+                    lr.material = new Material(shader);
+                }
                 lr.startColor = lr.endColor = new Color(0.1f, 0.1f, 0.1f, 1f);
 
                 for (int i = 0; i < conveyor.points.Count; i++)
@@ -90,10 +98,18 @@ namespace LoopSorting
                     var renderer = go.GetComponent<Renderer>();
                     if (renderer != null)
                     {
-                        renderer.sharedMaterial = new Material(Shader.Find("Standard"))
+                        var shader =
+                            Shader.Find("Standard") ??
+                            Shader.Find("Universal Render Pipeline/Lit") ??
+                            Shader.Find("Unlit/Color") ??
+                            Shader.Find("Sprites/Default");
+                        if (shader != null)
                         {
-                            color = box.color
-                        };
+                            renderer.sharedMaterial = new Material(shader)
+                            {
+                                color = box.color
+                            };
+                        }
                     }
                 }
 

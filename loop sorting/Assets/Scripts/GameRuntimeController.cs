@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -45,6 +46,16 @@ namespace LoopSorting
         public bool vibrationEnabled = true;
         public bool soundEnabled = true;
         public bool musicEnabled = true;
+        public bool useSavedProgress = true;
+
+        private const float SaveDelayStrongSeconds = 0.20f;
+        private const float SaveDelayWeakSeconds = 2.00f;
+
+        private bool _hasLoadedSave;
+        private int _savedFlowIndex;
+        private int _savedHighestUnlockedFlowIndex;
+        private bool _saveDirty;
+        private float _saveDueUnscaledTime = -1f;
         [Header("UI")]
         public BeltCounterUI beltCounterUI;
         [Header("Debug/Visuals")]
@@ -162,6 +173,7 @@ namespace LoopSorting
         private System.Random _rng = new System.Random();
         private bool _inputLocked = false;
         private GameObject _backgroundQuad;
+        private bool _backgroundDebugLogged;
         private GameObject _conveyorBelt;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
@@ -307,15 +319,79 @@ namespace LoopSorting
             _conveyorBelt = null;
             _conveyorTickSfxCountdown = 0;
 
-            _coins = InitialCoins;
-            _lives = InitialLives;
-            _boosterSortCount = InitialBoosterCount;
-            _boosterShuffleCount = InitialBoosterCount;
-
             _lockChipLayer = null;
             _lockChipByBox.Clear();
 
             ResetSfxSnapshot();
+        }
+
+        private void Awake()
+        {
+            // Load persistent settings / economy / progress before building any UI.
+            LoadSaveIfNeeded();
+            EnsureEconomyDefaults();
+        }
+
+        private void LoadSaveIfNeeded()
+        {
+            if (_hasLoadedSave) return;
+            _hasLoadedSave = true;
+
+            if (!LoopSortingSaveService.TryLoad(out var save)) return;
+
+            soundEnabled = save.soundEnabled;
+            musicEnabled = save.musicEnabled;
+            vibrationEnabled = save.vibrationEnabled;
+
+            _coins = Mathf.Max(0, save.coins);
+            _lives = Mathf.Max(0, save.lives);
+            _boosterSortCount = save.boosterSortCount;
+            _boosterShuffleCount = save.boosterShuffleCount;
+
+            _savedFlowIndex = save.flowIndex;
+            _savedHighestUnlockedFlowIndex = save.highestUnlockedFlowIndex;
+        }
+
+        private LoopSortingSaveService.SaveData BuildSaveData()
+        {
+            int flowIndex = _flow != null ? Mathf.Max(0, _flowIndex) : Mathf.Max(0, _savedFlowIndex);
+            int highestUnlocked = Mathf.Max(_savedHighestUnlockedFlowIndex, flowIndex);
+
+            return new LoopSortingSaveService.SaveData
+            {
+                flowIndex = flowIndex,
+                highestUnlockedFlowIndex = highestUnlocked,
+                coins = Mathf.Max(0, _coins),
+                lives = Mathf.Max(0, _lives),
+                boosterSortCount = Mathf.Clamp(_boosterSortCount, 0, 99),
+                boosterShuffleCount = Mathf.Clamp(_boosterShuffleCount, 0, 99),
+                soundEnabled = soundEnabled,
+                musicEnabled = musicEnabled,
+                vibrationEnabled = vibrationEnabled,
+            };
+        }
+
+        private void RequestSave(float delaySeconds, bool coalesce = true)
+        {
+            _saveDirty = true;
+            delaySeconds = Mathf.Max(0f, delaySeconds);
+            float due = Time.unscaledTime + delaySeconds;
+            if (!coalesce || _saveDueUnscaledTime < 0f)
+            {
+                _saveDueUnscaledTime = due;
+                return;
+            }
+
+            _saveDueUnscaledTime = Mathf.Min(_saveDueUnscaledTime, due);
+        }
+
+        private void FlushSave()
+        {
+            if (!_saveDirty) return;
+            _saveDirty = false;
+            _saveDueUnscaledTime = -1f;
+
+            LoopSortingSaveService.Save(BuildSaveData());
         }
 
         private void ResetSfxSnapshot()
@@ -432,6 +508,7 @@ namespace LoopSorting
 
         public void Boot(LevelLayout layout)
         {
+            LoadSaveIfNeeded();
             _pendingLevel = layout;
             _pendingFlow = null;
             _pendingFlowIndex = 0;
@@ -440,8 +517,11 @@ namespace LoopSorting
 
         public void Boot(LevelFlow flow, int startIndex = 0)
         {
+            LoadSaveIfNeeded();
             _pendingFlow = flow;
-            _pendingFlowIndex = Mathf.Clamp(startIndex, 0, flow != null ? Mathf.Max(0, flow.levels.Count - 1) : 0);
+            int max = flow != null ? Mathf.Max(0, flow.levels.Count - 1) : 0;
+            int savedIndex = useSavedProgress ? _savedFlowIndex : startIndex;
+            _pendingFlowIndex = Mathf.Clamp(savedIndex, 0, max);
             _pendingLevel = null;
             ShowMainMenu();
         }
@@ -557,45 +637,6 @@ namespace LoopSorting
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
             bgGO.transform.SetAsFirstSibling();
-
-            static void ApplyTmpOutlineUnderlay(
-                TMP_Text tmp,
-                float outlineWidth,
-                Color outlineColor,
-                Color underlayColor,
-                Vector2 underlayOffset,
-                float underlaySoftness,
-                float underlayDilate)
-            {
-                if (tmp == null) return;
-                if (tmp.fontMaterial == null) return;
-
-                // Clone material so we don't mutate shared TMP materials globally.
-                var mat = new Material(tmp.fontMaterial);
-                tmp.fontMaterial = mat;
-
-                if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
-                {
-                    mat.EnableKeyword("OUTLINE_ON");
-                    mat.SetFloat(ShaderUtilities.ID_OutlineWidth, Mathf.Clamp01(outlineWidth));
-                }
-                if (mat.HasProperty(ShaderUtilities.ID_OutlineColor))
-                {
-                    mat.SetColor(ShaderUtilities.ID_OutlineColor, outlineColor);
-                }
-
-                if (mat.HasProperty(ShaderUtilities.ID_UnderlayColor))
-                {
-                    mat.EnableKeyword("UNDERLAY_ON");
-                    mat.SetColor(ShaderUtilities.ID_UnderlayColor, underlayColor);
-                }
-                if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetX)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, underlayOffset.x);
-                if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetY)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, underlayOffset.y);
-                if (mat.HasProperty(ShaderUtilities.ID_UnderlaySoftness)) mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, Mathf.Clamp01(underlaySoftness));
-                if (mat.HasProperty(ShaderUtilities.ID_UnderlayDilate)) mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, Mathf.Clamp(underlayDilate, -1f, 1f));
-
-                tmp.UpdateMeshPadding();
-            }
 
             // Settings (top-right) - matches UI kit blueprint.
             if (LoopSortingUIKit.IsAvailable())
@@ -905,9 +946,34 @@ namespace LoopSorting
                 case SfxId.ConveyorFullFail:
                 case SfxId.LevelWin:
                 case SfxId.LevelLose:
-                    Handheld.Vibrate();
+                    TryVibrate();
                     break;
             }
+        }
+
+        private static void TryVibrate()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try
+            {
+                WeChatWASM.WX.VibrateShort(new WeChatWASM.VibrateShortOption { type = "light" });
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+#else
+            try
+            {
+                var handheldType = Type.GetType("UnityEngine.Handheld, UnityEngine");
+                var vibrate = handheldType?.GetMethod("Vibrate", BindingFlags.Public | BindingFlags.Static);
+                vibrate?.Invoke(null, null);
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+#endif
         }
 
         private void CaptureSfxSnapshot()
@@ -1029,7 +1095,8 @@ namespace LoopSorting
             // Rebuild each time to match camera framing and avoid offsets.
             if (_backgroundQuad != null)
             {
-                DestroyImmediate(_backgroundQuad);
+                if (Application.isPlaying) Destroy(_backgroundQuad);
+                else DestroyImmediate(_backgroundQuad);
                 _backgroundQuad = null;
             }
 
@@ -1067,17 +1134,17 @@ namespace LoopSorting
             {
                 tex = new Texture2D(1, 2);
                 tex.wrapMode = TextureWrapMode.Clamp;
-                Color top = new Color(1f, 0.92f, 0.78f);
-                Color bottom = new Color(1f, 0.87f, 0.65f);
+                Color top = uiTheme != null ? uiTheme.gradientTop : new Color(1f, 0.92f, 0.78f);
+                Color bottom = uiTheme != null ? uiTheme.gradientBottom : new Color(1f, 0.87f, 0.65f);
                 tex.SetPixels(new[] { bottom, top });
                 tex.Apply();
             }
 
             var shader =
-                Shader.Find("Unlit/Texture") ??
-                Shader.Find("Unlit/Transparent") ??
                 Shader.Find("Sprites/Default") ??
                 Shader.Find("UI/Default") ??
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Unlit/Transparent") ??
                 Shader.Find("Standard");
 
             if (shader != null)
@@ -1087,8 +1154,17 @@ namespace LoopSorting
                 mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
                 if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
                 if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                // WebGL/WeChat can be sensitive to backface culling on MeshRenderer backgrounds.
+                if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0); // 0=Off
+                if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
                 var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = mat;
+
+                if (Debug.isDebugBuild && !_backgroundDebugLogged)
+                {
+                    _backgroundDebugLogged = true;
+                    Debug.Log($"[Background] shader='{shader.name}', tex='{(tex != null ? tex.name : "null")}' {tex?.width}x{tex?.height}");
+                }
             }
 
             // Disable collider
@@ -1495,6 +1571,7 @@ namespace LoopSorting
             }
 
             RefreshBoosterBadges();
+            RequestSave(SaveDelayStrongSeconds);
         }
 
         private void ConsumeBooster(BoosterType type, int amount)
@@ -2172,6 +2249,11 @@ namespace LoopSorting
 
         private void Update()
         {
+            if (_saveDirty && _saveDueUnscaledTime >= 0f && Time.unscaledTime >= _saveDueUnscaledTime)
+            {
+                FlushSave();
+            }
+
             if (_game == null)
             {
                 return;
@@ -2212,6 +2294,27 @@ namespace LoopSorting
                 EmitSfxFromStateChanges();
                 CheckEndConditions();
             }
+        }
+
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            if (pauseStatus)
+            {
+                FlushSave();
+            }
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                FlushSave();
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            FlushSave();
         }
 
         private void ProcessConveyorPortEvents(List<ConveyorPortEvent> events)
@@ -2658,10 +2761,16 @@ namespace LoopSorting
         private void RefreshFastTag()
         {
             if (_fastTag == null) return;
-            bool show = _fullBeltFastForward || _speedMultiplier >= 4.99f;
+            float mult = EffectiveSpeedMultiplier;
+            bool show = mult > 1.01f;
             bool danger = _fullBeltFastForward;
             _fastTag.SetActive(show);
-            if (_fastTagText != null) _fastTagText.text = "FAST x5";
+            if (_fastTagText != null)
+            {
+                string label = FormatSpeedLabel(mult); // "2x", "3x", "5x"...
+                string valuePart = label.EndsWith("x") ? label.Substring(0, label.Length - 1) : label;
+                _fastTagText.text = $"FAST x{valuePart}";
+            }
             if (_fastTagBg != null && LoopSortingUIKit.IsAvailable())
             {
                 _fastTagBg.sprite = LoopSortingUIKit.LoadSpriteByKey(danger ? "ui.tag_fast.danger" : "ui.tag_fast.info");
@@ -3547,6 +3656,9 @@ namespace LoopSorting
                 {
                     PlaySfx(SfxId.LevelNext);
                     _flowIndex = next;
+                    _savedFlowIndex = _flowIndex;
+                    _savedHighestUnlockedFlowIndex = Mathf.Max(_savedHighestUnlockedFlowIndex, _flowIndex);
+                    RequestSave(SaveDelayStrongSeconds);
                     _gameOver = false;
                     Build(_flow, _flowIndex);
                     return;
@@ -3578,6 +3690,7 @@ namespace LoopSorting
                 }
 
                 ShowMainMenu();
+                RequestSave(SaveDelayStrongSeconds);
                 return;
             }
 
@@ -3837,6 +3950,9 @@ namespace LoopSorting
                     safeTopUnits = screenAdapter.RawSafeAreaInsetsPx.z / sf;
                     safeBottomUnits = screenAdapter.RawSafeAreaInsetsPx.w / sf;
                     capsuleRightUnits = screenAdapter.MenuButtonRightInsetPx / sf;
+                    // Fallback: on some WeChat builds, the safeArea width is reduced to avoid the capsule,
+                    // but GetMenuButtonBoundingClientRect may be missing or scaled differently.
+                    capsuleRightUnits = Mathf.Max(capsuleRightUnits, screenAdapter.RawSafeAreaInsetsPx.y / sf);
                     safeTopUnits = Mathf.Max(safeTopUnits, screenAdapter.StatusBarHeightPx / sf);
                 }
             }
@@ -3941,6 +4057,14 @@ namespace LoopSorting
             counterValue.fontSize = 64;
             counterValue.enableWordWrapping = false;
             counterValue.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                counterValue,
+                outlineWidth: 0.22f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.32f,
+                underlayDilate: 0.05f);
             var counterValueRect = counterValue.GetComponent<RectTransform>();
             counterValueRect.anchorMin = new Vector2(0f, 0f);
             counterValueRect.anchorMax = new Vector2(1f, 1f);
@@ -3984,6 +4108,14 @@ namespace LoopSorting
             _levelHudText.fontSize = 52;
             _levelHudText.enableWordWrapping = false;
             _levelHudText.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                _levelHudText,
+                outlineWidth: 0.20f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.32f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.30f,
+                underlayDilate: 0.04f);
             var levelTextRect = _levelHudText.GetComponent<RectTransform>();
             levelTextRect.anchorMin = Vector2.zero;
             levelTextRect.anchorMax = Vector2.one;
@@ -4006,37 +4138,40 @@ namespace LoopSorting
                 PlaySfx(SfxId.UiClick);
                 OpenShop(ShopTab.Coins);
             });
+            ApplyButtonPressScale(_shopButton, pressedScale: 0.96f);
 
-            // Coins + lives (top-right): value pill + "+" that opens shop.
-            CreateCurrencyPill(
+            // Currency bar (top-right): one-row TopBar with separate coin/lives hit areas.
+            CreateCurrencyBar(
                 parent: root.transform,
-                name: "CoinsPill",
-                anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.coins.x + uiLayout.coins.width)) - capsuleRightUnits, -(uiLayout.coins.y + safeTopUnits)),
-                size: new Vector2(uiLayout.coins.width, uiLayout.coins.height),
-                iconKey: hasKit ? "ui.icon.coin" : null,
+                name: "CurrencyBar",
+                coinsTopLeft: uiLayout.coins,
+                livesTopLeft: uiLayout.lives,
+                referenceWidth: uiLayout.referenceWidth,
+                safeTopUnits: safeTopUnits,
+                extraRightUnits: capsuleRightUnits,
                 out _coinText,
-                out _coinPlusButton);
-            _coinPlusButton.onClick.AddListener(() =>
-            {
-                PlaySfx(SfxId.UiClick);
-                OpenShop(ShopTab.Coins);
-            });
-
-            CreateCurrencyPill(
-                parent: root.transform,
-                name: "LivesPill",
-                anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.lives.x + uiLayout.lives.width)) - capsuleRightUnits, -(uiLayout.lives.y + safeTopUnits)),
-                size: new Vector2(uiLayout.lives.width, uiLayout.lives.height),
-                iconKey: hasKit ? "ui.icon.heart" : null,
                 out _lifeText,
+                out _coinPlusButton,
                 out _lifePlusButton);
-            _lifePlusButton.onClick.AddListener(() =>
+
+            if (_coinPlusButton != null)
             {
-                PlaySfx(SfxId.UiClick);
-                OpenShop(ShopTab.Lives);
-            });
+                _coinPlusButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    OpenShop(ShopTab.Coins);
+                });
+                ApplyButtonPressScale(_coinPlusButton, pressedScale: 0.96f);
+            }
+            if (_lifePlusButton != null)
+            {
+                _lifePlusButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    OpenShop(ShopTab.Lives);
+                });
+                ApplyButtonPressScale(_lifePlusButton, pressedScale: 0.96f);
+            }
 
             RefreshEconomyHUD();
 
@@ -4060,6 +4195,14 @@ namespace LoopSorting
             _speedButtonLabel.alignment = TextAlignmentOptions.Center;
             _speedButtonLabel.fontSize = 54;
             _speedButtonLabel.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                _speedButtonLabel,
+                outlineWidth: 0.22f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.32f,
+                underlayDilate: 0.05f);
             var speedLabelRect = _speedButtonLabel.GetComponent<RectTransform>();
             speedLabelRect.anchorMin = Vector2.zero;
             speedLabelRect.anchorMax = Vector2.one;
@@ -4068,6 +4211,7 @@ namespace LoopSorting
 
             _speedButton.onClick.AddListener(CycleSpeed);
             UpdateSpeedButtonLabel();
+            ApplyButtonPressScale(_speedButton, pressedScale: 0.96f);
 
             // Settings button (top-right)
             var settingsGO = new GameObject("SettingsButton");
@@ -4101,6 +4245,7 @@ namespace LoopSorting
             gearRect.sizeDelta = new Vector2(gearSide, gearSide);
 
             _settingsButton.onClick.AddListener(() => ToggleSettingsPanel(true));
+            ApplyButtonPressScale(_settingsButton, pressedScale: 0.96f);
 
             // Fast tag (top-center), toggled by full-belt fast-forward / boosters.
             _fastTag = new GameObject("FastTag");
@@ -4132,10 +4277,18 @@ namespace LoopSorting
             fastTextGO.transform.SetParent(_fastTag.transform, false);
             _fastTagText = fastTextGO.AddComponent<TextMeshProUGUI>();
             _fastTagText.raycastTarget = false;
-            _fastTagText.text = "FAST x5";
+            _fastTagText.text = "FAST";
             _fastTagText.alignment = TextAlignmentOptions.Center;
             _fastTagText.fontSize = 44;
             _fastTagText.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                _fastTagText,
+                outlineWidth: 0.20f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.32f,
+                underlayDilate: 0.05f);
             var fastTextRect = _fastTagText.GetComponent<RectTransform>();
             fastTextRect.anchorMin = new Vector2(0.5f, 1f);
             fastTextRect.anchorMax = new Vector2(0.5f, 1f);
@@ -4161,10 +4314,11 @@ namespace LoopSorting
                 anchoredPos: new Vector2(-uiLayout.boosterOffset.x, uiLayout.boosterOffset.y + safeBottomUnits),
                 size: uiLayout.boosterSize,
                 normal: hasKit ? "ui.button.mint_square.normal" : null,
-                pressed: hasKit ? "ui.button.mint_square.pressed" : null,
-                disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.sort" : null);
+                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
+                 disabled: hasKit ? "ui.button.mint_square.disabled" : null,
+                 icon: hasKit ? "ui.icon.sort" : null);
             RemoveButtonFrame(_boosterSortButton);
+            ApplyButtonPressScale(_boosterSortButton, pressedScale: 0.96f);
             _boosterSortButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Sort));
             if (hasKit) AttachBoosterBadge(_boosterSortButton.transform, _boosterSortCount);
 
@@ -4175,10 +4329,11 @@ namespace LoopSorting
                 anchoredPos: new Vector2(uiLayout.boosterOffset.x, uiLayout.boosterOffset.y + safeBottomUnits),
                 size: uiLayout.boosterSize,
                 normal: hasKit ? "ui.button.purple_square.normal" : null,
-                pressed: hasKit ? "ui.button.purple_square.pressed" : null,
-                disabled: hasKit ? "ui.button.purple_square.disabled" : null,
-                icon: hasKit ? "ui.icon.shuffle" : null);
+                 pressed: hasKit ? "ui.button.purple_square.pressed" : null,
+                 disabled: hasKit ? "ui.button.purple_square.disabled" : null,
+                 icon: hasKit ? "ui.icon.shuffle" : null);
             RemoveButtonFrame(_boosterShuffleButton);
+            ApplyButtonPressScale(_boosterShuffleButton, pressedScale: 0.96f);
             _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
             if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
 
@@ -4490,6 +4645,7 @@ namespace LoopSorting
                 musicEnabled = !musicEnabled;
                 EnsureMusic();
                 RefreshSettingsToggleVisuals();
+                RequestSave(SaveDelayStrongSeconds);
             });
 
             CreateOverlayButton("ToggleSfx", rectSfx, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
@@ -4499,6 +4655,7 @@ namespace LoopSorting
                 soundEnabled = !soundEnabled;
                 EnsureSfx();
                 RefreshSettingsToggleVisuals();
+                RequestSave(SaveDelayStrongSeconds);
             });
 
             CreateOverlayButton("ToggleVibration", rectVibration, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
@@ -4508,9 +4665,10 @@ namespace LoopSorting
                 vibrationEnabled = !vibrationEnabled;
                 if (vibrationEnabled)
                 {
-                    Handheld.Vibrate();
+                    TryVibrate();
                 }
                 RefreshSettingsToggleVisuals();
+                RequestSave(SaveDelayStrongSeconds);
             });
 
             RefreshSettingsToggleVisuals();
@@ -5189,6 +5347,7 @@ namespace LoopSorting
         private static void ApplyButtonPressScale(Button button, float pressedScale)
         {
             if (button == null) return;
+            var baseScale = button.transform.localScale;
             var trigger = button.gameObject.GetComponent<EventTrigger>();
             if (trigger == null)
             {
@@ -5199,17 +5358,18 @@ namespace LoopSorting
                 trigger.triggers = new List<EventTrigger.Entry>();
             }
 
-            void Add(EventTriggerType type, System.Action<BaseEventData> action)
+            void AddOrReplace(EventTriggerType type, System.Action<BaseEventData> action)
             {
+                trigger.triggers.RemoveAll(e => e != null && e.eventID == type);
                 var entry = new EventTrigger.Entry { eventID = type };
                 entry.callback.AddListener(data => action?.Invoke((BaseEventData)data));
                 trigger.triggers.Add(entry);
             }
 
-            Add(EventTriggerType.PointerDown, _ => button.transform.localScale = Vector3.one * pressedScale);
-            Add(EventTriggerType.PointerUp, _ => button.transform.localScale = Vector3.one);
-            Add(EventTriggerType.PointerExit, _ => button.transform.localScale = Vector3.one);
-            Add(EventTriggerType.Cancel, _ => button.transform.localScale = Vector3.one);
+            AddOrReplace(EventTriggerType.PointerDown, _ => button.transform.localScale = baseScale * pressedScale);
+            AddOrReplace(EventTriggerType.PointerUp, _ => button.transform.localScale = baseScale);
+            AddOrReplace(EventTriggerType.PointerExit, _ => button.transform.localScale = baseScale);
+            AddOrReplace(EventTriggerType.Cancel, _ => button.transform.localScale = baseScale);
         }
 
         private void SetPurchaseButtonVisuals(bool useFullPopup, bool showCoinPriceLabel)
@@ -5459,6 +5619,7 @@ namespace LoopSorting
             _coins -= price;
             AddBooster(_boosterPurchaseType, BoosterPurchaseGrantCount);
             RefreshEconomyHUD();
+            RequestSave(SaveDelayStrongSeconds);
             PlaySfx(SfxId.UiConfirm);
             CloseBoosterPurchase();
         }
@@ -5481,8 +5642,8 @@ namespace LoopSorting
 
         private void EnsureEconomyDefaults()
         {
-            if (_coins <= 0) _coins = InitialCoins;
-            if (_lives <= 0) _lives = InitialLives;
+            _coins = Mathf.Max(0, _coins);
+            _lives = Mathf.Max(0, _lives);
         }
 
         private void RefreshEconomyHUD()
@@ -5496,11 +5657,17 @@ namespace LoopSorting
         private static string FormatCurrencyValue(int value)
         {
             if (value < 0) return value.ToString();
-            if (value <= 9_999_999) return value.ToString(); // up to 7 digits: keep full for readability
+            if (value <= 9_999) return value.ToString();
 
-            // Compact notation for large values to keep text inside pills (K/M/B).
+            // Compact notation for HUD (K/M/B) to keep text readable in narrow pills.
+            if (value < 1_000_000)
+            {
+                if (value >= 999_500) return "1M";
+                return FormatCompact(value, 1_000, "K", decimals: value < 100_000 ? 1 : 0);
+            }
             if (value < 1_000_000_000)
             {
+                if (value >= 999_500_000) return "1B";
                 return FormatCompact(value, 1_000_000, "M", decimals: value < 100_000_000 ? 1 : 0);
             }
             return FormatCompact(value, 1_000_000_000, "B", decimals: 1);
@@ -5773,15 +5940,15 @@ namespace LoopSorting
             if (tab == ShopTab.Coins)
             {
                 AddShopSectionHeader(_shopContentRoot, "COINS");
-                AddShopCoinPackRow(_shopContentRoot, "Coins_1000", "1000 COINS", "+1000", () => { _coins += 1000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
-                AddShopCoinPackRow(_shopContentRoot, "Coins_5000", "5000 COINS", "+5000", () => { _coins += 5000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
-                AddShopCoinPackRow(_shopContentRoot, "Coins_10000", "10000 COINS", "+10000", () => { _coins += 10000; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_1000", "1000 COINS", "+1000", () => { _coins += 1000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_5000", "5000 COINS", "+5000", () => { _coins += 5000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_10000", "10000 COINS", "+10000", () => { _coins += 10000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
             }
             else
             {
                 AddShopSectionHeader(_shopContentRoot, "LIVES");
-                AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _lives += 1; RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
-                AddShopItem(_shopContentRoot, "Lives_5", "REFill 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); PlaySfx(SfxId.UiConfirm); });
+                AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _lives += 1; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopItem(_shopContentRoot, "Lives_5", "REFill 5 LIVES", "+5", () => { _lives = Mathf.Max(_lives, 5); RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
             }
 
             if (_shopScroll != null)
@@ -6007,6 +6174,198 @@ namespace LoopSorting
             rRect.sizeDelta = new Vector2(220f, 120f);
         }
 
+        private void CreateCurrencyBar(
+            Transform parent,
+            string name,
+            Rect coinsTopLeft,
+            Rect livesTopLeft,
+            float referenceWidth,
+            float safeTopUnits,
+            float extraRightUnits,
+            out TMP_Text coinText,
+            out TMP_Text lifeText,
+            out Button coinButton,
+            out Button lifeButton)
+        {
+            coinText = null;
+            lifeText = null;
+            coinButton = null;
+            lifeButton = null;
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            float barX = Mathf.Min(coinsTopLeft.x, livesTopLeft.x);
+            float barY = Mathf.Min(coinsTopLeft.y, livesTopLeft.y);
+            float barRight = Mathf.Max(coinsTopLeft.x + coinsTopLeft.width, livesTopLeft.x + livesTopLeft.width);
+            float barW = Mathf.Max(1f, barRight - barX);
+            float barH = Mathf.Max(1f, Mathf.Max(coinsTopLeft.height, livesTopLeft.height));
+
+            float right = referenceWidth - (barX + barW) + extraRightUnits;
+
+            var root = new GameObject(name);
+            root.transform.SetParent(parent, false);
+            var rect = root.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-right, -(barY + safeTopUnits));
+            rect.sizeDelta = new Vector2(barW, barH);
+
+            var bg = root.AddComponent<Image>();
+            bg.raycastTarget = false;
+            if (hasKit)
+            {
+                var bgSprite =
+                    LoopSortingUIKit.LoadSpriteByKey("ui.hud.pill_dark") ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
+                if (bgSprite != null)
+                {
+                    bg.sprite = bgSprite;
+                    bg.type = bgSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    bg.color = Color.white;
+                }
+                else
+                {
+                    bg.color = new Color(0f, 0f, 0f, 0.35f);
+                }
+            }
+            else
+            {
+                bg.color = new Color(0f, 0f, 0f, 0.35f);
+            }
+
+            float coinOffsetX = coinsTopLeft.x - barX;
+            float livesOffsetX = livesTopLeft.x - barX;
+
+            float height = barH;
+            float padding = Mathf.Clamp(height * 0.10f, 8f, 14f);
+            float plusSize = Mathf.Clamp(height * 0.30f, 22f, 38f);
+            float iconSize = Mathf.Clamp(height * 0.46f, 32f, 54f);
+            float fontMax = Mathf.Clamp(height * 0.60f, 32f, 56f);
+
+            Button CreateSegment(
+                string segmentName,
+                float xOffset,
+                float width,
+                string currencyIconKey,
+                out TMP_Text value)
+            {
+                value = null;
+
+                var segGO = new GameObject(segmentName);
+                segGO.transform.SetParent(root.transform, false);
+                var segRect = segGO.AddComponent<RectTransform>();
+                segRect.anchorMin = new Vector2(0f, 0f);
+                segRect.anchorMax = new Vector2(0f, 1f);
+                segRect.pivot = new Vector2(0f, 0.5f);
+                segRect.anchoredPosition = new Vector2(xOffset, 0f);
+                segRect.sizeDelta = new Vector2(Mathf.Max(1f, width), 0f);
+
+                var hit = segGO.AddComponent<Image>();
+                hit.raycastTarget = true;
+                hit.color = new Color(1f, 1f, 1f, 0f);
+
+                var btn = segGO.AddComponent<Button>();
+                btn.targetGraphic = hit;
+                btn.transition = Selectable.Transition.None;
+
+                // Plus icon (left)
+                var plusGO = new GameObject("Plus");
+                plusGO.transform.SetParent(segGO.transform, false);
+                var plusImg = plusGO.AddComponent<Image>();
+                plusImg.raycastTarget = false;
+                if (hasKit)
+                {
+                    plusImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.plus");
+                    plusImg.color = Color.white;
+                }
+                var plusRect = plusGO.GetComponent<RectTransform>();
+                plusRect.anchorMin = new Vector2(0f, 0.5f);
+                plusRect.anchorMax = new Vector2(0f, 0.5f);
+                plusRect.pivot = new Vector2(0f, 0.5f);
+                plusRect.anchoredPosition = new Vector2(padding, 0f);
+                plusRect.sizeDelta = new Vector2(plusSize, plusSize);
+
+                // Currency icon (right)
+                var iconGO = new GameObject("Icon");
+                iconGO.transform.SetParent(segGO.transform, false);
+                var iconImg = iconGO.AddComponent<Image>();
+                iconImg.raycastTarget = false;
+                if (hasKit)
+                {
+                    iconImg.sprite = LoopSortingUIKit.LoadSpriteByKey(currencyIconKey);
+                    iconImg.color = Color.white;
+                }
+                var iconRect = iconGO.GetComponent<RectTransform>();
+                iconRect.anchorMin = new Vector2(1f, 0.5f);
+                iconRect.anchorMax = new Vector2(1f, 0.5f);
+                iconRect.pivot = new Vector2(1f, 0.5f);
+                iconRect.anchoredPosition = new Vector2(-padding, 0f);
+                iconRect.sizeDelta = new Vector2(iconSize, iconSize);
+
+                // Value
+                var valueGO = new GameObject("Value");
+                valueGO.transform.SetParent(segGO.transform, false);
+                var tmp = valueGO.AddComponent<TextMeshProUGUI>();
+                tmp.raycastTarget = false;
+                tmp.text = "0";
+                tmp.alignment = TextAlignmentOptions.MidlineLeft;
+                tmp.enableWordWrapping = false;
+                tmp.enableAutoSizing = true;
+                tmp.fontSizeMax = fontMax;
+                tmp.fontSizeMin = Mathf.Clamp(fontMax * 0.58f, 18f, fontMax);
+                tmp.fontSize = fontMax;
+                tmp.color = Color.white;
+                ApplyTmpOutlineUnderlay(
+                    tmp,
+                    outlineWidth: 0.22f,
+                    outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                    underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                    underlayOffset: new Vector2(2f, -3f),
+                    underlaySoftness: 0.32f,
+                    underlayDilate: 0.05f);
+                var valueRect = tmp.GetComponent<RectTransform>();
+                valueRect.anchorMin = new Vector2(0f, 0f);
+                valueRect.anchorMax = new Vector2(1f, 1f);
+                valueRect.offsetMin = new Vector2(padding + plusSize + 8f, 0f);
+                valueRect.offsetMax = new Vector2(-(padding + iconSize + 8f), 0f);
+
+                value = tmp;
+                return btn;
+            }
+
+            coinButton = CreateSegment(
+                segmentName: "Coins",
+                xOffset: coinOffsetX,
+                width: coinsTopLeft.width,
+                currencyIconKey: "ui.icon.coin",
+                out coinText);
+
+            lifeButton = CreateSegment(
+                segmentName: "Lives",
+                xOffset: livesOffsetX,
+                width: livesTopLeft.width,
+                currencyIconKey: "ui.icon.heart",
+                out lifeText);
+
+            // Divider between segments (optional)
+            float dividerX = Mathf.Clamp(livesOffsetX, 0f, barW);
+            if (dividerX > 1f && dividerX < barW - 1f)
+            {
+                var divGO = new GameObject("Divider");
+                divGO.transform.SetParent(root.transform, false);
+                var divImg = divGO.AddComponent<Image>();
+                divImg.raycastTarget = false;
+                divImg.color = new Color(1f, 1f, 1f, 0.12f);
+                var divRect = divGO.GetComponent<RectTransform>();
+                divRect.anchorMin = new Vector2(0f, 0f);
+                divRect.anchorMax = new Vector2(0f, 1f);
+                divRect.pivot = new Vector2(0.5f, 0.5f);
+                divRect.anchoredPosition = new Vector2(dividerX, 0f);
+                divRect.sizeDelta = new Vector2(2f, 0f);
+            }
+        }
+
         private void CreateCurrencyPill(
             Transform parent,
             string name,
@@ -6080,6 +6439,14 @@ namespace LoopSorting
             tmp.enableWordWrapping = false;
             tmp.overflowMode = TextOverflowModes.Overflow;
             tmp.color = Color.white;
+            ApplyTmpOutlineUnderlay(
+                tmp,
+                outlineWidth: 0.22f,
+                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -3f),
+                underlaySoftness: 0.32f,
+                underlayDilate: 0.05f);
             var vRect = tmp.GetComponent<RectTransform>();
             vRect.anchorMin = new Vector2(0f, 0f);
             vRect.anchorMax = new Vector2(1f, 1f);
@@ -6098,6 +6465,7 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null,
                 icon: hasKit ? "ui.icon.plus" : null);
+            ApplyButtonPressScale(plusButton, pressedScale: 0.96f);
 
             valueText = tmp;
         }
@@ -6139,6 +6507,45 @@ namespace LoopSorting
             state.pressedSprite = pressedSprite;
             state.disabledSprite = disabledSprite;
             button.spriteState = state;
+        }
+
+        private static void ApplyTmpOutlineUnderlay(
+            TMP_Text tmp,
+            float outlineWidth,
+            Color outlineColor,
+            Color underlayColor,
+            Vector2 underlayOffset,
+            float underlaySoftness,
+            float underlayDilate)
+        {
+            if (tmp == null) return;
+            if (tmp.fontMaterial == null) return;
+
+            // Clone material so we don't mutate shared TMP materials globally.
+            var mat = new Material(tmp.fontMaterial);
+            tmp.fontMaterial = mat;
+
+            if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
+            {
+                mat.EnableKeyword("OUTLINE_ON");
+                mat.SetFloat(ShaderUtilities.ID_OutlineWidth, Mathf.Clamp01(outlineWidth));
+            }
+            if (mat.HasProperty(ShaderUtilities.ID_OutlineColor))
+            {
+                mat.SetColor(ShaderUtilities.ID_OutlineColor, outlineColor);
+            }
+
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayColor))
+            {
+                mat.EnableKeyword("UNDERLAY_ON");
+                mat.SetColor(ShaderUtilities.ID_UnderlayColor, underlayColor);
+            }
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetX)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, underlayOffset.x);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetY)) mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, underlayOffset.y);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlaySoftness)) mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, Mathf.Clamp01(underlaySoftness));
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayDilate)) mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, Mathf.Clamp(underlayDilate, -1f, 1f));
+
+            tmp.UpdateMeshPadding();
         }
 
         private static void RemoveButtonFrame(Button button)

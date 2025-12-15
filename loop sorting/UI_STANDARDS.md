@@ -9,6 +9,12 @@
 
 ---
 
+## 0.5 风格基准（Bright + Candy）
+- **参考**：你提供的 Shuffle/Setting 弹窗截图；UI 资源包说明见 `Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Docs/UI_GUIDE.md`
+- **视觉关键词**：大圆角 + 厚描边 + 软阴影/内阴影 + 渐变高光；白字 + 深色描边 + 轻 Underlay（更接近“糖果感/玩具感”的 3D 质感）
+- **颜色分工**：Mint=通用/主操作，Purple=Shuffle，Orange=强 CTA，Pink=扩展色（同 `UI_GUIDE.md`）
+- **优先落地范围**：玩法界面 + HUD（TopBar/货币条/BoosterButtons/FAST tag），再做弹窗与商店
+
 ## 0. 原则（必须遵守）
 1. **可预测**：同一 UI 在不同机型只允许“留白变化/边缘避让变化”，不允许“整体挤压导致布局语义改变”（例如按钮挤在一起、标题与按钮重叠）。
 2. **分层适配**：缩放（Scale）、安全区（SafeArea）、布局（Layout）必须拆开处理，避免“一个脚本改全局导致副作用”。
@@ -169,6 +175,7 @@
 ### 7.2 UI 驱动方式（必须）
 - 业务逻辑与 UI 解耦：Controller 只负责“状态 -> View”，不直接操作子节点层级结构。
 - 弹窗采用 `Show/Hide`（CanvasGroup）而不是频繁 Instantiate/Destroy（除非活动页等一次性内容）。
+- 任何会影响持久化状态的 UI 行为（设置开关/购买/道具增减/过关）必须走统一存档触发（见 `SAVE_SYSTEM.md`），禁止在页面里零散写 `PlayerPrefs`。
 
 ---
 
@@ -217,4 +224,3 @@
 - 本文件每次迭代用 `v0.x` 标注，并在本文件顶部维护简短变更记录。
 - 任何“新增例外规则”必须写清楚：适用范围 + 原因 + 替代方案。
 - 不允许“只在某个页面写死偏移”而不回写规范；否则后续页面必然复刻同类问题。
-

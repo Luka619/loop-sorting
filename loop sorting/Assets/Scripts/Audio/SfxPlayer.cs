@@ -70,7 +70,16 @@ namespace LoopSorting
             var clip = clips.Length == 1 ? clips[0] : clips[Random.Range(0, clips.Length)];
             if (clip != null)
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                // WeChat WebGL audio backend can behave inconsistently with PlayOneShot; use explicit clip playback.
+                src.Stop();
+                src.clip = clip;
+                src.loop = false;
+                src.volume = vol;
+                src.Play();
+#else
                 src.PlayOneShot(clip, vol);
+#endif
             }
         }
 

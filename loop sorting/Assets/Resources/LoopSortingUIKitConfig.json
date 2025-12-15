@@ -7,12 +7,12 @@
     "reservedBottom": 0.11,
     "modules": {
       "shop": { "x": 24, "y": 20, "w": 84, "h": 84 },
-      "counter": { "x": 120, "y": 20, "w": 220, "h": 84 },
-      "level": { "x": 380, "y": 20, "w": 320, "h": 84 },
+      "counter": { "x": 120, "y": 20, "w": 200, "h": 84 },
+      "level": { "x": 336, "y": 20, "w": 200, "h": 84 },
       "speed": { "x": 876, "y": 20, "w": 84, "h": 84 },
       "settings": { "x": 972, "y": 20, "w": 84, "h": 84 },
-      "lives": { "x": 600, "y": 120, "w": 220, "h": 78 },
-      "coins": { "x": 836, "y": 120, "w": 220, "h": 78 }
+      "lives": { "x": 710, "y": 20, "w": 150, "h": 84 },
+      "coins": { "x": 560, "y": 20, "w": 150, "h": 84 }
     },
     "boosters": {
       "anchorX": 0.5,
@@ -58,6 +58,7 @@
   "sprites": [
     { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.counter.bg", "path": "UI_Sprites/hud_pill_dark_small.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.hud.pill_dark", "path": "UI_Sprites/hud_pill_dark.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.counter.icon", "path": "UI_Sprites/icon_loop.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.hud.level_bg", "path": "UI_Sprites/hud_level_label_bg.png", "pixelsPerUnit": 100, "applyNineSlice": true },
 

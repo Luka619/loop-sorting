@@ -11,18 +11,6 @@ AutoStreamingSettings:
   mTextures:
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_blue.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_close_red_normal.png
     localFileId: 2800000
     rtMem: 1936
@@ -71,30 +59,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_stack.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_fill.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_mint_256x64_alphaEdges.png
     localFileId: 2800000
     rtMem: 2112
@@ -104,18 +68,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 196640
     width: 128
     height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_128.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 64
-    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -143,18 +95,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_square_pressed.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/tag_fast_info_bg.png
     localFileId: 2800000
     rtMem: 2112
@@ -167,111 +107,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_blue_disabled.png
+    assetPath: Assets/Resources/BoosterPurchase/header_title_shuffle.png
     localFileId: 2800000
-    rtMem: 15136
+    rtMem: 158448
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 196640
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_purple.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_close_red_pressed.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 64
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/tag_small_info_bg.png
-    localFileId: 2800000
-    rtMem: 3872
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_scroll_fade_bottom.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 512
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_7.png
-    localFileId: 2800000
-    rtMem: 288
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 16
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/panel_result.png
-    localFileId: 2800000
-    rtMem: 118336
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 512
-    height: 512
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/tag_fast_danger_bg.png
-    localFileId: 2800000
-    rtMem: 2112
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 32
+    width: 1024
+    height: 256
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -299,30 +143,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/preview_tile_purple_512x128_3x2.png
-    localFileId: 2800000
-    rtMem: 60192
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 1024
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/panel_thick_gold_blue.png
-    localFileId: 2800000
-    rtMem: 118336
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 512
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_red_pressed.png
     localFileId: 2800000
     rtMem: 15136
@@ -332,18 +152,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 196640
     width: 256
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_outline_dashed_open_top.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -383,54 +191,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_yellow.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_orange_disabled.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_long_pressed.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_purple.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_mint_512x128.png
     localFileId: 2800000
     rtMem: 7568
@@ -443,14 +203,14 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_music.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_long_pressed.png
     localFileId: 2800000
-    rtMem: 7744
+    rtMem: 30272
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 0
-    width: 128
+    maxPlaceholderSize: 196640
+    width: 512
     height: 128
     abSize: 0
   - serializedVersion: 2
@@ -491,18 +251,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_frame_glow_512.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_square_normal.png
     localFileId: 2800000
     rtMem: 29584
@@ -515,78 +263,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/card_setting_row.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_glass_overlay_1024.png
-    localFileId: 2800000
-    rtMem: 118336
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 512
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/orange_long_disabled.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_512x128_alphaEdges.png
-    localFileId: 2800000
-    rtMem: 7568
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 256
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_yellow.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_price_green_disabled.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_firework_confetti_effect.png
     localFileId: 2800000
     rtMem: 59168
@@ -595,18 +271,6 @@ AutoStreamingSettings:
     - res
     maxPlaceholderSize: 196640
     width: 512
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_outline_dashed_open_right.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
     height: 256
     abSize: 0
   - serializedVersion: 2
@@ -623,15 +287,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_0.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_heart_128.png
     localFileId: 2800000
-    rtMem: 288
+    rtMem: 1936
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 0
-    width: 16
-    height: 32
+    maxPlaceholderSize: 196640
+    width: 64
+    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -643,42 +307,6 @@ AutoStreamingSettings:
     - res
     maxPlaceholderSize: 196640
     width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_orange_normal.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_safe.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_beige.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
     height: 128
     abSize: 0
   - serializedVersion: 2
@@ -695,15 +323,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_256x64.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_safe.png
     localFileId: 2800000
-    rtMem: 2112
+    rtMem: 7744
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 196640
+    maxPlaceholderSize: 0
     width: 128
-    height: 32
+    height: 128
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -728,18 +356,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 512
     height: 512
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_heart_128.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 64
-    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -779,18 +395,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_256x64_alphaEdges.png
-    localFileId: 2800000
-    rtMem: 2112
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_rect_128.png
     localFileId: 2800000
     rtMem: 1936
@@ -799,30 +403,6 @@ AutoStreamingSettings:
     - res
     maxPlaceholderSize: 0
     width: 64
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_long_disabled.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128_alphaEdges.png
-    localFileId: 2800000
-    rtMem: 7568
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 256
     height: 64
     abSize: 0
   - serializedVersion: 2
@@ -851,42 +431,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_no_ads_tv.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_yellow.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pill_bg.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/conveyor_slot.png
     localFileId: 2800000
     rtMem: 3872
@@ -899,6 +443,18 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/btn_watch_ad_free.png
+    localFileId: 2800000
+    rtMem: 40096
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_128.png
     localFileId: 2800000
     rtMem: 1936
@@ -908,18 +464,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 64
     height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_shop_screen.png
-    localFileId: 2800000
-    rtMem: 235296
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 1024
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -947,18 +491,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_mint_256x64.png
-    localFileId: 2800000
-    rtMem: 2112
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/badge_red_bg.png
     localFileId: 2800000
     rtMem: 1936
@@ -968,18 +500,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 64
     height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_frame_glow_1024.png
-    localFileId: 2800000
-    rtMem: 118336
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 512
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1007,55 +527,7 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_red_normal.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_orange.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_6.png
-    localFileId: 2800000
-    rtMem: 288
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 16
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_256.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_video.png
     localFileId: 2800000
     rtMem: 7744
     warningFlag: 0
@@ -1103,18 +575,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_square_disabled.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_shuffle.png
     localFileId: 2800000
     rtMem: 7744
@@ -1124,42 +584,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 128
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/lock_node_base.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_disabled.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/lock_node_label_bg.png
-    localFileId: 2800000
-    rtMem: 3872
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1175,18 +599,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_256x64_alphaEdges.png
-    localFileId: 2800000
-    rtMem: 2112
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_complete_burst_sheet_8f_1024x512.png
     localFileId: 2800000
     rtMem: 59168
@@ -1199,39 +611,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_long_normal.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_256x64_alphaEdges.png
     localFileId: 2800000
-    rtMem: 30272
+    rtMem: 2112
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/lock_marker_color_disc.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 64
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pill_bg_pressed.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1247,18 +635,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_512x128.png
-    localFileId: 2800000
-    rtMem: 7568
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 256
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_next.png
     localFileId: 2800000
     rtMem: 7744
@@ -1271,18 +647,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_square_pressed.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/preview_tile_orange_512x128_3x2.png
     localFileId: 2800000
     rtMem: 60192
@@ -1292,18 +656,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 196640
     width: 1024
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_firework_confetti_burst_sheet_16f_1024x1024.png
-    localFileId: 2800000
-    rtMem: 118336
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 512
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1343,30 +695,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_256.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_topbar_scallop_tile_512x128.png
-    localFileId: 2800000
-    rtMem: 7568
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_square_normal.png
     localFileId: 2800000
     rtMem: 29584
@@ -1403,18 +731,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/preview_tile_mint_512x128_3x2.png
-    localFileId: 2800000
-    rtMem: 60192
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 1024
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_price_green_normal.png
     localFileId: 2800000
     rtMem: 15136
@@ -1427,110 +743,14 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_9.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/hud_pill_dark_tiny.png
     localFileId: 2800000
-    rtMem: 288
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 16
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_chest.png
-    localFileId: 2800000
-    rtMem: 7744
+    rtMem: 3872
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
     width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_long_pressed.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_shop.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_normal.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_complete_burst_sheet_8f_512x256.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/lock_marker_plate.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_rect_256.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_128.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 64
     height: 64
     abSize: 0
   - serializedVersion: 2
@@ -1559,18 +779,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_green_disabled.png
-    localFileId: 2800000
-    rtMem: 15136
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/orange_square_pressed.png
     localFileId: 2800000
     rtMem: 29584
@@ -1580,18 +788,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 256
     height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/run_outline_9slice.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1607,42 +803,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/hud_pill_dark_tiny.png
-    localFileId: 2800000
-    rtMem: 3872
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/bg_main.png
-    localFileId: 2800000
-    rtMem: 235296
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 1024
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/completed_overlay.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_star_256.png
     localFileId: 2800000
     rtMem: 7744
@@ -1655,19 +815,7 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_square_disabled.png
-    localFileId: 2800000
-    rtMem: 29584
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_256.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/run_outline_9slice.png
     localFileId: 2800000
     rtMem: 7744
     warningFlag: 0
@@ -1676,70 +824,10 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 128
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_5.png
-    localFileId: 2800000
-    rtMem: 288
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 16
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_clock.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_star_128.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 64
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_128.png
-    localFileId: 2800000
-    rtMem: 1936
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 64
-    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/lock_node_lock.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_plus.png
     localFileId: 2800000
     rtMem: 7744
     warningFlag: 0
@@ -1763,15 +851,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_3.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_pressed.png
     localFileId: 2800000
-    rtMem: 288
+    rtMem: 29584
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
-    width: 16
-    height: 32
+    width: 256
+    height: 256
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1787,9 +875,9 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_pressed.png
+    assetPath: Assets/Resources/BoosterPurchase/icon_coin.png
     localFileId: 2800000
-    rtMem: 29584
+    rtMem: 40096
     warningFlag: 0
     refs:
     - res
@@ -1847,18 +935,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_lock.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_hud_topbar.png
     localFileId: 2800000
     rtMem: 235296
@@ -1871,27 +947,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_hidden_generic.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_beige.png
     localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_locked_box_marker.png
-    localFileId: 2800000
-    rtMem: 118336
+    rtMem: 30272
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
     width: 512
-    height: 512
+    height: 128
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -1903,18 +967,6 @@ AutoStreamingSettings:
     - res
     maxPlaceholderSize: 0
     width: 256
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_beige.png
-    localFileId: 2800000
-    rtMem: 30272
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
     height: 128
     abSize: 0
   - serializedVersion: 2
@@ -1931,51 +983,15 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_badge_check_256.png
     localFileId: 2800000
-    rtMem: 7568
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 256
-    height: 64
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_256x64.png
-    localFileId: 2800000
-    rtMem: 2112
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 196640
-    width: 128
-    height: 32
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/orange_long_normal.png
-    localFileId: 2800000
-    rtMem: 30272
+    rtMem: 7744
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
-    width: 512
+    width: 128
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/toggle_full_on.png
-    localFileId: 2800000
-    rtMem: 3872
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -2003,18 +1019,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_badge_check_256.png
-    localFileId: 2800000
-    rtMem: 7744
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_firework_confetti_burst_sheet_16f_2048x2048.png
     localFileId: 2800000
     rtMem: 467856
@@ -2036,18 +1040,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 128
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/overlay_dim.png
-    localFileId: 2800000
-    rtMem: 235296
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 512
-    height: 1024
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -2099,6 +1091,1134 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_2.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_blue.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_stack.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_fill.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_128.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_square_pressed.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_blue_disabled.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_purple.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_close_red_pressed.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/tag_fast_danger_bg.png
+    localFileId: 2800000
+    rtMem: 2112
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/tag_small_info_bg.png
+    localFileId: 2800000
+    rtMem: 3872
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_scroll_fade_bottom.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 512
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_7.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_outline_dashed_open_top.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/panel_result.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/preview_tile_purple_512x128_3x2.png
+    localFileId: 2800000
+    rtMem: 60192
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 1024
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/panel_thick_gold_blue.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/btn_close.png
+    localFileId: 2800000
+    rtMem: 10512
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/popup_sort_full.png
+    localFileId: 2800000
+    rtMem: 7561864
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 994
+    height: 1427
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_yellow.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_orange_disabled.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_purple.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_music.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/popup_shuffle_full.png
+    localFileId: 2800000
+    rtMem: 6605332
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 930
+    height: 1332
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_frame_glow_512.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_glass_overlay_1024.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/card_setting_row.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/icon_booster_shuffle.png
+    localFileId: 2800000
+    rtMem: 158432
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_512x128_alphaEdges.png
+    localFileId: 2800000
+    rtMem: 7568
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/orange_long_disabled.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_yellow.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_price_green_disabled.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_outline_dashed_open_right.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_0.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_orange_normal.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_row_beige.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/btn_buy_coins_80.png
+    localFileId: 2800000
+    rtMem: 40096
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_256x64.png
+    localFileId: 2800000
+    rtMem: 2112
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_256x64_alphaEdges.png
+    localFileId: 2800000
+    rtMem: 2112
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_long_disabled.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128_alphaEdges.png
+    localFileId: 2800000
+    rtMem: 7568
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pill_bg.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_no_ads_tv.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_card_yellow.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_shop_screen.png
+    localFileId: 2800000
+    rtMem: 235296
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 1024
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_mint_256x64.png
+    localFileId: 2800000
+    rtMem: 2112
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_completed_frame_glow_1024.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_red_normal.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/lock_node_label_bg.png
+    localFileId: 2800000
+    rtMem: 3872
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_6.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_256.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_video.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_square_disabled.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/lock_node_base.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_disabled.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_long_normal.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/lock_marker_color_disc.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pill_bg_pressed.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_512x128.png
+    localFileId: 2800000
+    rtMem: 7568
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_square_pressed.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_firework_confetti_burst_sheet_16f_1024x1024.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_256.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/shop_topbar_scallop_tile_512x128.png
+    localFileId: 2800000
+    rtMem: 7568
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/preview_tile_mint_512x128_3x2.png
+    localFileId: 2800000
+    rtMem: 60192
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 1024
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_9.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_chest.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_shop.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/BoosterPurchase/title_shuffle_text.png
+    localFileId: 2800000
+    rtMem: 158448
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 1024
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_complete_burst_sheet_8f_512x256.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/mint_long_pressed.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/pink_square_normal.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/lock_marker_plate.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_rect_256.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_coin_128.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_small_green_disabled.png
+    localFileId: 2800000
+    rtMem: 15136
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_256.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/bg_main.png
+    localFileId: 2800000
+    rtMem: 235296
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 1024
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/completed_overlay.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/purple_square_disabled.png
+    localFileId: 2800000
+    rtMem: 29584
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_5.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_clock.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_star_128.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_128.png
+    localFileId: 2800000
+    rtMem: 1936
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 64
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_plus.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_3.png
+    localFileId: 2800000
+    rtMem: 288
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 16
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_lock.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_hidden_generic.png
+    localFileId: 2800000
+    rtMem: 7744
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Preview/preview_locked_box_marker.png
+    localFileId: 2800000
+    rtMem: 118336
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 512
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128.png
+    localFileId: 2800000
+    rtMem: 7568
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 256
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_256x64.png
+    localFileId: 2800000
+    rtMem: 2112
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 196640
+    width: 128
+    height: 32
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/orange_long_normal.png
+    localFileId: 2800000
+    rtMem: 30272
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/toggle_full_on.png
+    localFileId: 2800000
+    rtMem: 3872
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 64
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/overlay_dim.png
+    localFileId: 2800000
+    rtMem: 235296
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 1024
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/lock_marker_lock_icon.png
     localFileId: 2800000
     rtMem: 7744
@@ -2120,18 +2240,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 256
     height: 128
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/digit_2.png
-    localFileId: 2800000
-    rtMem: 288
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 16
-    height: 32
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -2159,7 +2267,7 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/btn_watch_ad_free.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_shuffle_noframe.png.png
     localFileId: 2800000
     rtMem: 40096
     warningFlag: 0
@@ -2171,31 +2279,31 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/header_title_shuffle.png
+    assetPath: Assets/Resources/setting_page_assets/toggle_off.png
     localFileId: 2800000
-    rtMem: 158448
+    rtMem: 20528
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
-    width: 1024
-    height: 256
+    width: 256
+    height: 128
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/popup_sort_full.png
+    assetPath: Assets/Resources/setting_page_assets/toggle_off_pressed.png
     localFileId: 2800000
-    rtMem: 7561864
+    rtMem: 20528
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
-    width: 994
-    height: 1427
+    width: 256
+    height: 128
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/icon_coin.png
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/icon_shuffle_noframe.png
     localFileId: 2800000
     rtMem: 40096
     warningFlag: 0
@@ -2207,43 +2315,43 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/btn_buy_coins_80.png
+    assetPath: Assets/Resources/setting_page_assets/btn_retry_pressed.png
     localFileId: 2800000
-    rtMem: 40096
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 256
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/title_shuffle_text.png
-    localFileId: 2800000
-    rtMem: 158448
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 1024
-    height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/icon_booster_shuffle.png
-    localFileId: 2800000
-    rtMem: 158432
+    rtMem: 79696
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
     width: 512
-    height: 512
+    height: 256
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/btn_close.png
+    assetPath: Assets/Resources/setting_page_assets/btn_retry.png
+    localFileId: 2800000
+    rtMem: 79696
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 512
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/setting_page_assets/toggle_on.png
+    localFileId: 2800000
+    rtMem: 20528
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/setting_page_assets/btn_close_pressed.png
     localFileId: 2800000
     rtMem: 10512
     warningFlag: 0
@@ -2255,28 +2363,81 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/Resources/BoosterPurchase/popup_shuffle_full.png
+    assetPath: Assets/Resources/setting_page.png
     localFileId: 2800000
-    rtMem: 6605332
+    rtMem: 5929000
     warningFlag: 0
     refs:
     - res
     maxPlaceholderSize: 0
-    width: 930
-    height: 1332
+    width: 902
+    height: 1233
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/icon_sort.png
+    localFileId: 2800000
+    rtMem: 40096
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/setting_page_assets/toggle_on_pressed.png
+    localFileId: 2800000
+    rtMem: 20528
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 128
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/conveyor_belt_texture_v02_candy/icon_sort_noframe.png
+    localFileId: 2800000
+    rtMem: 40096
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/icon_sort_noframe.png.png
+    localFileId: 2800000
+    rtMem: 40096
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 256
+    height: 256
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/setting_page_assets/btn_close.png
+    localFileId: 2800000
+    rtMem: 10512
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 128
     abSize: 0
   mAudios:
   - onDemandDownload: 0
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_select_02.wav
     localFileId: 8300000
     rtMem: 928
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_activate.wav
-    localFileId: 8300000
-    rtMem: 3072
     warningFlag: 0
     refs:
     - res
@@ -2295,23 +2456,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_01.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_arp.wav
     localFileId: 8300000
-    rtMem: 704
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_select.wav
-    localFileId: 8300000
-    rtMem: 960
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_open.wav
-    localFileId: 8300000
-    rtMem: 1888
+    rtMem: 1150560
     warningFlag: 0
     refs:
     - res
@@ -2323,30 +2470,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_01.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_pad.wav
     localFileId: 8300000
-    rtMem: 1184
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_cancel.wav
-    localFileId: 8300000
-    rtMem: 1504
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_end.wav
-    localFileId: 8300000
-    rtMem: 1504
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_02.wav
-    localFileId: 8300000
-    rtMem: 1184
+    rtMem: 2855968
     warningFlag: 0
     refs:
     - res
@@ -2358,9 +2484,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_start.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_win.wav
     localFileId: 8300000
-    rtMem: 2144
+    rtMem: 16896
     warningFlag: 0
     refs:
     - res
@@ -2379,9 +2505,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_denied.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_booster_activate.wav
     localFileId: 8300000
-    rtMem: 1152
+    rtMem: 6240
     warningFlag: 0
     refs:
     - res
@@ -2403,34 +2529,6 @@ AutoStreamingSettings:
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/belt_full_warning.wav
     localFileId: 8300000
     rtMem: 10912
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_locked_02.wav
-    localFileId: 8300000
-    rtMem: 1344
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/SFX/error.wav
-    localFileId: 8300000
-    rtMem: 1536
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/win_jingle.wav
-    localFileId: 8300000
-    rtMem: 4416
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_locked_thunk.wav
-    localFileId: 8300000
-    rtMem: 1376
     warningFlag: 0
     refs:
     - res
@@ -2463,6 +2561,307 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_pad.wav
+    localFileId: 8300000
+    rtMem: 1904160
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_close.wav
+    localFileId: 8300000
+    rtMem: 1888
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/hidden_reveal.wav
+    localFileId: 8300000
+    rtMem: 1568
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_speedup.wav
+    localFileId: 8300000
+    rtMem: 2336
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/SFX/fast_forward.wav
+    localFileId: 8300000
+    rtMem: 2880
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_arp.wav
+    localFileId: 8300000
+    rtMem: 827328
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_confirm.wav
+    localFileId: 8300000
+    rtMem: 1408
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_full_warning.wav
+    localFileId: 8300000
+    rtMem: 6816
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_03.wav
+    localFileId: 8300000
+    rtMem: 992
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_01.wav
+    localFileId: 8300000
+    rtMem: 960
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_unlock.wav
+    localFileId: 8300000
+    rtMem: 10240
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_02.wav
+    localFileId: 8300000
+    rtMem: 1216
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_perc.wav
+    localFileId: 8300000
+    rtMem: 109152
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_02.wav
+    localFileId: 8300000
+    rtMem: 960
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Gameplay/bgm_gameplay_base_loop.wav
+    localFileId: 8300000
+    rtMem: 2943808
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/SFX/box_complete.wav
+    localFileId: 8300000
+    rtMem: 4704
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_box_complete.wav
+    localFileId: 8300000
+    rtMem: 11168
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_retry.wav
+    localFileId: 8300000
+    rtMem: 1248
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Menu/bgm_menu_loop.wav
+    localFileId: 8300000
+    rtMem: 1873216
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_fail.wav
+    localFileId: 8300000
+    rtMem: 1792
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_start.wav
+    localFileId: 8300000
+    rtMem: 2592
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_busy_01.wav
+    localFileId: 8300000
+    rtMem: 1568
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_click_02.wav
+    localFileId: 8300000
+    rtMem: 896
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Gameplay/bgm_gameplay_pressure_loop.wav
+    localFileId: 8300000
+    rtMem: 3136672
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_full_02.wav
+    localFileId: 8300000
+    rtMem: 1504
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/SFX/block_release.wav
+    localFileId: 8300000
+    rtMem: 1184
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_eject_01.wav
+    localFileId: 8300000
+    rtMem: 800
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_lose.wav
+    localFileId: 8300000
+    rtMem: 12064
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_activate.wav
+    localFileId: 8300000
+    rtMem: 3072
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_01.wav
+    localFileId: 8300000
+    rtMem: 704
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_select.wav
+    localFileId: 8300000
+    rtMem: 960
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_open.wav
+    localFileId: 8300000
+    rtMem: 1888
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_01.wav
+    localFileId: 8300000
+    rtMem: 1184
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_cancel.wav
+    localFileId: 8300000
+    rtMem: 1504
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_end.wav
+    localFileId: 8300000
+    rtMem: 1504
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_02.wav
+    localFileId: 8300000
+    rtMem: 1184
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_start.wav
+    localFileId: 8300000
+    rtMem: 2144
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_denied.wav
+    localFileId: 8300000
+    rtMem: 1152
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_speeddown.wav
+    localFileId: 8300000
+    rtMem: 43968
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_locked_02.wav
+    localFileId: 8300000
+    rtMem: 1344
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/SFX/error.wav
+    localFileId: 8300000
+    rtMem: 1536
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/win_jingle.wav
+    localFileId: 8300000
+    rtMem: 4416
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_locked_thunk.wav
+    localFileId: 8300000
+    rtMem: 1376
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_02.wav
     localFileId: 8300000
     rtMem: 672
@@ -2484,30 +2883,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_close.wav
-    localFileId: 8300000
-    rtMem: 1888
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/hidden_reveal.wav
-    localFileId: 8300000
-    rtMem: 1568
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
     assetPath: Assets/Resources/Audio/SFX/block_enter.wav
     localFileId: 8300000
     rtMem: 1184
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_speedup.wav
-    localFileId: 8300000
-    rtMem: 2336
     warningFlag: 0
     refs:
     - res
@@ -2519,16 +2897,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/SFX/fast_forward.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_speedup.wav
     localFileId: 8300000
-    rtMem: 2880
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_confirm.wav
-    localFileId: 8300000
-    rtMem: 1408
+    rtMem: 44640
     warningFlag: 0
     refs:
     - res
@@ -2540,9 +2911,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_03.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_perc.wav
     localFileId: 8300000
-    rtMem: 992
+    rtMem: 882368
     warningFlag: 0
     refs:
     - res
@@ -2550,20 +2921,6 @@ AutoStreamingSettings:
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_shuffle.wav
     localFileId: 8300000
     rtMem: 3296
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_01.wav
-    localFileId: 8300000
-    rtMem: 960
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_02.wav
-    localFileId: 8300000
-    rtMem: 1216
     warningFlag: 0
     refs:
     - res
@@ -2617,27 +2974,6 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_02.wav
-    localFileId: 8300000
-    rtMem: 960
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/SFX/box_complete.wav
-    localFileId: 8300000
-    rtMem: 4704
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_retry.wav
-    localFileId: 8300000
-    rtMem: 1248
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_next.wav
     localFileId: 8300000
     rtMem: 1472
@@ -2652,30 +2988,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_fail.wav
-    localFileId: 8300000
-    rtMem: 1792
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_start.wav
-    localFileId: 8300000
-    rtMem: 2592
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_loop.wav
     localFileId: 8300000
     rtMem: 24768
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_busy_01.wav
-    localFileId: 8300000
-    rtMem: 1568
     warningFlag: 0
     refs:
     - res
@@ -2687,9 +3002,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_click_02.wav
+    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_pressure.wav
     localFileId: 8300000
-    rtMem: 896
+    rtMem: 956416
     warningFlag: 0
     refs:
     - res
@@ -2697,27 +3012,6 @@ AutoStreamingSettings:
     assetPath: Assets/Resources/Audio/SFX/unlock.wav
     localFileId: 8300000
     rtMem: 4288
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_full_02.wav
-    localFileId: 8300000
-    rtMem: 1504
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/SFX/block_release.wav
-    localFileId: 8300000
-    rtMem: 1184
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_eject_01.wav
-    localFileId: 8300000
-    rtMem: 800
     warningFlag: 0
     refs:
     - res
@@ -2735,132 +3029,6 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_speeddown.wav
-    localFileId: 8300000
-    rtMem: 43968
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Gameplay/bgm_gameplay_base_loop.wav
-    localFileId: 8300000
-    rtMem: 2943808
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_arp.wav
-    localFileId: 8300000
-    rtMem: 827328
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_full_warning.wav
-    localFileId: 8300000
-    rtMem: 6816
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_booster_activate.wav
-    localFileId: 8300000
-    rtMem: 6240
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_pad.wav
-    localFileId: 8300000
-    rtMem: 2855968
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_pad.wav
-    localFileId: 8300000
-    rtMem: 1904160
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_arp.wav
-    localFileId: 8300000
-    rtMem: 1150560
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_pressure.wav
-    localFileId: 8300000
-    rtMem: 956416
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_box_complete.wav
-    localFileId: 8300000
-    rtMem: 11168
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Menu/menu_perc.wav
-    localFileId: 8300000
-    rtMem: 109152
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Gameplay/bgm_gameplay_pressure_loop.wav
-    localFileId: 8300000
-    rtMem: 3136672
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_unlock.wav
-    localFileId: 8300000
-    rtMem: 10240
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_win.wav
-    localFileId: 8300000
-    rtMem: 16896
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_speedup.wav
-    localFileId: 8300000
-    rtMem: 44640
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stems/Gameplay/gameplay_perc.wav
-    localFileId: 8300000
-    rtMem: 882368
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Loops/Menu/bgm_menu_loop.wav
-    localFileId: 8300000
-    rtMem: 1873216
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_lose.wav
-    localFileId: 8300000
-    rtMem: 12064
-    warningFlag: 0
-    refs:
-    - res
   mMeshes:
   - onDemandDownload: 0
     assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_UnityPack/LegoLikeBrick_2x2_Detailed_PivotBottom.obj:default
@@ -2870,23 +3038,9 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v4/LegoLikeBrick_2x2_Detailed_BevelAO_PivotBottom_v4.obj:default
-    localFileId: -2432090755550338912
-    rtMem: 29600
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
     assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_UnityPack/LegoLikeBrick_2x2_Detailed_PivotCenter.obj:default
     localFileId: -2432090755550338912
     rtMem: 18080
-    warningFlag: 0
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v4/LegoLikeBrick_2x2_Detailed_BevelAO_PivotCenter_v4.obj:default
-    localFileId: -2432090755550338912
-    rtMem: 50080
     warningFlag: 0
     refs:
     - res
@@ -2899,6 +3053,20 @@ AutoStreamingSettings:
     - res
   - onDemandDownload: 0
     assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v3/LegoLikeBrick_2x2_Detailed_BevelAO_PivotCenter.obj:default
+    localFileId: -2432090755550338912
+    rtMem: 50080
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v4/LegoLikeBrick_2x2_Detailed_BevelAO_PivotBottom_v4.obj:default
+    localFileId: -2432090755550338912
+    rtMem: 29600
+    warningFlag: 0
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v4/LegoLikeBrick_2x2_Detailed_BevelAO_PivotCenter_v4.obj:default
     localFileId: -2432090755550338912
     rtMem: 50080
     warningFlag: 0

@@ -161,46 +161,136 @@ namespace LoopSorting
                 {
                     var windowInfo = WeChatWASM.WX.GetWindowInfo();
 
-                    float scaleX = 1f, scaleY = 1f, baseW = 0f, baseH = 0f;
-                    if (!TryGetWeChatScale(screenW, screenH, windowInfo, out scaleX, out scaleY, out baseW, out baseH))
+                    float pixelRatio = 1f;
+                    try
                     {
-                        // Fall back to Unity Screen.safeArea.
+                        pixelRatio = Mathf.Max(0.01f, (float)windowInfo.pixelRatio);
                     }
-                    else
+                    catch
                     {
-                        // Best-effort: status bar height (top-left origin units).
+                        pixelRatio = 1f;
+                    }
+
+                    // Build a few candidate "base coordinate systems" reported by WeChat, then pick the one that yields
+                    // the most plausible safeArea/menu button in Unity screen pixels.
+                    var baseW = new float[8];
+                    var baseH = new float[8];
+                    int baseCount = 0;
+
+                    void AddBase(float w, float h)
+                    {
+                        if (w <= 1f || h <= 1f) return;
+                        for (int i = 0; i < baseCount; i++)
+                        {
+                            if (Mathf.Abs(baseW[i] - w) < 0.01f && Mathf.Abs(baseH[i] - h) < 0.01f) return;
+                        }
+                        if (baseCount >= baseW.Length) return;
+                        baseW[baseCount] = w;
+                        baseH[baseCount] = h;
+                        baseCount++;
+                    }
+
+                    AddBase((float)windowInfo.screenWidth, (float)windowInfo.screenHeight);
+                    AddBase((float)windowInfo.windowWidth, (float)windowInfo.windowHeight);
+                    AddBase((float)windowInfo.screenWidth * pixelRatio, (float)windowInfo.screenHeight * pixelRatio);
+                    AddBase((float)windowInfo.windowWidth * pixelRatio, (float)windowInfo.windowHeight * pixelRatio);
+                    AddBase((float)windowInfo.screenWidth / pixelRatio, (float)windowInfo.screenHeight / pixelRatio);
+                    AddBase((float)windowInfo.windowWidth / pixelRatio, (float)windowInfo.windowHeight / pixelRatio);
+
+                    bool haveBestSafe = false;
+                    Rect bestSafe = default;
+                    float bestSafeArea = -1f;
+                    float bestSafeScaleY = 1f;
+
+                    bool haveBestMenu = false;
+                    Rect bestMenu = default;
+                    float bestMenuRightInset = 0f;
+                    float bestMenuEdgeGap = float.PositiveInfinity;
+                    float bestMenuScaleY = 1f;
+
+                    for (int i = 0; i < baseCount; i++)
+                    {
+                        float bw = baseW[i];
+                        float bh = baseH[i];
+                        float scaleX = screenW / bw;
+                        float scaleY = screenH / bh;
+
+                        // WeChat safeArea -> Unity px (bottom-left origin).
                         try
                         {
-                            _statusBarHeightPx = Mathf.Max(0f, (float)windowInfo.statusBarHeight) * scaleY;
-                            _statusBarHeightPx = Mathf.Clamp(_statusBarHeightPx, 0f, screenH * 0.25f);
+                            var sa = windowInfo.safeArea;
+                            if (sa.width > 0 && sa.height > 0)
+                            {
+                                if (TryGetWeChatSafeArea(screenW, screenH, windowInfo, bw, bh, scaleX, scaleY, out var wxRect) &&
+                                    IsPlausibleSafeArea(wxRect, screenW, screenH))
+                                {
+                                    float area = wxRect.width * wxRect.height;
+                                    if (!haveBestSafe || area > bestSafeArea)
+                                    {
+                                        haveBestSafe = true;
+                                        bestSafe = wxRect;
+                                        bestSafeArea = area;
+                                        bestSafeScaleY = scaleY;
+                                    }
+                                }
+                            }
                         }
                         catch
                         {
-                            _statusBarHeightPx = 0f;
-                        }
-
-                        // WeChat safeArea -> Unity px (bottom-left origin).
-                        var sa = windowInfo.safeArea;
-                        if (sa.width > 0 && sa.height > 0)
-                        {
-                            if (TryGetWeChatSafeArea(screenW, screenH, windowInfo, baseW, baseH, scaleX, scaleY, out var wxRect) &&
-                                IsPlausibleSafeArea(wxRect, screenW, screenH))
-                            {
-                                safeArea = wxRect;
-                            }
+                            // Best-effort only.
                         }
 
                         // WeChat capsule/menu button rect (top-right "..." area) -> Unity px.
                         if (TryGetWeChatMenuButtonRect(screenW, screenH, scaleX, scaleY, out var menuRect))
                         {
                             float rightInset = Mathf.Max(0f, screenW - menuRect.xMin);
-                            // Sanity clamp: if this is huge, we likely picked the wrong scale base; ignore to avoid shifting UI to the left.
-                            if (rightInset <= screenW * 0.6f)
+                            float edgeGap = Mathf.Abs(screenW - menuRect.xMax);
+
+                            bool plausible =
+                                rightInset > 0f &&
+                                rightInset <= screenW * 0.9f &&
+                                menuRect.width > 1f &&
+                                menuRect.height > 1f &&
+                                menuRect.width <= screenW * 0.35f &&
+                                menuRect.height <= screenH * 0.25f &&
+                                menuRect.xMax >= screenW * 0.7f;
+
+                            if (plausible && (!haveBestMenu || edgeGap < bestMenuEdgeGap))
                             {
-                                _menuButtonRectPx = menuRect;
-                                _menuButtonRightInsetPx = rightInset;
+                                haveBestMenu = true;
+                                bestMenu = menuRect;
+                                bestMenuRightInset = rightInset;
+                                bestMenuEdgeGap = edgeGap;
+                                bestMenuScaleY = scaleY;
                             }
                         }
+                    }
+
+                    if (haveBestSafe)
+                    {
+                        safeArea = bestSafe;
+                    }
+
+                    if (haveBestMenu)
+                    {
+                        _menuButtonRectPx = bestMenu;
+                        // Sanity clamp: if this is huge, we likely picked the wrong scale base; ignore to avoid shifting UI to the left.
+                        if (bestMenuRightInset <= screenW * 0.9f)
+                        {
+                            _menuButtonRightInsetPx = bestMenuRightInset;
+                        }
+                    }
+
+                    // Best-effort: status bar height (top-left origin units).
+                    float statusScaleY = haveBestSafe ? bestSafeScaleY : (haveBestMenu ? bestMenuScaleY : 1f);
+                    try
+                    {
+                        _statusBarHeightPx = Mathf.Max(0f, (float)windowInfo.statusBarHeight) * statusScaleY;
+                        _statusBarHeightPx = Mathf.Clamp(_statusBarHeightPx, 0f, screenH * 0.25f);
+                    }
+                    catch
+                    {
+                        _statusBarHeightPx = 0f;
                     }
                 }
                 catch

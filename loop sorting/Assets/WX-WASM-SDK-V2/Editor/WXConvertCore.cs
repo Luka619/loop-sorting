@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Reflection;
 using static WeChatWASM.LifeCycleEvent;
 namespace WeChatWASM
 {
@@ -2303,11 +2304,32 @@ namespace WeChatWASM
         public static string GetInstantGameAutoStreamingCDN()
         {
 #if UNITY_INSTANTGAME
-            string cdn = Unity.InstantGame.IGBuildPipeline.GetInstantGameCDNRoot();
-            return cdn;
-#else
-            return "";
+            try
+            {
+                var type = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .Select(a => a.GetType("Unity.InstantGame.IGBuildPipeline", throwOnError: false))
+                    .FirstOrDefault(t => t != null);
+
+                if (type == null)
+                {
+                    return "";
+                }
+
+                var method = type.GetMethod("GetInstantGameCDNRoot", BindingFlags.Public | BindingFlags.Static);
+                if (method == null)
+                {
+                    return "";
+                }
+
+                return method.Invoke(null, null) as string ?? "";
+            }
+            catch
+            {
+                return "";
+            }
 #endif
+            return "";
         }
 
         public static bool ShowMatchFailedWarning(string text, string rule, string file)

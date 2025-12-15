@@ -1,0 +1,57 @@
+{
+  "source_image": "setting_page.png",
+  "source_size": [
+    902,
+    1233
+  ],
+  "sprites": {
+    "toggle_on": "toggle_on.png",
+    "toggle_off": "toggle_off.png",
+    "toggle_on_pressed": "toggle_on_pressed.png",
+    "toggle_off_pressed": "toggle_off_pressed.png",
+    "btn_close": "btn_close.png",
+    "btn_close_pressed": "btn_close_pressed.png",
+    "btn_retry": "btn_retry.png",
+    "btn_retry_pressed": "btn_retry_pressed.png"
+  },
+  "instances": {
+    "toggle_music": {
+      "state_sprite": "toggle_on",
+      "x": 572,
+      "y": 384,
+      "w": 221,
+      "h": 132
+    },
+    "toggle_sound_effects": {
+      "state_sprite": "toggle_on",
+      "x": 572,
+      "y": 562,
+      "w": 221,
+      "h": 132
+    },
+    "toggle_vibration": {
+      "state_sprite": "toggle_on",
+      "x": 572,
+      "y": 750,
+      "w": 221,
+      "h": 131
+    },
+    "btn_close": {
+      "x": 761,
+      "y": 2,
+      "w": 143,
+      "h": 144
+    },
+    "btn_retry": {
+      "x": 119,
+      "y": 929,
+      "w": 632,
+      "h": 244
+    }
+  },
+  "notes": [
+    "All x,y,w,h are in pixels relative to the 902x1233 source image.",
+    "The toggle_off state is created by mirroring the ON toggle and desaturating it (knob moves left).",
+    "Pressed states are simple darkened versions; you can also scale down slightly at runtime for feedback."
+  ]
+}

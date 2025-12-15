@@ -77,6 +77,10 @@
     { "key": "ui.button.orange_long.pressed", "path": "UI_Sprites/orange_long_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.button.orange_long.disabled", "path": "UI_Sprites/orange_long_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
 
+    { "key": "ui.button.orange_square.normal", "path": "UI_Sprites/orange_square_normal.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.orange_square.pressed", "path": "UI_Sprites/orange_square_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+    { "key": "ui.button.orange_square.disabled", "path": "UI_Sprites/orange_square_disabled.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
     { "key": "ui.button.close_red.normal", "path": "UI_Sprites/btn_close_red_normal.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.button.close_red.pressed", "path": "UI_Sprites/btn_close_red_pressed.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.button.close_red.disabled", "path": "UI_Sprites/btn_close_red_normal.png", "pixelsPerUnit": 100, "applyNineSlice": false },
@@ -99,8 +103,8 @@
 
     { "key": "ui.icon.gear", "path": "UI_Sprites/icon_gear.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.close", "path": "UI_Sprites/icon_close.png", "pixelsPerUnit": 100, "applyNineSlice": false },
-    { "key": "ui.icon.fill", "path": "UI_Sprites/icon_fill.png", "pixelsPerUnit": 100, "applyNineSlice": false },
-    { "key": "ui.icon.shuffle", "path": "UI_Sprites/icon_shuffle.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.sort", "path": "conveyor_belt_texture_v02_candy/icon_sort_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.icon.shuffle", "path": "conveyor_belt_texture_v02_candy/icon_shuffle_noframe.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.next", "path": "UI_Sprites/icon_next.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.retry", "path": "UI_Sprites/icon_retry.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.icon.lock", "path": "UI_Sprites/icon_lock.png", "pixelsPerUnit": 100, "applyNineSlice": false },
@@ -135,12 +139,16 @@
     { "key": "ui.panel_shop", "path": "UI_Sprites/panel_thick_gold_blue.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.shop.item_bg", "path": "UI_Sprites/shop_card_beige.png", "pixelsPerUnit": 100, "applyNineSlice": true },
 
+    { "key": "ui.card.setting_row", "path": "UI_Sprites/card_setting_row.png", "pixelsPerUnit": 100, "applyNineSlice": true },
+
     { "key": "ui.lock.chip_plate", "path": "UI_Sprites/lock_chip_plate.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.lock.color_disc", "path": "World_Sprites/lock_marker_color_disc.png", "pixelsPerUnit": 100, "applyNineSlice": false },
 
     { "key": "ui.toggle.track_on", "path": "UI_Sprites/toggle_track_on.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.toggle.track_off", "path": "UI_Sprites/toggle_track_off.png", "pixelsPerUnit": 100, "applyNineSlice": false },
-    { "key": "ui.toggle.knob", "path": "UI_Sprites/toggle_knob.png", "pixelsPerUnit": 100, "applyNineSlice": false }
+    { "key": "ui.toggle.knob", "path": "UI_Sprites/toggle_knob.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.toggle.full_on", "path": "UI_Sprites/toggle_full_on.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.toggle.full_off", "path": "UI_Sprites/toggle_full_off.png", "pixelsPerUnit": 100, "applyNineSlice": false }
   ],
   "textures": [
     { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png" },

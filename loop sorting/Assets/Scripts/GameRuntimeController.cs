@@ -3941,7 +3941,9 @@ namespace LoopSorting
 
             float safeTopUnits = 0f;
             float safeBottomUnits = 0f;
+            float safeRightUnits = 0f;
             float capsuleRightUnits = 0f;
+            float capsuleBottomFromTopUnits = 0f;
             if (screenAdapter != null)
             {
                 float sf = ComputeCanvasScaleFactor(scaler);
@@ -3949,16 +3951,56 @@ namespace LoopSorting
                 {
                     safeTopUnits = screenAdapter.RawSafeAreaInsetsPx.z / sf;
                     safeBottomUnits = screenAdapter.RawSafeAreaInsetsPx.w / sf;
+                    safeRightUnits = screenAdapter.RawSafeAreaInsetsPx.y / sf;
                     capsuleRightUnits = screenAdapter.MenuButtonRightInsetPx / sf;
-                    // Fallback: on some WeChat builds, the safeArea width is reduced to avoid the capsule,
-                    // but GetMenuButtonBoundingClientRect may be missing or scaled differently.
-                    capsuleRightUnits = Mathf.Max(capsuleRightUnits, screenAdapter.RawSafeAreaInsetsPx.y / sf);
                     safeTopUnits = Mathf.Max(safeTopUnits, screenAdapter.StatusBarHeightPx / sf);
+
+                    var menuRect = screenAdapter.MenuButtonRectPx;
+                    if (menuRect.width > 1f && menuRect.height > 1f)
+                    {
+                        float menuBottomFromTopPx = Screen.height - menuRect.yMin;
+                        capsuleBottomFromTopUnits = menuBottomFromTopPx / sf;
+                    }
                 }
             }
             safeTopUnits = Mathf.Clamp(safeTopUnits, 0f, 260f);
             safeBottomUnits = Mathf.Clamp(safeBottomUnits, 0f, 260f);
+            safeRightUnits = Mathf.Clamp(safeRightUnits, 0f, 420f);
             capsuleRightUnits = Mathf.Clamp(capsuleRightUnits, 0f, 420f);
+            capsuleBottomFromTopUnits = Mathf.Clamp(capsuleBottomFromTopUnits, 0f, 420f);
+
+            bool isPortrait = Screen.height >= Screen.width;
+
+            // WeChat capsule handling: prefer pushing the TopBar down instead of shrinking it left.
+            float topBarTopUnits = safeTopUnits;
+            float topBarExtraRightUnits = safeRightUnits;
+
+            if (isPortrait && screenAdapter != null && screenAdapter.ignoreHorizontalInsetsInPortrait)
+            {
+                // In portrait we intentionally ignore horizontal safe-area insets to keep the HUD centered.
+                topBarExtraRightUnits = 0f;
+            }
+
+            // If the platform reports a large right inset (typical for WeChat capsule) in portrait, push the TopBar down.
+            float capsuleLikelyUnits = Mathf.Max(capsuleRightUnits, safeRightUnits);
+            if (isPortrait && capsuleLikelyUnits >= 80f)
+            {
+                const float capsuleGapUnits = 12f;
+                if (capsuleBottomFromTopUnits > 1f)
+                {
+                    topBarTopUnits = Mathf.Max(topBarTopUnits, capsuleBottomFromTopUnits + capsuleGapUnits);
+                }
+                else
+                {
+                    // Fallback: if we can’t locate the capsule rect, nudge down conservatively rather than shifting left.
+                    topBarTopUnits = Mathf.Max(topBarTopUnits, safeTopUnits + 120f);
+                }
+
+                // Keep the TopBar on the right edge when it’s below the capsule.
+                topBarExtraRightUnits = 0f;
+            }
+
+            topBarTopUnits = Mathf.Clamp(topBarTopUnits, 0f, 420f);
 
             // Root helper
             var root = new GameObject("HUDRoot");
@@ -3980,7 +4022,7 @@ namespace LoopSorting
                 r.anchorMin = new Vector2(0f, 1f);
                 r.anchorMax = new Vector2(0f, 1f);
                 r.pivot = new Vector2(0f, 1f);
-                r.anchoredPosition = new Vector2(topLeft.x, -(topLeft.y + safeTopUnits));
+                r.anchoredPosition = new Vector2(topLeft.x, -(topLeft.y + topBarTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
@@ -3990,7 +4032,7 @@ namespace LoopSorting
                 r.anchorMin = new Vector2(1f, 1f);
                 r.anchorMax = new Vector2(1f, 1f);
                 r.pivot = new Vector2(1f, 1f);
-                r.anchoredPosition = new Vector2(-right, -(topLeft.y + safeTopUnits));
+                r.anchoredPosition = new Vector2(-right, -(topLeft.y + topBarTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
@@ -4000,7 +4042,7 @@ namespace LoopSorting
                 r.anchorMin = new Vector2(0.5f, 1f);
                 r.anchorMax = new Vector2(0.5f, 1f);
                 r.pivot = new Vector2(0.5f, 1f);
-                r.anchoredPosition = new Vector2(centerX, -(topLeft.y + safeTopUnits));
+                r.anchoredPosition = new Vector2(centerX, -(topLeft.y + topBarTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
@@ -4127,7 +4169,7 @@ namespace LoopSorting
                 parent: root.transform,
                 name: "ShopButton",
                 anchor: new Vector2(0f, 1f),
-                anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -(uiLayout.shop.y + safeTopUnits) - uiLayout.shop.height * 0.5f),
+                anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -(uiLayout.shop.y + topBarTopUnits) - uiLayout.shop.height * 0.5f),
                 size: new Vector2(uiLayout.shop.width, uiLayout.shop.height),
                 normal: hasKit ? "ui.button.mint_square.normal" : null,
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
@@ -4147,8 +4189,8 @@ namespace LoopSorting
                 coinsTopLeft: uiLayout.coins,
                 livesTopLeft: uiLayout.lives,
                 referenceWidth: uiLayout.referenceWidth,
-                safeTopUnits: safeTopUnits,
-                extraRightUnits: capsuleRightUnits,
+                safeTopUnits: topBarTopUnits,
+                extraRightUnits: topBarExtraRightUnits,
                 out _coinText,
                 out _lifeText,
                 out _coinPlusButton,
@@ -4186,7 +4228,7 @@ namespace LoopSorting
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null);
 
             var speedRect = speedGO.GetComponent<RectTransform>();
-            PlaceTopRight(speedRect, uiLayout.speed, uiLayout.referenceWidth, capsuleRightUnits);
+            PlaceTopRight(speedRect, uiLayout.speed, uiLayout.referenceWidth, topBarExtraRightUnits);
 
             var speedLabelGO = new GameObject("Label");
             speedLabelGO.transform.SetParent(speedGO.transform, false);
@@ -4224,7 +4266,7 @@ namespace LoopSorting
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null);
 
             var settingsRect = settingsGO.GetComponent<RectTransform>();
-            PlaceTopRight(settingsRect, uiLayout.settings, uiLayout.referenceWidth, capsuleRightUnits);
+            PlaceTopRight(settingsRect, uiLayout.settings, uiLayout.referenceWidth, topBarExtraRightUnits);
 
             var gearGO = new GameObject("Icon");
             gearGO.transform.SetParent(settingsGO.transform, false);
@@ -4270,7 +4312,7 @@ namespace LoopSorting
             fastBgRect.anchorMin = new Vector2(0.5f, 1f);
             fastBgRect.anchorMax = new Vector2(0.5f, 1f);
             fastBgRect.pivot = new Vector2(0.5f, 1f);
-            fastBgRect.anchoredPosition = new Vector2(0f, -(160f + safeTopUnits));
+            fastBgRect.anchoredPosition = new Vector2(0f, -(160f + topBarTopUnits));
             fastBgRect.sizeDelta = new Vector2(330f, 78f);
 
             var fastTextGO = new GameObject("Text");
@@ -4293,7 +4335,7 @@ namespace LoopSorting
             fastTextRect.anchorMin = new Vector2(0.5f, 1f);
             fastTextRect.anchorMax = new Vector2(0.5f, 1f);
             fastTextRect.pivot = new Vector2(0.5f, 1f);
-            fastTextRect.anchoredPosition = new Vector2(0f, -(160f + safeTopUnits));
+            fastTextRect.anchoredPosition = new Vector2(0f, -(160f + topBarTopUnits));
             fastTextRect.sizeDelta = new Vector2(320f, 70f);
 
             _fastTag.SetActive(false);

@@ -143,6 +143,9 @@ namespace LoopSorting
         private RectTransform _boosterPurchaseSubtitleRect;
         private RectTransform _boosterPurchaseCoinsRect;
         private RectTransform _boosterPurchaseAdRect;
+        private Image _boosterPurchaseSubtitleBg;
+        private Coroutine _boosterPurchaseIntroRoutine;
+        private Coroutine _boosterPurchaseIdleRoutine;
         private GameObject _fastTag;
         private Image _fastTagBg;
         private TMP_Text _fastTagText;
@@ -511,6 +514,27 @@ namespace LoopSorting
             canvasGO.AddComponent<GraphicRaycaster>();
             DontDestroyOnLoad(canvasGO);
 
+            var safeAreaGO = new GameObject("SafeArea");
+            safeAreaGO.transform.SetParent(canvasGO.transform, false);
+            var safeAreaRect = safeAreaGO.AddComponent<RectTransform>();
+            safeAreaRect.anchorMin = Vector2.zero;
+            safeAreaRect.anchorMax = Vector2.one;
+            safeAreaRect.offsetMin = Vector2.zero;
+            safeAreaRect.offsetMax = Vector2.zero;
+
+            var screenAdapter = canvasGO.AddComponent<LoopSortingScreenAdapter>();
+            screenAdapter.canvasScaler = scaler;
+            screenAdapter.referenceResolution = scaler.referenceResolution;
+            screenAdapter.safeAreaRect = safeAreaRect;
+            screenAdapter.Refresh();
+
+            float safeRightUnits = 0f;
+            if (screenAdapter != null)
+            {
+                float sf = ComputeCanvasScaleFactor(scaler);
+                if (sf > 0.0001f) safeRightUnits = screenAdapter.RawSafeAreaInsetsPx.y / sf;
+            }
+
             var bgGO = new GameObject("BG");
             bgGO.transform.SetParent(canvasGO.transform, false);
             var bg = bgGO.AddComponent<Image>();
@@ -532,6 +556,7 @@ namespace LoopSorting
             bgRect.anchorMax = Vector2.one;
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
+            bgGO.transform.SetAsFirstSibling();
 
             static void ApplyTmpOutlineUnderlay(
                 TMP_Text tmp,
@@ -576,10 +601,10 @@ namespace LoopSorting
             if (LoopSortingUIKit.IsAvailable())
             {
                 var settingsBtn = CreateIconButton(
-                    parent: canvasGO.transform,
+                    parent: safeAreaGO.transform,
                     name: "SettingsButton",
                     anchor: new Vector2(1f, 1f),
-                    anchoredPos: new Vector2(-80f, -80f),
+                    anchoredPos: new Vector2(-80f - safeRightUnits, -80f),
                     size: new Vector2(180f, 180f),
                     normal: "ui.button.mint_square.normal",
                     pressed: "ui.button.mint_square.pressed",
@@ -594,7 +619,7 @@ namespace LoopSorting
             }
 
             var playGO = new GameObject("PlayButton");
-            playGO.transform.SetParent(canvasGO.transform, false);
+            playGO.transform.SetParent(safeAreaGO.transform, false);
             var playRect = playGO.AddComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0.34f);
             playRect.anchorMax = new Vector2(0.5f, 0.34f);
@@ -640,7 +665,7 @@ namespace LoopSorting
 
             // Title
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(canvasGO.transform, false);
+            titleGO.transform.SetParent(safeAreaGO.transform, false);
             var title = titleGO.AddComponent<TextMeshProUGUI>();
             title.raycastTarget = false;
             title.text = "LOOP\nSORTING";
@@ -666,7 +691,7 @@ namespace LoopSorting
             if (LoopSortingUIKit.IsAvailable())
             {
                 var levelPillGO = new GameObject("LevelPill");
-                levelPillGO.transform.SetParent(canvasGO.transform, false);
+                levelPillGO.transform.SetParent(safeAreaGO.transform, false);
                 var pillRect = levelPillGO.AddComponent<RectTransform>();
                 pillRect.anchorMin = new Vector2(0.5f, 0.55f);
                 pillRect.anchorMax = new Vector2(0.5f, 0.55f);
@@ -1159,6 +1184,24 @@ namespace LoopSorting
             panel.transform.localScale = Vector3.one;
             panel.SetActive(false);
             _uiPanelRoutines.Remove(panel);
+        }
+
+        private static float ComputeCanvasScaleFactor(CanvasScaler scaler)
+        {
+            if (scaler == null) return 1f;
+            if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize) return 1f;
+
+            float refW = Mathf.Max(1f, scaler.referenceResolution.x);
+            float refH = Mathf.Max(1f, scaler.referenceResolution.y);
+            float sw = Mathf.Max(1f, Screen.width);
+            float sh = Mathf.Max(1f, Screen.height);
+
+            float widthScale = sw / refW;
+            float heightScale = sh / refH;
+            float m = Mathf.Clamp01(scaler.matchWidthOrHeight);
+
+            // Unity's CanvasScaler uses a logarithmic lerp between the two scales.
+            return Mathf.Pow(widthScale, 1f - m) * Mathf.Pow(heightScale, m);
         }
 
         private void SyncLockChipsUI()
@@ -3696,6 +3739,32 @@ namespace LoopSorting
             canvasGO.AddComponent<GraphicRaycaster>();
             DontDestroyOnLoad(canvasGO);
 
+            var screenAdapter = canvasGO.AddComponent<LoopSortingScreenAdapter>();
+            screenAdapter.canvasScaler = scaler;
+            screenAdapter.referenceResolution = scaler.referenceResolution;
+            // Route-2 safe-area strategy for HUD: do NOT shrink the whole UI into safeArea.
+            // Instead, keep full-screen coordinates and apply safe insets as padding to edge UI elements.
+            screenAdapter.safeAreaRect = null;
+            screenAdapter.Refresh();
+
+            float safeTopUnits = 0f;
+            float safeBottomUnits = 0f;
+            float capsuleRightUnits = 0f;
+            if (screenAdapter != null)
+            {
+                float sf = ComputeCanvasScaleFactor(scaler);
+                if (sf > 0.0001f)
+                {
+                    safeTopUnits = screenAdapter.RawSafeAreaInsetsPx.z / sf;
+                    safeBottomUnits = screenAdapter.RawSafeAreaInsetsPx.w / sf;
+                    capsuleRightUnits = screenAdapter.MenuButtonRightInsetPx / sf;
+                    safeTopUnits = Mathf.Max(safeTopUnits, screenAdapter.StatusBarHeightPx / sf);
+                }
+            }
+            safeTopUnits = Mathf.Clamp(safeTopUnits, 0f, 260f);
+            safeBottomUnits = Mathf.Clamp(safeBottomUnits, 0f, 260f);
+            capsuleRightUnits = Mathf.Clamp(capsuleRightUnits, 0f, 420f);
+
             // Root helper
             var root = new GameObject("HUDRoot");
             root.transform.SetParent(canvasGO.transform, false);
@@ -3716,17 +3785,17 @@ namespace LoopSorting
                 r.anchorMin = new Vector2(0f, 1f);
                 r.anchorMax = new Vector2(0f, 1f);
                 r.pivot = new Vector2(0f, 1f);
-                r.anchoredPosition = new Vector2(topLeft.x, -topLeft.y);
+                r.anchoredPosition = new Vector2(topLeft.x, -(topLeft.y + safeTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
-            void PlaceTopRight(RectTransform r, Rect topLeft, float refW)
+            void PlaceTopRight(RectTransform r, Rect topLeft, float refW, float extraRight)
             {
-                float right = refW - (topLeft.x + topLeft.width);
+                float right = refW - (topLeft.x + topLeft.width) + extraRight;
                 r.anchorMin = new Vector2(1f, 1f);
                 r.anchorMax = new Vector2(1f, 1f);
                 r.pivot = new Vector2(1f, 1f);
-                r.anchoredPosition = new Vector2(-right, -topLeft.y);
+                r.anchoredPosition = new Vector2(-right, -(topLeft.y + safeTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
@@ -3736,7 +3805,7 @@ namespace LoopSorting
                 r.anchorMin = new Vector2(0.5f, 1f);
                 r.anchorMax = new Vector2(0.5f, 1f);
                 r.pivot = new Vector2(0.5f, 1f);
-                r.anchoredPosition = new Vector2(centerX, -topLeft.y);
+                r.anchoredPosition = new Vector2(centerX, -(topLeft.y + safeTopUnits));
                 r.sizeDelta = new Vector2(topLeft.width, topLeft.height);
             }
 
@@ -3847,7 +3916,7 @@ namespace LoopSorting
                 parent: root.transform,
                 name: "ShopButton",
                 anchor: new Vector2(0f, 1f),
-                anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -uiLayout.shop.y - uiLayout.shop.height * 0.5f),
+                anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -(uiLayout.shop.y + safeTopUnits) - uiLayout.shop.height * 0.5f),
                 size: new Vector2(uiLayout.shop.width, uiLayout.shop.height),
                 normal: hasKit ? "ui.button.mint_square.normal" : null,
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
@@ -3864,7 +3933,7 @@ namespace LoopSorting
                 parent: root.transform,
                 name: "CoinsPill",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.coins.x + uiLayout.coins.width)), -uiLayout.coins.y),
+                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.coins.x + uiLayout.coins.width)) - capsuleRightUnits, -(uiLayout.coins.y + safeTopUnits)),
                 size: new Vector2(uiLayout.coins.width, uiLayout.coins.height),
                 iconKey: hasKit ? "ui.icon.coin" : null,
                 out _coinText,
@@ -3879,7 +3948,7 @@ namespace LoopSorting
                 parent: root.transform,
                 name: "LivesPill",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.lives.x + uiLayout.lives.width)), -uiLayout.lives.y),
+                anchoredPos: new Vector2(-(uiLayout.referenceWidth - (uiLayout.lives.x + uiLayout.lives.width)) - capsuleRightUnits, -(uiLayout.lives.y + safeTopUnits)),
                 size: new Vector2(uiLayout.lives.width, uiLayout.lives.height),
                 iconKey: hasKit ? "ui.icon.heart" : null,
                 out _lifeText,
@@ -3903,7 +3972,7 @@ namespace LoopSorting
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null);
 
             var speedRect = speedGO.GetComponent<RectTransform>();
-            PlaceTopRight(speedRect, uiLayout.speed, uiLayout.referenceWidth);
+            PlaceTopRight(speedRect, uiLayout.speed, uiLayout.referenceWidth, capsuleRightUnits);
 
             var speedLabelGO = new GameObject("Label");
             speedLabelGO.transform.SetParent(speedGO.transform, false);
@@ -3932,7 +4001,7 @@ namespace LoopSorting
                 disabled: hasKit ? "ui.button.mint_square.disabled" : null);
 
             var settingsRect = settingsGO.GetComponent<RectTransform>();
-            PlaceTopRight(settingsRect, uiLayout.settings, uiLayout.referenceWidth);
+            PlaceTopRight(settingsRect, uiLayout.settings, uiLayout.referenceWidth, capsuleRightUnits);
 
             var gearGO = new GameObject("Icon");
             gearGO.transform.SetParent(settingsGO.transform, false);
@@ -3977,7 +4046,7 @@ namespace LoopSorting
             fastBgRect.anchorMin = new Vector2(0.5f, 1f);
             fastBgRect.anchorMax = new Vector2(0.5f, 1f);
             fastBgRect.pivot = new Vector2(0.5f, 1f);
-            fastBgRect.anchoredPosition = new Vector2(0f, -160f);
+            fastBgRect.anchoredPosition = new Vector2(0f, -(160f + safeTopUnits));
             fastBgRect.sizeDelta = new Vector2(330f, 78f);
 
             var fastTextGO = new GameObject("Text");
@@ -3992,7 +4061,7 @@ namespace LoopSorting
             fastTextRect.anchorMin = new Vector2(0.5f, 1f);
             fastTextRect.anchorMax = new Vector2(0.5f, 1f);
             fastTextRect.pivot = new Vector2(0.5f, 1f);
-            fastTextRect.anchoredPosition = new Vector2(0f, -160f);
+            fastTextRect.anchoredPosition = new Vector2(0f, -(160f + safeTopUnits));
             fastTextRect.sizeDelta = new Vector2(320f, 70f);
 
             _fastTag.SetActive(false);
@@ -4010,7 +4079,7 @@ namespace LoopSorting
                 _boosterPanel.transform,
                 name: "BoosterFill",
                 anchor: uiLayout.boosterAnchor,
-                anchoredPos: new Vector2(-uiLayout.boosterOffset.x, uiLayout.boosterOffset.y),
+                anchoredPos: new Vector2(-uiLayout.boosterOffset.x, uiLayout.boosterOffset.y + safeBottomUnits),
                 size: uiLayout.boosterSize,
                 normal: hasKit ? "ui.button.mint_square.normal" : null,
                 pressed: hasKit ? "ui.button.mint_square.pressed" : null,
@@ -4024,7 +4093,7 @@ namespace LoopSorting
                 _boosterPanel.transform,
                 name: "BoosterShuffle",
                 anchor: uiLayout.boosterAnchor,
-                anchoredPos: new Vector2(uiLayout.boosterOffset.x, uiLayout.boosterOffset.y),
+                anchoredPos: new Vector2(uiLayout.boosterOffset.x, uiLayout.boosterOffset.y + safeBottomUnits),
                 size: uiLayout.boosterSize,
                 normal: hasKit ? "ui.button.purple_square.normal" : null,
                 pressed: hasKit ? "ui.button.purple_square.pressed" : null,
@@ -4385,8 +4454,8 @@ namespace LoopSorting
             _boosterPurchasePopupRect.anchorMin = new Vector2(0.5f, 0.5f);
             _boosterPurchasePopupRect.anchorMax = new Vector2(0.5f, 0.5f);
             _boosterPurchasePopupRect.pivot = new Vector2(0.5f, 0.5f);
-            _boosterPurchasePopupRect.anchoredPosition = new Vector2(0f, 40f);
-            _boosterPurchasePopupRect.sizeDelta = new Vector2(900f, 1420f);
+            _boosterPurchasePopupRect.anchoredPosition = new Vector2(0f, 20f);
+            _boosterPurchasePopupRect.sizeDelta = new Vector2(900f, 1260f);
 
             _boosterPurchaseBackground = popupGO.AddComponent<Image>();
             _boosterPurchaseBackground.raycastTarget = false;
@@ -4415,11 +4484,20 @@ namespace LoopSorting
             _boosterPurchaseHeaderRect.anchorMin = new Vector2(0.5f, 1f);
             _boosterPurchaseHeaderRect.anchorMax = new Vector2(0.5f, 1f);
             _boosterPurchaseHeaderRect.pivot = new Vector2(0.5f, 1f);
-            _boosterPurchaseHeaderRect.anchoredPosition = new Vector2(0f, -90f);
-            _boosterPurchaseHeaderRect.sizeDelta = new Vector2(820f, 220f);
+            _boosterPurchaseHeaderRect.anchoredPosition = new Vector2(0f, -70f);
+            _boosterPurchaseHeaderRect.sizeDelta = new Vector2(820f, 210f);
             _boosterPurchaseHeader = headerGO.AddComponent<Image>();
             _boosterPurchaseHeader.raycastTarget = false;
             _boosterPurchaseHeader.color = Color.white;
+            if (hasKit)
+            {
+                var headerBg = LoopSortingUIKit.LoadSpriteByKey("ui.button.orange_long.normal");
+                if (headerBg != null)
+                {
+                    _boosterPurchaseHeader.sprite = headerBg;
+                    _boosterPurchaseHeader.type = headerBg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                }
+            }
 
             var titleGO = new GameObject("TitleText");
             titleGO.transform.SetParent(headerGO.transform, false);
@@ -4427,8 +4505,10 @@ namespace LoopSorting
             _boosterPurchaseTitleText.raycastTarget = false;
             _boosterPurchaseTitleText.text = "BOOSTER";
             _boosterPurchaseTitleText.alignment = TextAlignmentOptions.Center;
-            _boosterPurchaseTitleText.fontSize = 96;
+            _boosterPurchaseTitleText.fontSize = 92;
             _boosterPurchaseTitleText.color = new Color(1f, 1f, 1f, 0.98f);
+            _boosterPurchaseTitleText.outlineWidth = 0.22f;
+            _boosterPurchaseTitleText.outlineColor = new Color(0.12f, 0.06f, 0.02f, 0.88f);
             var titleRect = titleGO.GetComponent<RectTransform>();
             titleRect.anchorMin = Vector2.zero;
             titleRect.anchorMax = Vector2.one;
@@ -4441,8 +4521,8 @@ namespace LoopSorting
             _boosterPurchaseCloseRect.anchorMin = new Vector2(1f, 1f);
             _boosterPurchaseCloseRect.anchorMax = new Vector2(1f, 1f);
             _boosterPurchaseCloseRect.pivot = new Vector2(1f, 1f);
-            _boosterPurchaseCloseRect.anchoredPosition = new Vector2(-40f, -40f);
-            _boosterPurchaseCloseRect.sizeDelta = new Vector2(140f, 140f);
+            _boosterPurchaseCloseRect.anchoredPosition = new Vector2(-36f, -36f);
+            _boosterPurchaseCloseRect.sizeDelta = new Vector2(120f, 120f);
             _boosterPurchaseCloseImage = closeGO.AddComponent<Image>();
             _boosterPurchaseCloseImage.raycastTarget = true;
             _boosterPurchaseCloseImage.color = Color.white;
@@ -4471,11 +4551,12 @@ namespace LoopSorting
             _boosterPurchaseIconRect.anchorMin = new Vector2(0.5f, 0.5f);
             _boosterPurchaseIconRect.anchorMax = new Vector2(0.5f, 0.5f);
             _boosterPurchaseIconRect.pivot = new Vector2(0.5f, 0.5f);
-            _boosterPurchaseIconRect.anchoredPosition = new Vector2(0f, 120f);
-            _boosterPurchaseIconRect.sizeDelta = new Vector2(420f, 420f);
+            _boosterPurchaseIconRect.anchoredPosition = new Vector2(0f, 150f);
+            _boosterPurchaseIconRect.sizeDelta = new Vector2(460f, 460f);
             _boosterPurchaseIcon = iconGO.AddComponent<Image>();
             _boosterPurchaseIcon.raycastTarget = false;
             _boosterPurchaseIcon.color = Color.white;
+            _boosterPurchaseIcon.preserveAspect = true;
 
             var subtitleGO = new GameObject("Subtitle");
             subtitleGO.transform.SetParent(popupGO.transform, false);
@@ -4483,21 +4564,57 @@ namespace LoopSorting
             _boosterPurchaseSubtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
             _boosterPurchaseSubtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
             _boosterPurchaseSubtitleRect.pivot = new Vector2(0.5f, 0.5f);
-            _boosterPurchaseSubtitleRect.anchoredPosition = new Vector2(0f, -220f);
-            _boosterPurchaseSubtitleRect.sizeDelta = new Vector2(820f, 120f);
-            _boosterPurchaseSubtitleText = subtitleGO.AddComponent<TextMeshProUGUI>();
+            _boosterPurchaseSubtitleRect.anchoredPosition = new Vector2(0f, -240f);
+            _boosterPurchaseSubtitleRect.sizeDelta = new Vector2(760f, 120f);
+
+            var subtitleBgGO = new GameObject("BG");
+            subtitleBgGO.transform.SetParent(subtitleGO.transform, false);
+            var subtitleBgRect = subtitleBgGO.AddComponent<RectTransform>();
+            subtitleBgRect.anchorMin = Vector2.zero;
+            subtitleBgRect.anchorMax = Vector2.one;
+            subtitleBgRect.offsetMin = Vector2.zero;
+            subtitleBgRect.offsetMax = Vector2.zero;
+            _boosterPurchaseSubtitleBg = subtitleBgGO.AddComponent<Image>();
+            _boosterPurchaseSubtitleBg.raycastTarget = false;
+            _boosterPurchaseSubtitleBg.color = Color.white;
+            if (hasKit)
+            {
+                var pill = LoopSortingUIKit.LoadSpriteByKey("ui.tag_small.info");
+                if (pill != null)
+                {
+                    _boosterPurchaseSubtitleBg.sprite = pill;
+                    _boosterPurchaseSubtitleBg.type = pill.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                }
+                else
+                {
+                    _boosterPurchaseSubtitleBg.color = new Color(1f, 1f, 1f, 0.55f);
+                }
+            }
+            else
+            {
+                _boosterPurchaseSubtitleBg.color = new Color(1f, 1f, 1f, 0.55f);
+            }
+
+            var subtitleTextGO = new GameObject("Text");
+            subtitleTextGO.transform.SetParent(subtitleGO.transform, false);
+            var subtitleTextRect = subtitleTextGO.AddComponent<RectTransform>();
+            subtitleTextRect.anchorMin = Vector2.zero;
+            subtitleTextRect.anchorMax = Vector2.one;
+            subtitleTextRect.offsetMin = new Vector2(20f, 0f);
+            subtitleTextRect.offsetMax = new Vector2(-20f, 0f);
+            _boosterPurchaseSubtitleText = subtitleTextGO.AddComponent<TextMeshProUGUI>();
             _boosterPurchaseSubtitleText.raycastTarget = false;
             _boosterPurchaseSubtitleText.text = "Purchase Booster";
             _boosterPurchaseSubtitleText.alignment = TextAlignmentOptions.Center;
-            _boosterPurchaseSubtitleText.fontSize = 64;
-            _boosterPurchaseSubtitleText.color = new Color(0.2f, 0.15f, 0.1f, 1f);
+            _boosterPurchaseSubtitleText.fontSize = 60;
+            _boosterPurchaseSubtitleText.color = new Color(0.18f, 0.14f, 0.10f, 1f);
 
             _boosterPurchaseCoinsButton = CreateBoosterPurchaseActionButton(
                 parent: popupGO.transform,
                 name: "BuyWithCoins",
                 anchoredPos: new Vector2(-210f, -520f),
-                size: new Vector2(380f, 200f),
-                fallbackSpriteKey: hasKit ? "ui.button.orange_long.normal" : null,
+                size: new Vector2(380f, 220f),
+                fallbackSpriteKey: hasKit ? "ui.button.price_green.normal" : null,
                 labelText: "0",
                 out _boosterPurchaseCoinsLabel);
             _boosterPurchaseCoinsButton.onClick.AddListener(() => PurchaseBoosterWithCoins());
@@ -4515,24 +4632,28 @@ namespace LoopSorting
                 {
                     labelRect.anchorMin = Vector2.zero;
                     labelRect.anchorMax = Vector2.one;
-                    // Leave room for the left-side coin icon inside the baked button art.
                     labelRect.offsetMin = new Vector2(150f, 0f);
-                    labelRect.offsetMax = new Vector2(-20f, 0f);
+                    labelRect.offsetMax = new Vector2(-24f, 0f);
                 }
             }
             _boosterPurchaseCoinsPriceCover = EnsureBoosterPurchaseCoinsPriceCover(_boosterPurchaseCoinsButton.transform);
+            if (_boosterPurchaseCoinsPriceCover != null) _boosterPurchaseCoinsPriceCover.gameObject.SetActive(false);
 
             _boosterPurchaseAdButton = CreateBoosterPurchaseActionButton(
                 parent: popupGO.transform,
                 name: "BuyWithAd",
                 anchoredPos: new Vector2(210f, -520f),
-                size: new Vector2(380f, 200f),
+                size: new Vector2(380f, 220f),
                 fallbackSpriteKey: hasKit ? "ui.button.mint_long.normal" : null,
                 labelText: "FREE",
                 out _boosterPurchaseAdLabel);
             _boosterPurchaseAdButton.onClick.AddListener(() => PurchaseBoosterWithAd());
             _boosterPurchaseAdRect = _boosterPurchaseAdButton.GetComponent<RectTransform>();
             _boosterPurchaseAdImage = _boosterPurchaseAdButton.GetComponent<Image>();
+
+            ApplyButtonPressScale(_boosterPurchaseCloseButton, pressedScale: 0.92f);
+            ApplyButtonPressScale(_boosterPurchaseCoinsButton, pressedScale: 0.96f);
+            ApplyButtonPressScale(_boosterPurchaseAdButton, pressedScale: 0.96f);
 
             _boosterPurchasePanel.SetActive(false);
         }
@@ -4595,7 +4716,7 @@ namespace LoopSorting
 
             Sprite authored = name == "BuyWithAd"
                 ? TryLoadBoosterPurchaseSprite("btn_watch_ad_free")
-                : null;
+                : (name == "BuyWithCoins" ? TryLoadBoosterPurchaseSprite("btn_buy_coins_80") : null);
 
             if (authored != null)
             {
@@ -4628,7 +4749,7 @@ namespace LoopSorting
             tRect.offsetMax = Vector2.zero;
             label = tmp;
 
-            if (authored != null)
+            if (authored != null && name == "BuyWithAd")
             {
                 tmp.gameObject.SetActive(false);
             }
@@ -4649,12 +4770,14 @@ namespace LoopSorting
             if (_shopPanel != null) _shopPanel.SetActive(false);
 
             AnimateUiPanel(_boosterPurchasePanel, true, seconds: 0.20f);
+            StartBoosterPurchaseEffects();
             PlaySfx(SfxId.UiPopupOpen);
         }
 
         private void CloseBoosterPurchase()
         {
             if (_boosterPurchasePanel == null) return;
+            StopBoosterPurchaseEffects();
             AnimateUiPanel(_boosterPurchasePanel, false, seconds: 0.18f);
             PlaySfx(SfxId.UiPopupClose);
         }
@@ -4668,36 +4791,41 @@ namespace LoopSorting
             if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.text = title;
             if (_boosterPurchaseSubtitleText != null) _boosterPurchaseSubtitleText.text = $"Purchase {title}";
 
-            // Prefer a full authored popup sprite if available. When using it, hide our sub-elements to avoid double-layering.
-            var fullBg = isShuffle
-                ? TryLoadBoosterPurchaseSprite("popup_shuffle_full")
-                : TryLoadBoosterPurchaseSprite("popup_sort_full");
-            bool useFullPopup = fullBg != null;
+            // Use the split UI (header/icon/buttons) for a higher-quality animated popup.
+            // Keep full-popup sprites only as an optional fallback for missing assets.
+            bool useFullPopup = false;
+            var fullBg = (Sprite)null;
 
             int coinPrice = GetBoosterCoinPrice(type);
             if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.text = coinPrice.ToString();
 
-            // If a matching coin-price button sprite exists, use it when NOT using a full popup background.
-            if (!useFullPopup && _boosterPurchaseCoinsImage != null)
+            // Prefer authored coin button art; use a cover + TMP to support dynamic prices.
+            bool coinUsesAuthored = false;
+            if (_boosterPurchaseCoinsImage != null)
             {
-                var coinSprite = TryLoadBoosterPurchaseSprite($"btn_buy_coins_{coinPrice}");
-                if (coinSprite != null)
+                var authoredCoin = TryLoadBoosterPurchaseSprite("btn_buy_coins_80");
+                if (authoredCoin != null)
                 {
-                    _boosterPurchaseCoinsImage.sprite = coinSprite;
-                    _boosterPurchaseCoinsImage.type = coinSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                    if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.gameObject.SetActive(false);
+                    _boosterPurchaseCoinsImage.sprite = authoredCoin;
+                    _boosterPurchaseCoinsImage.type = authoredCoin.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    _boosterPurchaseCoinsImage.color = Color.white;
+                    coinUsesAuthored = true;
+                }
+                else if (hasKit)
+                {
+                    var normal = LoopSortingUIKit.LoadSpriteByKey("ui.button.price_green.normal");
+                    if (normal != null)
+                    {
+                        _boosterPurchaseCoinsImage.sprite = normal;
+                        _boosterPurchaseCoinsImage.type = normal.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                        _boosterPurchaseCoinsImage.color = Color.white;
+                    }
                 }
             }
 
             if (_boosterPurchaseBackground != null)
             {
-                if (useFullPopup)
-                {
-                    _boosterPurchaseBackground.sprite = fullBg;
-                    _boosterPurchaseBackground.type = fullBg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                    _boosterPurchaseBackground.color = Color.white;
-                }
-                else if (hasKit)
+                if (hasKit)
                 {
                     var bg = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
                     if (bg != null)
@@ -4711,21 +4839,8 @@ namespace LoopSorting
 
             if (_boosterPurchaseHeader != null)
             {
-                var headerName = isShuffle ? "header_title_shuffle" : "header_title_sort";
-                var header = TryLoadBoosterPurchaseSprite(headerName);
-                if (!useFullPopup && header != null)
-                {
-                    _boosterPurchaseHeader.sprite = header;
-                    _boosterPurchaseHeader.type = header.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                    _boosterPurchaseHeader.gameObject.SetActive(true);
-                    if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.gameObject.SetActive(false);
-                }
-                else
-                {
-                    _boosterPurchaseHeader.sprite = null;
-                    _boosterPurchaseHeader.gameObject.SetActive(!useFullPopup);
-                    if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.gameObject.SetActive(!useFullPopup);
-                }
+                _boosterPurchaseHeader.gameObject.SetActive(true);
+                if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.gameObject.SetActive(true);
             }
 
             if (_boosterPurchaseIcon != null)
@@ -4740,23 +4855,255 @@ namespace LoopSorting
                 _boosterPurchaseIcon.sprite = icon;
                 _boosterPurchaseIcon.color = icon != null ? Color.white : new Color(0f, 0f, 0f, 0.15f);
                 _boosterPurchaseIcon.type = icon != null && icon.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                _boosterPurchaseIcon.gameObject.SetActive(!useFullPopup);
+                _boosterPurchaseIcon.gameObject.SetActive(true);
             }
 
             if (_boosterPurchaseSubtitleText != null)
             {
-                _boosterPurchaseSubtitleText.gameObject.SetActive(!useFullPopup);
+                _boosterPurchaseSubtitleText.gameObject.SetActive(true);
             }
 
-            bool showDynamicCoinPrice = !useFullPopup;
+            bool showCoinPriceLabel = !coinUsesAuthored || coinPrice != 80;
+            if (_boosterPurchaseCoinsPriceCover != null) _boosterPurchaseCoinsPriceCover.gameObject.SetActive(coinUsesAuthored && coinPrice != 80);
 
-            // With the "single full popup image" approach, coin price is baked into the PNG.
-            // Hide the dynamic overlay to avoid duplicate numbers.
-            if (_boosterPurchaseCoinsPriceCover != null) _boosterPurchaseCoinsPriceCover.gameObject.SetActive(false);
-            if (_boosterPurchaseCoinsLabel != null) _boosterPurchaseCoinsLabel.gameObject.SetActive(showDynamicCoinPrice);
+            SetPurchaseButtonVisuals(useFullPopup, showCoinPriceLabel);
+            if (useFullPopup)
+            {
+                ApplyBoosterPurchaseLayoutFromManifest(type, useFullPopup, fullBg);
+            }
+        }
 
-            SetPurchaseButtonVisuals(useFullPopup, showDynamicCoinPrice);
-            ApplyBoosterPurchaseLayoutFromManifest(type, useFullPopup, fullBg);
+        private void StartBoosterPurchaseEffects()
+        {
+            StopBoosterPurchaseEffects();
+            if (_boosterPurchasePanel == null || !_boosterPurchasePanel.activeInHierarchy) return;
+            ResetBoosterPurchasePose();
+            _boosterPurchaseIntroRoutine = StartCoroutine(AnimateBoosterPurchaseIntro());
+        }
+
+        private void StopBoosterPurchaseEffects()
+        {
+            if (_boosterPurchaseIntroRoutine != null) StopCoroutine(_boosterPurchaseIntroRoutine);
+            _boosterPurchaseIntroRoutine = null;
+            if (_boosterPurchaseIdleRoutine != null) StopCoroutine(_boosterPurchaseIdleRoutine);
+            _boosterPurchaseIdleRoutine = null;
+
+            if (_boosterPurchaseIconRect != null)
+            {
+                _boosterPurchaseIconRect.localRotation = Quaternion.identity;
+            }
+        }
+
+        private void ResetBoosterPurchasePose()
+        {
+            if (_boosterPurchaseHeaderRect != null)
+            {
+                _boosterPurchaseHeaderRect.anchoredPosition = new Vector2(0f, -70f);
+                _boosterPurchaseHeaderRect.localScale = Vector3.one;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseHeaderRect.gameObject).alpha = 1f;
+            }
+            if (_boosterPurchaseIconRect != null)
+            {
+                _boosterPurchaseIconRect.anchoredPosition = new Vector2(0f, 150f);
+                _boosterPurchaseIconRect.localScale = Vector3.one;
+                _boosterPurchaseIconRect.localRotation = Quaternion.identity;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseIconRect.gameObject).alpha = 1f;
+            }
+            if (_boosterPurchaseSubtitleRect != null)
+            {
+                _boosterPurchaseSubtitleRect.anchoredPosition = new Vector2(0f, -240f);
+                _boosterPurchaseSubtitleRect.localScale = Vector3.one;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseSubtitleRect.gameObject).alpha = 1f;
+            }
+            if (_boosterPurchaseCoinsRect != null)
+            {
+                _boosterPurchaseCoinsRect.anchoredPosition = new Vector2(-210f, -520f);
+                _boosterPurchaseCoinsRect.localScale = Vector3.one;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseCoinsRect.gameObject).alpha = 1f;
+            }
+            if (_boosterPurchaseAdRect != null)
+            {
+                _boosterPurchaseAdRect.anchoredPosition = new Vector2(210f, -520f);
+                _boosterPurchaseAdRect.localScale = Vector3.one;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseAdRect.gameObject).alpha = 1f;
+            }
+            if (_boosterPurchaseCloseRect != null)
+            {
+                _boosterPurchaseCloseRect.anchoredPosition = new Vector2(-36f, -36f);
+                _boosterPurchaseCloseRect.localScale = Vector3.one;
+                MotionUtil.EnsureCanvasGroup(_boosterPurchaseCloseRect.gameObject).alpha = 1f;
+            }
+        }
+
+        private IEnumerator AnimateBoosterPurchaseIntro()
+        {
+            if (_boosterPurchasePanel == null) yield break;
+            if (_boosterPurchasePopupRect == null) yield break;
+
+            // Wait one frame so the panel scale/alpha animation is applied first.
+            yield return null;
+
+            if (_boosterPurchasePanel == null || !_boosterPurchasePanel.activeInHierarchy) yield break;
+
+            var header = _boosterPurchaseHeaderRect;
+            var icon = _boosterPurchaseIconRect;
+            var subtitle = _boosterPurchaseSubtitleRect;
+            var coins = _boosterPurchaseCoinsRect;
+            var ad = _boosterPurchaseAdRect;
+            var close = _boosterPurchaseCloseRect;
+
+            if (header == null || icon == null || subtitle == null || coins == null || ad == null || close == null) yield break;
+
+            var headerCg = MotionUtil.EnsureCanvasGroup(header.gameObject);
+            var iconCg = MotionUtil.EnsureCanvasGroup(icon.gameObject);
+            var subtitleCg = MotionUtil.EnsureCanvasGroup(subtitle.gameObject);
+            var coinsCg = MotionUtil.EnsureCanvasGroup(coins.gameObject);
+            var adCg = MotionUtil.EnsureCanvasGroup(ad.gameObject);
+            var closeCg = MotionUtil.EnsureCanvasGroup(close.gameObject);
+
+            Vector2 headerPos0 = header.anchoredPosition;
+            Vector2 iconPos0 = icon.anchoredPosition;
+            Vector2 subtitlePos0 = subtitle.anchoredPosition;
+            Vector2 coinsPos0 = coins.anchoredPosition;
+            Vector2 adPos0 = ad.anchoredPosition;
+            Vector2 closePos0 = close.anchoredPosition;
+
+            header.anchoredPosition = headerPos0 + new Vector2(0f, 26f);
+            header.localScale = Vector3.one * 0.92f;
+            icon.anchoredPosition = iconPos0 + new Vector2(0f, -40f);
+            icon.localScale = Vector3.one * 0.72f;
+            subtitle.anchoredPosition = subtitlePos0 + new Vector2(0f, -18f);
+            subtitle.localScale = Vector3.one * 0.98f;
+            coins.anchoredPosition = coinsPos0 + new Vector2(0f, -28f);
+            coins.localScale = Vector3.one * 0.96f;
+            ad.anchoredPosition = adPos0 + new Vector2(0f, -28f);
+            ad.localScale = Vector3.one * 0.96f;
+            close.anchoredPosition = closePos0 + new Vector2(0f, 18f);
+            close.localScale = Vector3.one * 0.9f;
+
+            headerCg.alpha = 0f;
+            iconCg.alpha = 0f;
+            subtitleCg.alpha = 0f;
+            coinsCg.alpha = 0f;
+            adCg.alpha = 0f;
+            closeCg.alpha = 0f;
+
+            float seconds = 0.34f;
+            float t = 0f;
+            while (t < seconds)
+            {
+                if (_boosterPurchasePanel == null || !_boosterPurchasePanel.activeInHierarchy) yield break;
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / Mathf.Max(0.0001f, seconds));
+
+                float e0 = MotionUtil.EaseOutCubic(u);
+                float eBack = MotionUtil.EaseOutBack(u);
+
+                headerCg.alpha = Mathf.Lerp(0f, 1f, e0);
+                header.anchoredPosition = Vector2.LerpUnclamped(headerPos0 + new Vector2(0f, 26f), headerPos0, eBack);
+                header.localScale = Vector3.one * Mathf.LerpUnclamped(0.92f, 1f, eBack);
+
+                // Stagger icon slightly after header.
+                float uIcon = Mathf.Clamp01((u - 0.10f) / 0.90f);
+                float eIcon = MotionUtil.EaseOutBack(uIcon);
+                iconCg.alpha = Mathf.Lerp(0f, 1f, MotionUtil.EaseOutCubic(uIcon));
+                icon.anchoredPosition = Vector2.LerpUnclamped(iconPos0 + new Vector2(0f, -40f), iconPos0, eIcon);
+                icon.localScale = Vector3.one * Mathf.LerpUnclamped(0.72f, 1f, eIcon);
+
+                // Subtitle and buttons after icon.
+                float uSub = Mathf.Clamp01((u - 0.22f) / 0.78f);
+                float eSub = MotionUtil.EaseOutCubic(uSub);
+                subtitleCg.alpha = Mathf.Lerp(0f, 1f, eSub);
+                subtitle.anchoredPosition = Vector2.LerpUnclamped(subtitlePos0 + new Vector2(0f, -18f), subtitlePos0, MotionUtil.EaseOutBack(uSub));
+
+                float uBtns = Mathf.Clamp01((u - 0.28f) / 0.72f);
+                float eBtns = MotionUtil.EaseOutBack(uBtns);
+                coinsCg.alpha = Mathf.Lerp(0f, 1f, MotionUtil.EaseOutCubic(uBtns));
+                adCg.alpha = coinsCg.alpha;
+                coins.anchoredPosition = Vector2.LerpUnclamped(coinsPos0 + new Vector2(0f, -28f), coinsPos0, eBtns);
+                ad.anchoredPosition = Vector2.LerpUnclamped(adPos0 + new Vector2(0f, -28f), adPos0, eBtns);
+                coins.localScale = Vector3.one * Mathf.LerpUnclamped(0.96f, 1f, eBtns);
+                ad.localScale = coins.localScale;
+
+                // Close button last.
+                float uClose = Mathf.Clamp01((u - 0.35f) / 0.65f);
+                float eClose = MotionUtil.EaseOutBack(uClose);
+                closeCg.alpha = Mathf.Lerp(0f, 1f, MotionUtil.EaseOutCubic(uClose));
+                close.anchoredPosition = Vector2.LerpUnclamped(closePos0 + new Vector2(0f, 18f), closePos0, eClose);
+                close.localScale = Vector3.one * Mathf.LerpUnclamped(0.9f, 1f, eClose);
+
+                yield return null;
+            }
+
+            header.anchoredPosition = headerPos0;
+            icon.anchoredPosition = iconPos0;
+            subtitle.anchoredPosition = subtitlePos0;
+            coins.anchoredPosition = coinsPos0;
+            ad.anchoredPosition = adPos0;
+            close.anchoredPosition = closePos0;
+            header.localScale = Vector3.one;
+            icon.localScale = Vector3.one;
+            subtitle.localScale = Vector3.one;
+            coins.localScale = Vector3.one;
+            ad.localScale = Vector3.one;
+            close.localScale = Vector3.one;
+
+            headerCg.alpha = 1f;
+            iconCg.alpha = 1f;
+            subtitleCg.alpha = 1f;
+            coinsCg.alpha = 1f;
+            adCg.alpha = 1f;
+            closeCg.alpha = 1f;
+
+            _boosterPurchaseIntroRoutine = null;
+            _boosterPurchaseIdleRoutine = StartCoroutine(AnimateBoosterPurchaseIdle(iconPos0));
+        }
+
+        private IEnumerator AnimateBoosterPurchaseIdle(Vector2 iconBasePos)
+        {
+            if (_boosterPurchaseIconRect == null) yield break;
+            float t = 0f;
+            while (_boosterPurchasePanel != null && _boosterPurchasePanel.activeInHierarchy && _boosterPurchaseIconRect != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float bob = Mathf.Sin(t * 2.0f) * 10f;
+                float tilt = Mathf.Sin(t * 1.7f) * 2.0f;
+                _boosterPurchaseIconRect.anchoredPosition = iconBasePos + new Vector2(0f, bob);
+                _boosterPurchaseIconRect.localRotation = Quaternion.Euler(0f, 0f, tilt);
+                yield return null;
+            }
+            if (_boosterPurchaseIconRect != null)
+            {
+                _boosterPurchaseIconRect.anchoredPosition = iconBasePos;
+                _boosterPurchaseIconRect.localRotation = Quaternion.identity;
+            }
+            _boosterPurchaseIdleRoutine = null;
+        }
+
+        private static void ApplyButtonPressScale(Button button, float pressedScale)
+        {
+            if (button == null) return;
+            var trigger = button.gameObject.GetComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = button.gameObject.AddComponent<EventTrigger>();
+            }
+            if (trigger.triggers == null)
+            {
+                trigger.triggers = new List<EventTrigger.Entry>();
+            }
+
+            void Add(EventTriggerType type, System.Action<BaseEventData> action)
+            {
+                var entry = new EventTrigger.Entry { eventID = type };
+                entry.callback.AddListener(data => action?.Invoke((BaseEventData)data));
+                trigger.triggers.Add(entry);
+            }
+
+            Add(EventTriggerType.PointerDown, _ => button.transform.localScale = Vector3.one * pressedScale);
+            Add(EventTriggerType.PointerUp, _ => button.transform.localScale = Vector3.one);
+            Add(EventTriggerType.PointerExit, _ => button.transform.localScale = Vector3.one);
+            Add(EventTriggerType.Cancel, _ => button.transform.localScale = Vector3.one);
         }
 
         private void SetPurchaseButtonVisuals(bool useFullPopup, bool showCoinPriceLabel)
@@ -4789,7 +5136,8 @@ namespace LoopSorting
             {
                 _boosterPurchaseAdImage.color = useFullPopup ? new Color(1f, 1f, 1f, 0f) : Color.white;
             }
-            if (_boosterPurchaseAdLabel != null) _boosterPurchaseAdLabel.gameObject.SetActive(!useFullPopup);
+            // Keep the authored FREE button label hidden (the PNG includes it). Only force-hide when using full-popup mode.
+            if (_boosterPurchaseAdLabel != null && useFullPopup) _boosterPurchaseAdLabel.gameObject.SetActive(false);
         }
 
         private void ApplyBoosterPurchaseLayoutFromManifest(BoosterType type, bool useFullPopup, Sprite fullPopupSprite)
@@ -4806,14 +5154,46 @@ namespace LoopSorting
             var refPopupTL = new Vector2(refPopupAsset.box[0], refPopupAsset.box[1]);
 
             Vector2 targetPopupSize = refPopupSize;
-            if (useFullPopup && fullPopupSprite != null)
+            if (useFullPopup)
             {
-                targetPopupSize = fullPopupSprite.rect.size;
-            }
+                // Keep the popup at our designed size (in UI units), and fit the full sprite proportionally.
+                var maxSize = _boosterPurchasePopupRect != null ? _boosterPurchasePopupRect.sizeDelta : refPopupSize;
+                float spriteAspect = fullPopupSprite != null
+                    ? (float)fullPopupSprite.rect.width / Mathf.Max(0.01f, (float)fullPopupSprite.rect.height)
+                    : refPopupSize.x / Mathf.Max(0.01f, refPopupSize.y);
 
-            if (_boosterPurchasePopupRect != null && useFullPopup)
+                float maxAspect = maxSize.x / Mathf.Max(0.01f, maxSize.y);
+                if (maxAspect >= spriteAspect)
+                {
+                    // Limited by height.
+                    float h = maxSize.y;
+                    float w = h * spriteAspect;
+                    targetPopupSize = new Vector2(w, h);
+                }
+                else
+                {
+                    // Limited by width.
+                    float w = maxSize.x;
+                    float h = w / Mathf.Max(0.01f, spriteAspect);
+                    targetPopupSize = new Vector2(w, h);
+                }
+
+                if (_boosterPurchasePopupRect != null)
+                {
+                    _boosterPurchasePopupRect.sizeDelta = targetPopupSize;
+                }
+
+                if (_boosterPurchaseBackground != null)
+                {
+                    _boosterPurchaseBackground.preserveAspect = true;
+                }
+            }
+            else
             {
-                _boosterPurchasePopupRect.sizeDelta = targetPopupSize;
+                if (_boosterPurchaseBackground != null)
+                {
+                    _boosterPurchaseBackground.preserveAspect = false;
+                }
             }
 
             ApplyRectFromManifestNormalized(_boosterPurchaseCloseRect, manifest.assets.btn_close, refPopupSize, refPopupTL, targetPopupSize);
@@ -6103,11 +6483,13 @@ namespace LoopSorting
 
         private void EnsureBlockVisual(int index, Block block)
         {
+            bool created = false;
             if (!_beltBlockVisuals.TryGetValue(index, out var go) || go == null)
             {
                 go = BlockVisual.CreateBlock(block.Color);
                 _beltBlockVisuals[index] = go;
                 go.transform.SetParent(transform, true);
+                created = true;
             }
 
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
@@ -6115,6 +6497,32 @@ namespace LoopSorting
             go.transform.localScale = new Vector3(baseSize, baseSize, baseSize * 0.6f);
 
             BlockVisual.ApplyColor(go, BlockVisual.ToUnityColor(block.Color));
+
+            // Avoid one-frame "flash" at world origin when a block visual is created before the belt positions update.
+            if (created)
+            {
+                go.transform.position = GetBeltBlockWorldPosition(index);
+            }
+        }
+
+        private Vector3 GetBeltBlockWorldPosition(int index)
+        {
+            Vector3 basePos;
+            if (index >= 0 && index < _slotCurrentPositions.Count)
+            {
+                basePos = _slotCurrentPositions[index];
+            }
+            else if (index >= 0 && index < _beltSlots.Count && _beltSlots[index] != null)
+            {
+                basePos = _beltSlots[index].position;
+            }
+            else
+            {
+                // Fallback: move out of view rather than (0,0,0) which can be visible in gameplay.
+                basePos = transform.position + new Vector3(0f, -9999f, 0f);
+            }
+
+            return basePos + GetBeltBlockOffset(index) + new Vector3(0f, 0f, beltBlockZOffset);
         }
 
         private void StartBeltSpawnFromBox(int containerIndex, Block released)

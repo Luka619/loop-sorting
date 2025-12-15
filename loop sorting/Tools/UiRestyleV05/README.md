@@ -20,7 +20,10 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReportPngSizes.ps1 -
 powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Hud
 ```
 - 输出：`Tools/UiRestyleV05/_prompt_sheet_hud_v05.md`
+- 玩法外（商店/设置/结算等）：`powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Meta`
+  - 输出：`Tools/UiRestyleV05/_prompt_sheet_meta_v05.md`
 - 全量：`powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope All`
+  - 输出：`Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
 
 ## 2.2) 直接在本地“出图”（占位版，可用于先跑通替换与预览）
 如果你现在不方便用外部 AI 出图，我可以先用脚本在本机生成一套“风格一致的占位 PNG”（按钮底/图标/数字/HUD pill/FAST tag），用于你在 Unity 里快速预览布局与风格方向。
@@ -48,6 +51,9 @@ python Tools/UiRestyleV05/GenerateOpenAiImages.py --model gpt-image-1 --dry-run 
 正式生成（建议先小批量试跑，避免一次性花费过大）：
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py --model gpt-image-1 --limit 10
+```
+（如果你用的是 API 代理，例如 API易：）```powershell
+python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1 --limit 10
 ```
 （默认会跳过已存在的输出文件；需要重生成时加 `--overwrite`）
 

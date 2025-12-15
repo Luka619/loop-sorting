@@ -1,5 +1,6 @@
 __pycache__/
 _generated_v05/
+_backup/
 _openai_output/
 _openai_output_raw_backup_*/
 _web_output/

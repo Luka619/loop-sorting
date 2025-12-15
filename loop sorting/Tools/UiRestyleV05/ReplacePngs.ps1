@@ -4,7 +4,11 @@ param(
 
     [string]$KitRoot = "Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti",
 
+    [string]$ResourcesRoot = "Assets/Resources",
+
     [switch]$IncludeWorldSprites,
+
+    [switch]$IncludeExtraResources,
 
     [switch]$Backup,
 
@@ -24,6 +28,9 @@ if (!(Test-Path $SourceDir)) {
 }
 if (!(Test-Path $KitRoot)) {
     Fail "KitRoot not found: $KitRoot"
+}
+if ($IncludeExtraResources -and !(Test-Path $ResourcesRoot)) {
+    Fail "ResourcesRoot not found: $ResourcesRoot"
 }
 
 Add-Type -AssemblyName System.Drawing
@@ -55,8 +62,7 @@ function Resolve-SourceFile([string]$subDir, [string]$fileName) {
     return $null
 }
 
-function Replace-InDir([string]$subDir) {
-    $targetDir = Join-Path $KitRoot $subDir
+function Replace-InTargetDir([string]$sourceSubDir, [string]$targetDir) {
     if (!(Test-Path $targetDir)) {
         Fail "Target directory not found: $targetDir"
     }
@@ -71,29 +77,29 @@ function Replace-InDir([string]$subDir) {
     $skipped = 0
 
     foreach ($t in $targetFiles) {
-        $src = Resolve-SourceFile $subDir $t.Name
+        $src = Resolve-SourceFile $sourceSubDir $t.Name
         if ($null -eq $src) {
             if ($AllowPartial) {
                 $skipped++
                 continue
             }
-            Fail "Missing source file for $subDir/$($t.Name) (expected at '$SourceDir/$subDir/$($t.Name)' or '$SourceDir/$($t.Name)')"
+            Fail "Missing source file for $sourceSubDir/$($t.Name) (expected at '$SourceDir/$sourceSubDir/$($t.Name)' or '$SourceDir/$($t.Name)')"
         }
 
         $exp = Get-PngSize $t.FullName
         $act = Get-PngSize $src
         if ($exp.w -ne $act.w -or $exp.h -ne $act.h) {
-            Fail "Size mismatch for $subDir/$($t.Name): expected ${($exp.w)}x${($exp.h)}, got ${($act.w)}x${($act.h)}"
+            Fail "Size mismatch for $sourceSubDir/$($t.Name): expected ${($exp.w)}x${($exp.h)}, got ${($act.w)}x${($act.h)}"
         }
 
         if ($Backup) {
-            $backupDir = Join-Path $backupRoot $subDir
+            $backupDir = Join-Path $backupRoot $sourceSubDir
             Ensure-Dir $backupDir
             Copy-Item -Force $t.FullName (Join-Path $backupDir $t.Name)
         }
 
         if ($DryRun) {
-            Write-Host "[DryRun] $subDir/$($t.Name) <= $src"
+            Write-Host "[DryRun] $sourceSubDir/$($t.Name) <= $src"
         }
         else {
             Copy-Item -Force $src $t.FullName
@@ -105,11 +111,18 @@ function Replace-InDir([string]$subDir) {
     return @{ replaced = $replaced; skipped = $skipped }
 }
 
+function Replace-InDir([string]$subDir) {
+    $targetDir = Join-Path $KitRoot $subDir
+    return Replace-InTargetDir $subDir $targetDir
+}
+
 Write-Host "SourceDir: $SourceDir"
 Write-Host "KitRoot:   $KitRoot"
+if ($IncludeExtraResources) { Write-Host "Resources: $ResourcesRoot" }
 Write-Host "DryRun:    $DryRun"
 Write-Host "Backup:    $Backup"
 Write-Host "Partial:   $AllowPartial"
+Write-Host "Extras:    $IncludeExtraResources"
 if ($Backup -and !$DryRun) { Write-Host "BackupDir: $backupRoot" }
 
 $summary = @()
@@ -117,10 +130,14 @@ $summary += [PSCustomObject]@{ dir = "UI_Sprites"; result = Replace-InDir "UI_Sp
 if ($IncludeWorldSprites) {
     $summary += [PSCustomObject]@{ dir = "World_Sprites"; result = Replace-InDir "World_Sprites" }
 }
+if ($IncludeExtraResources) {
+    $summary += [PSCustomObject]@{ dir = "BoosterPurchase"; result = Replace-InTargetDir "BoosterPurchase" (Join-Path $ResourcesRoot "BoosterPurchase") }
+    $summary += [PSCustomObject]@{ dir = "setting_page_assets"; result = Replace-InTargetDir "setting_page_assets" (Join-Path $ResourcesRoot "setting_page_assets") }
+    $summary += [PSCustomObject]@{ dir = "ResourcesRoot"; result = Replace-InTargetDir "ResourcesRoot" $ResourcesRoot }
+}
 
 Write-Host ""
 Write-Host "Done."
 foreach ($row in $summary) {
     Write-Host ("- {0}: replaced={1}, skipped={2}" -f $row.dir, $row.result.replaced, $row.result.skipped)
 }
-

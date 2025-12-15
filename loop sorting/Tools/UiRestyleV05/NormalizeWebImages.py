@@ -12,6 +12,7 @@ from PIL import Image, ImageChops, ImageFilter
 
 @dataclass(frozen=True)
 class PromptItem:
+    dir: str
     filename: str
     wants_transparent: bool
 
@@ -22,16 +23,24 @@ def load_json(path: Path):
 
 def parse_prompt_sheet(path: Path) -> List[PromptItem]:
     text = path.read_text(encoding="utf-8-sig")
-    files = re.findall(r"^## UI_Sprites/([^ ]+)", text, flags=re.M)
-    if not files:
+    headers = list(re.finditer(r"^## ([^/]+)/([^ ]+)", text, flags=re.M))
+    if not headers:
         raise RuntimeError(f"No sections found in prompt sheet: {path}")
 
     items: List[PromptItem] = []
-    for name in files:
-        # Heuristic: prompt sheet includes "transparent background" for most assets,
-        # except bg_main/overlay_dim. We follow that convention.
-        wants_transparent = name not in ("bg_main.png", "overlay_dim.png")
-        items.append(PromptItem(filename=name, wants_transparent=wants_transparent))
+    for i, m in enumerate(headers):
+        start = m.start()
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        section = text[start:end]
+        dir_name = m.group(1).strip()
+        filename = m.group(2).strip()
+
+        # Extract positive prompt block and derive transparency from it.
+        mm = re.search(r"^\*\*Positive prompt\*\*\s*\n+^~~~\s*\n(.*?)\n^~~~\s*$", section, flags=re.S | re.M)
+        positive = (mm.group(1).strip() if mm else "")
+        wants_transparent = "transparent background" in positive.lower()
+
+        items.append(PromptItem(dir=dir_name, filename=filename, wants_transparent=wants_transparent))
     return items
 
 
@@ -194,6 +203,7 @@ def main() -> int:
     ap.add_argument("--in-dir", required=True, help="Directory containing UI_Sprites/*.png (names should match target filenames).")
     ap.add_argument("--out-dir", default="Tools/UiRestyleV05/_web_output", help="Output directory root (will create UI_Sprites/).")
     ap.add_argument("--kit-root", default="Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti")
+    ap.add_argument("--resources-root", default="Assets/Resources", help="Project Resources root (for BoosterPurchase, setting_page_assets, etc).")
     ap.add_argument("--prompt-sheet", default="Tools/UiRestyleV05/_prompt_sheet_hud_v05.md")
 
     ap.add_argument("--only", action="append", default=[], help="glob filter(s), e.g. 'mint_square_*' (repeatable)")
@@ -204,49 +214,61 @@ def main() -> int:
 
     in_root = Path(args.in_dir)
     kit_root = Path(args.kit_root)
+    resources_root = Path(args.resources_root)
     prompt_sheet = Path(args.prompt_sheet)
     out_root = Path(args.out_dir)
 
     items = parse_prompt_sheet(prompt_sheet)
 
-    def want_file(name: str) -> bool:
+    def want_file(dir_name: str, name: str) -> bool:
         if not args.only:
             return True
-        return any(fnmatch.fnmatch(name, pat) for pat in args.only)
+        rel = f"{dir_name}/{name}"
+        return any(fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(rel, pat) for pat in args.only)
 
-    in_ui = in_root / "UI_Sprites"
-    if not in_ui.exists():
-        # allow passing UI_Sprites directly
-        if in_root.name.lower() == "ui_sprites":
-            in_ui = in_root
-        else:
-            raise SystemExit(f"UI_Sprites folder not found in: {in_root}")
+    def resolve_in_dir(dir_name: str) -> Optional[Path]:
+        p = in_root / dir_name
+        if p.exists():
+            return p
+        if in_root.name.lower() == dir_name.lower() and in_root.exists():
+            return in_root
+        return None
 
-    out_ui = out_root / "UI_Sprites"
-    out_ui.mkdir(parents=True, exist_ok=True)
+    def resolve_ref_path(dir_name: str, name: str) -> Path:
+        if dir_name in ("UI_Sprites", "World_Sprites"):
+            return kit_root / dir_name / name
+        if dir_name == "ResourcesRoot":
+            return resources_root / name
+        return resources_root / dir_name / name
 
     processed = 0
     missing: List[str] = []
 
     for item in items:
         name = item.filename
-        if not want_file(name):
+        if not want_file(item.dir, name):
             continue
 
-        src = in_ui / name
+        in_dir = resolve_in_dir(item.dir)
+        if in_dir is None:
+            missing.append(f"{item.dir}/{name}")
+            continue
+
+        src = in_dir / name
         if not src.exists():
-            missing.append(name)
+            missing.append(f"{item.dir}/{name}")
             continue
 
-        ref = kit_root / "UI_Sprites" / name
+        ref = resolve_ref_path(item.dir, name)
         if not ref.exists():
             print(f"[skip] missing reference: {ref}")
             continue
 
-        dst = out_ui / name
+        dst = out_root / item.dir / name
         if dst.exists() and not args.overwrite:
             print(f"[skip] exists: {dst}")
             continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
 
         img = Image.open(src).convert("RGBA")
         if item.wants_transparent:
@@ -259,7 +281,7 @@ def main() -> int:
 
     if missing and not args.allow_partial:
         print("")
-        print("Missing files (rename your downloads to these exact names and put them under UI_Sprites/):")
+        print("Missing files (rename your downloads to these exact names and put them under the matching subfolder, e.g. UI_Sprites/BoosterPurchase/setting_page_assets/):")
         for m in missing:
             print(f"- {m}")
         raise SystemExit(f"Missing {len(missing)} files. Re-run with --allow-partial to ignore.")
@@ -271,4 +293,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

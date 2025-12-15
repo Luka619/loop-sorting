@@ -9,6 +9,7 @@ import re
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -18,6 +19,7 @@ from PIL import Image, ImageChops, ImageFilter
 
 @dataclass(frozen=True)
 class PromptItem:
+    dir: str
     filename: str
     positive: str
     negative: str
@@ -33,7 +35,8 @@ def parse_prompt_sheet(path: Path) -> List[PromptItem]:
 
     # Split by section headers.
     # Example: ## UI_Sprites/mint_square_normal.png (552x566)
-    headers = list(re.finditer(r"^## UI_Sprites/([^ ]+)", text, flags=re.M))
+    # Example: ## BoosterPurchase/btn_close.png (110x108)
+    headers = list(re.finditer(r"^## ([^/]+)/([^ ]+)", text, flags=re.M))
     if not headers:
         raise RuntimeError(f"No sections found in prompt sheet: {path}")
 
@@ -42,7 +45,8 @@ def parse_prompt_sheet(path: Path) -> List[PromptItem]:
         start = m.start()
         end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
         section = text[start:end]
-        filename = m.group(1).strip()
+        dir_name = m.group(1).strip()
+        filename = m.group(2).strip()
 
         def extract_block(title: str) -> str:
             # Matches:
@@ -65,6 +69,7 @@ def parse_prompt_sheet(path: Path) -> List[PromptItem]:
 
         items.append(
             PromptItem(
+                dir=dir_name,
                 filename=filename,
                 positive=positive,
                 negative=negative,
@@ -87,6 +92,15 @@ def choose_gen_size(target_w: int, target_h: int) -> Tuple[int, int]:
     return (1024, 1024)
 
 
+def normalize_size_arg(s: str) -> str:
+    s = (s or "").strip().lower().replace("×", "x")
+    if not s:
+        return ""
+    if not re.fullmatch(r"\d+x\d+", s):
+        raise ValueError(f"Invalid size: {s} (expected like 512x512)")
+    return s
+
+
 def http_json_post(url: str, payload: dict, api_key: str, timeout: int = 120) -> dict:
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, method="POST")
@@ -97,20 +111,28 @@ def http_json_post(url: str, payload: dict, api_key: str, timeout: int = 120) ->
         return json.loads(body)
 
 
+def redact_secrets(text: str) -> str:
+    if not text:
+        return text
+    # Common OpenAI-style key pattern; keeps logs safe if upstream echoes it.
+    return re.sub(r"\bsk-[A-Za-z0-9]{8,}\b", "sk-***", text)
+
+
 def openai_generate_b64(
     *,
+    images_url: str,
+    api_base: str,
     api_key: str,
     model: str,
     prompt: str,
     size: str,
     quality: Optional[str],
     style: Optional[str],
+    response_format: Optional[str],
     timeout: int,
     max_retries: int,
     base_backoff: float,
 ) -> Tuple[bytes, Optional[str]]:
-    url = "https://api.openai.com/v1/images/generations"
-
     payload: Dict[str, object] = {
         "model": model,
         "prompt": prompt,
@@ -122,11 +144,13 @@ def openai_generate_b64(
         payload["quality"] = quality
     if style:
         payload["style"] = style
+    if response_format:
+        payload["response_format"] = response_format
 
     last_err: Optional[Exception] = None
     for attempt in range(1, max_retries + 1):
         try:
-            rsp = http_json_post(url, payload, api_key=api_key, timeout=timeout)
+            rsp = http_json_post(images_url, payload, api_key=api_key, timeout=timeout)
             data = rsp.get("data") or []
             if not data:
                 raise RuntimeError(f"Empty response data: {rsp}")
@@ -137,7 +161,9 @@ def openai_generate_b64(
                 img_url = first.get("url")
                 if not img_url:
                     raise RuntimeError(f"Missing b64_json/url in response: {rsp}")
-                with urllib.request.urlopen(img_url, timeout=timeout) as img_resp:
+                if isinstance(img_url, str) and not img_url.lower().startswith(("http://", "https://")):
+                    img_url = urllib.parse.urljoin(api_base.rstrip("/") + "/", img_url.lstrip("/"))
+                with urllib.request.urlopen(str(img_url), timeout=timeout) as img_resp:
                     return img_resp.read(), first.get("revised_prompt")
 
             revised = first.get("revised_prompt")
@@ -149,11 +175,23 @@ def openai_generate_b64(
                 body = e.read().decode("utf-8")
             except Exception:
                 body = ""
+            body = redact_secrets(body)
+
+            # Some OpenAI-compatible proxies don't support response_format; auto-fallback to default.
+            if (
+                e.code == 400
+                and "response_format" in payload
+                and ("Unknown parameter" in body or '"param":"response_format"' in body)
+            ):
+                print("[warn] API rejected response_format; falling back to default response format")
+                payload.pop("response_format", None)
+                if attempt < max_retries:
+                    continue
 
             # Rate limit/backoff.
             retryable = e.code in (408, 429, 500, 502, 503, 504)
             if not retryable or attempt == max_retries:
-                raise RuntimeError(f"OpenAI HTTPError {e.code}: {body}") from e
+                raise RuntimeError(f"Images API HTTPError {e.code}: {body}") from e
 
             sleep_s = base_backoff * (2 ** (attempt - 1)) + random.random() * 0.25
             print(f"[retry] HTTP {e.code} attempt {attempt}/{max_retries} sleep {sleep_s:.2f}s")
@@ -274,8 +312,6 @@ def fit_to_reference(
     wants_transparent: bool,
 ) -> Image.Image:
     target_w, target_h = target_size
-    canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
-
     ref = Image.open(ref_path).convert("RGBA")
     ref_bbox = alpha_bbox(ref) or (0, 0, target_w, target_h)
     ref_cx = (ref_bbox[0] + ref_bbox[2]) / 2.0
@@ -288,51 +324,84 @@ def fit_to_reference(
     gen_bw = max(1, gen_bbox[2] - gen_bbox[0])
     gen_bh = max(1, gen_bbox[3] - gen_bbox[1])
 
-    scale = min(ref_bw / gen_bw, ref_bh / gen_bh) * 0.985
-    scale = max(0.15, min(3.0, scale))
-    new_w = max(1, int(round(img.size[0] * scale)))
-    new_h = max(1, int(round(img.size[1] * scale)))
-    img = img.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
+    base_scale = min(ref_bw / gen_bw, ref_bh / gen_bh) * 0.985
+    base_scale = max(0.15, min(3.0, base_scale))
 
-    gen_bbox2 = alpha_bbox(img) or (0, 0, img.size[0], img.size[1])
-    gen_cx = (gen_bbox2[0] + gen_bbox2[2]) / 2.0
-    gen_cy = (gen_bbox2[1] + gen_bbox2[3]) / 2.0
+    # Avoid tiny "shadow clipping" by verifying with a more sensitive alpha threshold and shrinking if needed.
+    last_canvas: Optional[Image.Image] = None
+    for shrink_i in range(5):
+        scale = base_scale * (0.97**shrink_i)
+        new_w = max(1, int(round(img.size[0] * scale)))
+        new_h = max(1, int(round(img.size[1] * scale)))
+        resized = img.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
 
-    paste_x = int(round(ref_cx - gen_cx))
-    paste_y = int(round(ref_cy - gen_cy))
+        gen_bbox2 = alpha_bbox(resized, alpha_threshold=8) or (0, 0, resized.size[0], resized.size[1])
+        gen_bbox2_outer = alpha_bbox(resized, alpha_threshold=1) or gen_bbox2
+        gen_cx = (gen_bbox2[0] + gen_bbox2[2]) / 2.0
+        gen_cy = (gen_bbox2[1] + gen_bbox2[3]) / 2.0
 
-    # Clamp to keep bbox inside canvas as much as possible.
-    bx0 = paste_x + gen_bbox2[0]
-    by0 = paste_y + gen_bbox2[1]
-    bx1 = paste_x + gen_bbox2[2]
-    by1 = paste_y + gen_bbox2[3]
+        paste_x = int(round(ref_cx - gen_cx))
+        paste_y = int(round(ref_cy - gen_cy))
 
-    if bx0 < 0:
-        paste_x += -bx0
-    if by0 < 0:
-        paste_y += -by0
-    if bx1 > target_w:
-        paste_x -= bx1 - target_w
-    if by1 > target_h:
-        paste_y -= by1 - target_h
+        # Clamp using outer bbox so faint pixels don't get clipped.
+        bx0 = paste_x + gen_bbox2_outer[0]
+        by0 = paste_y + gen_bbox2_outer[1]
+        bx1 = paste_x + gen_bbox2_outer[2]
+        by1 = paste_y + gen_bbox2_outer[3]
 
-    canvas.alpha_composite(img, dest=(paste_x, paste_y))
+        if bx0 < 0:
+            paste_x += -bx0
+        if by0 < 0:
+            paste_y += -by0
+        if bx1 > target_w:
+            paste_x -= bx1 - target_w
+        if by1 > target_h:
+            paste_y -= by1 - target_h
+
+        bx0 = paste_x + gen_bbox2_outer[0]
+        by0 = paste_y + gen_bbox2_outer[1]
+        bx1 = paste_x + gen_bbox2_outer[2]
+        by1 = paste_y + gen_bbox2_outer[3]
+        touches = bx0 < 1 or by0 < 1 or bx1 > (target_w - 1) or by1 > (target_h - 1)
+
+        canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
+        canvas.alpha_composite(resized, dest=(paste_x, paste_y))
+        last_canvas = canvas
+        if not touches:
+            break
 
     if not wants_transparent:
         # Fill remaining with opaque background sampled from edges.
         bg = sample_edge_bg_rgb(gen)
         opaque = Image.new("RGBA", (target_w, target_h), (bg[0], bg[1], bg[2], 255))
-        opaque.alpha_composite(canvas)
+        opaque.alpha_composite(last_canvas or Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0)))
         canvas = opaque
+    else:
+        canvas = last_canvas or Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
 
     return canvas
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Batch-generate UI PNGs via OpenAI Images API from the prompt sheet.")
+    ap.add_argument(
+        "--api-base",
+        default="https://api.openai.com/v1",
+        help="API base URL, e.g. https://api.openai.com/v1 or a proxy like https://api.apiyi.com/v1",
+    )
     ap.add_argument("--model", default="gpt-image-1", help="e.g. gpt-image-1 or dall-e-3")
-    ap.add_argument("--quality", default="", help="dall-e-3 only: standard|hd")
+    ap.add_argument("--quality", default="", help="Optional: depends on model/proxy (e.g. low|standard|hd).")
     ap.add_argument("--style", default="", help="dall-e-3 only: vivid|natural")
+    ap.add_argument(
+        "--response-format",
+        default="",
+        help="Optional: url|b64_json. Using url can reduce proxy 'completion tokens' by avoiding base64 in the JSON response.",
+    )
+    ap.add_argument(
+        "--gen-size",
+        default="",
+        help="Override generation size, e.g. 256x256, 512x512, 1024x1024 (proxy/model dependent).",
+    )
     ap.add_argument("--api-key-env", default="OPENAI_API_KEY")
     ap.add_argument(
         "--api-key-file",
@@ -343,6 +412,7 @@ def main() -> int:
     ap.add_argument("--prompt-sheet", default="Tools/UiRestyleV05/_prompt_sheet_hud_v05.md")
     ap.add_argument("--sizes-json", default="Tools/UiRestyleV05/_sizes_ui_sprites.json")
     ap.add_argument("--kit-root", default="Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti")
+    ap.add_argument("--resources-root", default="Assets/Resources", help="Project Resources root (for BoosterPurchase, setting_page_assets, etc).")
     ap.add_argument("--out-dir", default="Tools/UiRestyleV05/_openai_output")
 
     ap.add_argument("--only", action="append", default=[], help="glob filter(s), e.g. 'mint_square_*' (repeatable)")
@@ -357,6 +427,7 @@ def main() -> int:
     ap.add_argument("--sleep", type=float, default=0.2, help="sleep between requests")
 
     args = ap.parse_args()
+    rejected_gen_sizes: set[str] = set()
 
     def load_api_key() -> str:
         key = os.environ.get(args.api_key_env, "").strip()
@@ -382,47 +453,58 @@ def main() -> int:
     prompt_sheet = Path(args.prompt_sheet)
     sizes_json = Path(args.sizes_json)
     kit_root = Path(args.kit_root)
+    resources_root = Path(args.resources_root)
     out_root = Path(args.out_dir)
 
     items = parse_prompt_sheet(prompt_sheet)
-    sizes = load_json(sizes_json)
+    sizes = load_json(sizes_json) if sizes_json.exists() else []
     size_map: Dict[str, Tuple[int, int]] = {}
     for it in sizes:
         if it.get("dir") == "UI_Sprites":
             size_map[it["name"]] = (int(it["w"]), int(it["h"]))
 
-    def want_file(name: str) -> bool:
+    def want_file(dir_name: str, name: str) -> bool:
         if not args.only:
             return True
-        return any(fnmatch.fnmatch(name, pat) for pat in args.only)
+        rel = f"{dir_name}/{name}"
+        return any(fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(rel, pat) for pat in args.only)
 
-    ui_out = out_root / "UI_Sprites"
-    ui_out.mkdir(parents=True, exist_ok=True)
+    def resolve_reference_path(dir_name: str, name: str) -> Path:
+        if dir_name in ("UI_Sprites", "World_Sprites"):
+            return kit_root / dir_name / name
+        if dir_name == "conveyor_belt_texture_v02_candy":
+            return kit_root / dir_name / name
+        if dir_name == "ResourcesRoot":
+            return resources_root / name
+        return resources_root / dir_name / name
 
     count = 0
     for item in items:
         name = item.filename
-        if not want_file(name):
+        if not want_file(item.dir, name):
             continue
 
-        target_size = size_map.get(name)
-        if not target_size:
-            print(f"[skip] missing size entry: {name}")
-            continue
-        target_w, target_h = target_size
-
-        ref_path = kit_root / "UI_Sprites" / name
+        ref_path = resolve_reference_path(item.dir, name)
         if not ref_path.exists():
             print(f"[skip] missing reference PNG: {ref_path}")
             continue
 
-        out_path = ui_out / name
+        with Image.open(ref_path) as ref_img:
+            target_w, target_h = ref_img.size
+
+        # Optional sanity: warn if size map disagrees.
+        if item.dir == "UI_Sprites":
+            mapped = size_map.get(name)
+            if mapped and mapped != (target_w, target_h):
+                print(f"[warn] size json mismatch for {item.dir}/{name}: json={mapped[0]}x{mapped[1]} ref={target_w}x{target_h}")
+
+        out_path = out_root / item.dir / name
         if not args.overwrite and out_path.exists():
             print(f"[skip] exists: {out_path}")
             continue
 
         gen_w, gen_h = choose_gen_size(target_w, target_h)
-        gen_size = f"{gen_w}x{gen_h}"
+        gen_size = normalize_size_arg(args.gen_size) or f"{gen_w}x{gen_h}"
 
         prompt = item.positive.strip()
         neg = item.negative.strip()
@@ -430,23 +512,55 @@ def main() -> int:
             prompt = f"{prompt}\n\nAvoid: {neg}"
 
         if args.dry_run:
-            print(f"[dry-run] {name} target={target_w}x{target_h} gen={gen_size} model={args.model}")
+            print(f"[dry-run] {item.dir}/{name} target={target_w}x{target_h} gen={gen_size} model={args.model}")
             count += 1
         else:
-            print(f"[gen] {name} target={target_w}x{target_h} gen={gen_size} model={args.model}")
+            def size_candidates() -> List[str]:
+                if not args.gen_size:
+                    return [gen_size]
+                # When overriding to a smaller size, auto-fallback to larger common sizes if the API rejects it.
+                common = ["256x256", "512x512", "1024x1024"]
+                first = gen_size
+                return [first] + [s for s in common if s != first]
 
-            img_bytes, revised = openai_generate_b64(
-                api_key=api_key,
-                model=args.model,
-                prompt=prompt,
-                size=gen_size,
-                quality=args.quality or None,
-                style=args.style or None,
-                timeout=args.timeout,
-                max_retries=args.max_retries,
-                base_backoff=args.base_backoff,
-            )
-            img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
+            candidates = [s for s in size_candidates() if s not in rejected_gen_sizes]
+            if not candidates:
+                candidates = ["1024x1024"]
+            last_error: Optional[Exception] = None
+            for attempt_size in candidates:
+                if attempt_size != gen_size:
+                    print(f"[warn] retry with gen size {attempt_size} (previous rejected)")
+                print(f"[gen] {item.dir}/{name} target={target_w}x{target_h} gen={attempt_size} model={args.model}")
+
+                api_base = str(args.api_base).strip().rstrip("/")
+                images_url = f"{api_base}/images/generations"
+                try:
+                    img_bytes, revised = openai_generate_b64(
+                        images_url=images_url,
+                        api_base=api_base,
+                        api_key=api_key,
+                        model=args.model,
+                        prompt=prompt,
+                        size=attempt_size,
+                        quality=args.quality or None,
+                        style=args.style or None,
+                        response_format=args.response_format or None,
+                        timeout=args.timeout,
+                        max_retries=args.max_retries,
+                        base_backoff=args.base_backoff,
+                    )
+                    img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
+                    break
+                except RuntimeError as e:
+                    last_error = e
+                    msg = str(e)
+                    invalid_size = ('"param":"size"' in msg) or ("size" in msg.lower() and "invalid" in msg.lower())
+                    if invalid_size and attempt_size != candidates[-1]:
+                        rejected_gen_sizes.add(attempt_size)
+                        continue
+                    raise
+            else:
+                raise last_error or RuntimeError("Image generation failed")
 
             if item.wants_transparent:
                 img = ensure_transparent(img, tol=args.bg_tolerance)

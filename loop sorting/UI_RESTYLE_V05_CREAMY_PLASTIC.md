@@ -15,8 +15,12 @@
 2) 生成 HUD 核心资源的逐文件 Prompt Sheet（直接复制出图）：
    - `powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Hud`
    - 输出文件：`Tools/UiRestyleV05/_prompt_sheet_hud_v05.md`
-3) 用 Prompt Sheet 出图，保证：**同名 + 同尺寸 + PNG**（除 `bg_main.png / overlay_dim.png` 之外透明）
-4) 用替换脚本覆盖到工程（校验尺寸、保留 `.meta`）：见 `Tools/UiRestyleV05/README.md`
+3) 继续重做其它界面（设置/商店/结算等）的 Prompt Sheet：
+   - `powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Meta`
+   - 输出文件：`Tools/UiRestyleV05/_prompt_sheet_meta_v05.md`
+   - （可选）全量：`powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope All` → `Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
+4) 用 Prompt Sheet 出图，保证：**同名 + 同尺寸 + PNG**（除 `bg_main.png / overlay_dim.png` 之外透明）
+5) 用替换脚本覆盖到工程（校验尺寸、保留 `.meta`）：见 `Tools/UiRestyleV05/README.md`
 
 ## 2) 推荐的替换顺序（先可见、先高频）
 1) **HUD 核心**：`*_square_*`、`hud_pill_dark*`、`hud_level_label_bg.png`、`tag_fast_*`、`badge_red_bg.png`、`digit_*.png`、`icon_*.png`

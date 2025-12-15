@@ -1,0 +1,872 @@
+﻿[
+    {
+        "dir":  "UI_Sprites",
+        "name":  "badge_red_bg.png",
+        "w":  152,
+        "h":  162
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "bg_main.png",
+        "w":  1080,
+        "h":  1920
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_close_red_normal.png",
+        "w":  160,
+        "h":  170
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_close_red_pressed.png",
+        "w":  160,
+        "h":  170
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_price_green_disabled.png",
+        "w":  384,
+        "h":  198
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_price_green_normal.png",
+        "w":  384,
+        "h":  198
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_price_green_pressed.png",
+        "w":  384,
+        "h":  194
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_blue_disabled.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_blue_normal.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_blue_pressed.png",
+        "w":  464,
+        "h":  224
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_green_disabled.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_green_normal.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_green_pressed.png",
+        "w":  464,
+        "h":  224
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_orange_disabled.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_orange_normal.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_orange_pressed.png",
+        "w":  464,
+        "h":  224
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_red_disabled.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_red_normal.png",
+        "w":  464,
+        "h":  228
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "btn_small_red_pressed.png",
+        "w":  464,
+        "h":  224
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "card_setting_row.png",
+        "w":  864,
+        "h":  248
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_0.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_1.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_2.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_3.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_4.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_5.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_6.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_7.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_8.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "digit_9.png",
+        "w":  64,
+        "h":  88
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "heart_big.png",
+        "w":  352,
+        "h":  362
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "hud_level_label_bg.png",
+        "w":  392,
+        "h":  138
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "hud_pill_dark.png",
+        "w":  452,
+        "h":  138
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "hud_pill_dark_small.png",
+        "w":  352,
+        "h":  126
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "hud_pill_dark_tiny.png",
+        "w":  292,
+        "h":  126
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_clock.png",
+        "w":  224,
+        "h":  234
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_clock_128.png",
+        "w":  160,
+        "h":  170
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_close.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin.png",
+        "w":  224,
+        "h":  234
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin_128.png",
+        "w":  160,
+        "h":  170
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin_bag.png",
+        "w":  296,
+        "h":  308
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin_chest.png",
+        "w":  296,
+        "h":  308
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin_safe.png",
+        "w":  296,
+        "h":  308
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_coin_stack.png",
+        "w":  292,
+        "h":  302
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_fill.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_gear.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_heart.png",
+        "w":  224,
+        "h":  234
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_heart_128.png",
+        "w":  160,
+        "h":  170
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_lock.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_loop.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_music.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_next.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_no_ads_tv.png",
+        "w":  296,
+        "h":  310
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_pause.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_plus.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_retry.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_shop.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_shuffle.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_shuffle_noframe.png.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_sort_noframe.png.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_vibrate.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "icon_video.png",
+        "w":  192,
+        "h":  192
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "lock_chip_plate.png",
+        "w":  292,
+        "h":  132
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "lock_node_base.png",
+        "w":  360,
+        "h":  374
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "lock_node_label_bg.png",
+        "w":  252,
+        "h":  112
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "lock_node_lock.png",
+        "w":  212,
+        "h":  222
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_long_disabled.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_long_normal.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_long_pressed.png",
+        "w":  944,
+        "h":  314
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_square_disabled.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_square_normal.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "mint_square_pressed.png",
+        "w":  544,
+        "h":  554
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_long_disabled.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_long_normal.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_long_pressed.png",
+        "w":  944,
+        "h":  314
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_square_disabled.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_square_normal.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "orange_square_pressed.png",
+        "w":  544,
+        "h":  554
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "overlay_dim.png",
+        "w":  1080,
+        "h":  1920
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "panel_modal.png",
+        "w":  916,
+        "h":  794
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "panel_result.png",
+        "w":  956,
+        "h":  794
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "panel_thick_gold_blue.png",
+        "w":  960,
+        "h":  1140
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pill_bg.png",
+        "w":  392,
+        "h":  162
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pill_bg_disabled.png",
+        "w":  392,
+        "h":  162
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pill_bg_pressed.png",
+        "w":  392,
+        "h":  162
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pill_timer_beige.png",
+        "w":  464,
+        "h":  178
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_long_disabled.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_long_normal.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_long_pressed.png",
+        "w":  944,
+        "h":  314
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_square_disabled.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_square_normal.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "pink_square_pressed.png",
+        "w":  544,
+        "h":  554
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_long_disabled.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_long_normal.png",
+        "w":  944,
+        "h":  318
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_long_pressed.png",
+        "w":  944,
+        "h":  314
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_square_disabled.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_square_normal.png",
+        "w":  552,
+        "h":  566
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "purple_square_pressed.png",
+        "w":  544,
+        "h":  554
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_card_beige.png",
+        "w":  1048,
+        "h":  324
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_card_purple.png",
+        "w":  1048,
+        "h":  324
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_card_yellow.png",
+        "w":  1048,
+        "h":  324
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_group_bar.png",
+        "w":  752,
+        "h":  138
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_row_beige.png",
+        "w":  1044,
+        "h":  258
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_row_purple.png",
+        "w":  1044,
+        "h":  258
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_row_yellow.png",
+        "w":  1044,
+        "h":  258
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_scroll_fade_bottom.png",
+        "w":  1080,
+        "h":  180
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_scroll_fade_top.png",
+        "w":  1080,
+        "h":  180
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "shop_topbar_scallop_tile_512x128.png",
+        "w":  512,
+        "h":  128
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "tag_fast_danger_bg.png",
+        "w":  362,
+        "h":  120
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "tag_fast_info_bg.png",
+        "w":  362,
+        "h":  120
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "tag_small_info_bg.png",
+        "w":  292,
+        "h":  112
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "toggle_full_off.png",
+        "w":  292,
+        "h":  128
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "toggle_full_on.png",
+        "w":  292,
+        "h":  128
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "toggle_knob.png",
+        "w":  88,
+        "h":  96
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "toggle_track_off.png",
+        "w":  220,
+        "h":  60
+    },
+    {
+        "dir":  "UI_Sprites",
+        "name":  "toggle_track_on.png",
+        "w":  220,
+        "h":  60
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_badge_check_256.png",
+        "w":  292,
+        "h":  304
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_badge_check_512.png",
+        "w":  548,
+        "h":  560
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_frame_glow_1024.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_frame_glow_512.png",
+        "w":  512,
+        "h":  512
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_glass_overlay_1024.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_completed_glass_overlay_512.png",
+        "w":  512,
+        "h":  512
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_outline_dashed_open_right.png",
+        "w":  552,
+        "h":  562
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_outline_dashed_open_top.png",
+        "w":  552,
+        "h":  562
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "completed_overlay.png",
+        "w":  520,
+        "h":  520
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "conveyor_slot.png",
+        "w":  252,
+        "h":  162
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "lock_marker_color_disc.png",
+        "w":  160,
+        "h":  160
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "lock_marker_lock_icon.png",
+        "w":  192,
+        "h":  202
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "lock_marker_plate.png",
+        "w":  296,
+        "h":  308
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "lock_overlay.png",
+        "w":  556,
+        "h":  568
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "run_outline_9slice.png",
+        "w":  240,
+        "h":  240
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_complete_burst_sheet_8f_1024x512.png",
+        "w":  1024,
+        "h":  512
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_complete_burst_sheet_8f_512x256.png",
+        "w":  512,
+        "h":  256
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_rect_128.png",
+        "w":  128,
+        "h":  128
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_rect_256.png",
+        "w":  256,
+        "h":  256
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_star_128.png",
+        "w":  128,
+        "h":  128
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_star_256.png",
+        "w":  256,
+        "h":  256
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_stream_128.png",
+        "w":  128,
+        "h":  128
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_stream_256.png",
+        "w":  256,
+        "h":  256
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_tri_128.png",
+        "w":  128,
+        "h":  128
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_confetti_tri_256.png",
+        "w":  256,
+        "h":  256
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_firework_confetti_burst_sheet_16f_1024x1024.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_firework_confetti_burst_sheet_16f_2048x2048.png",
+        "w":  2048,
+        "h":  2048
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_sparkle_star_128.png",
+        "w":  128,
+        "h":  128
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "vfx_sparkle_star_256.png",
+        "w":  256,
+        "h":  256
+    }
+]

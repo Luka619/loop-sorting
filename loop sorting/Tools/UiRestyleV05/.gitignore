@@ -1,0 +1,5 @@
+__pycache__/
+_generated_v05/
+_openai_output/
+_web_output/
+_secrets/

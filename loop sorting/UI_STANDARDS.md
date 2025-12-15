@@ -9,11 +9,14 @@
 
 ---
 
-## 0.5 风格基准（Bright + Candy）
-- **参考**：你提供的 Shuffle/Setting 弹窗截图；UI 资源包说明见 `Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Docs/UI_GUIDE.md`
-- **视觉关键词**：大圆角 + 厚描边 + 软阴影/内阴影 + 渐变高光；白字 + 深色描边 + 轻 Underlay（更接近“糖果感/玩具感”的 3D 质感）
-- **颜色分工**：Mint=通用/主操作，Purple=Shuffle，Orange=强 CTA，Pink=扩展色（同 `UI_GUIDE.md`）
-- **优先落地范围**：玩法界面 + HUD（TopBar/货币条/BoosterButtons/FAST tag），再做弹窗与商店
+## 0.5 风格基准（v0.5 / Creamy Plastic）
+- **参考**：你提供的 Shuffle/Setting 弹窗截图（奶油底 + 橙色标题条 + 3D 塑料糖果质感）
+- **主规范**：`UI_STYLE_GUIDE_V05_CREAMY_PLASTIC.md`
+- **资源出图提示词**：`UI_ASSET_PROMPT_PACK_V05_CREAMY_PLASTIC.md`
+- **重制执行计划**：`UI_RESTYLE_V05_CREAMY_PLASTIC.md`
+- **资源替换脚本**：`Tools/UiRestyleV05/README.md`
+- **旧资源包说明（v0.4 组件/命名/9-slice 仍可复用）**：`Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Docs/UI_GUIDE.md`
+- **优先落地范围**：玩法界面 + HUD（TopBar/货币条/BoosterButtons/FAST tag），再扩展到弹窗与商店
 
 ## 0. 原则（必须遵守）
 1. **可预测**：同一 UI 在不同机型只允许“留白变化/边缘避让变化”，不允许“整体挤压导致布局语义改变”（例如按钮挤在一起、标题与按钮重叠）。

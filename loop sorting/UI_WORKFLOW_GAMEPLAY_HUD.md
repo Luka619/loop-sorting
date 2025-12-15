@@ -5,6 +5,10 @@
 ## 0. 固定输入（每次都要喂给 AI）
 - 规范：`UI_STANDARDS.md`
 - 资源包说明（风格基准/组件清单/9-slice）：`Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Docs/UI_GUIDE.md`
+- v0.5 风格规范（奶油塑料）：`UI_STYLE_GUIDE_V05_CREAMY_PLASTIC.md`
+- v0.5 资源出图 Prompt Pack：`UI_ASSET_PROMPT_PACK_V05_CREAMY_PLASTIC.md`
+- v0.5 重制执行计划：`UI_RESTYLE_V05_CREAMY_PLASTIC.md`
+- 资源替换脚本：`Tools/UiRestyleV05/README.md`
 - 动效语言：`Assets/Resources/LoopSorting_MotionPack/LoopSorting_MotionDesign.md`
 - 资源入口与布局：`Assets/Resources/LoopSortingUIKitConfig.json`（sprite keys / layout.modules / nineSliceRules）
 

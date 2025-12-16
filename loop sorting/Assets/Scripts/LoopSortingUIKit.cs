@@ -117,6 +117,9 @@ namespace LoopSorting
 
         private const string DefaultResourcesRoot = "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti";
         private const string ConfigResourcePath = "LoopSortingUIKitConfig";
+        public const string PlayerPrefsKeyResourcesRoot = "LoopSortingUIKit.ResourcesRoot";
+
+        private static string _resourcesRootOverride;
 
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, Sprite> SpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
@@ -162,11 +165,68 @@ namespace LoopSorting
         public static string GetResourcesRoot()
         {
             EnsureConfig();
+            if (!string.IsNullOrWhiteSpace(_resourcesRootOverride))
+            {
+                return _resourcesRootOverride.Trim();
+            }
             if (_config != null && !string.IsNullOrWhiteSpace(_config.resourcesRoot))
             {
                 return _config.resourcesRoot.Trim();
             }
             return DefaultResourcesRoot;
+        }
+
+        public static string GetResourcesRootOverride()
+        {
+            return _resourcesRootOverride;
+        }
+
+        public static void SetResourcesRootOverride(string resourcesRoot, bool persistToPlayerPrefs = false)
+        {
+            string normalized = (resourcesRoot ?? string.Empty).Trim().Replace('\\', '/').Trim('/');
+            if (string.IsNullOrEmpty(normalized))
+            {
+                if (_resourcesRootOverride == null && !persistToPlayerPrefs) return;
+                _resourcesRootOverride = null;
+                if (persistToPlayerPrefs)
+                {
+                    PlayerPrefs.DeleteKey(PlayerPrefsKeyResourcesRoot);
+                    PlayerPrefs.Save();
+                }
+                ResetConfigAndCaches();
+                return;
+            }
+
+            if (string.Equals(_resourcesRootOverride, normalized, StringComparison.Ordinal))
+            {
+                if (persistToPlayerPrefs)
+                {
+                    PlayerPrefs.SetString(PlayerPrefsKeyResourcesRoot, normalized);
+                    PlayerPrefs.Save();
+                }
+                return;
+            }
+
+            _resourcesRootOverride = normalized;
+            if (persistToPlayerPrefs)
+            {
+                PlayerPrefs.SetString(PlayerPrefsKeyResourcesRoot, normalized);
+                PlayerPrefs.Save();
+            }
+            ResetConfigAndCaches();
+        }
+
+        public static bool ApplyResourcesRootFromPlayerPrefs(bool resetIfMissing = false)
+        {
+            if (!PlayerPrefs.HasKey(PlayerPrefsKeyResourcesRoot))
+            {
+                if (resetIfMissing) SetResourcesRootOverride(string.Empty, persistToPlayerPrefs: false);
+                return false;
+            }
+
+            var root = PlayerPrefs.GetString(PlayerPrefsKeyResourcesRoot, string.Empty);
+            SetResourcesRootOverride(root, persistToPlayerPrefs: false);
+            return !string.IsNullOrWhiteSpace(root);
         }
 
         public static bool TryGetRuntimeLayout(out RuntimeLayout layout)
@@ -402,7 +462,17 @@ namespace LoopSorting
         {
             try
             {
-                var ta = Resources.Load<TextAsset>(ConfigResourcePath);
+                // Prefer per-pack config at "<ResourcesRoot>/LoopSortingUIKitConfig.json" when overriding root.
+                // This lets each art set keep its own layout + 9-slice tuning while using the same key mapping code.
+                TextAsset ta = null;
+                if (!string.IsNullOrWhiteSpace(_resourcesRootOverride))
+                {
+                    ta = Resources.Load<TextAsset>($"{_resourcesRootOverride.Trim()}/{ConfigResourcePath}");
+                }
+                if (ta == null)
+                {
+                    ta = Resources.Load<TextAsset>(ConfigResourcePath);
+                }
                 if (ta == null || string.IsNullOrWhiteSpace(ta.text))
                 {
                     return DefaultConfig();
@@ -419,6 +489,18 @@ namespace LoopSorting
             {
                 return DefaultConfig();
             }
+        }
+
+        private static void ResetConfigAndCaches()
+        {
+            _config = null;
+            _spriteByKey = null;
+            _textureByKey = null;
+            _nineSliceRules = null;
+            _runtimeLayout = default;
+            _runtimeLayoutFromConfig = false;
+            TextureCache.Clear();
+            SpriteCache.Clear();
         }
 
         private static ConfigFile DefaultConfig()
@@ -460,10 +542,11 @@ namespace LoopSorting
                     new NineSliceRuleFile { pattern = "orange_square_*", border = new[] {170,170,170,170} },
                     new NineSliceRuleFile { pattern = "mint_long_*", border = new[] {140,140,90,90} },
                     new NineSliceRuleFile { pattern = "purple_long_*", border = new[] {140,140,90,90} },
-                    new NineSliceRuleFile { pattern = "orange_long_*", border = new[] {140,140,90,90} },
+                    new NineSliceRuleFile { pattern = "orange_long_*", border = new[] {170,170,70,70} },
                     new NineSliceRuleFile { pattern = "pill_bg*", border = new[] {90,90,60,60} },
                     new NineSliceRuleFile { pattern = "panel_modal.png", border = new[] {120,120,120,120} },
                     new NineSliceRuleFile { pattern = "panel_result.png", border = new[] {120,120,120,120} },
+                    new NineSliceRuleFile { pattern = "panel_thick_gold_blue.png", border = new[] {140,140,140,140} },
                     new NineSliceRuleFile { pattern = "card_setting_row.png", border = new[] {70,70,50,50} },
                     new NineSliceRuleFile { pattern = "tag_fast_*", border = new[] {60,60,40,40} },
                     new NineSliceRuleFile { pattern = "tag_small_*", border = new[] {50,50,30,30} },

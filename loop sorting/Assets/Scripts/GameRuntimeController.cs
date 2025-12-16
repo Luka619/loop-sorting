@@ -330,6 +330,10 @@ namespace LoopSorting
             // Load persistent settings / economy / progress before building any UI.
             LoadSaveIfNeeded();
             EnsureEconomyDefaults();
+
+            // Optional: allow swapping the entire UIKit Resources pack by changing one string (PlayerPrefs).
+            // Example: PlayerPrefs.SetString("LoopSortingUIKit.ResourcesRoot", "loop_sorting_ui_components_v05_pack_b");
+            LoopSortingUIKit.ApplyResourcesRootFromPlayerPrefs();
         }
 
         private void LoadSaveIfNeeded()
@@ -1243,6 +1247,38 @@ namespace LoopSorting
         {
             if (button == null || image == null) return;
 
+            // Prefer split toggle (track + knob) from LoopSortingUIKit when available.
+            // We intentionally avoid pressed-sprite swaps to keep assets functionally reusable.
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                var track = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.track_on" : "ui.toggle.track_off");
+                var knobSprite = LoopSortingUIKit.LoadSpriteByKey("ui.toggle.knob");
+                if (track != null && knobSprite != null)
+                {
+                    image.sprite = track;
+                    image.type = Image.Type.Simple;
+                    image.preserveAspect = true;
+                    image.color = Color.white;
+
+                    var knobImg = EnsureToggleKnobImage(image, knobSprite);
+                    LayoutSplitToggle(image.rectTransform, knobImg.rectTransform, isOn);
+
+                    button.transition = Selectable.Transition.ColorTint;
+                    button.targetGraphic = image;
+                    button.image = image;
+                    var colors = button.colors;
+                    colors.normalColor = Color.white;
+                    colors.highlightedColor = new Color(1f, 1f, 1f, 0.98f);
+                    colors.pressedColor = new Color(0.92f, 0.92f, 0.92f, 0.98f);
+                    colors.selectedColor = Color.white;
+                    colors.disabledColor = new Color(1f, 1f, 1f, 0.6f);
+                    button.colors = colors;
+                    button.spriteState = default;
+                    return;
+                }
+            }
+
+            // Fallback: combined sprites from setting_page_assets (legacy).
             string normalKey = isOn ? "toggle_on" : "toggle_off";
             string pressedKey = isOn ? "toggle_on_pressed" : "toggle_off_pressed";
             var normal = TryLoadSettingsPageSprite(normalKey);
@@ -1251,10 +1287,110 @@ namespace LoopSorting
 
             button.transition = Selectable.Transition.SpriteSwap;
             button.image = image;
-            button.spriteState = new SpriteState
+            button.spriteState = new SpriteState { pressedSprite = pressed };
+        }
+
+        private static Image EnsureToggleKnobImage(Image trackImage, Sprite knobSprite)
+        {
+            if (trackImage == null) return null;
+            if (knobSprite == null) return null;
+
+            var existing = trackImage.transform.Find("Knob");
+            Image knobImg = null;
+            if (existing != null)
             {
-                pressedSprite = pressed
-            };
+                knobImg = existing.GetComponent<Image>();
+            }
+            if (knobImg == null)
+            {
+                var knobGO = new GameObject("Knob");
+                knobGO.transform.SetParent(trackImage.transform, false);
+                knobImg = knobGO.AddComponent<Image>();
+                knobImg.raycastTarget = false;
+                var knobRect = knobGO.GetComponent<RectTransform>();
+                knobRect.anchorMin = new Vector2(0.5f, 0.5f);
+                knobRect.anchorMax = new Vector2(0.5f, 0.5f);
+                knobRect.pivot = new Vector2(0.5f, 0.5f);
+                knobRect.anchoredPosition = Vector2.zero;
+            }
+
+            knobImg.sprite = knobSprite;
+            knobImg.type = Image.Type.Simple;
+            knobImg.preserveAspect = true;
+            knobImg.color = Color.white;
+            return knobImg;
+        }
+
+        private static void LayoutSplitToggle(RectTransform rootRect, RectTransform knobRect, bool isOn)
+        {
+            if (rootRect == null || knobRect == null) return;
+            var r = rootRect.rect;
+            float w = Mathf.Max(1f, r.width);
+            float h = Mathf.Max(1f, r.height);
+
+            float knobSide = Mathf.Clamp(h * 0.85f, 8f, 9999f);
+            knobRect.sizeDelta = new Vector2(knobSide, knobSide);
+
+            float margin = knobSide * 0.58f;
+            float x = isOn ? (w * 0.5f - margin) : (-w * 0.5f + margin);
+            knobRect.anchoredPosition = new Vector2(x, 0f);
+        }
+
+        private static Image EnsureOverlayImage(Transform parent, string name, Sprite sprite)
+        {
+            if (parent == null || sprite == null) return null;
+            var existing = parent.Find(name);
+            Image img = null;
+            if (existing != null) img = existing.GetComponent<Image>();
+            if (img == null)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(parent, false);
+                img = go.AddComponent<Image>();
+                img.raycastTarget = false;
+                var rect = go.GetComponent<RectTransform>();
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+            }
+            img.sprite = sprite;
+            img.type = Image.Type.Simple;
+            img.preserveAspect = false;
+            img.color = Color.white;
+            return img;
+        }
+
+        private static void ApplySplitBackground(
+            Image baseImage,
+            Transform parent,
+            string decorName,
+            string basePath,
+            string decorPath,
+            Sprite fallbackSprite,
+            Color noSpriteColor)
+        {
+            if (baseImage == null || parent == null) return;
+
+            var baseSprite = !string.IsNullOrEmpty(basePath) ? (LoopSortingUIKit.LoadSprite(basePath) ?? fallbackSprite) : fallbackSprite;
+            baseImage.sprite = baseSprite;
+            baseImage.type = baseSprite != null && baseSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+            baseImage.color = baseSprite != null ? Color.white : noSpriteColor;
+
+            if (!string.IsNullOrEmpty(decorPath))
+            {
+                var decor = LoopSortingUIKit.LoadSprite(decorPath);
+                if (decor != null)
+                {
+                    EnsureOverlayImage(parent, decorName, decor);
+                }
+                else
+                {
+                    var existing = parent.Find(decorName);
+                    if (existing != null) existing.gameObject.SetActive(false);
+                }
+            }
         }
 
         public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
@@ -1601,6 +1737,15 @@ namespace LoopSorting
             }
 
             count = Mathf.Clamp(count, 0, 99);
+            var tmp = badge.Find("Text")?.GetComponent<TextMeshProUGUI>();
+            if (tmp == null) tmp = badge.GetComponentInChildren<TextMeshProUGUI>(includeInactive: true);
+            if (tmp != null)
+            {
+                tmp.text = count.ToString();
+                return;
+            }
+
+            // Back-compat: older badges used sprite digits.
             int tens = count / 10;
             int ones = count % 10;
             bool showTens = count >= 10;
@@ -4061,9 +4206,15 @@ namespace LoopSorting
             counterBg.raycastTarget = false;
             if (hasKit)
             {
-                counterBg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
-                counterBg.type = counterBg.sprite != null && counterBg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                counterBg.color = Color.white;
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
+                ApplySplitBackground(
+                    baseImage: counterBg,
+                    parent: counterBgGO.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                    decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(0.1f, 0.1f, 0.1f, 0.55f));
             }
             else
             {
@@ -4425,9 +4576,15 @@ namespace LoopSorting
             boxImg.raycastTarget = false;
             if (hasKit)
             {
-                boxImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
-                boxImg.type = boxImg.sprite != null && boxImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                boxImg.color = Color.white;
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
+                ApplySplitBackground(
+                    baseImage: boxImg,
+                    parent: boxGO.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/panel_result_base_9slice.png",
+                    decorPath: "UI_Sprites/panel_result_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
             }
             else
             {
@@ -4652,26 +4809,105 @@ namespace LoopSorting
             }
 
             CreateOverlayButton("CloseButton", rectClose, out _settingsCloseButton, out _settingsCloseImage);
+            bool usingCloseBase = false;
+            var closeBase = TryLoadSettingsPageSprite("btn_close_base");
+            if (closeBase != null) usingCloseBase = true;
+            closeBase = closeBase ?? TryLoadSettingsPageSprite("btn_close");
+            var closePressed = TryLoadSettingsPageSprite("btn_close_base_pressed") ?? TryLoadSettingsPageSprite("btn_close_pressed");
             if (_settingsCloseImage != null)
             {
-                _settingsCloseImage.sprite = null;
-                _settingsCloseImage.color = new Color(1f, 1f, 1f, 0f);
+                if (closeBase != null)
+                {
+                    _settingsCloseImage.sprite = closeBase;
+                    _settingsCloseImage.color = Color.white;
+                    _settingsCloseImage.preserveAspect = true;
+                }
+                else
+                {
+                    _settingsCloseImage.sprite = null;
+                    _settingsCloseImage.color = new Color(1f, 1f, 1f, 0f);
+                }
             }
             if (_settingsCloseButton != null)
             {
-                _settingsCloseButton.transition = Selectable.Transition.None;
+                if (closeBase != null && closePressed != null)
+                {
+                    _settingsCloseButton.transition = Selectable.Transition.SpriteSwap;
+                    _settingsCloseButton.spriteState = new SpriteState { pressedSprite = closePressed };
+                }
+                else
+                {
+                    _settingsCloseButton.transition = Selectable.Transition.ColorTint;
+                }
+            }
+            if (usingCloseBase && hasKit && _settingsCloseImage != null)
+            {
+                var iconSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.close");
+                if (iconSprite != null)
+                {
+                    var iconImg = EnsureOverlayImage(_settingsCloseImage.transform, "Icon", iconSprite);
+                    if (iconImg != null)
+                    {
+                        iconImg.preserveAspect = true;
+                        var r = iconImg.rectTransform;
+                        float side = Mathf.Min(_settingsCloseImage.rectTransform.rect.width, _settingsCloseImage.rectTransform.rect.height) * 0.62f;
+                        r.anchorMin = new Vector2(0.5f, 0.5f);
+                        r.anchorMax = new Vector2(0.5f, 0.5f);
+                        r.pivot = new Vector2(0.5f, 0.5f);
+                        r.anchoredPosition = Vector2.zero;
+                        r.sizeDelta = new Vector2(side, side);
+                    }
+                }
             }
             _settingsCloseButton.onClick.AddListener(() => ToggleSettingsPanel(false));
 
             CreateOverlayButton("RetryButton", rectRetry, out _settingsRetryButton, out _settingsRetryImage);
+            bool usingRetryBase = false;
+            var retryBase = TryLoadSettingsPageSprite("btn_retry_base_normal");
+            if (retryBase != null) usingRetryBase = true;
+            retryBase = retryBase ?? TryLoadSettingsPageSprite("btn_retry") ?? TryLoadSettingsPageSprite("btn_retry_base");
+            var retryPressed = TryLoadSettingsPageSprite("btn_retry_base_pressed") ?? TryLoadSettingsPageSprite("btn_retry_pressed");
             if (_settingsRetryImage != null)
             {
-                _settingsRetryImage.sprite = null;
-                _settingsRetryImage.color = new Color(1f, 1f, 1f, 0f);
+                if (retryBase != null)
+                {
+                    _settingsRetryImage.sprite = retryBase;
+                    _settingsRetryImage.color = Color.white;
+                    _settingsRetryImage.preserveAspect = true;
+                }
+                else
+                {
+                    _settingsRetryImage.sprite = null;
+                    _settingsRetryImage.color = new Color(1f, 1f, 1f, 0f);
+                }
             }
             if (_settingsRetryButton != null)
             {
-                _settingsRetryButton.transition = Selectable.Transition.None;
+                if (retryBase != null && retryPressed != null)
+                {
+                    _settingsRetryButton.transition = Selectable.Transition.SpriteSwap;
+                    _settingsRetryButton.spriteState = new SpriteState { pressedSprite = retryPressed };
+                }
+                else
+                {
+                    _settingsRetryButton.transition = Selectable.Transition.ColorTint;
+                }
+            }
+            if (usingRetryBase && _settingsRetryImage != null)
+            {
+                var textGO = new GameObject("Text");
+                textGO.transform.SetParent(_settingsRetryImage.transform, false);
+                var tmp = textGO.AddComponent<TextMeshProUGUI>();
+                tmp.raycastTarget = false;
+                tmp.text = "RETRY";
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.fontSize = 64;
+                tmp.color = new Color(0.35f, 0.22f, 0.12f, 1f);
+                var tr = tmp.GetComponent<RectTransform>();
+                tr.anchorMin = Vector2.zero;
+                tr.anchorMax = Vector2.one;
+                tr.offsetMin = new Vector2(20f, 10f);
+                tr.offsetMax = new Vector2(-20f, -10f);
             }
             _settingsRetryButton.onClick.AddListener(() =>
             {
@@ -4768,16 +5004,15 @@ namespace LoopSorting
             _boosterPurchaseBackground.color = Color.white;
             if (hasKit)
             {
-                var bg = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
-                if (bg != null)
-                {
-                    _boosterPurchaseBackground.sprite = bg;
-                    _boosterPurchaseBackground.type = bg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                }
-                else
-                {
-                    _boosterPurchaseBackground.color = new Color(1f, 1f, 1f, 0.92f);
-                }
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                ApplySplitBackground(
+                    baseImage: _boosterPurchaseBackground,
+                    parent: popupGO.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                    decorPath: "UI_Sprites/panel_modal_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
             }
             else
             {
@@ -5133,13 +5368,15 @@ namespace LoopSorting
             {
                 if (hasKit)
                 {
-                    var bg = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
-                    if (bg != null)
-                    {
-                        _boosterPurchaseBackground.sprite = bg;
-                        _boosterPurchaseBackground.type = bg.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                        _boosterPurchaseBackground.color = Color.white;
-                    }
+                    var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                    ApplySplitBackground(
+                        baseImage: _boosterPurchaseBackground,
+                        parent: _boosterPurchaseBackground.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                        decorPath: "UI_Sprites/panel_modal_decor.png",
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
                 }
             }
 
@@ -5748,8 +5985,10 @@ namespace LoopSorting
             dim.raycastTarget = true;
             if (hasKit)
             {
-                dim.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.overlay_dim");
-                dim.color = Color.white;
+                // Always use a solid full-screen dim. Some themed overlay sprites can be partially transparent
+                // (e.g. top/bottom gradients), which makes the HUD behind look like a layout bug.
+                dim.sprite = null;
+                dim.color = new Color(0f, 0f, 0f, 0.55f);
             }
             else
             {
@@ -5764,20 +6003,34 @@ namespace LoopSorting
             var panelGO = new GameObject("Panel");
             panelGO.transform.SetParent(_shopPanel.transform, false);
             var panelRect = panelGO.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMin = new Vector2(0.5f, 0.52f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.52f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = new Vector2(0f, 40f);
-            panelRect.sizeDelta = new Vector2(980f, 1200f);
+            panelRect.anchoredPosition = Vector2.zero;
+            panelRect.sizeDelta = new Vector2(900f, 1060f);
 
             var panelImg = panelGO.AddComponent<Image>();
             panelImg.raycastTarget = false;
             if (hasKit)
             {
-                panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_shop");
-                if (panelImg.sprite == null) panelImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                // Prefer split panel (base + decor) if available; otherwise fall back to the legacy combined sprite.
+                var baseSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_gold_blue_base_9slice.png") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_modal_base_9slice.png") ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.panel_shop") ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+
+                panelImg.sprite = baseSprite;
                 panelImg.type = panelImg.sprite != null && panelImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 panelImg.color = Color.white;
+
+                var decorSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_gold_blue_decor.png") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_modal_decor.png");
+                if (decorSprite != null)
+                {
+                    EnsureOverlayImage(panelGO.transform, "Decor", decorSprite);
+                }
             }
             else
             {
@@ -5796,15 +6049,15 @@ namespace LoopSorting
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -50f);
+            titleRect.anchoredPosition = new Vector2(0f, -70f);
             titleRect.sizeDelta = new Vector2(700f, 100f);
 
             var closeBtn = CreateIconButton(
                 parent: panelGO.transform,
                 name: "CloseButton",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-96f, -96f),
-                size: new Vector2(160f, 160f),
+                anchoredPos: new Vector2(-90f, -90f),
+                size: new Vector2(128f, 128f),
                 normal: hasKit ? "ui.button.close_red.normal" : null,
                 pressed: hasKit ? "ui.button.close_red.pressed" : null,
                 disabled: hasKit ? "ui.button.close_red.disabled" : null,
@@ -5815,19 +6068,40 @@ namespace LoopSorting
                 AnimateUiPanel(_shopPanel, false, seconds: 0.18f);
             });
 
-            // Currency strip
-            var coinsStrip = CreateCurrencyStrip(panelGO.transform, "CoinsStrip", new Vector2(-220f, -150f), hasKit ? "ui.icon.coin" : null, out _shopCoinValue);
-            var livesStrip = CreateCurrencyStrip(panelGO.transform, "LivesStrip", new Vector2(220f, -150f), hasKit ? "ui.icon.heart" : null, out _shopLifeValue);
+            // Currency row (matches UI kit blueprint intent).
+            var currencyRowGO = new GameObject("CurrencyRow");
+            currencyRowGO.transform.SetParent(panelGO.transform, false);
+            var currencyRowRect = currencyRowGO.AddComponent<RectTransform>();
+            currencyRowRect.anchorMin = new Vector2(0.5f, 1f);
+            currencyRowRect.anchorMax = new Vector2(0.5f, 1f);
+            currencyRowRect.pivot = new Vector2(0.5f, 1f);
+            currencyRowRect.anchoredPosition = new Vector2(0f, -250f);
+            currencyRowRect.sizeDelta = new Vector2(860f, 120f);
+
+            var heartsStrip = CreateCurrencyStrip(currencyRowGO.transform, "Hearts", Vector2.zero, hasKit ? "ui.icon.heart" : null, out _shopLifeValue);
+            heartsStrip.anchorMin = new Vector2(0f, 0.5f);
+            heartsStrip.anchorMax = new Vector2(0f, 0.5f);
+            heartsStrip.pivot = new Vector2(0f, 0.5f);
+            heartsStrip.anchoredPosition = Vector2.zero;
+            heartsStrip.sizeDelta = new Vector2(480f, 120f);
+
+            var coinsStrip = CreateCurrencyStrip(currencyRowGO.transform, "Coins", Vector2.zero, hasKit ? "ui.icon.coin" : null, out _shopCoinValue);
+            coinsStrip.anchorMin = new Vector2(1f, 0.5f);
+            coinsStrip.anchorMax = new Vector2(1f, 0.5f);
+            coinsStrip.pivot = new Vector2(1f, 0.5f);
+            coinsStrip.anchoredPosition = Vector2.zero;
+            coinsStrip.sizeDelta = new Vector2(480f, 120f);
 
             // Scroll list (v04_3 spec): ScrollRect -> Viewport (RectMask2D) -> Content (VerticalLayoutGroup + ContentSizeFitter)
             var scrollGO = new GameObject("ShopScrollList");
             scrollGO.transform.SetParent(panelGO.transform, false);
             var scrollRect = scrollGO.AddComponent<RectTransform>();
-            scrollRect.anchorMin = new Vector2(0.5f, 0f);
-            scrollRect.anchorMax = new Vector2(0.5f, 0f);
-            scrollRect.pivot = new Vector2(0.5f, 0f);
-            scrollRect.anchoredPosition = new Vector2(0f, 80f);
-            scrollRect.sizeDelta = new Vector2(920f, 880f);
+            scrollRect.anchorMin = Vector2.zero;
+            scrollRect.anchorMax = Vector2.one;
+            scrollRect.pivot = new Vector2(0.5f, 0.5f);
+            // Leave space at the top for title + currency row, and at the bottom for breathing room.
+            scrollRect.offsetMin = new Vector2(60f, 90f);
+            scrollRect.offsetMax = new Vector2(-60f, -340f);
 
             _shopScroll = scrollGO.AddComponent<ScrollRect>();
             _shopScroll.horizontal = false;
@@ -5924,9 +6198,15 @@ namespace LoopSorting
             bg.raycastTarget = false;
             if (hasKit)
             {
-                bg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
-                bg.type = bg.sprite != null && bg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                bg.color = Color.white;
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
+                ApplySplitBackground(
+                    baseImage: bg,
+                    parent: go.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                    decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
             }
             else
             {
@@ -5954,15 +6234,15 @@ namespace LoopSorting
             var tmp = txtGO.AddComponent<TextMeshProUGUI>();
             tmp.raycastTarget = false;
             tmp.text = "0";
-            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
             tmp.fontSize = 56;
             tmp.color = Color.white;
             var tRect = txtGO.GetComponent<RectTransform>();
-            tRect.anchorMin = new Vector2(0.5f, 0.5f);
-            tRect.anchorMax = new Vector2(0.5f, 0.5f);
-            tRect.pivot = new Vector2(0.5f, 0.5f);
-            tRect.anchoredPosition = new Vector2(40f, 0f);
-            tRect.sizeDelta = new Vector2(260f, 90f);
+            tRect.anchorMin = new Vector2(0f, 0.5f);
+            tRect.anchorMax = new Vector2(0f, 0.5f);
+            tRect.pivot = new Vector2(0f, 0.5f);
+            tRect.anchoredPosition = new Vector2(190f, 0f);
+            tRect.sizeDelta = new Vector2(240f, 90f);
 
             valueText = tmp;
             return rect;
@@ -6020,11 +6300,20 @@ namespace LoopSorting
             if (hasKit)
             {
                 // Prefer card background for lives; coins are rendered as rows by AddShopCoinPackRow().
-                img.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.shop.item_bg");
-                if (img.sprite == null) img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige.png");
-                if (img.sprite == null) img.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                var baseSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige_base_9slice.png") ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.shop.item_bg") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige.png") ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+
+                var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige_decor.png");
+                if (decor != null)
+                {
+                    EnsureOverlayImage(itemGO.transform, "Decor", decor);
+                }
             }
             else
             {
@@ -6107,9 +6396,18 @@ namespace LoopSorting
             img.raycastTarget = false;
             if (hasKit)
             {
-                img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar.png");
+                var baseSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar_base.png") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar.png");
+                img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+
+                var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar_decor.png");
+                if (decor != null)
+                {
+                    EnsureOverlayImage(go.transform, "Decor", decor);
+                }
             }
             else
             {
@@ -6150,9 +6448,18 @@ namespace LoopSorting
             img.raycastTarget = true;
             if (hasKit)
             {
-                img.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow.png");
+                var baseSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow_base_9slice.png") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow.png");
+                img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+
+                var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow_decor.png");
+                if (decor != null)
+                {
+                    EnsureOverlayImage(itemGO.transform, "Decor", decor);
+                }
             }
             else
             {
@@ -6257,19 +6564,17 @@ namespace LoopSorting
             bg.raycastTarget = false;
             if (hasKit)
             {
-                var bgSprite =
+                var fallback =
                     LoopSortingUIKit.LoadSpriteByKey("ui.hud.pill_dark") ??
                     LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
-                if (bgSprite != null)
-                {
-                    bg.sprite = bgSprite;
-                    bg.type = bgSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                    bg.color = Color.white;
-                }
-                else
-                {
-                    bg.color = new Color(0f, 0f, 0f, 0.35f);
-                }
+                ApplySplitBackground(
+                    baseImage: bg,
+                    parent: root.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/hud_pill_dark_base_9slice.png",
+                    decorPath: "UI_Sprites/hud_pill_dark_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
             }
             else
             {
@@ -6438,9 +6743,15 @@ namespace LoopSorting
             bg.raycastTarget = false;
             if (hasKit)
             {
-                bg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
-                bg.type = bg.sprite != null && bg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                bg.color = Color.white;
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
+                ApplySplitBackground(
+                    baseImage: bg,
+                    parent: root.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                    decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
             }
             else
             {
@@ -6731,9 +7042,6 @@ namespace LoopSorting
             if (existing != null) return;
 
             count = Mathf.Clamp(count, 0, 99);
-            int tens = count / 10;
-            int ones = count % 10;
-            bool showTens = count >= 10;
 
             float buttonSize = 420f;
             var btnRect = buttonTransform.GetComponent<RectTransform>();
@@ -6765,34 +7073,29 @@ namespace LoopSorting
             bgRect.anchoredPosition = Vector2.zero;
             bgRect.sizeDelta = new Vector2(badgeSize * 0.86f, badgeSize * 0.86f);
 
-            var tensGO = new GameObject("DigitTens");
-            tensGO.transform.SetParent(badgeGO.transform, false);
-            var tensImg = tensGO.AddComponent<Image>();
-            tensImg.raycastTarget = false;
-            tensImg.sprite = LoopSortingUIKit.LoadSpriteByKey($"ui.digit.{tens}");
-            tensImg.color = Color.white;
-            tensImg.gameObject.SetActive(showTens);
-            var tensRect = tensGO.GetComponent<RectTransform>();
-            tensRect.anchorMin = new Vector2(0.5f, 0.5f);
-            tensRect.anchorMax = new Vector2(0.5f, 0.5f);
-            tensRect.pivot = new Vector2(0.5f, 0.5f);
-            float digitW = badgeSize * 0.46f;
-            float digitH = digitW * 1.375f;
-            tensRect.anchoredPosition = new Vector2(-digitW * 0.35f, 0f);
-            tensRect.sizeDelta = new Vector2(digitW, digitH);
+            var textGO = new GameObject("Text");
+            textGO.transform.SetParent(badgeGO.transform, false);
+            var tmp = textGO.AddComponent<TextMeshProUGUI>();
+            tmp.raycastTarget = false;
+            tmp.text = count.ToString();
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.enableWordWrapping = false;
+            tmp.color = Color.white;
+            tmp.fontSize = Mathf.Clamp(badgeSize * 0.58f, 36f, 72f);
+            ApplyTmpOutlineUnderlay(
+                tmp,
+                outlineWidth: 0.20f,
+                outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -2f),
+                underlaySoftness: 0.28f,
+                underlayDilate: 0.02f);
 
-            var onesGO = new GameObject("DigitOnes");
-            onesGO.transform.SetParent(badgeGO.transform, false);
-            var onesImg = onesGO.AddComponent<Image>();
-            onesImg.raycastTarget = false;
-            onesImg.sprite = LoopSortingUIKit.LoadSpriteByKey($"ui.digit.{ones}");
-            onesImg.color = Color.white;
-            var onesRect = onesGO.GetComponent<RectTransform>();
-            onesRect.anchorMin = new Vector2(0.5f, 0.5f);
-            onesRect.anchorMax = new Vector2(0.5f, 0.5f);
-            onesRect.pivot = new Vector2(0.5f, 0.5f);
-            onesRect.anchoredPosition = showTens ? new Vector2(digitW * 0.35f, 0f) : Vector2.zero;
-            onesRect.sizeDelta = new Vector2(digitW, digitH);
+            var textRect = tmp.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10f, 6f);
+            textRect.offsetMax = new Vector2(-10f, -6f);
         }
 
         private Button CreateBoosterButton(
@@ -6954,17 +7257,27 @@ namespace LoopSorting
 
             if (LoopSortingUIKit.IsAvailable())
             {
-                var sprite = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.full_on" : "ui.toggle.full_off");
-                if (sprite == null)
+                var track = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.track_on" : "ui.toggle.track_off");
+                var knobSprite = LoopSortingUIKit.LoadSpriteByKey("ui.toggle.knob");
+                if (track != null && knobSprite != null)
                 {
-                    sprite = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.track_on" : "ui.toggle.track_off");
+                    toggleImage.sprite = track;
+                    toggleImage.type = Image.Type.Simple;
+                    toggleImage.preserveAspect = true;
+                    toggleImage.color = Color.white;
+
+                    var knobImg = EnsureToggleKnobImage(toggleImage, knobSprite);
+                    LayoutSplitToggle(toggleImage.rectTransform, knobImg.rectTransform, isOn);
+                    return;
                 }
-                if (sprite != null)
+
+                var fallback = LoopSortingUIKit.LoadSpriteByKey(isOn ? "ui.toggle.full_on" : "ui.toggle.full_off");
+                if (fallback != null)
                 {
-                    toggleImage.sprite = sprite;
+                    toggleImage.sprite = fallback;
+                    toggleImage.color = Color.white;
+                    return;
                 }
-                toggleImage.color = Color.white;
-                return;
             }
 
             toggleImage.color = isOn ? new Color(0.2f, 0.75f, 0.2f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);

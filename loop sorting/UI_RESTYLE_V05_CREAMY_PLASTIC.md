@@ -12,13 +12,9 @@
 ## 1.1) 开始重制（今天就能跑通的一套最小闭环）
 1) 导出当前 UI_Sprites 的像素尺寸清单（给出图“定尺”）：
    - `powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReportPngSizes.ps1 -OutFile Tools/UiRestyleV05/_sizes_ui_sprites.json`
-2) 生成 HUD 核心资源的逐文件 Prompt Sheet（直接复制出图）：
-   - `powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Hud`
-   - 输出文件：`Tools/UiRestyleV05/_prompt_sheet_hud_v05.md`
-3) 继续重做其它界面（设置/商店/结算等）的 Prompt Sheet：
-   - `powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope Meta`
-   - 输出文件：`Tools/UiRestyleV05/_prompt_sheet_meta_v05.md`
-   - （可选）全量：`powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.ps1 -Scope All` → `Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
+2) Prompt 主存储（推荐）：
+   - Prompt DB：`Tools/UiRestyleV05/_prompt_db_all_v05.json`
+   - 导出浏览版 MD（可选）：`python Tools/UiRestyleV05/PromptDbCli.py export-md --out Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
 4) 用 Prompt Sheet 出图，保证：**同名 + 同尺寸 + PNG**（除 `bg_main.png / overlay_dim.png` 之外透明）
 5) 用替换脚本覆盖到工程（校验尺寸、保留 `.meta`）：见 `Tools/UiRestyleV05/README.md`
 

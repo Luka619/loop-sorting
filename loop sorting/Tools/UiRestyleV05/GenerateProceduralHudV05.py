@@ -111,18 +111,6 @@ def mask_erode(mask: Image.Image, r: int) -> Image.Image:
     return mask.filter(ImageFilter.MinFilter(r * 2 + 1))
 
 
-def alpha_bbox(img: Image.Image, alpha_threshold: int = 8) -> Optional[Tuple[int, int, int, int]]:
-    if img.mode != "RGBA":
-        img = img.convert("RGBA")
-    a = img.getchannel("A")
-    lut = _LUT_THRESH_CACHE.get(alpha_threshold)
-    if lut is None:
-        lut = [255 if i >= alpha_threshold else 0 for i in range(256)]
-        _LUT_THRESH_CACHE[alpha_threshold] = lut
-    bbox = a.point(lut).getbbox()
-    return bbox
-
-
 def _lut_scale(factor: float) -> List[int]:
     key = int(round(factor * 10000))
     hit = _LUT_SCALE_CACHE.get(key)
@@ -577,6 +565,22 @@ def paint_icon(size: Tuple[int, int], subject: str, *, scale: int) -> Image.Imag
 
 
 def parse_prompt_sheet_files(prompt_sheet_path: Path) -> List[str]:
+    if prompt_sheet_path.suffix.lower() == ".json":
+        try:
+            from PromptDbLib import PromptDb
+        except Exception as e:
+            raise RuntimeError(f"Cannot read prompt db json: {e}") from e
+        db = PromptDb.load(prompt_sheet_path)
+        files = []
+        for key, item in db.items.items():
+            dir_name = str(item.get("dir") or "").strip() or key.split("/", 1)[0]
+            filename = str(item.get("filename") or "").strip() or key.split("/", 1)[1]
+            if dir_name == "UI_Sprites":
+                files.append(filename)
+        if not files:
+            raise RuntimeError(f"No UI_Sprites entries found in prompt db: {prompt_sheet_path}")
+        return files
+
     text = prompt_sheet_path.read_text(encoding="utf-8-sig")
     files = re.findall(r"^## UI_Sprites/([^ ]+)", text, flags=re.M)
     if not files:
@@ -587,7 +591,7 @@ def parse_prompt_sheet_files(prompt_sheet_path: Path) -> List[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Generate procedural v0.5 HUD PNGs (creamy plastic) as a starter pack.")
     ap.add_argument("--kit-root", default="Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti")
-    ap.add_argument("--prompt-sheet", default="Tools/UiRestyleV05/_prompt_sheet_hud_v05.md")
+    ap.add_argument("--prompt-sheet", default="Tools/UiRestyleV05/_prompt_db_all_v05.json")
     ap.add_argument("--out-dir", default="Tools/UiRestyleV05/_generated_v05")
     ap.add_argument("--scale", type=int, default=4)
     args = ap.parse_args()
@@ -606,7 +610,8 @@ def main() -> int:
 
     files = parse_prompt_sheet_files(prompt_sheet)
 
-    # Determine base shape bbox from existing images, to preserve padding.
+    # Do not derive bbox from existing images (avoid bbox-based fitting/cropping logic).
+    # Use a simple padding rule instead.
     generated = 0
     for name in files:
         src = ui_dir / name
@@ -616,7 +621,9 @@ def main() -> int:
 
         src_img = Image.open(src).convert("RGBA")
         w, h = src_img.size
-        bbox = alpha_bbox(src_img) or (0, 0, w, h)
+        pad_x = int(round(w * 0.08))
+        pad_y = int(round(h * 0.08))
+        bbox = (pad_x, pad_y, max(pad_x + 1, w - pad_x), max(pad_y + 1, h - pad_y))
 
         out_path = out_dir / name
 

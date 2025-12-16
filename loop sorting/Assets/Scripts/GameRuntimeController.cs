@@ -4510,7 +4510,6 @@ namespace LoopSorting
                  pressed: hasKit ? "ui.button.mint_square.pressed" : null,
                  disabled: hasKit ? "ui.button.mint_square.disabled" : null,
                  icon: hasKit ? "ui.icon.sort" : null);
-            RemoveButtonFrame(_boosterSortButton);
             ApplyButtonPressScale(_boosterSortButton, pressedScale: 0.96f);
             _boosterSortButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Sort));
             if (hasKit) AttachBoosterBadge(_boosterSortButton.transform, _boosterSortCount);
@@ -4525,7 +4524,6 @@ namespace LoopSorting
                  pressed: hasKit ? "ui.button.purple_square.pressed" : null,
                  disabled: hasKit ? "ui.button.purple_square.disabled" : null,
                  icon: hasKit ? "ui.icon.shuffle" : null);
-            RemoveButtonFrame(_boosterShuffleButton);
             ApplyButtonPressScale(_boosterShuffleButton, pressedScale: 0.96f);
             _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
             if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
@@ -5388,12 +5386,18 @@ namespace LoopSorting
 
             if (_boosterPurchaseIcon != null)
             {
-                var icon = isShuffle
-                    ? TryLoadBoosterPurchaseSprite("icon_booster_shuffle")
-                    : (TryLoadBoosterPurchaseSprite("icon_booster_sort") ?? TryLoadBoosterPurchaseSprite("icon_booster_Sort"));
-                if (icon == null && hasKit)
+                // Keep booster icons consistent across HUD + purchase popup.
+                // Prefer UIKit icons (same keys as HUD); fall back to BoosterPurchase-specific icons only if needed.
+                Sprite icon = null;
+                if (hasKit)
                 {
                     icon = LoopSortingUIKit.LoadSpriteByKey(isShuffle ? "ui.icon.shuffle" : "ui.icon.sort");
+                }
+                if (icon == null)
+                {
+                    icon = isShuffle
+                        ? TryLoadBoosterPurchaseSprite("icon_booster_shuffle")
+                        : (TryLoadBoosterPurchaseSprite("icon_booster_sort") ?? TryLoadBoosterPurchaseSprite("icon_booster_Sort"));
                 }
                 _boosterPurchaseIcon.sprite = icon;
                 _boosterPurchaseIcon.color = icon != null ? Color.white : new Color(0f, 0f, 0f, 0.15f);

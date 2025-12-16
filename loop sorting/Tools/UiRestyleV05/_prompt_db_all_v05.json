@@ -21,8 +21,8 @@
       "background": "opaque",
       "template": "BG_MAIN",
       "tags": [],
-      "positive": "warm creamy background gradient, subtle bokeh accents in mint and pink, soft vignette, clean and minimal, no text, no characters, exact 1080x1920px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
-      "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+      "positive": "full-bleed mobile game background wallpaper (not an isolated object), fill the entire 1080x1920 canvas edge-to-edge, no empty/transparent pixels, no alpha channel (like a JPEG), creamy warm candy palette, smooth vertical gradient (warm beige -> soft sky blue), subtle soft bokeh dots, clean minimal, no UI elements, no text, no characters",
+      "negative": "transparent background, alpha, cutout, sticker, isolated object on transparent canvas, border, frame, UI, buttons, text, logo, watermark, photorealistic, 3D scene, perspective"
     },
     "UI_Sprites/btn_close_red_normal.png": {
       "dir": "UI_Sprites",

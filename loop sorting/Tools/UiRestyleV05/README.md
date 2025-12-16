@@ -33,34 +33,28 @@ python Tools/UiRestyleV05/GenerateProceduralHudV05.py --prompt-sheet Tools/UiRes
 - 输出目录：`Tools/UiRestyleV05/_generated_v05/UI_Sprites/`
 - 覆盖到工程（建议先演练）：`powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -SourceDir Tools/UiRestyleV05/_generated_v05 -DryRun -AllowPartial`
 
-## 2.3) 用 OpenAI 模型批量“真正出图”（推荐）
-脚本会读取 `Tools/UiRestyleV05/_prompt_sheet_hud_v05.md`，逐文件调用 OpenAI Images API 生成图片，再按工程内原图的 bbox/尺寸对齐，输出到同名 PNG 目录。
+## 2.3) 用 API易 代理批量“真正出图”（推荐）
+统一走 API 代理（API易），在 API 调用里设置 `background=transparent`，并使用 `--no-postprocess` 直接保存模型输出：不切图、不抠图。
 
-准备（只在本机环境变量里放 key，不要写进任何文件）：
+准备：
+- 推荐：把 API易 key 粘贴到 `Tools/UiRestyleV05/_secrets/openai_api_key.txt`（只一行，不要引号）
+- 或者：只在本机环境变量里放 key（不要写进任何文件）：
 ```powershell
 $env:OPENAI_API_KEY = "<your key>"
 ```
-或者（更推荐，避免粘贴到命令行历史）：
-- 把 key 粘贴到 `Tools/UiRestyleV05/_secrets/openai_api_key.txt`（只一行，不要引号）
 
-先 dry-run 看要生成哪些文件：
+先 dry-run 看要生成哪些文件（质量最低，省钱优先）：
 ```powershell
-python Tools/UiRestyleV05/GenerateOpenAiImages.py --model gpt-image-1 --dry-run --limit 5
+python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1-mini --quality low --gen-size auto --background transparent --no-postprocess --parallel 5 --dry-run --limit 5
 ```
 
-正式生成（建议先小批量试跑，避免一次性花费过大）：
+正式生成（质量最低，建议先小批量试跑）：
 ```powershell
-python Tools/UiRestyleV05/GenerateOpenAiImages.py --model gpt-image-1 --limit 10
-```
-（如果你用的是 API 代理，例如 API易：）```powershell
-python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1 --limit 10
+python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1-mini --quality low --gen-size auto --background transparent --no-postprocess --parallel 5 --limit 10
 ```
 （默认会跳过已存在的输出文件；需要重生成时加 `--overwrite`）
 
-如果要用 DALL·E 3（更偏“成片”，可用于带大字的资产）：
-```powershell
-python Tools/UiRestyleV05/GenerateOpenAiImages.py --model dall-e-3 --quality hd --style vivid --only "panel_*"
-```
+如需把输出严格对齐到工程内原图的像素尺寸/留白（会做对齐/缩放），去掉 `--no-postprocess`。
 
 输出目录（默认）：
 - `Tools/UiRestyleV05/_openai_output/UI_Sprites/*.png`
@@ -71,7 +65,8 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -Sou
 powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -SourceDir Tools/UiRestyleV05/_openai_output -Backup -AllowPartial
 ```
 
-## 2.4) 用网页版 ChatGPT 出图（不走 API 计费）+ 本地归一化（推荐）
+## 2.4) 用网页版 ChatGPT 出图（不走 API 计费）+ 本地归一化（不再推荐）
+现在统一使用 2.3 的 API易 代理出图（`--background transparent`），通常不再需要走网页版 + 归一化；下面内容仅保留备忘。
 网页版出图的“像素尺寸/透明背景/留白”不一定 100% 按要求输出，所以推荐流程是：
 1) 网页版按 `Tools/UiRestyleV05/_prompt_sheet_hud_v05.md` 逐个出图
 2) **下载后改成工程要求的文件名**，放到 `<WebOut>/UI_Sprites/`

@@ -10,6 +10,8 @@ import time
 import urllib.error
 import urllib.request
 import urllib.parse
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -96,8 +98,10 @@ def normalize_size_arg(s: str) -> str:
     s = (s or "").strip().lower().replace("×", "x")
     if not s:
         return ""
+    if s == "auto":
+        return s
     if not re.fullmatch(r"\d+x\d+", s):
-        raise ValueError(f"Invalid size: {s} (expected like 512x512)")
+        raise ValueError(f"Invalid size: {s} (expected like 512x512 or auto)")
     return s
 
 
@@ -128,6 +132,7 @@ def openai_generate_b64(
     size: str,
     quality: Optional[str],
     style: Optional[str],
+    background: Optional[str],
     response_format: Optional[str],
     timeout: int,
     max_retries: int,
@@ -144,6 +149,8 @@ def openai_generate_b64(
         payload["quality"] = quality
     if style:
         payload["style"] = style
+    if background:
+        payload["background"] = background
     if response_format:
         payload["response_format"] = response_format
 
@@ -185,6 +192,15 @@ def openai_generate_b64(
             ):
                 print("[warn] API rejected response_format; falling back to default response format")
                 payload.pop("response_format", None)
+                if attempt < max_retries:
+                    continue
+            if (
+                e.code == 400
+                and "background" in payload
+                and ("Unknown parameter" in body or '"param":"background"' in body)
+            ):
+                print("[warn] API rejected background; falling back to prompt-only background instruction")
+                payload.pop("background", None)
                 if attempt < max_retries:
                     continue
 
@@ -398,9 +414,20 @@ def main() -> int:
         help="Optional: url|b64_json. Using url can reduce proxy 'completion tokens' by avoiding base64 in the JSON response.",
     )
     ap.add_argument(
+        "--background",
+        default="",
+        help="Optional: transparent|opaque (model/proxy dependent). When set, the prompt is also adjusted to match.",
+    )
+    ap.add_argument(
         "--gen-size",
         default="",
-        help="Override generation size, e.g. 256x256, 512x512, 1024x1024 (proxy/model dependent).",
+        help="Override generation size, e.g. 256x256, 512x512, 1024x1024, auto (proxy/model dependent).",
+    )
+    ap.add_argument(
+        "--strict-gen-size",
+        action="store_true",
+        default=False,
+        help="When --gen-size is set, do not fallback to other sizes if the API rejects it.",
     )
     ap.add_argument("--api-key-env", default="OPENAI_API_KEY")
     ap.add_argument(
@@ -418,6 +445,18 @@ def main() -> int:
     ap.add_argument("--only", action="append", default=[], help="glob filter(s), e.g. 'mint_square_*' (repeatable)")
     ap.add_argument("--limit", type=int, default=0, help="limit number of generated files (0 = no limit)")
     ap.add_argument("--overwrite", action="store_true", default=False, help="overwrite existing output PNGs (default: skip)")
+    ap.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help="Number of concurrent generations (default 1). Use with care to avoid rate limits.",
+    )
+    ap.add_argument(
+        "--no-postprocess",
+        action="store_true",
+        default=False,
+        help="Write the model output directly (skip transparency fix and bbox/size fitting to the reference).",
+    )
     ap.add_argument("--dry-run", action="store_true", default=False)
 
     ap.add_argument("--bg-tolerance", type=int, default=18, help="background remove tolerance (when transparency missing)")
@@ -428,6 +467,15 @@ def main() -> int:
 
     args = ap.parse_args()
     rejected_gen_sizes: set[str] = set()
+    rejected_lock = threading.Lock()
+
+    background = (args.background or "").strip().lower()
+    if background and background not in ("transparent", "opaque"):
+        raise SystemExit(f"Invalid --background: {args.background} (expected transparent|opaque)")
+
+    parallel = int(args.parallel or 1)
+    if parallel < 1:
+        raise SystemExit(f"Invalid --parallel: {args.parallel} (expected >= 1)")
 
     def load_api_key() -> str:
         key = os.environ.get(args.api_key_env, "").strip()
@@ -478,21 +526,46 @@ def main() -> int:
             return resources_root / name
         return resources_root / dir_name / name
 
-    count = 0
-    for item in items:
-        name = item.filename
-        if not want_file(item.dir, name):
-            continue
+    def apply_background_override(prompt: str) -> str:
+        if not background:
+            return prompt
+        if background == "opaque":
+            p = prompt
+            p = re.sub(r"(?i)\btransparent background\b", "opaque background", p)
+            p = re.sub(r"(?i)\btransparent padding\b", "padding", p)
+            p = re.sub(r"(?i)\bleave generous transparent padding\b", "leave generous padding", p)
+            p = re.sub(r"(?i)\bno background\b", "plain solid background (no background scene)", p)
+            if "background:" not in p.lower():
+                p = f"{p}\n\nBackground: opaque solid color, no scene."
+            return p
+        if background == "transparent":
+            p = prompt
+            p = re.sub(r"(?i)\bopaque background\b", "transparent background", p)
+            if "transparent background" not in p.lower() and "background:" not in p.lower():
+                p = f"{p}\n\nBackground: transparent."
+            return p
+        return prompt
 
+    def size_candidates(*, gen_size: str) -> List[str]:
+        if not args.gen_size:
+            return [gen_size]
+        if args.strict_gen_size:
+            return [gen_size]
+        # When overriding to a smaller size, auto-fallback to larger common sizes if the API rejects it.
+        common = ["256x256", "512x512", "1024x1024"]
+        first = gen_size
+        return [first] + [s for s in common if s != first]
+
+    def process_item(item: PromptItem) -> bool:
+        name = item.filename
         ref_path = resolve_reference_path(item.dir, name)
         if not ref_path.exists():
             print(f"[skip] missing reference PNG: {ref_path}")
-            continue
+            return False
 
         with Image.open(ref_path) as ref_img:
             target_w, target_h = ref_img.size
 
-        # Optional sanity: warn if size map disagrees.
         if item.dir == "UI_Sprites":
             mapped = size_map.get(name)
             if mapped and mapped != (target_w, target_h):
@@ -501,87 +574,151 @@ def main() -> int:
         out_path = out_root / item.dir / name
         if not args.overwrite and out_path.exists():
             print(f"[skip] exists: {out_path}")
-            continue
+            return False
 
         gen_w, gen_h = choose_gen_size(target_w, target_h)
         gen_size = normalize_size_arg(args.gen_size) or f"{gen_w}x{gen_h}"
 
-        prompt = item.positive.strip()
+        wants_transparent = item.wants_transparent
+        if background == "opaque":
+            wants_transparent = False
+        elif background == "transparent":
+            wants_transparent = True
+
+        prompt = apply_background_override(item.positive.strip())
         neg = item.negative.strip()
         if neg:
             prompt = f"{prompt}\n\nAvoid: {neg}"
 
-        if args.dry_run:
-            print(f"[dry-run] {item.dir}/{name} target={target_w}x{target_h} gen={gen_size} model={args.model}")
-            count += 1
-        else:
-            def size_candidates() -> List[str]:
-                if not args.gen_size:
-                    return [gen_size]
-                # When overriding to a smaller size, auto-fallback to larger common sizes if the API rejects it.
-                common = ["256x256", "512x512", "1024x1024"]
-                first = gen_size
-                return [first] + [s for s in common if s != first]
+        def candidates_for_item() -> List[str]:
+            if args.gen_size and args.strict_gen_size:
+                return size_candidates(gen_size=gen_size)
+            with rejected_lock:
+                candidates = [s for s in size_candidates(gen_size=gen_size) if s not in rejected_gen_sizes]
+            return candidates or ["1024x1024"]
 
-            candidates = [s for s in size_candidates() if s not in rejected_gen_sizes]
-            if not candidates:
-                candidates = ["1024x1024"]
-            last_error: Optional[Exception] = None
-            for attempt_size in candidates:
-                if attempt_size != gen_size:
-                    print(f"[warn] retry with gen size {attempt_size} (previous rejected)")
-                print(f"[gen] {item.dir}/{name} target={target_w}x{target_h} gen={attempt_size} model={args.model}")
+        candidates = candidates_for_item()
+        last_error: Optional[Exception] = None
+        img_bytes: Optional[bytes] = None
+        revised: Optional[str] = None
+        img: Optional[Image.Image] = None
+        for attempt_size in candidates:
+            if attempt_size != gen_size:
+                print(f"[warn] retry with gen size {attempt_size} (previous rejected)")
+            bg_info = f" bg={background}" if background else ""
+            print(f"[gen] {item.dir}/{name} target={target_w}x{target_h} gen={attempt_size} model={args.model}{bg_info}")
 
-                api_base = str(args.api_base).strip().rstrip("/")
-                images_url = f"{api_base}/images/generations"
-                try:
-                    img_bytes, revised = openai_generate_b64(
-                        images_url=images_url,
-                        api_base=api_base,
-                        api_key=api_key,
-                        model=args.model,
-                        prompt=prompt,
-                        size=attempt_size,
-                        quality=args.quality or None,
-                        style=args.style or None,
-                        response_format=args.response_format or None,
-                        timeout=args.timeout,
-                        max_retries=args.max_retries,
-                        base_backoff=args.base_backoff,
-                    )
+            api_base = str(args.api_base).strip().rstrip("/")
+            images_url = f"{api_base}/images/generations"
+            try:
+                img_bytes, revised = openai_generate_b64(
+                    images_url=images_url,
+                    api_base=api_base,
+                    api_key=api_key,
+                    model=args.model,
+                    prompt=prompt,
+                    size=attempt_size,
+                    quality=args.quality or None,
+                    style=args.style or None,
+                    background=background or None,
+                    response_format=args.response_format or None,
+                    timeout=args.timeout,
+                    max_retries=args.max_retries,
+                    base_backoff=args.base_backoff,
+                )
+                if not args.no_postprocess:
                     img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
-                    break
-                except RuntimeError as e:
-                    last_error = e
-                    msg = str(e)
-                    invalid_size = ('"param":"size"' in msg) or ("size" in msg.lower() and "invalid" in msg.lower())
-                    if invalid_size and attempt_size != candidates[-1]:
+                break
+            except RuntimeError as e:
+                last_error = e
+                msg = str(e)
+                invalid_size = ('"param":"size"' in msg) or ("size" in msg.lower() and "invalid" in msg.lower())
+                if invalid_size and attempt_size != candidates[-1]:
+                    with rejected_lock:
                         rejected_gen_sizes.add(attempt_size)
-                        continue
-                    raise
-            else:
-                raise last_error or RuntimeError("Image generation failed")
+                    continue
+                raise
+        else:
+            raise last_error or RuntimeError("Image generation failed")
 
-            if item.wants_transparent:
-                img = ensure_transparent(img, tol=args.bg_tolerance)
+        if not img_bytes:
+            raise RuntimeError("Image generation returned empty bytes")
 
-            final_img = fit_to_reference(
-                img,
-                ref_path=ref_path,
-                target_size=(target_w, target_h),
-                wants_transparent=item.wants_transparent,
-            )
-
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            final_img.save(out_path, format="PNG")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        if args.no_postprocess:
+            out_path.write_bytes(img_bytes)
             if revised:
                 (out_path.parent / f"{name}.revised_prompt.txt").write_text(revised, encoding="utf-8")
-
             time.sleep(max(0.0, float(args.sleep)))
-            count += 1
+            return True
 
-        if args.limit and count >= args.limit:
+        if img is None:
+            raise RuntimeError("Image decode failed")
+
+        if wants_transparent:
+            img = ensure_transparent(img, tol=args.bg_tolerance)
+
+        final_img = fit_to_reference(
+            img,
+            ref_path=ref_path,
+            target_size=(target_w, target_h),
+            wants_transparent=wants_transparent,
+        )
+
+        final_img.save(out_path, format="PNG")
+        if revised:
+            (out_path.parent / f"{name}.revised_prompt.txt").write_text(revised, encoding="utf-8")
+
+        time.sleep(max(0.0, float(args.sleep)))
+        return True
+
+    # Build work list.
+    work: List[PromptItem] = []
+    for item in items:
+        name = item.filename
+        if not want_file(item.dir, name):
+            continue
+        work.append(item)
+        if args.limit and len(work) >= args.limit:
             break
+
+    if args.dry_run:
+        count = 0
+        for item in work:
+            name = item.filename
+            ref_path = resolve_reference_path(item.dir, name)
+            if not ref_path.exists():
+                print(f"[skip] missing reference PNG: {ref_path}")
+                continue
+
+            with Image.open(ref_path) as ref_img:
+                target_w, target_h = ref_img.size
+
+            out_path = out_root / item.dir / name
+            if not args.overwrite and out_path.exists():
+                print(f"[skip] exists: {out_path}")
+                continue
+
+            gen_w, gen_h = choose_gen_size(target_w, target_h)
+            gen_size = normalize_size_arg(args.gen_size) or f"{gen_w}x{gen_h}"
+            bg_info = f" bg={background}" if background else ""
+            print(f"[dry-run] {item.dir}/{name} target={target_w}x{target_h} gen={gen_size} model={args.model}{bg_info}")
+            count += 1
+        print(f"Done. Processed: {count}")
+        return 0
+
+    # Execute work list.
+    count = 0
+    if parallel == 1:
+        for item in work:
+            if process_item(item):
+                count += 1
+    else:
+        with ThreadPoolExecutor(max_workers=parallel) as ex:
+            futures = [ex.submit(process_item, item) for item in work]
+            for fut in as_completed(futures):
+                if fut.result():
+                    count += 1
 
     print(f"Done. Processed: {count}")
     return 0

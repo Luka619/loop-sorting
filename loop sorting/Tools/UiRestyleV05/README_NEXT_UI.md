@@ -33,7 +33,13 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.
 6) （可选）**World_Sprites**：完成/锁等世界 UI 视觉统一
 
 ## 4) 出图后的一键处理与替换（抠图/对齐/覆盖）
-### 4.1 先把你的新图放到 `_openai_output`
+### 4.1 用 API易 代理批量出图到 `_openai_output`
+推荐直接用脚本出图（`--background transparent --no-postprocess`），不切图、不抠图，不再需要先网页版下载再“抠图/归一化”。
+```powershell
+python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1-mini --quality low --gen-size auto --background transparent --no-postprocess --parallel 5 --prompt-sheet Tools/UiRestyleV05/_prompt_sheet_all_v05.md --out-dir Tools/UiRestyleV05/_openai_output --limit 10
+```
+（跑全量时去掉 `--limit`；需要重生成时加 `--overwrite`）
+
 目录结构建议保持一致：
 - UIKit：`Tools/UiRestyleV05/_openai_output/UI_Sprites/*.png`
 - 可选世界：`Tools/UiRestyleV05/_openai_output/World_Sprites/*.png`
@@ -42,7 +48,8 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/GeneratePromptSheet.
   - `Tools/UiRestyleV05/_openai_output/setting_page_assets/*.png`
   - `Tools/UiRestyleV05/_openai_output/ResourcesRoot/setting_page.png`（如果重做整张 setting_page）
 
-### 4.2 自动抠图 + 尺寸/居中对齐（覆盖写回）
+### 4.2 （可选）只有非 API 出图来源才需要归一化
+如果你的图片来自网页版下载/其它来源（尺寸/透明不可靠），再用这个脚本做“透明背景（可选）+ 对齐 bbox + 输出为精确尺寸 PNG”：
 ```powershell
 python Tools/UiRestyleV05/NormalizeWebImages.py --in-dir Tools/UiRestyleV05/_openai_output --out-dir Tools/UiRestyleV05/_openai_output --prompt-sheet Tools/UiRestyleV05/_prompt_sheet_all_v05.md --overwrite --allow-partial
 ```
@@ -68,4 +75,3 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -Sou
 - 9-slice：面板/卡片拉伸不变形（边角不被拉伸）
 - 点击区：小按钮（close/plus）可点击面积足够
 - 文案层级：数字/价格/倍率在深色底上可读、对比足够
-

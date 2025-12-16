@@ -2005,6 +2005,30 @@
       "positive": "Close button BASE (Settings overlay) PRESSED, background only (glyph is separate icon):\n- Same shape as normal.\n- Pressed change: slightly darker and lower contrast, highlight reduced, drop shadow shorter/softer, inner shadow stronger.\nTransparent background, centered, no cropping, crisp edges, sRGB, PNG, orthographic front view.",
       "negative": "photorealistic, realistic materials, wood grain, leather, fabric, paper texture, metal, brushed texture, background scene, vignette, glow, haze, background gradient, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
+    "setting_page_assets/btn_retry_base_normal.png": {
+      "dir": "setting_page_assets",
+      "filename": "btn_retry_base_normal.png",
+      "size": "632x244",
+      "background": "transparent",
+      "template": "BTN_RETRY_BASE",
+      "tags": [
+        "split_base"
+      ],
+      "positive": "Retry button BASE (Settings overlay), background only (text is TMP):\n- Shape: wide rounded-rectangle button 632x244, thick outer rim/frame, slightly recessed inner face (concave), soft bevel.\n- Material: creamy plastic candy style, warm beige/cream, subtle orange rim accent, top-left highlight, soft inner shadow, gentle ambient occlusion.\n- Normal state: brighter highlight and slightly longer drop shadow.\n- No text, no icons.\nTransparent background, centered, no cropping, crisp edges, sRGB, PNG, orthographic front view.",
+      "negative": "photorealistic, realistic materials, wood grain, leather, fabric, paper texture, metal, brushed texture, background scene, vignette, glow, haze, background gradient, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "setting_page_assets/btn_retry_base_pressed.png": {
+      "dir": "setting_page_assets",
+      "filename": "btn_retry_base_pressed.png",
+      "size": "632x244",
+      "background": "transparent",
+      "template": "BTN_RETRY_BASE",
+      "tags": [
+        "split_base"
+      ],
+      "positive": "Retry button BASE (Settings overlay) PRESSED, background only (text is TMP):\n- Same shape as normal.\n- Pressed change: slightly darker and lower contrast, highlight reduced, drop shadow shorter/softer, inner shadow stronger.\n- No text, no icons.\nTransparent background, centered, no cropping, crisp edges, sRGB, PNG, orthographic front view.",
+      "negative": "photorealistic, realistic materials, wood grain, leather, fabric, paper texture, metal, brushed texture, background scene, vignette, glow, haze, background gradient, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks/block_blue.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/Blocks",
       "filename": "block_blue.png",

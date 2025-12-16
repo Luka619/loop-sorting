@@ -14,7 +14,14 @@ param(
 
     [switch]$DryRun,
 
-    [switch]$AllowPartial
+    [switch]$AllowPartial,
+
+    # Back-compat: when provided, size mismatches will be warned but not blocked.
+    # Default behavior is now also to allow mismatches unless -StrictSize is set.
+    [switch]$AllowSizeMismatch,
+
+    # Enforce exact pixel-size match (old default behavior).
+    [switch]$StrictSize
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,6 +58,10 @@ function Ensure-Dir([string]$dir) {
 
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $backupRoot = Join-Path "Tools/UiRestyleV05/_backup" $timestamp
+
+if ($AllowSizeMismatch -and $StrictSize) {
+    Fail "Invalid args: -AllowSizeMismatch and -StrictSize cannot be used together."
+}
 
 function Resolve-SourceFile([string]$subDir, [string]$fileName) {
     $candidate1 = Join-Path (Join-Path $SourceDir $subDir) $fileName
@@ -89,7 +100,11 @@ function Replace-InTargetDir([string]$sourceSubDir, [string]$targetDir) {
         $exp = Get-PngSize $t.FullName
         $act = Get-PngSize $src
         if ($exp.w -ne $act.w -or $exp.h -ne $act.h) {
-            Fail "Size mismatch for $sourceSubDir/$($t.Name): expected ${($exp.w)}x${($exp.h)}, got ${($act.w)}x${($act.h)}"
+            $msg = "Size mismatch for $sourceSubDir/$($t.Name): expected ${($exp.w)}x${($exp.h)}, got ${($act.w)}x${($act.h)}"
+            if ($StrictSize) {
+                Fail $msg
+            }
+            Write-Host "[warn] $msg"
         }
 
         if ($Backup) {
@@ -122,6 +137,7 @@ if ($IncludeExtraResources) { Write-Host "Resources: $ResourcesRoot" }
 Write-Host "DryRun:    $DryRun"
 Write-Host "Backup:    $Backup"
 Write-Host "Partial:   $AllowPartial"
+Write-Host "SizeCheck: $(if ($StrictSize) { 'STRICT' } else { 'ALLOW_MISMATCH' })"
 Write-Host "Extras:    $IncludeExtraResources"
 if ($Backup -and !$DryRun) { Write-Host "BackupDir: $backupRoot" }
 

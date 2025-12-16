@@ -446,6 +446,12 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="limit number of generated files (0 = no limit)")
     ap.add_argument("--overwrite", action="store_true", default=False, help="overwrite existing output PNGs (default: skip)")
     ap.add_argument(
+        "--fit-only",
+        action="store_true",
+        default=False,
+        help="No API calls: fit existing images in --out-dir to the reference PNG sizes (overwrite in place).",
+    )
+    ap.add_argument(
         "--parallel",
         type=int,
         default=1,
@@ -492,7 +498,7 @@ def main() -> int:
         return p.read_text(encoding="utf-8").strip()
 
     api_key = load_api_key()
-    if not api_key and not args.dry_run:
+    if not api_key and not args.dry_run and not args.fit_only:
         raise SystemExit(
             f"Missing API key: set env var {args.api_key_env} or create key file at "
             f"Tools/UiRestyleV05/_secrets/openai_api_key.txt (not committed)."
@@ -545,6 +551,9 @@ def main() -> int:
                 p = f"{p}\n\nBackground: transparent."
             return p
         return prompt
+
+    def resolve_output_path(item: PromptItem) -> Path:
+        return out_root / item.dir / item.filename
 
     def size_candidates(*, gen_size: str) -> List[str]:
         if not args.gen_size:
@@ -682,6 +691,42 @@ def main() -> int:
         if args.limit and len(work) >= args.limit:
             break
 
+    if args.fit_only:
+        count = 0
+        for item in work:
+            ref_path = resolve_reference_path(item.dir, item.filename)
+            if not ref_path.exists():
+                print(f"[skip] missing reference PNG: {ref_path}")
+                continue
+
+            in_path = resolve_output_path(item)
+            if not in_path.exists():
+                print(f"[skip] missing output PNG: {in_path}")
+                continue
+
+            with Image.open(ref_path) as ref_img:
+                target_w, target_h = ref_img.size
+
+            wants_transparent = item.wants_transparent
+            if background == "opaque":
+                wants_transparent = False
+            elif background == "transparent":
+                wants_transparent = True
+
+            img = Image.open(in_path).convert("RGBA")
+            final_img = fit_to_reference(
+                img,
+                ref_path=ref_path,
+                target_size=(target_w, target_h),
+                wants_transparent=wants_transparent,
+            )
+            in_path.parent.mkdir(parents=True, exist_ok=True)
+            final_img.save(in_path, format="PNG")
+            count += 1
+
+        print(f"Done. Processed: {count}")
+        return 0
+
     if args.dry_run:
         count = 0
         for item in work:
@@ -694,7 +739,7 @@ def main() -> int:
             with Image.open(ref_path) as ref_img:
                 target_w, target_h = ref_img.size
 
-            out_path = out_root / item.dir / name
+            out_path = resolve_output_path(item)
             if not args.overwrite and out_path.exists():
                 print(f"[skip] exists: {out_path}")
                 continue

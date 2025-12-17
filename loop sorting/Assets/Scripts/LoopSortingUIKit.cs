@@ -662,7 +662,7 @@ namespace LoopSorting
                 {
                     new TextureEntry { key = "ui.bg_main", path = "UI_Sprites/bg_main.png" },
                     new TextureEntry { key = "world.conveyor_belt", path = "World_Sprites/conveyor_belt.png" },
-                    new TextureEntry { key = "world.conveyor_slot", path = "World_Sprites/conveyor_slot.png" },
+                    new TextureEntry { key = "world.conveyor_slot", path = "World_Sprites/conveyor_slot_gray.png" },
                     new TextureEntry { key = "world.lock_overlay", path = "World_Sprites/lock_overlay.png" },
                     new TextureEntry { key = "world.lock_marker_plate", path = "World_Sprites/lock_marker_plate.png" },
                     new TextureEntry { key = "world.lock_marker_color_disc", path = "World_Sprites/lock_marker_color_disc.png" },

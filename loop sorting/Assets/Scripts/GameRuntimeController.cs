@@ -1122,15 +1122,35 @@ namespace LoopSorting
             }
 
             var cam = Camera.main;
+            if (cam == null)
+            {
+                // Fallback for scenes where the gameplay camera isn't tagged MainCamera.
+                var cams = Camera.allCameras;
+                for (int i = 0; i < cams.Length; i++)
+                {
+                    if (cams[i] != null && cams[i].enabled)
+                    {
+                        cam = cams[i];
+                        break;
+                    }
+                }
+            }
             if (cam == null) return;
 
             _backgroundQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             _backgroundQuad.name = "BackgroundQuad";
-            _backgroundQuad.layer = cam.gameObject.layer;
+            int layer = cam.gameObject.layer;
+            if ((cam.cullingMask & (1 << layer)) == 0)
+            {
+                layer = FindFirstIncludedLayer(cam.cullingMask);
+            }
+            _backgroundQuad.layer = layer;
             _backgroundQuad.transform.SetParent(cam.transform, false);
 
-            // Anchor to camera far side so it always sits behind gameplay.
-            float dist = Mathf.Max(5f, cam.farClipPlane * 0.5f);
+            // Place inside the camera frustum near the far plane (avoid clipping when farClipPlane is small).
+            float near = Mathf.Max(0.01f, cam.nearClipPlane);
+            float far = Mathf.Max(near + 0.02f, cam.farClipPlane);
+            float dist = near + (far - near) * 0.95f;
             _backgroundQuad.transform.localPosition = Vector3.forward * dist;
             _backgroundQuad.transform.localRotation = Quaternion.identity;
 
@@ -1162,16 +1182,18 @@ namespace LoopSorting
             }
 
             var shader =
-                Shader.Find("Sprites/Default") ??
-                Shader.Find("UI/Default") ??
                 Shader.Find("Unlit/Texture") ??
                 Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
                 Shader.Find("Standard");
 
             if (shader != null)
             {
                 var mat = new Material(shader);
                 mat.mainTexture = tex;
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
+                if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
                 mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
                 if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
                 if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
@@ -1180,17 +1202,31 @@ namespace LoopSorting
                 if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
                 var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = mat;
+                renderer.sortingLayerID = 0;
+                renderer.sortingOrder = int.MinValue;
 
                 if (Debug.isDebugBuild && !_backgroundDebugLogged)
                 {
                     _backgroundDebugLogged = true;
-                    Debug.Log($"[Background] shader='{shader.name}', tex='{(tex != null ? tex.name : "null")}' {tex?.width}x{tex?.height}");
+                    Debug.Log(
+                        $"[Background] cam='{cam.name}' layer={layer} cullingMask=0x{cam.cullingMask:X8} " +
+                        $"near={cam.nearClipPlane:0.###} far={cam.farClipPlane:0.###} " +
+                        $"shader='{shader.name}', tex='{(tex != null ? tex.name : "null")}' {tex?.width}x{tex?.height}");
                 }
             }
 
             // Disable collider
             var col = _backgroundQuad.GetComponent<Collider>();
             if (col != null) Destroy(col);
+        }
+
+        private static int FindFirstIncludedLayer(int cullingMask)
+        {
+            for (int i = 0; i < 32; i++)
+            {
+                if ((cullingMask & (1 << i)) != 0) return i;
+            }
+            return 0;
         }
 
         private int? TryGetBlockedPort()

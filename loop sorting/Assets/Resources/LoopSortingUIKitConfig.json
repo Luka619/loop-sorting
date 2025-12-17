@@ -710,7 +710,7 @@
     { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png" },
 
     { "key": "world.conveyor_belt", "path": "conveyor_belt_texture_v02_candy/conveyor_belt_candy_purple_512x128_alphaEdges.png" },
-    { "key": "world.conveyor_slot", "path": "World_Sprites/conveyor_slot.png" },
+    { "key": "world.conveyor_slot", "path": "World_Sprites/conveyor_slot_gray.png" },
     { "key": "world.lock_overlay", "path": "World_Sprites/lock_overlay.png" },
     { "key": "world.lock_marker_plate", "path": "World_Sprites/lock_marker_plate.png" },
     { "key": "world.lock_marker_color_disc", "path": "World_Sprites/lock_marker_color_disc.png" },

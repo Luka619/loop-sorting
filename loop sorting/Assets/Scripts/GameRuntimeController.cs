@@ -4561,15 +4561,9 @@ namespace LoopSorting
 
             var dim = panelGO.AddComponent<Image>();
             dim.raycastTarget = true;
-            if (hasKit)
-            {
-                dim.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.overlay_dim");
-                dim.color = Color.white;
-            }
-            else
-            {
-                dim.color = new Color(0f, 0f, 0f, 0.6f);
-            }
+            // Use a solid full-screen dim (no sprite) for consistent readability across themes.
+            dim.sprite = null;
+            dim.color = new Color(0f, 0f, 0f, 0.55f);
             var rect = panelGO.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
@@ -4688,15 +4682,9 @@ namespace LoopSorting
 
             var dim = _settingsPanel.AddComponent<Image>();
             dim.raycastTarget = true;
-            if (hasKit)
-            {
-                dim.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.overlay_dim");
-                dim.color = Color.white;
-            }
-            else
-            {
-                dim.color = new Color(0f, 0f, 0f, 0.4f);
-            }
+            // Use a solid full-screen dim (no sprite) to avoid accidental gradients/alpha artifacts from themed overlay sprites.
+            dim.sprite = null;
+            dim.color = new Color(0f, 0f, 0f, 0.55f);
             var overlayRect = _settingsPanel.GetComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;
             overlayRect.anchorMax = Vector2.one;
@@ -4737,10 +4725,26 @@ namespace LoopSorting
 
             var bgImg = popupGO.AddComponent<Image>();
             bgImg.raycastTarget = false;
-            bgImg.sprite = settingsSprite;
-            bgImg.color = Color.white;
-            bgImg.type = Image.Type.Simple;
-            bgImg.preserveAspect = true;
+            if (hasKit)
+            {
+                bgImg.preserveAspect = false;
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                ApplySplitBackground(
+                    baseImage: bgImg,
+                    parent: popupGO.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                    decorPath: null,
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
+            }
+            else
+            {
+                bgImg.sprite = settingsSprite;
+                bgImg.color = settingsSprite != null ? Color.white : new Color(0.12f, 0.12f, 0.12f, 0.95f);
+                bgImg.type = Image.Type.Simple;
+                bgImg.preserveAspect = true;
+            }
 
             static bool TryExtractInt(string json, string pattern, out int value)
             {
@@ -4987,15 +4991,9 @@ namespace LoopSorting
 
             var dim = _boosterPurchasePanel.AddComponent<Image>();
             dim.raycastTarget = true;
-            if (hasKit)
-            {
-                dim.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.overlay_dim");
-                dim.color = Color.white;
-            }
-            else
-            {
-                dim.color = new Color(0f, 0f, 0f, 0.55f);
-            }
+            // Use a solid full-screen dim (no sprite) to keep the background consistent across themes.
+            dim.sprite = null;
+            dim.color = new Color(0f, 0f, 0f, 0.55f);
 
             var overlayRect = _boosterPurchasePanel.GetComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;
@@ -5023,7 +5021,7 @@ namespace LoopSorting
                     parent: popupGO.transform,
                     decorName: "Decor",
                     basePath: "UI_Sprites/panel_modal_base_9slice.png",
-                    decorPath: "UI_Sprites/panel_modal_decor.png",
+                    decorPath: null,
                     fallbackSprite: fallback,
                     noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
             }
@@ -5387,7 +5385,7 @@ namespace LoopSorting
                         parent: _boosterPurchaseBackground.transform,
                         decorName: "Decor",
                         basePath: "UI_Sprites/panel_modal_base_9slice.png",
-                        decorPath: "UI_Sprites/panel_modal_decor.png",
+                        decorPath: null,
                         fallbackSprite: fallback,
                         noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
                 }

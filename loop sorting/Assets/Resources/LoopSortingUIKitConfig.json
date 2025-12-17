@@ -37,7 +37,9 @@
     { "pattern": "pink_long_*", "border": [140, 140, 90, 90] },
 
     { "pattern": "pill_bg*", "border": [90, 90, 60, 60] },
-    { "pattern": "panel_gold_blue_base_9slice.png", "border": [320, 320, 222, 237] },
+    { "pattern": "panel_gold_blue_base_9slice.png", "border": [320, 320, 237, 222] },
+    { "pattern": "panel_modal_base_9slice.png", "border": [250, 247, 222, 223] },
+    { "pattern": "panel_result_base_9slice.png", "border": [198, 180, 203, 182] },
     { "pattern": "panel_modal.png", "border": [120, 120, 120, 120] },
     { "pattern": "panel_result.png", "border": [120, 120, 120, 120] },
     { "pattern": "panel_thick_gold_blue.png", "border": [140, 140, 140, 140] },

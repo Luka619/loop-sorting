@@ -29,6 +29,143 @@ def _alpha_bbox(im: Image.Image, alpha_threshold: int):
     return left, upper, right_excl - 1, lower_excl - 1
 
 
+def _nearest_pow2(n: int) -> int:
+    n = max(1, int(n))
+    p = 1
+    while p < n:
+        p <<= 1
+    # p is now >= n, (p>>1) < n
+    lower = p >> 1
+    if lower < 1:
+        return p
+    return lower if (n - lower) <= (p - n) else p
+
+
+def _next_pow2(n: int) -> int:
+    n = max(1, int(n))
+    p = 1
+    while p < n:
+        p <<= 1
+    return p
+
+
+def _prev_pow2(n: int) -> int:
+    n = max(1, int(n))
+    p = 1
+    while (p << 1) <= n:
+        p <<= 1
+    return p
+
+
+def _parse_texture_meta(meta_path: str, platform: str):
+    # Parse only the bits we need from Unity .meta YAML.
+    # NPOTScale enum: 0=None, 1=ToNearest, 2=ToLarger, 3=ToSmaller
+    n_pot_scale = 0
+    default_max_size = None
+    platform_max_size = None
+    platform_overridden = False
+
+    if not os.path.exists(meta_path):
+        return n_pot_scale, default_max_size, platform_max_size, platform_overridden
+
+    in_platform_block = False
+    current_target = None
+    current_overridden = False
+    current_max_size = None
+
+    with open(meta_path, "r", encoding="utf-8", errors="ignore") as f:
+        for raw in f:
+            line = raw.strip()
+            m = re.match(r"nPOTScale:\s*(\d+)", line)
+            if m:
+                n_pot_scale = int(m.group(1))
+                continue
+
+            m = re.match(r"maxTextureSize:\s*(\d+)", line)
+            if m and default_max_size is None:
+                default_max_size = int(m.group(1))
+                continue
+
+            # platformSettings is a list; entries start with "- serializedVersion:"
+            if line.startswith("platformSettings:"):
+                in_platform_block = True
+                current_target = None
+                current_overridden = False
+                current_max_size = None
+                continue
+
+            if not in_platform_block:
+                continue
+
+            if line.startswith("- "):
+                # commit previous entry
+                if current_target == platform and current_overridden and current_max_size:
+                    platform_max_size = current_max_size
+                    platform_overridden = True
+                current_target = None
+                current_overridden = False
+                current_max_size = None
+                continue
+
+            m = re.match(r"buildTarget:\s*(.+)", line)
+            if m:
+                current_target = m.group(1).strip()
+                continue
+
+            m = re.match(r"overridden:\s*(\d+)", line)
+            if m:
+                current_overridden = m.group(1).strip() == "1"
+                continue
+
+            m = re.match(r"maxTextureSize:\s*(\d+)", line)
+            if m:
+                current_max_size = int(m.group(1))
+                continue
+
+    # commit last entry
+    if current_target == platform and current_overridden and current_max_size:
+        platform_max_size = current_max_size
+        platform_overridden = True
+
+    return n_pot_scale, default_max_size, platform_max_size, platform_overridden
+
+
+def _simulate_import_size(orig_w: int, orig_h: int, max_size: int | None, n_pot_scale: int) -> tuple[int, int]:
+    w = int(orig_w)
+    h = int(orig_h)
+
+    if max_size and max(orig_w, orig_h) > max_size:
+        scale = max_size / float(max(orig_w, orig_h))
+        w = max(1, int(round(orig_w * scale)))
+        h = max(1, int(round(orig_h * scale)))
+
+    if n_pot_scale == 0:
+        return w, h
+
+    if n_pot_scale == 1:  # ToNearest
+        w2 = _nearest_pow2(w)
+        h2 = _nearest_pow2(h)
+    elif n_pot_scale == 2:  # ToLarger
+        w2 = _next_pow2(w)
+        h2 = _next_pow2(h)
+    elif n_pot_scale == 3:  # ToSmaller
+        w2 = _prev_pow2(w)
+        h2 = _prev_pow2(h)
+    else:
+        w2, h2 = w, h
+
+    # Keep under max texture size if specified (best-effort).
+    if max_size and max(w2, h2) > max_size:
+        scale = max_size / float(max(w2, h2))
+        w2 = max(1, int(round(w2 * scale)))
+        h2 = max(1, int(round(h2 * scale)))
+        if n_pot_scale != 0:
+            w2 = _nearest_pow2(w2) if n_pot_scale == 1 else (_next_pow2(w2) if n_pot_scale == 2 else _prev_pow2(w2))
+            h2 = _nearest_pow2(h2) if n_pot_scale == 1 else (_next_pow2(h2) if n_pot_scale == 2 else _prev_pow2(h2))
+
+    return int(w2), int(h2)
+
+
 def _clamp_border_for_sprite(border: Border, w: int, h: int) -> Border:
     # Unity requires center region sizes >= 1px for both axes to avoid collapsing to 3-slice.
     left = max(0, min(border.left, w - 2))
@@ -53,95 +190,40 @@ def _compute_border_for_sprite(path: str, alpha_threshold: int) -> Border | None
 
     visible_w = max(1, w - pad_left - pad_right)
     visible_h = max(1, h - pad_top - pad_bottom)
-    aspect = visible_w / float(visible_h)
 
-    file_name = os.path.basename(path).lower()
+    # Convert to the same pixel space Unity uses at runtime by simulating TextureImporter scaling.
+    meta_path = path + ".meta"
+    n_pot_scale, default_max, platform_max, overridden = _parse_texture_meta(
+        meta_path, platform=_compute_border_for_sprite.platform
+    )
+    max_size = platform_max if overridden and platform_max else default_max
+    imp_w, imp_h = _simulate_import_size(w, h, max_size=max_size, n_pot_scale=n_pot_scale)
 
-    # Prefer style-guided "corner sizes" and only compensate for transparent padding.
-    # This avoids over-estimating borders when the art contains strong bevels/gradients.
-    def _starts(prefix: str):
-        return file_name.startswith(prefix)
+    sx = imp_w / float(w)
+    sy = imp_h / float(h)
 
-    # Base "corner sizes" (no padding) in pixels, roughly matching the kit's intended 9-slice lines.
-    # For long/pill shapes, horizontal caps are derived from the visible height (true capsule ends),
-    # and vertical borders use a safe fraction of the visible height to preserve a 3-row grid.
-    base = None
-    if _starts("mint_square_") or _starts("purple_square_") or _starts("orange_square_") or _starts("pink_square_"):
-        base = Border(170, 170, 170, 170)
-    elif _starts("btn_small_"):
-        base = Border(80, 80, 55, 55)
-    elif _starts("btn_price_green_"):
-        base = Border(60, 60, 40, 40)
-    elif _starts("tag_fast_"):
-        base = Border(60, 60, 40, 40)
-    elif _starts("tag_small_"):
-        base = Border(50, 50, 30, 30)
-    elif file_name == "card_setting_row.png":
-        base = Border(70, 70, 50, 50)
-    elif file_name in ("lock_chip_plate.png", "lock_overlay.png"):
-        base = Border(60, 60, 40, 40)
-    elif file_name.startswith("shop_row_") or file_name.startswith("shop_card_") or file_name.startswith("shop_group_"):
-        base = Border(90, 90, 60, 60)
-    elif file_name.startswith("panel_thick_"):
-        base = Border(140, 140, 140, 140)
-    elif file_name.startswith("panel_"):
-        base = Border(120, 120, 120, 120)
+    pad_left_i = int(round(pad_left * sx))
+    pad_right_i = int(round(pad_right * sx))
+    pad_top_i = int(round(pad_top * sy))
+    pad_bottom_i = int(round(pad_bottom * sy))
 
-    is_long = ("_long_" in file_name) or ("pill" in file_name) or (file_name.startswith("hud_pill_")) or (aspect >= 1.8)
-    if is_long:
-        cap_x = int(round(visible_h * 0.5))
-        cap_y = int(round(visible_h * 0.25))
-        cap_y = max(8, min(cap_y, int(visible_h * 0.45)))
-        left = pad_left + cap_x
-        right = pad_right + cap_x
-        # If we have style defaults, use them as a floor (so we don't go too thin on tall assets).
-        if base is not None:
-            top = pad_top + max(base.top, cap_y)
-            bottom = pad_bottom + max(base.bottom, cap_y)
-        else:
-            top = pad_top + cap_y
-            bottom = pad_bottom + cap_y
-        return _clamp_border_for_sprite(Border(left, right, top, bottom), w=w, h=h)
+    visible_w_i = max(1, imp_w - pad_left_i - pad_right_i)
+    visible_h_i = max(1, imp_h - pad_top_i - pad_bottom_i)
 
-    if base is not None:
-        left = pad_left + base.left
-        right = pad_right + base.right
-        top = pad_top + base.top
-        bottom = pad_bottom + base.bottom
-        return _clamp_border_for_sprite(Border(left, right, top, bottom), w=w, h=h)
+    # User rule: after excluding transparent padding, keep only the middle `center_stretch_fraction`
+    # (width & height) as the stretchable area. Borders are the remaining area split equally on both sides.
+    # side_fraction = (1 - center) / 2
+    center = _compute_border_for_sprite.center_stretch_fraction
+    side_fraction = (1.0 - center) * 0.5
 
-    # Generic rounded-rect corner detection: scan top-left corner until the left edge "fills in".
-    pixels = im.load()
-    radius_y = 0
-    for y in range(min_y, max_y + 1):
-        first = None
-        for x in range(min_x, max_x + 1):
-            if pixels[x, y][3] > alpha_threshold:
-                first = x
-                break
-        if first is not None and first == min_x:
-            radius_y = y - min_y
-            break
+    vis_border_x = max(1, int(round(visible_w_i * side_fraction)))
+    vis_border_y = max(1, int(round(visible_h_i * side_fraction)))
 
-    radius_x = 0
-    for x in range(min_x, max_x + 1):
-        first = None
-        for y in range(min_y, max_y + 1):
-            if pixels[x, y][3] > alpha_threshold:
-                first = y
-                break
-        if first is not None and first == min_y:
-            radius_x = x - min_x
-            break
-
-    radius = max(radius_x, radius_y)
-    radius = max(0, min(radius, int(min(visible_w, visible_h) * 0.45)))
-
-    left = pad_left + radius
-    right = pad_right + radius
-    top = pad_top + radius
-    bottom = pad_bottom + radius
-    return _clamp_border_for_sprite(Border(left, right, top, bottom), w=w, h=h)
+    left = pad_left_i + vis_border_x
+    right = pad_right_i + vis_border_x
+    top = pad_top_i + vis_border_y
+    bottom = pad_bottom_i + vis_border_y
+    return _clamp_border_for_sprite(Border(left, right, top, bottom), w=imp_w, h=imp_h)
 
 
 def _replace_nineslice_rules_in_file(config_path: str, new_rules_list: list[dict]):
@@ -207,11 +289,24 @@ def main():
         help="Alpha threshold (0-255) for detecting visible pixels; higher ignores softer glows/shadows.",
     )
     ap.add_argument(
+        "--center",
+        type=float,
+        default=(1.0 / 3.0),
+        help="Center stretch fraction after trimming padding (e.g. 0.5 keeps middle half; 0.333 keeps middle third).",
+    )
+    ap.add_argument(
+        "--platform",
+        default="WebGL",
+        help="Unity buildTarget name to apply importer overrides from .meta (e.g. WebGL, Android).",
+    )
+    ap.add_argument(
         "--dry-run",
         action="store_true",
         help="Print summary only; do not write config.",
     )
     args = ap.parse_args()
+    _compute_border_for_sprite.center_stretch_fraction = max(0.1, min(0.9, float(args.center)))
+    _compute_border_for_sprite.platform = str(args.platform).strip()
 
     cfg = json.loads(open(args.config, "r", encoding="utf-8").read())
     resources_root = cfg.get("resourcesRoot")

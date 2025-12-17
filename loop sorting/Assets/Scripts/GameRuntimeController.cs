@@ -120,6 +120,7 @@ namespace LoopSorting
         private Image _settingsCloseImage;
         private Button _settingsRetryButton;
         private Image _settingsRetryImage;
+        private bool _didLogOrangeLongNineSlice;
         private int _coins = 810;
         private int _lives = 5;
         private Button _shopButton;
@@ -1382,7 +1383,7 @@ namespace LoopSorting
             RectTransform panelRect,
             Sprite sprite,
             Vector2 desiredVisibleSizeUnits,
-            float assumedCornerPx = 120f)
+            float centerStretchFraction = 0.5f)
         {
             if (parent == null || panelRect == null || sprite == null) return parent;
             if (desiredVisibleSizeUnits.x <= 1f || desiredVisibleSizeUnits.y <= 1f) return parent;
@@ -1390,18 +1391,35 @@ namespace LoopSorting
             int wPx = Mathf.Max(1, Mathf.RoundToInt(sprite.rect.width));
             int hPx = Mathf.Max(1, Mathf.RoundToInt(sprite.rect.height));
 
-            float borderL = sprite.border.x;
-            float borderB = sprite.border.y;
-            float borderR = sprite.border.z;
-            float borderT = sprite.border.w;
+            // Borders are generated as: border = padding + visible * sideFraction,
+            // where visible excludes transparent padding, and the center stretch region is the middle `centerStretchFraction`.
+            // sideFraction = (1 - centerStretchFraction) / 2. Default centerStretchFraction=0.5 -> sideFraction=0.25.
+            float center = Mathf.Clamp(centerStretchFraction, 0.1f, 0.9f);
+            float sideFrac = (1f - center) * 0.5f;
+            float denom = Mathf.Max(0.05f, 1f - (2f * sideFrac));
 
-            float padL = Mathf.Max(0f, borderL - assumedCornerPx);
-            float padR = Mathf.Max(0f, borderR - assumedCornerPx);
-            float padT = Mathf.Max(0f, borderT - assumedCornerPx);
-            float padB = Mathf.Max(0f, borderB - assumedCornerPx);
+            float borderL = Mathf.Max(0f, sprite.border.x);
+            float borderB = Mathf.Max(0f, sprite.border.y);
+            float borderR = Mathf.Max(0f, sprite.border.z);
+            float borderT = Mathf.Max(0f, sprite.border.w);
 
-            float visibleFracX = Mathf.Clamp01(1f - ((padL + padR) / wPx));
-            float visibleFracY = Mathf.Clamp01(1f - ((padT + padB) / hPx));
+            float visibleWPx = (wPx - (borderL + borderR)) / denom;
+            float visibleHPx = (hPx - (borderT + borderB)) / denom;
+            visibleWPx = Mathf.Clamp(visibleWPx, 1f, wPx);
+            visibleHPx = Mathf.Clamp(visibleHPx, 1f, hPx);
+
+            float padL = borderL - (sideFrac * visibleWPx);
+            float padR = borderR - (sideFrac * visibleWPx);
+            float padT = borderT - (sideFrac * visibleHPx);
+            float padB = borderB - (sideFrac * visibleHPx);
+
+            padL = Mathf.Clamp(padL, 0f, wPx - 2f);
+            padR = Mathf.Clamp(padR, 0f, wPx - 2f);
+            padT = Mathf.Clamp(padT, 0f, hPx - 2f);
+            padB = Mathf.Clamp(padB, 0f, hPx - 2f);
+
+            float visibleFracX = Mathf.Clamp01(visibleWPx / wPx);
+            float visibleFracY = Mathf.Clamp01(visibleHPx / hPx);
             if (visibleFracX <= 0.05f || visibleFracY <= 0.05f) return parent;
 
             panelRect.sizeDelta = new Vector2(desiredVisibleSizeUnits.x / visibleFracX, desiredVisibleSizeUnits.y / visibleFracY);
@@ -4643,7 +4661,7 @@ namespace LoopSorting
                     panelRect: boxRect,
                     sprite: boxImg.sprite,
                     desiredVisibleSizeUnits: new Vector2(900f, 760f),
-                    assumedCornerPx: 120f);
+                    centerStretchFraction: 1f / 3f);
             }
             else
             {
@@ -4777,7 +4795,7 @@ namespace LoopSorting
                     panelRect: popupRect,
                     sprite: bgImg.sprite,
                     desiredVisibleSizeUnits: new Vector2(popupWidth, popupHeight),
-                    assumedCornerPx: 120f);
+                    centerStretchFraction: 1f / 3f);
 
                 var titleGO = new GameObject("Title");
                 titleGO.transform.SetParent(layoutParent, false);
@@ -6247,37 +6265,12 @@ namespace LoopSorting
 
                 // Layout should be based on the visible silhouette (excluding transparent padding), otherwise UI elements
                 // appear misaligned and 9-slice guides look "wrong" when the source texture has large margins.
-                if (baseSprite != null)
-                {
-                    const float assumedBorderPx = 120f;
-                    float padL = Mathf.Max(0f, baseSprite.border.x - assumedBorderPx);
-                    float padB = Mathf.Max(0f, baseSprite.border.y - assumedBorderPx);
-                    float padR = Mathf.Max(0f, baseSprite.border.z - assumedBorderPx);
-                    float padT = Mathf.Max(0f, baseSprite.border.w - assumedBorderPx);
-
-                    float wPx = Mathf.Max(1f, baseSprite.rect.width);
-                    float hPx = Mathf.Max(1f, baseSprite.rect.height);
-                    float visibleFracX = Mathf.Clamp01((wPx - padL - padR) / wPx);
-                    float visibleFracY = Mathf.Clamp01((hPx - padB - padT) / hPx);
-
-                    var desiredVisible = new Vector2(900f, 1060f);
-                    panelRect.sizeDelta = new Vector2(
-                        desiredVisible.x / Mathf.Max(0.05f, visibleFracX),
-                        desiredVisible.y / Mathf.Max(0.05f, visibleFracY));
-
-                    float unitsPerPxX = panelRect.sizeDelta.x / wPx;
-                    float unitsPerPxY = panelRect.sizeDelta.y / hPx;
-
-                    var layoutRootGO = new GameObject("LayoutRoot");
-                    layoutRootGO.transform.SetParent(panelGO.transform, false);
-                    var contentRect = layoutRootGO.AddComponent<RectTransform>();
-                    contentRect.anchorMin = Vector2.zero;
-                    contentRect.anchorMax = Vector2.one;
-                    contentRect.pivot = new Vector2(0.5f, 0.5f);
-                    contentRect.offsetMin = new Vector2(padL * unitsPerPxX, padB * unitsPerPxY);
-                    contentRect.offsetMax = new Vector2(-padR * unitsPerPxX, -padT * unitsPerPxY);
-                    layoutParent = layoutRootGO.transform;
-                }
+                layoutParent = TryCreatePaddingTrimmedLayoutRoot(
+                    parent: panelGO.transform,
+                    panelRect: panelRect,
+                    sprite: baseSprite,
+                    desiredVisibleSizeUnits: new Vector2(900f, 1060f),
+                    centerStretchFraction: 1f / 3f);
             }
             else
             {
@@ -7116,6 +7109,14 @@ namespace LoopSorting
             state.pressedSprite = pressedSprite;
             state.disabledSprite = disabledSprite;
             button.spriteState = state;
+
+            if (!_didLogOrangeLongNineSlice && string.Equals(normal, "ui.button.orange_long.normal", StringComparison.Ordinal))
+            {
+                _didLogOrangeLongNineSlice = true;
+                Debug.Log(
+                    $"[NineSliceCheck] {normal} -> sprite='{normalSprite.name}', rect={normalSprite.rect.width:0}x{normalSprite.rect.height:0}, " +
+                    $"border(L,B,R,T)={normalSprite.border} pressedBorder={pressedSprite?.border.ToString() ?? "(null)"}");
+            }
         }
 
         private static void ApplyTmpOutlineUnderlay(

@@ -130,6 +130,7 @@ namespace LoopSorting
         private static NineSliceRule[] _nineSliceRules;
         private static RuntimeLayout _runtimeLayout;
         private static bool _runtimeLayoutFromConfig;
+        private static uint _configTextHash;
 
         public struct RuntimeLayout
         {
@@ -341,17 +342,21 @@ namespace LoopSorting
                 // This keeps UI consistent even when assets are imported as Sprites in Unity with default (zero) borders.
                 Vector4 sliceBorder = Vector4.zero; // Unity order: left, bottom, right, top
                 string fileName = Path.GetFileName(relativePath.Replace('\\', '/'));
+                string fileNameNoExt = Path.GetFileNameWithoutExtension(fileName);
+                bool hasExt = !string.IsNullOrEmpty(Path.GetExtension(fileName));
                 var rules = GetNineSliceRules();
                 for (int i = 0; i < rules.Length; i++)
                 {
-                    if (rules[i].Matches(fileName))
+                    if (rules[i].Matches(fileName) ||
+                        (!hasExt && rules[i].Matches(fileName + ".png")) ||
+                        (!string.IsNullOrEmpty(fileNameNoExt) && rules[i].Matches(fileNameNoExt)))
                     {
                         sliceBorder = rules[i].BorderUnity;
                         break;
                     }
                 }
 
-                if (sliceBorder.sqrMagnitude <= 0.0001f || direct.border.sqrMagnitude > 0.0001f)
+                if (sliceBorder.sqrMagnitude <= 0.0001f)
                 {
                     SpriteCache[cacheKey] = direct;
                     return direct;
@@ -359,6 +364,12 @@ namespace LoopSorting
 
                 var directTex = direct.texture;
                 if (directTex == null)
+                {
+                    SpriteCache[cacheKey] = direct;
+                    return direct;
+                }
+
+                if ((direct.border - sliceBorder).sqrMagnitude <= 0.0001f)
                 {
                     SpriteCache[cacheKey] = direct;
                     return direct;
@@ -389,10 +400,14 @@ namespace LoopSorting
             if (applyNineSlice)
             {
                 string fileName = Path.GetFileName(relativePath.Replace('\\', '/'));
+                string fileNameNoExt = Path.GetFileNameWithoutExtension(fileName);
+                bool hasExt = !string.IsNullOrEmpty(Path.GetExtension(fileName));
                 var rules = GetNineSliceRules();
                 for (int i = 0; i < rules.Length; i++)
                 {
-                    if (rules[i].Matches(fileName))
+                    if (rules[i].Matches(fileName) ||
+                        (!hasExt && rules[i].Matches(fileName + ".png")) ||
+                        (!string.IsNullOrEmpty(fileNameNoExt) && rules[i].Matches(fileNameNoExt)))
                     {
                         border = rules[i].BorderUnity;
                         break;
@@ -440,12 +455,17 @@ namespace LoopSorting
 
         private static void EnsureConfig()
         {
-            if (_config != null && _spriteByKey != null && _textureByKey != null && _nineSliceRules != null)
+            var configAsset = LoadConfigTextAsset();
+            uint hash = ComputeFnv1a32(configAsset != null ? configAsset.text : null);
+            if (_config != null && _spriteByKey != null && _textureByKey != null && _nineSliceRules != null && _configTextHash == hash)
             {
                 return;
             }
 
-            _config = LoadConfigInternal();
+            ResetConfigAndCaches();
+            _configTextHash = hash;
+
+            _config = LoadConfigInternal(configAsset);
             _configRootCached = _config != null && !string.IsNullOrWhiteSpace(_config.resourcesRoot)
                 ? _config.resourcesRoot.Trim()
                 : DefaultResourcesRoot;
@@ -458,27 +478,49 @@ namespace LoopSorting
             _runtimeLayout = BuildRuntimeLayout(_config, out _runtimeLayoutFromConfig);
         }
 
-        private static ConfigFile LoadConfigInternal()
+        private static uint ComputeFnv1a32(string s)
+        {
+            unchecked
+            {
+                const uint offset = 2166136261u;
+                const uint prime = 16777619u;
+                uint hash = offset;
+                if (string.IsNullOrEmpty(s)) return hash;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    hash ^= s[i];
+                    hash *= prime;
+                }
+                return hash;
+            }
+        }
+
+        private static TextAsset LoadConfigTextAsset()
+        {
+            // Prefer per-pack config at "<ResourcesRoot>/LoopSortingUIKitConfig.json" when overriding root.
+            // This lets each art set keep its own layout + 9-slice tuning while using the same key mapping code.
+            TextAsset ta = null;
+            if (!string.IsNullOrWhiteSpace(_resourcesRootOverride))
+            {
+                ta = Resources.Load<TextAsset>($"{_resourcesRootOverride.Trim()}/{ConfigResourcePath}");
+            }
+            if (ta == null)
+            {
+                ta = Resources.Load<TextAsset>(ConfigResourcePath);
+            }
+            return ta;
+        }
+
+        private static ConfigFile LoadConfigInternal(TextAsset configAsset)
         {
             try
             {
-                // Prefer per-pack config at "<ResourcesRoot>/LoopSortingUIKitConfig.json" when overriding root.
-                // This lets each art set keep its own layout + 9-slice tuning while using the same key mapping code.
-                TextAsset ta = null;
-                if (!string.IsNullOrWhiteSpace(_resourcesRootOverride))
-                {
-                    ta = Resources.Load<TextAsset>($"{_resourcesRootOverride.Trim()}/{ConfigResourcePath}");
-                }
-                if (ta == null)
-                {
-                    ta = Resources.Load<TextAsset>(ConfigResourcePath);
-                }
-                if (ta == null || string.IsNullOrWhiteSpace(ta.text))
+                if (configAsset == null || string.IsNullOrWhiteSpace(configAsset.text))
                 {
                     return DefaultConfig();
                 }
 
-                var parsed = JsonUtility.FromJson<ConfigFile>(ta.text);
+                var parsed = JsonUtility.FromJson<ConfigFile>(configAsset.text);
                 if (parsed == null)
                 {
                     return DefaultConfig();
@@ -499,6 +541,7 @@ namespace LoopSorting
             _nineSliceRules = null;
             _runtimeLayout = default;
             _runtimeLayoutFromConfig = false;
+            _configTextHash = 0;
             TextureCache.Clear();
             SpriteCache.Clear();
         }

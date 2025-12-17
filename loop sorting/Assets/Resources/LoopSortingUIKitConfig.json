@@ -24,40 +24,591 @@
     }
   },
   "nineSliceRules": [
-    { "pattern": "mint_square_*", "border": [170, 170, 170, 170] },
-    { "pattern": "purple_square_*", "border": [170, 170, 170, 170] },
-    { "pattern": "orange_square_*", "border": [170, 170, 170, 170] },
-
-    { "pattern": "pink_square_*", "border": [170, 170, 170, 170] },
-
-    { "pattern": "mint_long_*", "border": [140, 140, 90, 90] },
-    { "pattern": "purple_long_*", "border": [140, 140, 90, 90] },
-    { "pattern": "orange_long_*", "border": [170, 170, 70, 70] },
-
-    { "pattern": "pink_long_*", "border": [140, 140, 90, 90] },
-
-    { "pattern": "pill_bg*", "border": [90, 90, 60, 60] },
-    { "pattern": "panel_gold_blue_base_9slice.png", "border": [320, 320, 237, 222] },
-    { "pattern": "panel_modal_base_9slice.png", "border": [250, 247, 222, 223] },
-    { "pattern": "panel_result_base_9slice.png", "border": [198, 180, 203, 182] },
-    { "pattern": "panel_modal.png", "border": [120, 120, 120, 120] },
-    { "pattern": "panel_result.png", "border": [120, 120, 120, 120] },
-    { "pattern": "panel_thick_gold_blue.png", "border": [140, 140, 140, 140] },
-    { "pattern": "panel_*", "border": [120, 120, 120, 120] },
-
-    { "pattern": "tag_fast_*", "border": [60, 60, 40, 40] },
-    { "pattern": "tag_small_*", "border": [50, 50, 30, 30] },
-
-    { "pattern": "lock_chip_plate.png", "border": [60, 60, 40, 40] },
-    { "pattern": "lock_overlay.png", "border": [60, 60, 60, 60] },
-    { "pattern": "card_setting_row.png", "border": [70, 70, 50, 50] },
-    { "pattern": "hud_pill_dark*", "border": [40, 40, 30, 30] },
-    { "pattern": "shop_row_*", "border": [90, 90, 60, 60] },
-    { "pattern": "shop_card_*", "border": [90, 90, 60, 60] },
-    { "pattern": "shop_group_bar*", "border": [48, 48, 30, 30] },
-    { "pattern": "btn_small_*", "border": [80, 80, 55, 55] },
-    { "pattern": "btn_price_green_*", "border": [60, 60, 40, 40] },
-    { "pattern": "lock_node_label_bg.png", "border": [30, 30, 20, 20] }
+    {
+      "pattern": "btn_price_green_disabled.png",
+      "border": [
+        244,
+        275,
+        186,
+        181
+      ]
+    },
+    {
+      "pattern": "btn_price_green_normal.png",
+      "border": [
+        274,
+        284,
+        179,
+        177
+      ]
+    },
+    {
+      "pattern": "btn_price_green_pressed.png",
+      "border": [
+        151,
+        276,
+        155,
+        162
+      ]
+    },
+    {
+      "pattern": "btn_small_blue_disabled.png",
+      "border": [
+        403,
+        503,
+        154,
+        165
+      ]
+    },
+    {
+      "pattern": "btn_small_blue_normal.png",
+      "border": [
+        307,
+        379,
+        215,
+        237
+      ]
+    },
+    {
+      "pattern": "btn_small_blue_pressed.png",
+      "border": [
+        407,
+        525,
+        170,
+        176
+      ]
+    },
+    {
+      "pattern": "btn_small_green_disabled.png",
+      "border": [
+        435,
+        504,
+        178,
+        168
+      ]
+    },
+    {
+      "pattern": "btn_small_green_normal.png",
+      "border": [
+        327,
+        399,
+        225,
+        233
+      ]
+    },
+    {
+      "pattern": "btn_small_green_pressed.png",
+      "border": [
+        175,
+        175,
+        151,
+        154
+      ]
+    },
+    {
+      "pattern": "btn_small_red_disabled.png",
+      "border": [
+        271,
+        381,
+        258,
+        242
+      ]
+    },
+    {
+      "pattern": "btn_small_red_normal.png",
+      "border": [
+        395,
+        478,
+        161,
+        154
+      ]
+    },
+    {
+      "pattern": "btn_small_red_pressed.png",
+      "border": [
+        220,
+        220,
+        198,
+        189
+      ]
+    },
+    {
+      "pattern": "card_setting_row.png",
+      "border": [
+        454,
+        476,
+        330,
+        329
+      ]
+    },
+    {
+      "pattern": "hud_level_label_bg.png",
+      "border": [
+        413,
+        538,
+        367,
+        359
+      ]
+    },
+    {
+      "pattern": "hud_pill_dark.png",
+      "border": [
+        454,
+        562,
+        388,
+        397
+      ]
+    },
+    {
+      "pattern": "hud_pill_dark_small.png",
+      "border": [
+        380,
+        545,
+        330,
+        335
+      ]
+    },
+    {
+      "pattern": "lock_chip_plate.png",
+      "border": [
+        319,
+        326,
+        143,
+        122
+      ]
+    },
+    {
+      "pattern": "mint_long_disabled.png",
+      "border": [
+        446,
+        572,
+        355,
+        352
+      ]
+    },
+    {
+      "pattern": "mint_long_normal.png",
+      "border": [
+        463,
+        593,
+        338,
+        340
+      ]
+    },
+    {
+      "pattern": "mint_long_pressed.png",
+      "border": [
+        378,
+        378,
+        107,
+        114
+      ]
+    },
+    {
+      "pattern": "mint_square_disabled.png",
+      "border": [
+        220,
+        226,
+        224,
+        232
+      ]
+    },
+    {
+      "pattern": "mint_square_normal.png",
+      "border": [
+        248,
+        246,
+        244,
+        246
+      ]
+    },
+    {
+      "pattern": "mint_square_pressed.png",
+      "border": [
+        226,
+        226,
+        225,
+        232
+      ]
+    },
+    {
+      "pattern": "orange_long_disabled.png",
+      "border": [
+        357,
+        360,
+        101,
+        118
+      ]
+    },
+    {
+      "pattern": "orange_long_normal.png",
+      "border": [
+        344,
+        345,
+        108,
+        105
+      ]
+    },
+    {
+      "pattern": "orange_long_pressed.png",
+      "border": [
+        377,
+        376,
+        118,
+        102
+      ]
+    },
+    {
+      "pattern": "orange_square_disabled.png",
+      "border": [
+        232,
+        233,
+        227,
+        244
+      ]
+    },
+    {
+      "pattern": "orange_square_normal.png",
+      "border": [
+        227,
+        237,
+        229,
+        238
+      ]
+    },
+    {
+      "pattern": "orange_square_pressed.png",
+      "border": [
+        220,
+        224,
+        225,
+        231
+      ]
+    },
+    {
+      "pattern": "panel_modal.png",
+      "border": [
+        250,
+        249,
+        219,
+        229
+      ]
+    },
+    {
+      "pattern": "panel_result.png",
+      "border": [
+        247,
+        254,
+        226,
+        232
+      ]
+    },
+    {
+      "pattern": "panel_thick_gold_blue.png",
+      "border": [
+        320,
+        319,
+        329,
+        348
+      ]
+    },
+    {
+      "pattern": "purple_square_disabled.png",
+      "border": [
+        224,
+        224,
+        223,
+        232
+      ]
+    },
+    {
+      "pattern": "purple_square_normal.png",
+      "border": [
+        219,
+        220,
+        221,
+        228
+      ]
+    },
+    {
+      "pattern": "purple_square_pressed.png",
+      "border": [
+        229,
+        227,
+        228,
+        238
+      ]
+    },
+    {
+      "pattern": "shop_card_beige.png",
+      "border": [
+        416,
+        415,
+        100,
+        107
+      ]
+    },
+    {
+      "pattern": "tag_fast_danger_bg.png",
+      "border": [
+        144,
+        144,
+        43,
+        75
+      ]
+    },
+    {
+      "pattern": "tag_fast_info_bg.png",
+      "border": [
+        137,
+        136,
+        51,
+        55
+      ]
+    },
+    {
+      "pattern": "tag_small_info_bg.png",
+      "border": [
+        108,
+        112,
+        46,
+        47
+      ]
+    },
+    {
+      "pattern": "mint_square_*",
+      "border": [
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    {
+      "pattern": "purple_square_*",
+      "border": [
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    {
+      "pattern": "orange_square_*",
+      "border": [
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    {
+      "pattern": "pink_square_*",
+      "border": [
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    {
+      "pattern": "purple_long_normal.png",
+      "border": [
+        393,
+        391,
+        165,
+        167
+      ]
+    },
+    {
+      "pattern": "purple_long_pressed.png",
+      "border": [
+        368,
+        368,
+        166,
+        150
+      ]
+    },
+    {
+      "pattern": "purple_long_disabled.png",
+      "border": [
+        390,
+        390,
+        144,
+        144
+      ]
+    },
+    {
+      "pattern": "mint_long_*",
+      "border": [
+        465,
+        465,
+        180,
+        180
+      ]
+    },
+    {
+      "pattern": "purple_long_*",
+      "border": [
+        380,
+        380,
+        160,
+        160
+      ]
+    },
+    {
+      "pattern": "orange_long_*",
+      "border": [
+        360,
+        360,
+        160,
+        160
+      ]
+    },
+    {
+      "pattern": "pink_long_*",
+      "border": [
+        140,
+        140,
+        90,
+        90
+      ]
+    },
+    {
+      "pattern": "pill_bg*",
+      "border": [
+        90,
+        90,
+        60,
+        60
+      ]
+    },
+    {
+      "pattern": "panel_gold_blue_base_9slice.png",
+      "border": [
+        320,
+        320,
+        237,
+        222
+      ]
+    },
+    {
+      "pattern": "panel_modal_base_9slice.png",
+      "border": [
+        250,
+        247,
+        222,
+        223
+      ]
+    },
+    {
+      "pattern": "panel_result_base_9slice.png",
+      "border": [
+        182,
+        164,
+        187,
+        166
+      ]
+    },
+    {
+      "pattern": "panel_*",
+      "border": [
+        120,
+        120,
+        120,
+        120
+      ]
+    },
+    {
+      "pattern": "tag_fast_*",
+      "border": [
+        60,
+        60,
+        40,
+        40
+      ]
+    },
+    {
+      "pattern": "tag_small_*",
+      "border": [
+        50,
+        50,
+        30,
+        30
+      ]
+    },
+    {
+      "pattern": "lock_overlay.png",
+      "border": [
+        60,
+        60,
+        60,
+        60
+      ]
+    },
+    {
+      "pattern": "hud_pill_dark*",
+      "border": [
+        40,
+        40,
+        30,
+        30
+      ]
+    },
+    {
+      "pattern": "shop_row_*",
+      "border": [
+        90,
+        90,
+        60,
+        60
+      ]
+    },
+    {
+      "pattern": "shop_card_*",
+      "border": [
+        90,
+        90,
+        60,
+        60
+      ]
+    },
+    {
+      "pattern": "shop_group_bar*",
+      "border": [
+        48,
+        48,
+        30,
+        30
+      ]
+    },
+    {
+      "pattern": "btn_small_*",
+      "border": [
+        80,
+        80,
+        55,
+        55
+      ]
+    },
+    {
+      "pattern": "btn_price_green_*",
+      "border": [
+        60,
+        60,
+        40,
+        40
+      ]
+    },
+    {
+      "pattern": "lock_node_label_bg.png",
+      "border": [
+        30,
+        30,
+        20,
+        20
+      ]
+    }
   ],
   "sprites": [
     { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png", "pixelsPerUnit": 100, "applyNineSlice": false },

@@ -1377,6 +1377,50 @@ namespace LoopSorting
             shadow.useGraphicAlpha = true;
         }
 
+        private static Transform TryCreatePaddingTrimmedLayoutRoot(
+            Transform parent,
+            RectTransform panelRect,
+            Sprite sprite,
+            Vector2 desiredVisibleSizeUnits,
+            float assumedCornerPx = 120f)
+        {
+            if (parent == null || panelRect == null || sprite == null) return parent;
+            if (desiredVisibleSizeUnits.x <= 1f || desiredVisibleSizeUnits.y <= 1f) return parent;
+
+            int wPx = Mathf.Max(1, Mathf.RoundToInt(sprite.rect.width));
+            int hPx = Mathf.Max(1, Mathf.RoundToInt(sprite.rect.height));
+
+            float borderL = sprite.border.x;
+            float borderB = sprite.border.y;
+            float borderR = sprite.border.z;
+            float borderT = sprite.border.w;
+
+            float padL = Mathf.Max(0f, borderL - assumedCornerPx);
+            float padR = Mathf.Max(0f, borderR - assumedCornerPx);
+            float padT = Mathf.Max(0f, borderT - assumedCornerPx);
+            float padB = Mathf.Max(0f, borderB - assumedCornerPx);
+
+            float visibleFracX = Mathf.Clamp01(1f - ((padL + padR) / wPx));
+            float visibleFracY = Mathf.Clamp01(1f - ((padT + padB) / hPx));
+            if (visibleFracX <= 0.05f || visibleFracY <= 0.05f) return parent;
+
+            panelRect.sizeDelta = new Vector2(desiredVisibleSizeUnits.x / visibleFracX, desiredVisibleSizeUnits.y / visibleFracY);
+
+            float unitsPerPxX = panelRect.sizeDelta.x / wPx;
+            float unitsPerPxY = panelRect.sizeDelta.y / hPx;
+
+            var layoutRootGO = new GameObject("LayoutRoot");
+            layoutRootGO.transform.SetParent(parent, false);
+            var contentRect = layoutRootGO.AddComponent<RectTransform>();
+            contentRect.anchorMin = Vector2.zero;
+            contentRect.anchorMax = Vector2.one;
+            contentRect.pivot = new Vector2(0.5f, 0.5f);
+            contentRect.offsetMin = new Vector2(padL * unitsPerPxX, padB * unitsPerPxY);
+            contentRect.offsetMax = new Vector2(-padR * unitsPerPxX, -padT * unitsPerPxY);
+
+            return layoutRootGO.transform;
+        }
+
         private static float GetSpriteAspect(Sprite sprite)
         {
             if (sprite == null) return 1f;
@@ -4581,6 +4625,7 @@ namespace LoopSorting
 
             var boxImg = boxGO.AddComponent<Image>();
             boxImg.raycastTarget = false;
+            Transform contentParent = boxGO.transform;
             if (hasKit)
             {
                 var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
@@ -4592,6 +4637,13 @@ namespace LoopSorting
                     decorPath: "UI_Sprites/panel_result_decor.png",
                     fallbackSprite: fallback,
                     noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
+
+                contentParent = TryCreatePaddingTrimmedLayoutRoot(
+                    parent: boxGO.transform,
+                    panelRect: boxRect,
+                    sprite: boxImg.sprite,
+                    desiredVisibleSizeUnits: new Vector2(900f, 760f),
+                    assumedCornerPx: 120f);
             }
             else
             {
@@ -4599,7 +4651,7 @@ namespace LoopSorting
             }
 
             var bannerGO = new GameObject("Banner");
-            bannerGO.transform.SetParent(boxGO.transform, false);
+            bannerGO.transform.SetParent(contentParent, false);
             var bannerImg = bannerGO.AddComponent<Image>();
             bannerImg.raycastTarget = false;
             if (hasKit)
@@ -4616,7 +4668,7 @@ namespace LoopSorting
             bannerRect.sizeDelta = new Vector2(620f, 96f);
 
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(boxGO.transform, false);
+            titleGO.transform.SetParent(contentParent, false);
             _resultText = titleGO.AddComponent<TextMeshProUGUI>();
             _resultText.raycastTarget = false;
             _resultText.alignment = TextAlignmentOptions.Center;
@@ -4630,10 +4682,10 @@ namespace LoopSorting
             titleRect.sizeDelta = new Vector2(600f, 90f);
 
             _primaryButton = CreateLongButton(
-                parent: boxGO.transform,
+                parent: contentParent,
                 name: "PrimaryButton",
-                anchor: new Vector2(0.5f, 0.48f),
-                size: new Vector2(820f, 200f),
+                anchor: new Vector2(0.5f, 0.54f),
+                size: new Vector2(760f, 180f),
                 normal: hasKit ? "ui.button.mint_long.normal" : null,
                 pressed: hasKit ? "ui.button.mint_long.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_long.disabled" : null,
@@ -4644,10 +4696,10 @@ namespace LoopSorting
             _resultPrimaryIcon = CreateButtonIcon(_primaryButton.transform);
 
             _secondaryButton = CreateLongButton(
-                parent: boxGO.transform,
+                parent: contentParent,
                 name: "SecondaryButton",
-                anchor: new Vector2(0.5f, 0.23f),
-                size: new Vector2(820f, 200f),
+                anchor: new Vector2(0.5f, 0.30f),
+                size: new Vector2(760f, 180f),
                 normal: hasKit ? "ui.button.orange_long.normal" : null,
                 pressed: hasKit ? "ui.button.orange_long.pressed" : null,
                 disabled: hasKit ? "ui.button.orange_long.disabled" : null,
@@ -4691,6 +4743,181 @@ namespace LoopSorting
             overlayRect.offsetMin = Vector2.zero;
             overlayRect.offsetMax = Vector2.zero;
 
+            var popupGO = new GameObject("Popup");
+            popupGO.transform.SetParent(_settingsPanel.transform, false);
+            var popupRect = popupGO.AddComponent<RectTransform>();
+            popupRect.anchorMin = new Vector2(0.5f, 0.5f);
+            popupRect.anchorMax = new Vector2(0.5f, 0.5f);
+            popupRect.pivot = new Vector2(0.5f, 0.5f);
+            popupRect.anchoredPosition = new Vector2(0f, 40f);
+
+            float popupWidth = 900f;
+            float popupHeight = 1230f;
+            popupRect.sizeDelta = new Vector2(popupWidth, popupHeight);
+
+            var bgImg = popupGO.AddComponent<Image>();
+            bgImg.raycastTarget = false;
+            if (hasKit)
+            {
+                bgImg.preserveAspect = false;
+                bgImg.color = Color.white;
+
+                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                ApplySplitBackground(
+                    baseImage: bgImg,
+                    parent: popupGO.transform,
+                    decorName: "Decor",
+                    basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                    decorPath: null,
+                    fallbackSprite: fallback,
+                    noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
+
+                var layoutParent = TryCreatePaddingTrimmedLayoutRoot(
+                    parent: popupGO.transform,
+                    panelRect: popupRect,
+                    sprite: bgImg.sprite,
+                    desiredVisibleSizeUnits: new Vector2(popupWidth, popupHeight),
+                    assumedCornerPx: 120f);
+
+                var titleGO = new GameObject("Title");
+                titleGO.transform.SetParent(layoutParent, false);
+                var title = titleGO.AddComponent<TextMeshProUGUI>();
+                title.raycastTarget = false;
+                title.text = "SETTINGS";
+                title.alignment = TextAlignmentOptions.Center;
+                title.fontSize = 72;
+                title.color = new Color(0.24f, 0.14f, 0.08f, 0.96f);
+                title.outlineWidth = 0.18f;
+                title.outlineColor = new Color(1f, 1f, 1f, 0.6f);
+                var titleRect = titleGO.GetComponent<RectTransform>();
+                titleRect.anchorMin = new Vector2(0.5f, 1f);
+                titleRect.anchorMax = new Vector2(0.5f, 1f);
+                titleRect.pivot = new Vector2(0.5f, 1f);
+                titleRect.anchoredPosition = new Vector2(0f, -70f);
+                titleRect.sizeDelta = new Vector2(760f, 120f);
+
+                var closeBtn = CreateIconButton(
+                    parent: layoutParent,
+                    name: "CloseButton",
+                    anchor: new Vector2(1f, 1f),
+                    anchoredPos: new Vector2(-26f, -26f),
+                    size: new Vector2(128f, 128f),
+                    normal: "ui.button.close_red.normal",
+                    pressed: "ui.button.close_red.pressed",
+                    disabled: "ui.button.close_red.disabled",
+                    icon: null);
+                var closeRect = closeBtn.GetComponent<RectTransform>();
+                closeRect.pivot = new Vector2(1f, 1f);
+                closeRect.anchoredPosition = new Vector2(-26f, -26f);
+                _settingsCloseButton = closeBtn;
+                _settingsCloseImage = closeBtn.GetComponent<Image>();
+                _settingsCloseButton.onClick.AddListener(() => ToggleSettingsPanel(false));
+
+                void CreateToggleRow(string label, float topY, out Button button, out Image image)
+                {
+                    var rowGO = new GameObject(label + "Row");
+                    rowGO.transform.SetParent(layoutParent, false);
+                    var rowRect = rowGO.AddComponent<RectTransform>();
+                    rowRect.anchorMin = new Vector2(0.5f, 1f);
+                    rowRect.anchorMax = new Vector2(0.5f, 1f);
+                    rowRect.pivot = new Vector2(0.5f, 1f);
+                    rowRect.anchoredPosition = new Vector2(0f, topY);
+                    rowRect.sizeDelta = new Vector2(820f, 140f);
+
+                    var textGO = new GameObject("Label");
+                    textGO.transform.SetParent(rowGO.transform, false);
+                    var tmp = textGO.AddComponent<TextMeshProUGUI>();
+                    tmp.raycastTarget = false;
+                    tmp.text = label;
+                    tmp.alignment = TextAlignmentOptions.Left;
+                    tmp.fontSize = 58;
+                    tmp.color = new Color(0.24f, 0.14f, 0.08f, 0.96f);
+                    var tRect = textGO.GetComponent<RectTransform>();
+                    tRect.anchorMin = new Vector2(0f, 0.5f);
+                    tRect.anchorMax = new Vector2(0f, 0.5f);
+                    tRect.pivot = new Vector2(0f, 0.5f);
+                    tRect.anchoredPosition = new Vector2(30f, 0f);
+                    tRect.sizeDelta = new Vector2(460f, 90f);
+
+                    var toggleGO = new GameObject("Toggle");
+                    toggleGO.transform.SetParent(rowGO.transform, false);
+                    var toggleRect = toggleGO.AddComponent<RectTransform>();
+                    toggleRect.anchorMin = new Vector2(1f, 0.5f);
+                    toggleRect.anchorMax = new Vector2(1f, 0.5f);
+                    toggleRect.pivot = new Vector2(1f, 0.5f);
+                    toggleRect.anchoredPosition = new Vector2(-30f, 0f);
+                    toggleRect.sizeDelta = new Vector2(260f, 110f);
+
+                    image = toggleGO.AddComponent<Image>();
+                    image.raycastTarget = true;
+                    image.color = Color.white;
+                    image.type = Image.Type.Simple;
+                    image.preserveAspect = true;
+
+                    button = toggleGO.AddComponent<Button>();
+                    button.targetGraphic = image;
+                    button.transition = Selectable.Transition.ColorTint;
+                }
+
+                CreateToggleRow("MUSIC", topY: -250f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
+                CreateToggleRow("SFX", topY: -420f, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
+                CreateToggleRow("VIBRATION", topY: -590f, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
+
+                _settingsMusicToggleButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    musicEnabled = !musicEnabled;
+                    EnsureMusic();
+                    RefreshSettingsToggleVisuals();
+                    RequestSave(SaveDelayStrongSeconds);
+                });
+                _settingsSfxToggleButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    soundEnabled = !soundEnabled;
+                    EnsureSfx();
+                    RefreshSettingsToggleVisuals();
+                    RequestSave(SaveDelayStrongSeconds);
+                });
+                _settingsVibrationToggleButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    vibrationEnabled = !vibrationEnabled;
+                    if (vibrationEnabled) TryVibrate();
+                    RefreshSettingsToggleVisuals();
+                    RequestSave(SaveDelayStrongSeconds);
+                });
+
+                TMP_Text retryLabelText;
+                _settingsRetryButton = CreateLongButton(
+                    parent: layoutParent,
+                    name: "RetryButton",
+                    anchor: new Vector2(0.5f, 0f),
+                    size: new Vector2(820f, 200f),
+                    normal: "ui.button.orange_long.normal",
+                    pressed: "ui.button.orange_long.pressed",
+                    disabled: "ui.button.orange_long.disabled",
+                    label: "RETRY",
+                    out retryLabelText);
+                _settingsRetryImage = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<Image>() : null;
+                if (_settingsRetryButton != null)
+                {
+                    var rr = _settingsRetryButton.GetComponent<RectTransform>();
+                    rr.pivot = new Vector2(0.5f, 0f);
+                    rr.anchoredPosition = new Vector2(0f, 80f);
+                    _settingsRetryButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.LevelRetry);
+                        HideSettingsPanelImmediate();
+                        RestartCurrent();
+                    });
+                }
+
+                RefreshSettingsToggleVisuals();
+                _settingsPanel.SetActive(false);
+                return;
+            }
+
             Sprite settingsSprite = Resources.Load<Sprite>("setting_page");
             if (settingsSprite == null)
             {
@@ -4706,45 +4933,17 @@ namespace LoopSorting
                 }
             }
 
-            var popupGO = new GameObject("Popup");
-            popupGO.transform.SetParent(_settingsPanel.transform, false);
-            var popupRect = popupGO.AddComponent<RectTransform>();
-            popupRect.anchorMin = new Vector2(0.5f, 0.5f);
-            popupRect.anchorMax = new Vector2(0.5f, 0.5f);
-            popupRect.pivot = new Vector2(0.5f, 0.5f);
-            popupRect.anchoredPosition = new Vector2(0f, 40f);
-
-            float popupWidth = 900f;
-            float popupHeight = 1230f;
             if (settingsSprite != null && settingsSprite.rect.width > 0.01f)
             {
                 float aspect = settingsSprite.rect.height / settingsSprite.rect.width;
                 popupHeight = popupWidth * aspect;
+                popupRect.sizeDelta = new Vector2(popupWidth, popupHeight);
             }
-            popupRect.sizeDelta = new Vector2(popupWidth, popupHeight);
 
-            var bgImg = popupGO.AddComponent<Image>();
-            bgImg.raycastTarget = false;
-            if (hasKit)
-            {
-                bgImg.preserveAspect = false;
-                var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
-                ApplySplitBackground(
-                    baseImage: bgImg,
-                    parent: popupGO.transform,
-                    decorName: "Decor",
-                    basePath: "UI_Sprites/panel_modal_base_9slice.png",
-                    decorPath: null,
-                    fallbackSprite: fallback,
-                    noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
-            }
-            else
-            {
-                bgImg.sprite = settingsSprite;
-                bgImg.color = settingsSprite != null ? Color.white : new Color(0.12f, 0.12f, 0.12f, 0.95f);
-                bgImg.type = Image.Type.Simple;
-                bgImg.preserveAspect = true;
-            }
+            bgImg.sprite = settingsSprite;
+            bgImg.color = Color.white;
+            bgImg.type = Image.Type.Simple;
+            bgImg.preserveAspect = true;
 
             static bool TryExtractInt(string json, string pattern, out int value)
             {

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "style_core": "soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+  "negative_core": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts",
+  "export_core": "centered, no cropping, leave generous padding on all sides, ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG",
+  "items": {
+    "UI_Sprites/toggle_knob.png": {
+      "dir": "UI_Sprites",
+      "filename": "toggle_knob.png",
+      "size": "88x96",
+      "background": "transparent",
+      "template": "TOGGLE",
+      "tags": [
+        "oneoff_test"
+      ],
+      "positive": "Toggle knob (slider cap) only, no track:\n- Shape: raised circular/oval cap, centered; soft bevel; subtle rim.\n- Size: fill most of the canvas but leave generous transparent padding on all sides (~6–10% of canvas). The knob silhouette + outline + shadow must be fully inside the canvas; nothing touches or crosses the image border; no cropping/cut-off.\n- Material: creamy ivory glossy plastic, top-left highlight, soft inner shadow and ambient occlusion.\n- Outline: thick dark-brown outline around the knob silhouette.\n- Shadow: very subtle, kept well inside the padding (no outer glow).\nTransparent background outside the knob (fully transparent), no vignette/haze/background, no text, orthographic front view.",
+      "negative": "cropped, cut off, clipped, touches border, truncated outline, outer glow, vignette, haze, background gradient, background scene, checkerboard, alpha grid, transparency grid, text, watermark, logo, blurry, low-res, artifacts, photorealistic, realistic materials"
+    }
+  }
+}

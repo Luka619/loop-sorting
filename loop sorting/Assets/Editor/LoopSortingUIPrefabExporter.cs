@@ -12,6 +12,7 @@ namespace LoopSorting.Editor
     public static class LoopSortingUIPrefabExporter
     {
         private const string OutputFolder = "Assets/Resources/UI";
+        private const string GameplayHudPrefabName = "GameplayHUD";
 
         [MenuItem("LoopSorting/UI/Generate Panel Prefabs (if missing)")]
         public static void GenerateAllIfMissing()
@@ -32,6 +33,27 @@ namespace LoopSorting.Editor
             }
 
             GenerateAllInternal(overwriteExisting: true);
+        }
+
+        [MenuItem("LoopSorting/UI/Generate Gameplay HUD Prefab (if missing)")]
+        public static void GenerateGameplayHudIfMissing()
+        {
+            GenerateGameplayHudInternal(overwriteExisting: false);
+        }
+
+        [MenuItem("LoopSorting/UI/Regenerate Gameplay HUD Prefab (overwrite)")]
+        public static void RegenerateGameplayHudOverwrite()
+        {
+            if (!EditorUtility.DisplayDialog(
+                    "Regenerate Gameplay HUD Prefab",
+                    $"This will overwrite {OutputFolder}/{GameplayHudPrefabName}.prefab and may discard your manual layout tweaks.\n\nContinue?",
+                    "Overwrite",
+                    "Cancel"))
+            {
+                return;
+            }
+
+            GenerateGameplayHudInternal(overwriteExisting: true);
         }
 
         private static void GenerateAllInternal(bool overwriteExisting)
@@ -71,6 +93,7 @@ namespace LoopSorting.Editor
                 SavePanelPrefab<ShopPanelPrefabRefs>(canvasGO.transform, "ShopPanel", "ShopPanel", overwriteExisting);
                 SavePanelPrefab<ResultPanelPrefabRefs>(canvasGO.transform, "ResultPanel", "ResultPanel", overwriteExisting);
                 SavePanelPrefab<BoosterPurchasePanelPrefabRefs>(canvasGO.transform, "BoosterPurchasePanel", "BoosterPurchasePanel", overwriteExisting);
+                GenerateGameplayHudUnder(root.transform, overwriteExisting);
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -78,6 +101,42 @@ namespace LoopSorting.Editor
             finally
             {
                 UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void GenerateGameplayHudInternal(bool overwriteExisting)
+        {
+            EnsureFolder(OutputFolder);
+
+            var root = new GameObject("__LoopSortingGameplayHudPrefabExportRoot");
+            root.hideFlags = HideFlags.HideAndDontSave;
+
+            try
+            {
+                GenerateGameplayHudUnder(root.transform, overwriteExisting);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void GenerateGameplayHudUnder(Transform parent, bool overwriteExisting)
+        {
+            var controllerGO = new GameObject("__TempController_HUD");
+            controllerGO.hideFlags = HideFlags.HideAndDontSave;
+            controllerGO.transform.SetParent(parent, false);
+
+            var controller = controllerGO.AddComponent<GameRuntimeController>();
+            InvokeEnsureHud(controller);
+            SaveGameplayHudPrefab(controller, overwriteExisting);
+
+            var canvas = GetPrivateField<Canvas>(controller, "_uiCanvas");
+            if (canvas != null)
+            {
+                UnityEngine.Object.DestroyImmediate(canvas.gameObject);
             }
         }
 
@@ -116,6 +175,53 @@ namespace LoopSorting.Editor
             Debug.Log($"[LoopSortingUIPrefabExporter] Saved: {assetPath}");
         }
 
+        private static void InvokeEnsureHud(GameRuntimeController controller)
+        {
+            if (controller == null) return;
+
+            // Export a "full" HUD so designers can tweak everything in the prefab.
+            controller.shopEnabled = true;
+            controller.livesHudEnabled = true;
+
+            InvokePrivate(controller, "EnsureCounterUI");
+        }
+
+        private static void SaveGameplayHudPrefab(GameRuntimeController controller, bool overwriteExisting)
+        {
+            if (controller == null) return;
+
+            var canvas = GetPrivateField<Canvas>(controller, "_uiCanvas");
+            if (canvas == null)
+            {
+                Debug.LogWarning("[LoopSortingUIPrefabExporter] HUD canvas not found after EnsureCounterUI().");
+                return;
+            }
+
+            var hudRoot = FindChildByName(canvas.transform, "HUDRoot");
+            if (hudRoot == null)
+            {
+                Debug.LogWarning("[LoopSortingUIPrefabExporter] HUDRoot not found under HUD canvas.");
+                return;
+            }
+
+            var refs = hudRoot.GetComponent<GameplayHudPrefabRefs>();
+            if (refs == null) refs = hudRoot.gameObject.AddComponent<GameplayHudPrefabRefs>();
+            refs.AutoAssign();
+            refs.authoredTopInsetUnits = controller.HudTopInsetUnits;
+            refs.authoredRightInsetUnits = controller.HudRightInsetUnits;
+            refs.authoredBottomInsetUnits = controller.HudBottomInsetUnits;
+
+            string assetPath = $"{OutputFolder}/{GameplayHudPrefabName}.prefab";
+            if (!overwriteExisting && File.Exists(assetPath))
+            {
+                Debug.Log($"[LoopSortingUIPrefabExporter] Skip (already exists): {assetPath}");
+                return;
+            }
+
+            PrefabUtility.SaveAsPrefabAsset(hudRoot.gameObject, assetPath);
+            Debug.Log($"[LoopSortingUIPrefabExporter] Saved: {assetPath}");
+        }
+
         private static void EnsureFolder(string folderPath)
         {
             folderPath = folderPath.Replace('\\', '/').TrimEnd('/');
@@ -142,6 +248,14 @@ namespace LoopSorting.Editor
                 if (t != null && t.name == name) return t;
             }
             return null;
+        }
+
+        private static T GetPrivateField<T>(object instance, string fieldName) where T : class
+        {
+            if (instance == null) return null;
+            var f = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (f == null) return null;
+            return f.GetValue(instance) as T;
         }
 
         private static void SetPrivateField(object instance, string fieldName, object value)

@@ -154,6 +154,67 @@ namespace LoopSorting
             {
                 UIPrefabPreviewUtil.ApplyNineSliceIfMissing(adImage, LoopSortingUIKit.LoadSpriteByKey("ui.button.mint_long.normal"));
             }
+
+            if (coinsPriceCover != null)
+            {
+                coinsPriceCover.sprite = null;
+                coinsPriceCover.color = new Color(1f, 1f, 1f, 0f);
+            }
+
+            if (coinsImage != null)
+            {
+                var coinSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
+                if (coinSprite != null)
+                {
+                    var img = UIPrefabPreviewUtil.EnsureChildImage(coinsImage.transform, "Icon", coinSprite);
+                    if (img != null)
+                    {
+                        var r = img.rectTransform;
+                        r.anchorMin = new Vector2(0f, 0.5f);
+                        r.anchorMax = new Vector2(0f, 0.5f);
+                        r.pivot = new Vector2(0.5f, 0.5f);
+                        r.anchoredPosition = new Vector2(86f, 0f);
+                        r.sizeDelta = new Vector2(84f, 84f);
+                    }
+                }
+            }
+
+            if (adImage != null)
+            {
+                var videoSprite =
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false) ??
+                    LoopSortingUIKit.LoadSpriteByKey("ui.icon.video");
+                if (videoSprite != null)
+                {
+                    var img = UIPrefabPreviewUtil.EnsureChildImage(adImage.transform, "Icon", videoSprite);
+                    if (img != null)
+                    {
+                        var r = img.rectTransform;
+                        r.anchorMin = new Vector2(0f, 0.5f);
+                        r.anchorMax = new Vector2(0f, 0.5f);
+                        r.pivot = new Vector2(0.5f, 0.5f);
+                        r.anchoredPosition = new Vector2(86f, 0f);
+                        r.sizeDelta = new Vector2(84f, 84f);
+                    }
+                }
+            }
+
+            if (coinsLabel != null)
+            {
+                var r = coinsLabel.rectTransform;
+                r.anchorMin = Vector2.zero;
+                r.anchorMax = Vector2.one;
+                r.offsetMin = new Vector2(160f, 0f);
+                r.offsetMax = new Vector2(-60f, 0f);
+            }
+            if (adLabel != null)
+            {
+                var r = adLabel.rectTransform;
+                r.anchorMin = Vector2.zero;
+                r.anchorMax = Vector2.one;
+                r.offsetMin = new Vector2(160f, 0f);
+                r.offsetMax = new Vector2(-60f, 0f);
+            }
         }
 #endif
     }

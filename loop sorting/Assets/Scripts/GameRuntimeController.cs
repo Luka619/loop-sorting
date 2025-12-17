@@ -59,6 +59,7 @@ namespace LoopSorting
         private const string ShopPanelPrefabResourcePath = "UI/ShopPanel";
         private const string ResultPanelPrefabResourcePath = "UI/ResultPanel";
         private const string BoosterPurchasePanelPrefabResourcePath = "UI/BoosterPurchasePanel";
+        private const string GameplayHudPrefabResourcePath = "UI/GameplayHUD";
 
         private bool _hasLoadedSave;
         private int _savedFlowIndex;
@@ -67,6 +68,10 @@ namespace LoopSorting
         private float _saveDueUnscaledTime = -1f;
         [Header("UI")]
         public BeltCounterUI beltCounterUI;
+        [Tooltip("Enable Shop entry points (Shop button and + buttons in currency pills).")]
+        public bool shopEnabled = false;
+        [Tooltip("Show stamina (lives) pill in the HUD.")]
+        public bool livesHudEnabled = false;
         [Header("Debug/Visuals")]
         public bool showSlotGizmos = true;
         [Tooltip("Log each box's resolved belt port mapping (slot index + world position). Useful when blocks don't enter the expected box.")]
@@ -94,6 +99,14 @@ namespace LoopSorting
         private readonly Dictionary<int, Coroutine> _beltBlockOffsetCoroutines = new Dictionary<int, Coroutine>();
         private readonly HashSet<int> _beltInsertAnimating = new HashSet<int>();
         private readonly Dictionary<int, Coroutine> _beltInsertCoroutines = new Dictionary<int, Coroutine>();
+
+        private float _hudTopInsetUnits;
+        private float _hudRightInsetUnits;
+        private float _hudBottomInsetUnits;
+
+        public float HudTopInsetUnits => _hudTopInsetUnits;
+        public float HudRightInsetUnits => _hudRightInsetUnits;
+        public float HudBottomInsetUnits => _hudBottomInsetUnits;
         private Coroutine _emptyDeferredHintRoutine;
         private LineRenderer _emptyDeferredLine;
         private RejectFeedbackGate _rejectGate;
@@ -625,7 +638,7 @@ namespace LoopSorting
             scaler.matchWidthOrHeight = 0.5f;
 
             canvasGO.AddComponent<GraphicRaycaster>();
-            DontDestroyOnLoad(canvasGO);
+            if (Application.isPlaying) DontDestroyOnLoad(canvasGO);
 
             var safeAreaGO = new GameObject("SafeArea");
             safeAreaGO.transform.SetParent(canvasGO.transform, false);
@@ -1923,6 +1936,13 @@ namespace LoopSorting
             {
                 AttachBoosterBadge(buttonTransform, count);
                 return;
+            }
+
+            var badgeBg = badge.Find("BadgeBG")?.GetComponent<Image>();
+            if (badgeBg != null)
+            {
+                UIPrefabPreviewUtil.ApplySimpleIfMissing(badgeBg, LoopSortingUIKit.LoadSpriteByKey("ui.badge.bg"), preserveAspect: true);
+                badgeBg.raycastTarget = false;
             }
 
             count = Mathf.Clamp(count, 0, 99);
@@ -4336,6 +4356,162 @@ namespace LoopSorting
 
             topBarTopUnits = Mathf.Clamp(topBarTopUnits, 0f, 420f);
 
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+            EnsureEconomyDefaults();
+
+            _hudTopInsetUnits = topBarTopUnits;
+            _hudRightInsetUnits = topBarExtraRightUnits;
+            _hudBottomInsetUnits = safeBottomUnits;
+
+            // Prefer prefab-driven HUD so layout can be tweaked manually in the editor.
+            if (TryInstantiateUiPrefab(GameplayHudPrefabResourcePath, out GameplayHudPrefabRefs hudPrefab))
+            {
+                hudPrefab.AutoAssign();
+                RebindGameplayHudPrefabSprites(hudPrefab, hasKit);
+
+                _hudRootRect = hudPrefab.rootRect != null ? hudPrefab.rootRect : hudPrefab.GetComponent<RectTransform>();
+                if (_hudRootRect != null)
+                {
+                    _hudRootRect.anchorMin = Vector2.zero;
+                    _hudRootRect.anchorMax = Vector2.one;
+                    _hudRootRect.offsetMin = Vector2.zero;
+                    _hudRootRect.offsetMax = Vector2.zero;
+                }
+
+                beltCounterUI = hudPrefab.beltCounterUI;
+                _levelHudText = hudPrefab.levelText;
+                _shopButton = hudPrefab.shopButton;
+                _coinText = hudPrefab.coinText;
+                _coinPlusButton = hudPrefab.coinPlusButton;
+                _lifeText = hudPrefab.lifeText;
+                _lifePlusButton = hudPrefab.lifePlusButton;
+                _speedButton = hudPrefab.speedButton;
+                _speedButtonLabel = hudPrefab.speedLabel;
+                _settingsButton = hudPrefab.settingsButton;
+                _boosterPanel = hudPrefab.boosterPanel;
+                _boosterSortButton = hudPrefab.boosterSortButton;
+                _boosterShuffleButton = hudPrefab.boosterShuffleButton;
+
+                // Apply current feature toggles to prefab content.
+                var shopBtnT = _hudRootRect != null ? _hudRootRect.Find("ShopButton") : null;
+                if (shopBtnT != null) shopBtnT.gameObject.SetActive(shopEnabled);
+
+                var livesPillT = _hudRootRect != null ? _hudRootRect.Find("LivesPill") : null;
+                if (livesPillT != null) livesPillT.gameObject.SetActive(livesHudEnabled);
+
+                var coinPlusT = _hudRootRect != null ? _hudRootRect.Find("CoinsPill/Plus") : null;
+                if (coinPlusT != null) coinPlusT.gameObject.SetActive(shopEnabled);
+
+                var lifePlusT = _hudRootRect != null ? _hudRootRect.Find("LivesPill/Plus") : null;
+                if (lifePlusT != null) lifePlusT.gameObject.SetActive(shopEnabled && livesHudEnabled);
+
+                // Safe-area adjustments: nudge top HUD down, and boosters up from bottom inset.
+                float topDelta = topBarTopUnits - hudPrefab.authoredTopInsetUnits;
+                float rightDelta = topBarExtraRightUnits - hudPrefab.authoredRightInsetUnits;
+                float bottomDelta = safeBottomUnits - hudPrefab.authoredBottomInsetUnits;
+
+                void NudgeTop(string childName, bool applyRightInset)
+                {
+                    if (_hudRootRect == null || string.IsNullOrEmpty(childName)) return;
+                    var t = _hudRootRect.Find(childName);
+                    if (t == null) return;
+                    var rt = t.GetComponent<RectTransform>();
+                    if (rt == null) return;
+                    var p = rt.anchoredPosition;
+                    p.y -= topDelta;
+                    if (applyRightInset) p.x -= rightDelta;
+                    rt.anchoredPosition = p;
+                }
+
+                NudgeTop("FreeSlotsCounter", applyRightInset: false);
+                NudgeTop("LevelLabel", applyRightInset: false);
+                NudgeTop("ShopButton", applyRightInset: false);
+                NudgeTop("CoinsPill", applyRightInset: true);
+                NudgeTop("LivesPill", applyRightInset: true);
+                NudgeTop("SpeedButton", applyRightInset: true);
+                NudgeTop("SettingsButton", applyRightInset: true);
+                NudgeTop("FastTag", applyRightInset: false);
+
+                void NudgeBooster(Button b)
+                {
+                    if (b == null) return;
+                    var rt = b.GetComponent<RectTransform>();
+                    if (rt == null) return;
+                    var p = rt.anchoredPosition;
+                    p.y += bottomDelta;
+                    rt.anchoredPosition = p;
+                }
+
+                NudgeBooster(_boosterSortButton);
+                NudgeBooster(_boosterShuffleButton);
+
+                // Rebind button actions (prefabs are layout-only).
+                if (_speedButton != null)
+                {
+                    _speedButton.onClick.RemoveAllListeners();
+                    _speedButton.onClick.AddListener(CycleSpeed);
+                    ApplyButtonPressScale(_speedButton, pressedScale: 0.96f);
+                }
+                if (_settingsButton != null)
+                {
+                    _settingsButton.onClick.RemoveAllListeners();
+                    _settingsButton.onClick.AddListener(() => ToggleSettingsPanel(true));
+                    ApplyButtonPressScale(_settingsButton, pressedScale: 0.96f);
+                }
+                if (_shopButton != null)
+                {
+                    _shopButton.onClick.RemoveAllListeners();
+                    _shopButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        OpenShop(ShopTab.Coins);
+                    });
+                    ApplyButtonPressScale(_shopButton, pressedScale: 0.96f);
+                }
+                if (_coinPlusButton != null)
+                {
+                    _coinPlusButton.onClick.RemoveAllListeners();
+                    _coinPlusButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        OpenShop(ShopTab.Coins);
+                    });
+                    ApplyButtonPressScale(_coinPlusButton, pressedScale: 0.96f);
+                }
+                if (_lifePlusButton != null)
+                {
+                    _lifePlusButton.onClick.RemoveAllListeners();
+                    _lifePlusButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        OpenShop(ShopTab.Lives);
+                    });
+                    ApplyButtonPressScale(_lifePlusButton, pressedScale: 0.96f);
+                }
+                if (_boosterSortButton != null)
+                {
+                    _boosterSortButton.onClick.RemoveAllListeners();
+                    _boosterSortButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Sort));
+                    ApplyButtonPressScale(_boosterSortButton, pressedScale: 0.96f);
+                    if (hasKit) AttachBoosterBadge(_boosterSortButton.transform, _boosterSortCount);
+                }
+                if (_boosterShuffleButton != null)
+                {
+                    _boosterShuffleButton.onClick.RemoveAllListeners();
+                    _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
+                    ApplyButtonPressScale(_boosterShuffleButton, pressedScale: 0.96f);
+                    if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
+                }
+
+                UpdateSpeedButtonLabel();
+                RefreshEconomyHUD();
+
+                EnsureResultPanel();
+                if (shopEnabled) EnsureShopUI();
+                EnsureBoosterPurchaseUI();
+                return;
+            }
+
             // Root helper
             var root = new GameObject("HUDRoot");
             root.transform.SetParent(canvasGO.transform, false);
@@ -4346,10 +4522,7 @@ namespace LoopSorting
             rootRect.offsetMax = Vector2.zero;
             _hudRootRect = rootRect;
 
-            bool hasKit = LoopSortingUIKit.IsAvailable();
             var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
-
-            EnsureEconomyDefaults();
 
             void PlaceTopLeft(RectTransform r, Rect topLeft)
             {
@@ -4505,36 +4678,54 @@ namespace LoopSorting
             levelTextRect.offsetMax = new Vector2(-16f, 0f);
 
             // Shop button (top-left under pause area, uses placeholder icon if missing)
-            _shopButton = CreateIconButton(
-                parent: root.transform,
-                name: "ShopButton",
-                anchor: new Vector2(0f, 1f),
-                anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -(uiLayout.shop.y + topBarTopUnits) - uiLayout.shop.height * 0.5f),
-                size: new Vector2(uiLayout.shop.width, uiLayout.shop.height),
-                normal: hasKit ? "ui.button.mint_square.normal" : null,
-                pressed: hasKit ? "ui.button.mint_square.pressed" : null,
-                disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.shop" : null);
-            _shopButton.onClick.AddListener(() =>
+            if (shopEnabled)
             {
-                PlaySfx(SfxId.UiClick);
-                OpenShop(ShopTab.Coins);
-            });
-            ApplyButtonPressScale(_shopButton, pressedScale: 0.96f);
+                _shopButton = CreateIconButton(
+                    parent: root.transform,
+                    name: "ShopButton",
+                    anchor: new Vector2(0f, 1f),
+                    anchoredPos: new Vector2(uiLayout.shop.x + uiLayout.shop.width * 0.5f, -(uiLayout.shop.y + topBarTopUnits) - uiLayout.shop.height * 0.5f),
+                    size: new Vector2(uiLayout.shop.width, uiLayout.shop.height),
+                    normal: hasKit ? "ui.button.mint_square.normal" : null,
+                    pressed: hasKit ? "ui.button.mint_square.pressed" : null,
+                    disabled: hasKit ? "ui.button.mint_square.disabled" : null,
+                    icon: hasKit ? "ui.icon.shop" : null);
+                _shopButton.onClick.AddListener(() =>
+                {
+                    PlaySfx(SfxId.UiClick);
+                    OpenShop(ShopTab.Coins);
+                });
+                ApplyButtonPressScale(_shopButton, pressedScale: 0.96f);
+            }
 
-            // Currency bar (top-right): one-row TopBar with separate coin/lives hit areas.
-            CreateCurrencyBar(
+            // Currency pills (top-right): separate coins/lives, no shared background.
+            Rect coinsRect = livesHudEnabled ? uiLayout.coins : uiLayout.lives;
+            float coinsRight = uiLayout.referenceWidth - (coinsRect.x + coinsRect.width) + topBarExtraRightUnits;
+            CreateCurrencyPill(
                 parent: root.transform,
-                name: "CurrencyBar",
-                coinsTopLeft: uiLayout.coins,
-                livesTopLeft: uiLayout.lives,
-                referenceWidth: uiLayout.referenceWidth,
-                safeTopUnits: topBarTopUnits,
-                extraRightUnits: topBarExtraRightUnits,
+                name: "CoinsPill",
+                anchor: new Vector2(1f, 1f),
+                anchoredPos: new Vector2(-coinsRight, -(coinsRect.y + topBarTopUnits)),
+                size: new Vector2(coinsRect.width, coinsRect.height),
+                iconKey: "ui.icon.coin",
+                showPlusButton: shopEnabled,
                 out _coinText,
-                out _lifeText,
-                out _coinPlusButton,
-                out _lifePlusButton);
+                out _coinPlusButton);
+
+            if (livesHudEnabled)
+            {
+                float livesRight = uiLayout.referenceWidth - (uiLayout.lives.x + uiLayout.lives.width) + topBarExtraRightUnits;
+                CreateCurrencyPill(
+                    parent: root.transform,
+                    name: "LivesPill",
+                    anchor: new Vector2(1f, 1f),
+                    anchoredPos: new Vector2(-livesRight, -(uiLayout.lives.y + topBarTopUnits)),
+                    size: new Vector2(uiLayout.lives.width, uiLayout.lives.height),
+                    iconKey: "ui.icon.heart",
+                    showPlusButton: shopEnabled,
+                    out _lifeText,
+                    out _lifePlusButton);
+            }
 
             if (_coinPlusButton != null)
             {
@@ -4718,7 +4909,7 @@ namespace LoopSorting
             if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _boosterShuffleCount);
 
             EnsureResultPanel();
-            EnsureShopUI();
+            if (shopEnabled) EnsureShopUI();
             EnsureBoosterPurchaseUI();
         }
 
@@ -6422,7 +6613,7 @@ namespace LoopSorting
             {
                 PlaySfx(SfxId.UiDenied);
                 CloseBoosterPurchase();
-                OpenShop(ShopTab.Coins);
+                if (shopEnabled) OpenShop(ShopTab.Coins);
                 return;
             }
 
@@ -6493,6 +6684,8 @@ namespace LoopSorting
 
 	        private void OpenShop(ShopTab tab)
 	        {
+	            if (!shopEnabled) return;
+
 	            EnsureShopUI();
 	            RefreshEconomyHUD();
 	            PopulateShop(tab);
@@ -7294,6 +7487,7 @@ namespace LoopSorting
             Vector2 anchoredPos,
             Vector2 size,
             string iconKey,
+            bool showPlusButton,
             out TMP_Text valueText,
             out Button plusButton)
         {
@@ -7374,28 +7568,32 @@ namespace LoopSorting
                 underlayOffset: new Vector2(2f, -3f),
                 underlaySoftness: 0.32f,
                 underlayDilate: 0.05f);
-            var vRect = tmp.GetComponent<RectTransform>();
-            vRect.anchorMin = new Vector2(0f, 0f);
-            vRect.anchorMax = new Vector2(1f, 1f);
-            float rightInset = padding + plusSize + padding;
-            vRect.offsetMin = new Vector2(leftInset, 0f);
-            vRect.offsetMax = new Vector2(-rightInset, 0f);
+             var vRect = tmp.GetComponent<RectTransform>();
+             vRect.anchorMin = new Vector2(0f, 0f);
+             vRect.anchorMax = new Vector2(1f, 1f);
+             float rightInset = showPlusButton ? (padding + plusSize + padding) : padding;
+             vRect.offsetMin = new Vector2(leftInset, 0f);
+             vRect.offsetMax = new Vector2(-rightInset, 0f);
 
-            // Plus button
-            plusButton = CreateIconButton(
-                parent: root.transform,
-                name: "Plus",
-                anchor: new Vector2(1f, 0.5f),
-                anchoredPos: new Vector2(-padding - plusSize * 0.5f, 0f),
-                size: new Vector2(plusSize, plusSize),
-                normal: hasKit ? "ui.button.mint_square.normal" : null,
-                pressed: hasKit ? "ui.button.mint_square.pressed" : null,
-                disabled: hasKit ? "ui.button.mint_square.disabled" : null,
-                icon: hasKit ? "ui.icon.plus" : null);
-            ApplyButtonPressScale(plusButton, pressedScale: 0.96f);
+             // Plus button
+             plusButton = null;
+             if (showPlusButton)
+             {
+                 plusButton = CreateIconButton(
+                     parent: root.transform,
+                     name: "Plus",
+                     anchor: new Vector2(1f, 0.5f),
+                     anchoredPos: new Vector2(-padding - plusSize * 0.5f, 0f),
+                     size: new Vector2(plusSize, plusSize),
+                     normal: hasKit ? "ui.button.mint_square.normal" : null,
+                     pressed: hasKit ? "ui.button.mint_square.pressed" : null,
+                     disabled: hasKit ? "ui.button.mint_square.disabled" : null,
+                     icon: hasKit ? "ui.icon.plus" : null);
+                 ApplyButtonPressScale(plusButton, pressedScale: 0.96f);
+             }
 
-            valueText = tmp;
-        }
+             valueText = tmp;
+         }
 
         private void ApplyUIKitButtonSprites(Button button, Image image, string normal, string pressed, string disabled)
         {
@@ -7441,6 +7639,213 @@ namespace LoopSorting
                 Debug.Log(
                     $"[NineSliceCheck] {normal} -> sprite='{normalSprite.name}', rect={normalSprite.rect.width:0}x{normalSprite.rect.height:0}, " +
                     $"border(L,B,R,T)={normalSprite.border} pressedBorder={pressedSprite?.border.ToString() ?? "(null)"}");
+            }
+        }
+
+        private void RebindGameplayHudPrefabSprites(GameplayHudPrefabRefs prefab, bool hasKit)
+        {
+            if (prefab == null) return;
+
+            void ApplyButton(Button btn, string normal, string pressed, string disabled)
+            {
+                if (btn == null) return;
+                var img = btn.GetComponent<Image>();
+                if (img == null) return;
+                ApplyUIKitButtonSprites(btn, img, normal, pressed, disabled);
+            }
+
+            void ApplyIcon(Transform parent, string iconKey, bool preserveAspect)
+            {
+                if (parent == null) return;
+                var iconT = parent.Find("Icon");
+                if (iconT == null) return;
+                var img = iconT.GetComponent<Image>();
+                if (img == null) img = iconT.gameObject.AddComponent<Image>();
+                img.raycastTarget = false;
+
+                Sprite s = hasKit && !string.IsNullOrEmpty(iconKey) ? LoopSortingUIKit.LoadSpriteByKey(iconKey) : null;
+                img.sprite = s;
+                img.type = Image.Type.Simple;
+                img.color = s != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+                img.preserveAspect = preserveAspect;
+            }
+
+            // Free slots counter
+            if (prefab.beltCounterUI != null)
+            {
+                var counterBgT = prefab.beltCounterUI.transform.parent;
+                var bgImg = counterBgT != null ? counterBgT.GetComponent<Image>() : null;
+                if (bgImg != null)
+                {
+                    var fallback = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg") : null;
+                    ApplySplitBackground(
+                        baseImage: bgImg,
+                        parent: bgImg.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                        decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(0.1f, 0.1f, 0.1f, 0.55f));
+                }
+
+                var iconT = counterBgT != null ? counterBgT.Find("Icon") : null;
+                var iconImg = iconT != null ? iconT.GetComponent<Image>() : null;
+                if (iconImg != null)
+                {
+                    var s = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.counter.icon") : null;
+                    iconImg.sprite = s;
+                    iconImg.type = Image.Type.Simple;
+                    iconImg.color = s != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+                    iconImg.preserveAspect = true;
+                }
+            }
+
+            // Level label background + text styling.
+            var levelLabel = prefab.transform.Find("LevelLabel");
+            var levelBg = levelLabel != null ? levelLabel.GetComponent<Image>() : null;
+            if (levelBg != null)
+            {
+                if (hasKit)
+                {
+                    levelBg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.hud.level_bg");
+                    levelBg.type = levelBg.sprite != null && levelBg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    levelBg.color = levelBg.sprite != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+                }
+                else
+                {
+                    levelBg.sprite = null;
+                    levelBg.color = new Color(0f, 0f, 0f, 0.25f);
+                }
+            }
+
+            if (hasKit && prefab.levelText != null)
+            {
+                prefab.levelText.raycastTarget = false;
+                prefab.levelText.enableWordWrapping = false;
+                prefab.levelText.alignment = TextAlignmentOptions.Center;
+                prefab.levelText.color = Color.white;
+                ApplyTmpOutlineUnderlay(
+                    prefab.levelText,
+                    outlineWidth: 0.20f,
+                    outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                    underlayColor: new Color(0f, 0f, 0f, 0.32f),
+                    underlayOffset: new Vector2(2f, -3f),
+                    underlaySoftness: 0.30f,
+                    underlayDilate: 0.04f);
+            }
+
+            // Buttons + icons
+            ApplyButton(prefab.shopButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+            ApplyIcon(prefab.shopButton != null ? prefab.shopButton.transform : null, "ui.icon.shop", preserveAspect: true);
+
+            ApplyButton(prefab.speedButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+
+            ApplyButton(prefab.settingsButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+            ApplyIcon(prefab.settingsButton != null ? prefab.settingsButton.transform : null, "ui.icon.gear", preserveAspect: true);
+
+            // Currency pills
+            if (prefab.coinText != null)
+            {
+                var root = prefab.coinText.transform.parent;
+                var bg = root != null ? root.GetComponent<Image>() : null;
+                if (bg != null)
+                {
+                    var fallback = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg") : null;
+                    ApplySplitBackground(
+                        baseImage: bg,
+                        parent: bg.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                        decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
+                }
+                ApplyIcon(root, "ui.icon.coin", preserveAspect: true);
+            }
+            ApplyButton(prefab.coinPlusButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+            ApplyIcon(prefab.coinPlusButton != null ? prefab.coinPlusButton.transform : null, "ui.icon.plus", preserveAspect: true);
+
+            if (prefab.lifeText != null)
+            {
+                var root = prefab.lifeText.transform.parent;
+                var bg = root != null ? root.GetComponent<Image>() : null;
+                if (bg != null)
+                {
+                    var fallback = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg") : null;
+                    ApplySplitBackground(
+                        baseImage: bg,
+                        parent: bg.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                        decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
+                }
+                ApplyIcon(root, "ui.icon.heart", preserveAspect: true);
+            }
+            ApplyButton(prefab.lifePlusButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+            ApplyIcon(prefab.lifePlusButton != null ? prefab.lifePlusButton.transform : null, "ui.icon.plus", preserveAspect: true);
+
+            // Boosters
+            ApplyButton(prefab.boosterSortButton, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+            ApplyIcon(prefab.boosterSortButton != null ? prefab.boosterSortButton.transform : null, "ui.icon.sort", preserveAspect: true);
+
+            ApplyButton(prefab.boosterShuffleButton, "ui.button.purple_square.normal", "ui.button.purple_square.pressed", "ui.button.purple_square.disabled");
+            ApplyIcon(prefab.boosterShuffleButton != null ? prefab.boosterShuffleButton.transform : null, "ui.icon.shuffle", preserveAspect: true);
+
+            void RebindExistingBadge(Button b)
+            {
+                if (b == null) return;
+                var badge = b.transform.Find("Badge");
+                if (badge == null) return;
+
+                var bg = badge.Find("BadgeBG")?.GetComponent<Image>();
+                if (bg != null)
+                {
+                    UIPrefabPreviewUtil.ApplySimpleIfMissing(bg, LoopSortingUIKit.LoadSpriteByKey("ui.badge.bg"), preserveAspect: true);
+                    bg.raycastTarget = false;
+                }
+
+                var tmp = badge.Find("Text")?.GetComponent<TextMeshProUGUI>();
+                if (tmp == null) tmp = badge.GetComponentInChildren<TextMeshProUGUI>(includeInactive: true);
+                if (tmp != null)
+                {
+                    tmp.raycastTarget = false;
+                    tmp.enableWordWrapping = false;
+                    tmp.alignment = TextAlignmentOptions.Center;
+                    tmp.color = Color.white;
+                    ApplyTmpOutlineUnderlay(
+                        tmp,
+                        outlineWidth: 0.20f,
+                        outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                        underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                        underlayOffset: new Vector2(2f, -2f),
+                        underlaySoftness: 0.28f,
+                        underlayDilate: 0.02f);
+                }
+            }
+
+            RebindExistingBadge(prefab.boosterSortButton);
+            RebindExistingBadge(prefab.boosterShuffleButton);
+
+            // Fast tag (optional)
+            if (_hudRootRect != null)
+            {
+                var fastBg = _hudRootRect.Find("FastTag/BG")?.GetComponent<Image>();
+                if (fastBg != null)
+                {
+                    if (hasKit)
+                    {
+                        fastBg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_fast.info");
+                        fastBg.type = fastBg.sprite != null && fastBg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                        fastBg.color = fastBg.sprite != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+                    }
+                    else
+                    {
+                        fastBg.sprite = null;
+                        fastBg.color = new Color(0f, 0f, 0f, 0.35f);
+                    }
+                }
             }
         }
 
@@ -7849,6 +8254,60 @@ namespace LoopSorting
                 prefab.coinsImage.color = Color.white;
             }
 
+            if (prefab.coinsPriceCover != null)
+            {
+                prefab.coinsPriceCover.sprite = null;
+                prefab.coinsPriceCover.color = new Color(1f, 1f, 1f, 0f);
+                prefab.coinsPriceCover.raycastTarget = false;
+            }
+
+            if (prefab.coinsLabel != null)
+            {
+                var r = prefab.coinsLabel.rectTransform;
+                r.anchorMin = Vector2.zero;
+                r.anchorMax = Vector2.one;
+                r.offsetMin = new Vector2(160f, 0f);
+                r.offsetMax = new Vector2(-60f, 0f);
+            }
+
+            Image EnsureIcon(Transform buttonTransform)
+            {
+                if (buttonTransform == null) return null;
+                var icon = buttonTransform.Find("Icon")?.GetComponent<Image>();
+                if (icon == null) icon = CreateButtonIcon(buttonTransform);
+                if (icon == null) return null;
+
+                var rect = icon.rectTransform;
+                rect.anchorMin = new Vector2(0.18f, 0.5f);
+                rect.anchorMax = new Vector2(0.18f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+
+                float side = 150f;
+                var btnRect = buttonTransform.GetComponent<RectTransform>();
+                if (btnRect != null)
+                {
+                    side = Mathf.Clamp(btnRect.rect.height * 0.72f, 110f, 150f);
+                }
+                rect.sizeDelta = new Vector2(side, side);
+                icon.raycastTarget = false;
+
+                return icon;
+            }
+
+            if (prefab.coinsImage != null)
+            {
+                var icon = EnsureIcon(prefab.coinsImage.transform);
+                if (icon != null)
+                {
+                    var s = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin") : null;
+                    icon.sprite = s;
+                    icon.type = Image.Type.Simple;
+                    icon.preserveAspect = true;
+                    icon.color = s != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+                }
+            }
+
             if (prefab.adImage != null)
             {
                 var authored = TryLoadBoosterPurchaseSprite("btn_watch_ad_free");
@@ -7861,6 +8320,30 @@ namespace LoopSorting
                 if (prefab.adLabel != null && authored != null)
                 {
                     prefab.adLabel.gameObject.SetActive(false);
+                }
+            }
+
+            if (prefab.adLabel != null)
+            {
+                var r = prefab.adLabel.rectTransform;
+                r.anchorMin = Vector2.zero;
+                r.anchorMax = Vector2.one;
+                r.offsetMin = new Vector2(160f, 0f);
+                r.offsetMax = new Vector2(-60f, 0f);
+            }
+
+            if (prefab.adImage != null)
+            {
+                var icon = EnsureIcon(prefab.adImage.transform);
+                if (icon != null)
+                {
+                    var s =
+                        (hasKit ? LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false) : null) ??
+                        TryLoadBoosterPurchaseSprite("icon_video");
+                    icon.sprite = s;
+                    icon.type = Image.Type.Simple;
+                    icon.preserveAspect = true;
+                    icon.color = s != null ? Color.white : new Color(0f, 0f, 0f, 0f);
                 }
             }
         }

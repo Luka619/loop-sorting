@@ -186,12 +186,18 @@ namespace LoopSorting
         private Coroutine _boosterPurchaseIdleRoutine;
         private GameObject _fastTag;
         private Image _fastTagBg;
-        private TMP_Text _fastTagText;
-        private System.Random _rng = new System.Random();
-        private bool _inputLocked = false;
-        private GameObject _backgroundQuad;
-        private bool _backgroundDebugLogged;
-        private GameObject _conveyorBelt;
+	        private TMP_Text _fastTagText;
+	        private System.Random _rng = new System.Random();
+	        private bool _inputLocked = false;
+	        private int _uiModalInputLockDepth = 0;
+	        private bool _settingsModalInputLockHeld = false;
+	        private bool _shopModalInputLockHeld = false;
+	        private bool _boosterPurchaseModalInputLockHeld = false;
+	
+	        private bool IsGameplayInputLocked => _inputLocked || _uiModalInputLockDepth > 0;
+	        private GameObject _backgroundQuad;
+	        private bool _backgroundDebugLogged;
+	        private GameObject _conveyorBelt;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
         private Canvas _mainMenuCanvas;
@@ -325,12 +331,16 @@ namespace LoopSorting
             _isReleasing = false;
             _activeReleasePort = null;
             _tickTimer = 0f;
-            _beltSpacingUsed = 0f;
-            _gameOver = false;
-            _inputLocked = false;
-            _endSequenceRoutine = null;
-            _fullBeltFastForward = false;
-            _fullBeltStepsRemaining = 0;
+	            _beltSpacingUsed = 0f;
+	            _gameOver = false;
+	            _inputLocked = false;
+	            _uiModalInputLockDepth = 0;
+	            _settingsModalInputLockHeld = false;
+	            _shopModalInputLockHeld = false;
+	            _boosterPurchaseModalInputLockHeld = false;
+	            _endSequenceRoutine = null;
+	            _fullBeltFastForward = false;
+	            _fullBeltStepsRemaining = 0;
             _beltSpawnAnimating.Clear();
             _beltSpawnCoroutines.Clear();
             _conveyorBelt = null;
@@ -547,21 +557,23 @@ namespace LoopSorting
             ShowMainMenu();
         }
 
-        private void ShowMainMenu()
-        {
-            EnsureEventSystem();
-            EnsureSfx();
-            EnsureMusic();
+	        private void ShowMainMenu()
+	        {
+	            EnsureEventSystem();
+	            EnsureSfx();
+	            EnsureMusic();
 
             // Build shared HUD canvas (hidden) so the Settings modal can be opened from the main menu.
-            EnsureCounterUI();
-            EnsureSettingsUI();
-            EnsureMainMenuUI();
-            if (_mainMenuCanvas != null) _mainMenuCanvas.gameObject.SetActive(true);
-            if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(false);
-            if (_settingsPanel != null) _settingsPanel.SetActive(false);
-            if (_resultPanel != null) _resultPanel.SetActive(false);
-        }
+	            EnsureCounterUI();
+	            EnsureSettingsUI();
+	            EnsureMainMenuUI();
+	            if (_mainMenuCanvas != null) _mainMenuCanvas.gameObject.SetActive(true);
+	            if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(false);
+	            HideSettingsPanelImmediate();
+	            HideUiPanelImmediate(_shopPanel);
+	            HideUiPanelImmediate(_boosterPurchasePanel);
+	            if (_resultPanel != null) _resultPanel.SetActive(false);
+	        }
 
         private void StartPendingGame()
         {
@@ -1246,37 +1258,43 @@ namespace LoopSorting
             return null;
         }
 
-        private void ToggleSettingsPanel(bool show)
-        {
-            if (_settingsPanel == null) return;
-            PlaySfx(show ? SfxId.UiPopupOpen : SfxId.UiPopupClose);
-            AnimateUiPanel(_settingsPanel, show);
-            if (show)
-            {
-                RefreshSettingsToggleVisuals();
-            }
-        }
+	        private void ToggleSettingsPanel(bool show)
+	        {
+	            if (_settingsPanel == null) return;
+	            PlaySfx(show ? SfxId.UiPopupOpen : SfxId.UiPopupClose);
+	            AnimateUiPanel(_settingsPanel, show);
+	            if (show)
+	            {
+	                RefreshSettingsToggleVisuals();
+	            }
+	        }
 
-        private void HideSettingsPanelImmediate()
-        {
-            if (_settingsPanel == null) return;
-
-            if (_uiPanelRoutines.TryGetValue(_settingsPanel, out var routine) && routine != null)
-            {
-                StopCoroutine(routine);
-            }
-            _uiPanelRoutines.Remove(_settingsPanel);
-
-            var cg = MotionUtil.EnsureCanvasGroup(_settingsPanel);
-            if (cg != null)
-            {
-                cg.alpha = 0f;
-                cg.blocksRaycasts = false;
-                cg.interactable = false;
-            }
-
-            _settingsPanel.SetActive(false);
-        }
+	        private void HideUiPanelImmediate(GameObject panel)
+	        {
+	            if (panel == null) return;
+	
+	            if (_uiPanelRoutines.TryGetValue(panel, out var routine) && routine != null)
+	            {
+	                StopCoroutine(routine);
+	            }
+	            _uiPanelRoutines.Remove(panel);
+	
+	            var cg = MotionUtil.EnsureCanvasGroup(panel);
+	            if (cg != null)
+	            {
+	                cg.alpha = 0f;
+	                cg.blocksRaycasts = false;
+	                cg.interactable = false;
+	            }
+	
+	            panel.SetActive(false);
+	            OnModalPanelHidden(panel);
+	        }
+	
+	        private void HideSettingsPanelImmediate()
+	        {
+	            HideUiPanelImmediate(_settingsPanel);
+	        }
 
         private void RefreshSettingsToggleVisuals()
         {
@@ -1522,19 +1540,54 @@ namespace LoopSorting
             ApplyFakeDecorShadow(baseImage);
         }
 
-        public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
-        {
-            if (_gameOver) return;
-            PlaySfx(SfxId.HiddenReveal);
-            if (containerIndex >= 0 && containerIndex < _boxViews.Count)
-            {
-                _boxViews[containerIndex].PlayTapFeedback();
-            }
-        }
+	        public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
+	        {
+	            if (_gameOver) return;
+	            PlaySfx(SfxId.HiddenReveal);
+	            if (containerIndex >= 0 && containerIndex < _boxViews.Count)
+	            {
+	                _boxViews[containerIndex].PlayTapFeedback();
+	            }
+	        }
+	
+	        private void SetUiModalInputLock(ref bool heldFlag, bool hold)
+	        {
+	            if (hold)
+	            {
+	                if (heldFlag) return;
+	                heldFlag = true;
+	                _uiModalInputLockDepth++;
+	                return;
+	            }
+	
+	            if (!heldFlag) return;
+	            heldFlag = false;
+	            _uiModalInputLockDepth = Mathf.Max(0, _uiModalInputLockDepth - 1);
+	        }
+	
+	        private void OnModalPanelShown(GameObject panel)
+	        {
+	            if (panel == null) return;
+	            if (panel == _settingsPanel) SetUiModalInputLock(ref _settingsModalInputLockHeld, true);
+	            else if (panel == _shopPanel) SetUiModalInputLock(ref _shopModalInputLockHeld, true);
+	            else if (panel == _boosterPurchasePanel) SetUiModalInputLock(ref _boosterPurchaseModalInputLockHeld, true);
+	        }
+	
+	        private void OnModalPanelHidden(GameObject panel)
+	        {
+	            if (panel == null) return;
+	            if (panel == _settingsPanel) SetUiModalInputLock(ref _settingsModalInputLockHeld, false);
+	            else if (panel == _shopPanel) SetUiModalInputLock(ref _shopModalInputLockHeld, false);
+	            else if (panel == _boosterPurchasePanel)
+	            {
+	                SetUiModalInputLock(ref _boosterPurchaseModalInputLockHeld, false);
+	                StopBoosterPurchaseEffects();
+	            }
+	        }
 
-        private void AnimateUiPanel(GameObject panel, bool show, float seconds = 0.18f)
-        {
-            if (panel == null) return;
+	        private void AnimateUiPanel(GameObject panel, bool show, float seconds = 0.18f)
+	        {
+	            if (panel == null) return;
 
             if (_uiPanelRoutines.TryGetValue(panel, out var existing) && existing != null)
             {
@@ -1542,29 +1595,33 @@ namespace LoopSorting
             }
             _uiPanelRoutines.Remove(panel);
 
-            var cg = MotionUtil.EnsureCanvasGroup(panel);
-            if (cg == null)
-            {
-                panel.SetActive(show);
-                return;
-            }
+	            var cg = MotionUtil.EnsureCanvasGroup(panel);
+	            if (cg == null)
+	            {
+	                panel.SetActive(show);
+	                if (show) OnModalPanelShown(panel);
+	                else OnModalPanelHidden(panel);
+	                return;
+	            }
 
-            if (show)
-            {
-                panel.SetActive(true);
-                panel.transform.localScale = Vector3.one * 0.92f;
-                cg.alpha = 0f;
-                cg.blocksRaycasts = true;
-                cg.interactable = true;
-                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelIn(panel, cg, seconds));
-            }
-            else
-            {
-                cg.blocksRaycasts = false;
-                cg.interactable = false;
-                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelOut(panel, cg, seconds));
-            }
-        }
+	            if (show)
+	            {
+	                panel.SetActive(true);
+	                panel.transform.localScale = Vector3.one * 0.92f;
+	                cg.alpha = 0f;
+	                cg.blocksRaycasts = true;
+	                cg.interactable = true;
+	                OnModalPanelShown(panel);
+	                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelIn(panel, cg, seconds));
+	            }
+	            else
+	            {
+	                cg.interactable = false;
+	                // Keep blocking raycasts during fade-out to prevent click-through to gameplay/HUD.
+	                cg.blocksRaycasts = true;
+	                _uiPanelRoutines[panel] = StartCoroutine(AnimateUiPanelOut(panel, cg, seconds));
+	            }
+	        }
 
         private IEnumerator AnimateUiPanelIn(GameObject panel, CanvasGroup cg, float seconds)
         {
@@ -1585,9 +1642,9 @@ namespace LoopSorting
             _uiPanelRoutines.Remove(panel);
         }
 
-        private IEnumerator AnimateUiPanelOut(GameObject panel, CanvasGroup cg, float seconds)
-        {
-            if (panel == null || cg == null) yield break;
+	        private IEnumerator AnimateUiPanelOut(GameObject panel, CanvasGroup cg, float seconds)
+	        {
+	            if (panel == null || cg == null) yield break;
             float startAlpha = cg.alpha;
             float t = 0f;
             seconds = Mathf.Max(0.05f, seconds);
@@ -1600,11 +1657,14 @@ namespace LoopSorting
                 panel.transform.localScale = Vector3.one * s;
                 yield return null;
             }
-            cg.alpha = 0f;
-            panel.transform.localScale = Vector3.one;
-            panel.SetActive(false);
-            _uiPanelRoutines.Remove(panel);
-        }
+	            cg.alpha = 0f;
+	            panel.transform.localScale = Vector3.one;
+	            cg.blocksRaycasts = false;
+	            cg.interactable = false;
+	            panel.SetActive(false);
+	            OnModalPanelHidden(panel);
+	            _uiPanelRoutines.Remove(panel);
+	        }
 
         private static float ComputeCanvasScaleFactor(CanvasScaler scaler)
         {
@@ -1794,12 +1854,12 @@ namespace LoopSorting
             }
         }
 
-        private void HandleBoosterButtonClick(BoosterType type)
-        {
-            if (_game == null || _gameOver || _inputLocked)
-            {
-                return;
-            }
+	        private void HandleBoosterButtonClick(BoosterType type)
+	        {
+	            if (_game == null || _gameOver || IsGameplayInputLocked)
+	            {
+	                return;
+	            }
 
             if (GetBoosterCount(type) <= 0)
             {
@@ -1898,10 +1958,10 @@ namespace LoopSorting
             }
         }
 
-        private IEnumerator BoosterSortSequence()
-        {
-            if (_game == null || _inputLocked) yield break;
-            _inputLocked = true;
+	        private IEnumerator BoosterSortSequence()
+	        {
+	            if (_game == null || IsGameplayInputLocked) yield break;
+	            _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
             EnsureBgm();
@@ -1946,10 +2006,10 @@ namespace LoopSorting
             if (!_gameOver) _inputLocked = false;
         }
 
-        private IEnumerator BoosterShuffleSequence()
-        {
-            if (_game == null || _inputLocked) yield break;
-            _inputLocked = true;
+	        private IEnumerator BoosterShuffleSequence()
+	        {
+	            if (_game == null || IsGameplayInputLocked) yield break;
+	            _inputLocked = true;
             SetInteractableForBooster(false);
             PlaySfx(SfxId.BoosterActivate);
             EnsureBgm();
@@ -3053,12 +3113,12 @@ namespace LoopSorting
             }
         }
 
-        public void HandleContainerClick(int containerIndex)
-        {
-            if (_game == null || _isReleasing || _inputLocked)
-            {
-                return;
-            }
+	        public void HandleContainerClick(int containerIndex)
+	        {
+	            if (_game == null || _isReleasing || IsGameplayInputLocked)
+	            {
+	                return;
+	            }
 
             if (containerIndex < 0 || containerIndex >= _game.Containers.Count)
             {
@@ -5736,22 +5796,22 @@ namespace LoopSorting
             return btn;
         }
 
-        private void OpenBoosterPurchase(BoosterType type)
-        {
-            EnsureBoosterPurchaseUI();
-            if (_boosterPurchasePanel == null) return;
+	        private void OpenBoosterPurchase(BoosterType type)
+	        {
+	            EnsureBoosterPurchaseUI();
+	            if (_boosterPurchasePanel == null) return;
 
             _boosterPurchaseType = type;
             ConfigureBoosterPurchaseUI(type);
 
-            if (_settingsPanel != null) _settingsPanel.SetActive(false);
-            if (_resultPanel != null) _resultPanel.SetActive(false);
-            if (_shopPanel != null) _shopPanel.SetActive(false);
+	            HideSettingsPanelImmediate();
+	            if (_resultPanel != null) _resultPanel.SetActive(false);
+	            HideUiPanelImmediate(_shopPanel);
 
-            AnimateUiPanel(_boosterPurchasePanel, true, seconds: 0.20f);
-            StartBoosterPurchaseEffects();
-            PlaySfx(SfxId.UiPopupOpen);
-        }
+	            AnimateUiPanel(_boosterPurchasePanel, true, seconds: 0.20f);
+	            StartBoosterPurchaseEffects();
+	            PlaySfx(SfxId.UiPopupOpen);
+	        }
 
         private void CloseBoosterPurchase()
         {
@@ -6431,16 +6491,16 @@ namespace LoopSorting
             return scaled.ToString(fmt, System.Globalization.CultureInfo.InvariantCulture) + suffix;
         }
 
-        private void OpenShop(ShopTab tab)
-        {
-            EnsureShopUI();
-            RefreshEconomyHUD();
-            PopulateShop(tab);
-            if (_shopPanel != null) AnimateUiPanel(_shopPanel, true, seconds: 0.20f);
-            if (_settingsPanel != null) _settingsPanel.SetActive(false);
-            if (_resultPanel != null) _resultPanel.SetActive(false);
-            PlaySfx(SfxId.UiPopupOpen);
-        }
+	        private void OpenShop(ShopTab tab)
+	        {
+	            EnsureShopUI();
+	            RefreshEconomyHUD();
+	            PopulateShop(tab);
+	            if (_shopPanel != null) AnimateUiPanel(_shopPanel, true, seconds: 0.20f);
+	            HideSettingsPanelImmediate();
+	            if (_resultPanel != null) _resultPanel.SetActive(false);
+	            PlaySfx(SfxId.UiPopupOpen);
+	        }
 
         private void EnsureShopUI()
         {
@@ -8098,9 +8158,9 @@ namespace LoopSorting
             return toggle;
         }
 
-        private void UpdateToggleVisual(Image toggleImage, bool isOn)
-        {
-            if (toggleImage == null) return;
+	        private void UpdateToggleVisual(Image toggleImage, bool isOn)
+	        {
+	            if (toggleImage == null) return;
 
             if (LoopSortingUIKit.IsAvailable())
             {
@@ -8127,13 +8187,63 @@ namespace LoopSorting
                 }
             }
 
-            toggleImage.color = isOn ? new Color(0.2f, 0.75f, 0.2f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);
-        }
+	            toggleImage.color = isOn ? new Color(0.2f, 0.75f, 0.2f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);
+	        }
 
-        private void BuildSlotMarkers()
-        {
-            if (!showSlotMarkersRuntime)
-            {
+	        private static Quaternion ComputeSlotMarkerRotation(
+	            int index,
+	            IReadOnlyList<Vector3> slotPositions,
+	            bool loop,
+	            Quaternion faceRotation)
+	        {
+	            int count = slotPositions != null ? slotPositions.Count : 0;
+	            if (count < 2 || index < 0 || index >= count)
+	            {
+	                return faceRotation;
+	            }
+
+	            Vector3 dir;
+	            if (index < count - 1)
+	            {
+	                dir = slotPositions[index + 1] - slotPositions[index];
+	            }
+	            else
+	            {
+	                dir = loop
+	                    ? (slotPositions[0] - slotPositions[index])
+	                    : (slotPositions[index] - slotPositions[index - 1]);
+	            }
+
+	            if (dir.sqrMagnitude < 0.000001f)
+	            {
+	                if (index > 0)
+	                {
+	                    dir = slotPositions[index] - slotPositions[index - 1];
+	                }
+	                else if (count > 1)
+	                {
+	                    dir = slotPositions[1] - slotPositions[0];
+	                }
+	            }
+
+	            var normal = faceRotation * Vector3.forward;
+	            var inPlane = Vector3.ProjectOnPlane(dir, normal);
+	            if (inPlane.sqrMagnitude < 0.000001f)
+	            {
+	                return faceRotation;
+	            }
+
+	            inPlane.Normalize();
+	            var right = faceRotation * Vector3.right;
+	            var up = faceRotation * Vector3.up;
+	            float angle = Mathf.Atan2(Vector3.Dot(inPlane, up), Vector3.Dot(inPlane, right)) * Mathf.Rad2Deg;
+	            return Quaternion.AngleAxis(angle, normal) * faceRotation;
+	        }
+
+	        private void BuildSlotMarkers()
+	        {
+	            if (!showSlotMarkersRuntime)
+	            {
                 return;
             }
 
@@ -8144,6 +8254,7 @@ namespace LoopSorting
             }
             _slotMarkers.Clear();
             _slotBasePositions.Clear();
+            _slotCurrentPositions.Clear();
 
             var parent = new GameObject("SlotMarkers");
             parent.transform.SetParent(transform, false);
@@ -8158,15 +8269,24 @@ namespace LoopSorting
             // Match belt block footprint: belt blocks are scaled by spacing * beltBlockSizeFactor in X/Y.
             float side = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
 
-            foreach (var t in _beltSlots)
+            var slotPositions = new List<Vector3>(_beltSlots.Count);
+            for (int i = 0; i < _beltSlots.Count; i++)
             {
-                _slotBasePositions.Add(t.position);
-                _slotCurrentPositions.Add(t.position);
+                var t = _beltSlots[i];
+                var pos = t != null ? t.position : Vector3.zero;
+                slotPositions.Add(pos);
+                _slotBasePositions.Add(pos);
+                _slotCurrentPositions.Add(pos);
+            }
+
+            for (int i = 0; i < slotPositions.Count; i++)
+            {
+                var pos = slotPositions[i];
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 marker.name = "SlotMarker";
                 marker.transform.SetParent(parent.transform, false);
-                marker.transform.position = t.position;
-                marker.transform.rotation = markerRotation;
+                marker.transform.position = pos;
+                marker.transform.rotation = ComputeSlotMarkerRotation(i, slotPositions, _beltLoop, markerRotation);
                 marker.transform.localScale = new Vector3(side, side, 1f);
                 var renderer = marker.GetComponent<Renderer>();
                 if (renderer != null)
@@ -8213,7 +8333,7 @@ namespace LoopSorting
             {
                 var marker = _slotMarkers[i];
                 if (marker == null) continue;
-                marker.transform.rotation = markerRotation;
+                marker.transform.rotation = ComputeSlotMarkerRotation(i, _slotBasePositions, _beltLoop, markerRotation);
 
                 var from = _slotBasePositions[i];
                 // Do not interpolate the last one to avoid a visual jump between exit and entry.

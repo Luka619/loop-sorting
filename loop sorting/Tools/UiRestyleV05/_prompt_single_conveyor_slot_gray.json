@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "style_core": "soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+  "negative_core": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts",
+  "export_core": "centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG",
+  "items": {
+    "World_Sprites/conveyor_slot_gray.png": {
+      "dir": "World_Sprites",
+      "filename": "conveyor_slot_gray.png",
+      "size": "1536x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [
+        "oneoff_test"
+      ],
+      "positive": "conveyor belt slot base plate (wide rounded rectangle tray), neutral cool light-grey plastic palette (desaturated), soft 3D plastic toy UI style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, no text, exact 1536x1024px, transparent background, centered, no cropping, leave generous transparent padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    }
+  }
+}

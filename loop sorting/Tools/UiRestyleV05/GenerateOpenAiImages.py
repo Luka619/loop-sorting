@@ -362,6 +362,12 @@ def main() -> int:
         help="Number of concurrent generations (default 1). Use with care to avoid rate limits.",
     )
     ap.add_argument("--dry-run", action="store_true", default=False)
+    ap.add_argument(
+        "--no-postprocess",
+        action="store_true",
+        default=False,
+        help="Deprecated/no-op (this script does not post-process images; kept for workflow doc compatibility).",
+    )
 
     ap.add_argument("--timeout", type=int, default=180)
     ap.add_argument("--max-retries", type=int, default=5)

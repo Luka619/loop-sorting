@@ -155,9 +155,37 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -Sou
 - 当前运行时代码已支持以下“拆分文件名”组合（存在则启用；不存在会回退到旧单图）：
   - `UI_Sprites/panel_modal_base_9slice.png` (decor handled at runtime via base silhouette shadow)
   - `UI_Sprites/panel_result_base_9slice.png` (decor handled at runtime via base silhouette shadow)
-  - `UI_Sprites/hud_pill_dark_small_base_9slice.png` (decor handled at runtime via base silhouette shadow)
-  - `UI_Sprites/hud_pill_dark_base_9slice.png` (decor handled at runtime via base silhouette shadow)
+- `UI_Sprites/hud_pill_dark_small_base_9slice.png` (decor handled at runtime via base silhouette shadow)
+- `UI_Sprites/hud_pill_dark_base_9slice.png` (decor handled at runtime via base silhouette shadow)
 - Booster badge 数字使用 TMP（无需 digit 贴图；旧 digit 方式仍兼容）
+
+---
+
+## 9-slice Border（自动生成）
+
+### 目标
+- 解决 PNG 周围透明 padding 导致的 9-slice 切线错位/四角被拉伸
+- 解决 Unity 平台导入缩放/NPOT 缩放导致的“运行时 rect 尺寸”与“原 PNG 尺寸”不一致
+
+### 默认规则（只让中间一部分可拉伸）
+- 先排除单图周围透明 padding，再分配 9-slice
+- 可拉伸区域只保留中间 `center` 比例；四边各占 `(1-center)/2`
+  - 例：`center = 0.3333333` → 中间 1/3 可拉伸，左右/上下各 1/3 不拉伸
+  - 例：`center = 0.5` → 中间 1/2 可拉伸，左右/上下各 1/4 不拉伸
+
+### 为什么必须考虑平台导入（例：WebGL）
+- Unity 可能对某些平台启用 `maxTextureSize` + `nPOTScale`，导致运行时 Sprite 实际 `rect` 变成 512x128 等
+- 如果 border 按原 PNG 尺寸算，运行时就可能“过大”把中间可拉伸区挤没，看起来像 3-slice
+
+### 全自动刷新 `nineSliceRules`
+- 脚本：`Tools/UiRestyleV05/auto_nineslice_borders.py`
+- WebGL 推荐：
+  - `python Tools/UiRestyleV05/auto_nineslice_borders.py --platform WebGL --center 0.3333333`
+- 常用参数：
+  - `--alpha 32`：alpha 阈值（更大可忽略微弱光晕/阴影）
+  - `--center 0.5`：中间可拉伸比例
+  - `--platform WebGL`：按指定平台的 `.png.meta` 导入设置模拟运行时像素空间
+  - `--dry-run`：不写回，只输出结果
 3) **有哪些状态**：`normal / pressed / disabled / on / off`，并明确“状态差异来自哪里”（颜色、阴影、凹凸、位置）。
 4) **不可变约束**（必须遵守的运行时约束）：
    - 透明资产：画面外必须是**完全透明**（不要 vignette、不要雾、不要背景渐变、不要光晕）。

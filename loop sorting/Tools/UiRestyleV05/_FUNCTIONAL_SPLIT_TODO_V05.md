@@ -84,6 +84,13 @@
 ### 需要改的功能点（你改代码/Prefab）
 - Prefab：9-slice 只挂在 base 上；decor 用独立 Image（不参与拉伸，或按需拉伸）
 
+### 9-slice Border 刷新（推荐全自动）
+- 规则：先排除透明 padding，再按 `center` 规则留中间可拉伸区（四边各为 `(1-center)/2`）。
+- 注意：Unity 平台导入可能会缩放/NPOT（例如 WebGL `maxTextureSize=512` + `nPOTScale`），运行时 rect 尺寸可能与原 PNG 不同；border 必须按运行时像素空间计算。
+- 脚本：`Tools/UiRestyleV05/auto_nineslice_borders.py`
+  - WebGL 推荐：`python Tools/UiRestyleV05/auto_nineslice_borders.py --platform WebGL --center 0.3333333`
+  - 调参：`--center 0.5`（中间拉伸区更大）、`--alpha 32`（忽略更弱的阴影/光晕）、`--dry-run`（只看结果）
+
 ### 按现有 Screen 的拆分清单
 - Modal_Settings
   - `panel_modal.png`（916x794）→

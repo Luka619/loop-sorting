@@ -51,6 +51,15 @@ namespace LoopSorting
         private const float SaveDelayStrongSeconds = 0.20f;
         private const float SaveDelayWeakSeconds = 2.00f;
 
+        private static readonly Vector2 ModalPopupSize = new Vector2(980f, 1260f);
+        private static readonly Vector2 ModalPopupAnchoredPos = new Vector2(0f, 20f);
+        private static readonly Vector2 ModalCloseInset = new Vector2(-36f, -36f);
+
+        private const string SettingsPanelPrefabResourcePath = "UI/SettingsPanel";
+        private const string ShopPanelPrefabResourcePath = "UI/ShopPanel";
+        private const string ResultPanelPrefabResourcePath = "UI/ResultPanel";
+        private const string BoosterPurchasePanelPrefabResourcePath = "UI/BoosterPurchasePanel";
+
         private bool _hasLoadedSave;
         private int _savedFlowIndex;
         private int _savedHighestUnlockedFlowIndex;
@@ -4617,6 +4626,35 @@ namespace LoopSorting
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
+            if (TryInstantiateUiPrefab(ResultPanelPrefabResourcePath, out ResultPanelPrefabRefs prefab))
+            {
+                prefab.AutoAssign();
+
+                _resultPanel = prefab.gameObject;
+                _resultText = prefab.resultText;
+                _primaryButton = prefab.primaryButton;
+                _primaryLabel = prefab.primaryLabel;
+                _resultPrimaryIcon = prefab.primaryIcon;
+                _secondaryButton = prefab.secondaryButton;
+                _secondaryLabel = prefab.secondaryLabel;
+                _resultSecondaryIcon = prefab.secondaryIcon;
+
+                if (_primaryButton != null)
+                {
+                    _primaryButton.onClick.RemoveAllListeners();
+                    _primaryButton.onClick.AddListener(OnPrimaryClicked);
+                }
+                if (_secondaryButton != null)
+                {
+                    _secondaryButton.onClick.RemoveAllListeners();
+                    _secondaryButton.onClick.AddListener(OnSecondaryClicked);
+                }
+
+                RebindResultPanelPrefabSprites(hasKit);
+                _resultPanel.SetActive(false);
+                return;
+            }
+
             var panelGO = new GameObject("ResultPanel");
             panelGO.transform.SetParent(_uiCanvas.transform, false);
             _resultPanel = panelGO;
@@ -4708,7 +4746,8 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.mint_long.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_long.disabled" : null,
                 label: "NEXT",
-                out _primaryLabel);
+                out _primaryLabel,
+                reserveIconSpace: true);
             _primaryButton.onClick.AddListener(OnPrimaryClicked);
 
             _resultPrimaryIcon = CreateButtonIcon(_primaryButton.transform);
@@ -4722,7 +4761,8 @@ namespace LoopSorting
                 pressed: hasKit ? "ui.button.orange_long.pressed" : null,
                 disabled: hasKit ? "ui.button.orange_long.disabled" : null,
                 label: "RETRY",
-                out _secondaryLabel);
+                out _secondaryLabel,
+                reserveIconSpace: true);
             _secondaryButton.onClick.AddListener(OnSecondaryClicked);
 
             _resultSecondaryIcon = CreateButtonIcon(_secondaryButton.transform);
@@ -4736,6 +4776,75 @@ namespace LoopSorting
             if (_settingsPanel != null) return;
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            if (TryInstantiateUiPrefab(SettingsPanelPrefabResourcePath, out SettingsPanelPrefabRefs prefab))
+            {
+                prefab.AutoAssign();
+
+                _settingsPanel = prefab.gameObject;
+                _settingsMusicToggleButton = prefab.musicToggleButton;
+                _settingsMusicToggleImage = prefab.musicToggleImage;
+                _settingsSfxToggleButton = prefab.sfxToggleButton;
+                _settingsSfxToggleImage = prefab.sfxToggleImage;
+                _settingsVibrationToggleButton = prefab.vibrationToggleButton;
+                _settingsVibrationToggleImage = prefab.vibrationToggleImage;
+                _settingsCloseButton = prefab.closeButton;
+                _settingsCloseImage = prefab.closeImage;
+                _settingsRetryButton = prefab.retryButton;
+                _settingsRetryImage = prefab.retryImage;
+
+                if (_settingsCloseButton != null)
+                {
+                    _settingsCloseButton.onClick.AddListener(() => ToggleSettingsPanel(false));
+                }
+                if (_settingsRetryButton != null)
+                {
+                    _settingsRetryButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.LevelRetry);
+                        HideSettingsPanelImmediate();
+                        RestartCurrent();
+                    });
+                }
+                if (_settingsMusicToggleButton != null)
+                {
+                    _settingsMusicToggleButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        musicEnabled = !musicEnabled;
+                        EnsureMusic();
+                        RefreshSettingsToggleVisuals();
+                        RequestSave(SaveDelayStrongSeconds);
+                    });
+                }
+                if (_settingsSfxToggleButton != null)
+                {
+                    _settingsSfxToggleButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        soundEnabled = !soundEnabled;
+                        EnsureSfx();
+                        RefreshSettingsToggleVisuals();
+                        RequestSave(SaveDelayStrongSeconds);
+                    });
+                }
+                if (_settingsVibrationToggleButton != null)
+                {
+                    _settingsVibrationToggleButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiClick);
+                        vibrationEnabled = !vibrationEnabled;
+                        if (vibrationEnabled) TryVibrate();
+                        RefreshSettingsToggleVisuals();
+                        RequestSave(SaveDelayStrongSeconds);
+                    });
+                }
+
+                RebindSettingsPanelPrefabSprites(prefab, hasKit);
+                RefreshSettingsToggleVisuals();
+                _settingsPanel.SetActive(false);
+                return;
+            }
 
             _settingsPanel = new GameObject("SettingsPanel");
             _settingsPanel.transform.SetParent(_uiCanvas.transform, false);
@@ -4767,10 +4876,10 @@ namespace LoopSorting
             popupRect.anchorMin = new Vector2(0.5f, 0.5f);
             popupRect.anchorMax = new Vector2(0.5f, 0.5f);
             popupRect.pivot = new Vector2(0.5f, 0.5f);
-            popupRect.anchoredPosition = new Vector2(0f, 40f);
+            popupRect.anchoredPosition = ModalPopupAnchoredPos;
 
-            float popupWidth = 900f;
-            float popupHeight = 1230f;
+            float popupWidth = ModalPopupSize.x;
+            float popupHeight = ModalPopupSize.y;
             popupRect.sizeDelta = new Vector2(popupWidth, popupHeight);
 
             var bgImg = popupGO.AddComponent<Image>();
@@ -4803,7 +4912,7 @@ namespace LoopSorting
                 title.raycastTarget = false;
                 title.text = "SETTINGS";
                 title.alignment = TextAlignmentOptions.Center;
-                title.fontSize = 72;
+                title.fontSize = 68;
                 title.color = new Color(0.24f, 0.14f, 0.08f, 0.96f);
                 title.outlineWidth = 0.18f;
                 title.outlineColor = new Color(1f, 1f, 1f, 0.6f);
@@ -4811,22 +4920,22 @@ namespace LoopSorting
                 titleRect.anchorMin = new Vector2(0.5f, 1f);
                 titleRect.anchorMax = new Vector2(0.5f, 1f);
                 titleRect.pivot = new Vector2(0.5f, 1f);
-                titleRect.anchoredPosition = new Vector2(0f, -70f);
-                titleRect.sizeDelta = new Vector2(760f, 120f);
+                titleRect.anchoredPosition = new Vector2(0f, -130f);
+                titleRect.sizeDelta = new Vector2(760f, 110f);
 
                 var closeBtn = CreateIconButton(
                     parent: layoutParent,
                     name: "CloseButton",
                     anchor: new Vector2(1f, 1f),
-                    anchoredPos: new Vector2(-26f, -26f),
+                    anchoredPos: ModalCloseInset,
                     size: new Vector2(128f, 128f),
                     normal: "ui.button.close_red.normal",
                     pressed: "ui.button.close_red.pressed",
                     disabled: "ui.button.close_red.disabled",
-                    icon: null);
+                    icon: "ui.icon.close");
                 var closeRect = closeBtn.GetComponent<RectTransform>();
                 closeRect.pivot = new Vector2(1f, 1f);
-                closeRect.anchoredPosition = new Vector2(-26f, -26f);
+                closeRect.anchoredPosition = ModalCloseInset;
                 _settingsCloseButton = closeBtn;
                 _settingsCloseImage = closeBtn.GetComponent<Image>();
                 _settingsCloseButton.onClick.AddListener(() => ToggleSettingsPanel(false));
@@ -4840,7 +4949,7 @@ namespace LoopSorting
                     rowRect.anchorMax = new Vector2(0.5f, 1f);
                     rowRect.pivot = new Vector2(0.5f, 1f);
                     rowRect.anchoredPosition = new Vector2(0f, topY);
-                    rowRect.sizeDelta = new Vector2(820f, 140f);
+                    rowRect.sizeDelta = new Vector2(760f, 140f);
 
                     var textGO = new GameObject("Label");
                     textGO.transform.SetParent(rowGO.transform, false);
@@ -4848,14 +4957,14 @@ namespace LoopSorting
                     tmp.raycastTarget = false;
                     tmp.text = label;
                     tmp.alignment = TextAlignmentOptions.Left;
-                    tmp.fontSize = 58;
+                    tmp.fontSize = 52;
                     tmp.color = new Color(0.24f, 0.14f, 0.08f, 0.96f);
                     var tRect = textGO.GetComponent<RectTransform>();
                     tRect.anchorMin = new Vector2(0f, 0.5f);
                     tRect.anchorMax = new Vector2(0f, 0.5f);
                     tRect.pivot = new Vector2(0f, 0.5f);
                     tRect.anchoredPosition = new Vector2(30f, 0f);
-                    tRect.sizeDelta = new Vector2(460f, 90f);
+                    tRect.sizeDelta = new Vector2(420f, 90f);
 
                     var toggleGO = new GameObject("Toggle");
                     toggleGO.transform.SetParent(rowGO.transform, false);
@@ -4863,8 +4972,8 @@ namespace LoopSorting
                     toggleRect.anchorMin = new Vector2(1f, 0.5f);
                     toggleRect.anchorMax = new Vector2(1f, 0.5f);
                     toggleRect.pivot = new Vector2(1f, 0.5f);
-                    toggleRect.anchoredPosition = new Vector2(-30f, 0f);
-                    toggleRect.sizeDelta = new Vector2(260f, 110f);
+                    toggleRect.anchoredPosition = new Vector2(-50f, 0f);
+                    toggleRect.sizeDelta = new Vector2(240f, 100f);
 
                     image = toggleGO.AddComponent<Image>();
                     image.raycastTarget = true;
@@ -4877,9 +4986,9 @@ namespace LoopSorting
                     button.transition = Selectable.Transition.ColorTint;
                 }
 
-                CreateToggleRow("MUSIC", topY: -250f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
-                CreateToggleRow("SFX", topY: -420f, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
-                CreateToggleRow("VIBRATION", topY: -590f, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
+                CreateToggleRow("MUSIC", topY: -320f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
+                CreateToggleRow("SFX", topY: -490f, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
+                CreateToggleRow("VIBRATION", topY: -660f, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
 
                 _settingsMusicToggleButton.onClick.AddListener(() =>
                 {
@@ -4911,18 +5020,19 @@ namespace LoopSorting
                     parent: layoutParent,
                     name: "RetryButton",
                     anchor: new Vector2(0.5f, 0f),
-                    size: new Vector2(820f, 200f),
+                    size: new Vector2(760f, 180f),
                     normal: "ui.button.orange_long.normal",
                     pressed: "ui.button.orange_long.pressed",
                     disabled: "ui.button.orange_long.disabled",
                     label: "RETRY",
-                    out retryLabelText);
+                    out retryLabelText,
+                    reserveIconSpace: false);
                 _settingsRetryImage = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<Image>() : null;
                 if (_settingsRetryButton != null)
                 {
                     var rr = _settingsRetryButton.GetComponent<RectTransform>();
                     rr.pivot = new Vector2(0.5f, 0f);
-                    rr.anchoredPosition = new Vector2(0f, 80f);
+                    rr.anchoredPosition = new Vector2(0f, 140f);
                     _settingsRetryButton.onClick.AddListener(() =>
                     {
                         PlaySfx(SfxId.LevelRetry);
@@ -5198,6 +5308,61 @@ namespace LoopSorting
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
+            if (TryInstantiateUiPrefab(BoosterPurchasePanelPrefabResourcePath, out BoosterPurchasePanelPrefabRefs prefab))
+            {
+                prefab.AutoAssign();
+
+                _boosterPurchasePanel = prefab.gameObject;
+                _boosterPurchasePopupRect = prefab.popupRect;
+                _boosterPurchaseHeaderRect = prefab.headerRect;
+                _boosterPurchaseIconRect = prefab.iconRect;
+                _boosterPurchaseCloseRect = prefab.closeRect;
+                _boosterPurchaseSubtitleRect = prefab.subtitleRect;
+                _boosterPurchaseCoinsRect = prefab.coinsRect;
+                _boosterPurchaseAdRect = prefab.adRect;
+
+                _boosterPurchaseCloseButton = prefab.closeButton;
+                _boosterPurchaseCloseImage = prefab.closeImage;
+                _boosterPurchaseCoinsButton = prefab.coinsButton;
+                _boosterPurchaseCoinsImage = prefab.coinsImage;
+                _boosterPurchaseCoinsLabel = prefab.coinsLabel;
+                _boosterPurchaseCoinsPriceCover = prefab.coinsPriceCover;
+                _boosterPurchaseAdButton = prefab.adButton;
+                _boosterPurchaseAdImage = prefab.adImage;
+                _boosterPurchaseAdLabel = prefab.adLabel;
+
+                _boosterPurchaseTitleText = prefab.titleText;
+                _boosterPurchaseSubtitleText = prefab.subtitleText;
+                _boosterPurchaseBackground = prefab.background;
+                _boosterPurchaseHeader = prefab.header;
+                _boosterPurchaseIcon = prefab.icon;
+                _boosterPurchaseSubtitleBg = prefab.subtitleBg;
+
+                if (_boosterPurchaseCloseButton != null)
+                {
+                    _boosterPurchaseCloseButton.onClick.RemoveAllListeners();
+                    _boosterPurchaseCloseButton.onClick.AddListener(() => CloseBoosterPurchase());
+                }
+                if (_boosterPurchaseCoinsButton != null)
+                {
+                    _boosterPurchaseCoinsButton.onClick.RemoveAllListeners();
+                    _boosterPurchaseCoinsButton.onClick.AddListener(() => PurchaseBoosterWithCoins());
+                }
+                if (_boosterPurchaseAdButton != null)
+                {
+                    _boosterPurchaseAdButton.onClick.RemoveAllListeners();
+                    _boosterPurchaseAdButton.onClick.AddListener(() => PurchaseBoosterWithAd());
+                }
+
+                ApplyButtonPressScale(_boosterPurchaseCloseButton, pressedScale: 0.92f);
+                ApplyButtonPressScale(_boosterPurchaseCoinsButton, pressedScale: 0.96f);
+                ApplyButtonPressScale(_boosterPurchaseAdButton, pressedScale: 0.96f);
+
+                RebindBoosterPurchasePanelPrefabSprites(prefab, hasKit);
+                _boosterPurchasePanel.SetActive(false);
+                return;
+            }
+
             if (_boosterPurchasePanel != null)
             {
                 Destroy(_boosterPurchasePanel);
@@ -5224,8 +5389,8 @@ namespace LoopSorting
             _boosterPurchasePopupRect.anchorMin = new Vector2(0.5f, 0.5f);
             _boosterPurchasePopupRect.anchorMax = new Vector2(0.5f, 0.5f);
             _boosterPurchasePopupRect.pivot = new Vector2(0.5f, 0.5f);
-            _boosterPurchasePopupRect.anchoredPosition = new Vector2(0f, 20f);
-            _boosterPurchasePopupRect.sizeDelta = new Vector2(900f, 1260f);
+            _boosterPurchasePopupRect.anchoredPosition = ModalPopupAnchoredPos;
+            _boosterPurchasePopupRect.sizeDelta = ModalPopupSize;
 
             _boosterPurchaseBackground = popupGO.AddComponent<Image>();
             _boosterPurchaseBackground.raycastTarget = false;
@@ -5381,7 +5546,7 @@ namespace LoopSorting
             _boosterPurchaseCoinsButton = CreateBoosterPurchaseActionButton(
                 parent: popupGO.transform,
                 name: "BuyWithCoins",
-                anchoredPos: new Vector2(-210f, -520f),
+                anchoredPos: new Vector2(-210f, -480f),
                 size: new Vector2(380f, 220f),
                 fallbackSpriteKey: hasKit ? "ui.button.price_green.normal" : null,
                 labelText: "0",
@@ -5411,7 +5576,7 @@ namespace LoopSorting
             _boosterPurchaseAdButton = CreateBoosterPurchaseActionButton(
                 parent: popupGO.transform,
                 name: "BuyWithAd",
-                anchoredPos: new Vector2(210f, -520f),
+                anchoredPos: new Vector2(210f, -480f),
                 size: new Vector2(380f, 220f),
                 fallbackSpriteKey: hasKit ? "ui.button.mint_long.normal" : null,
                 labelText: "FREE",
@@ -5694,13 +5859,13 @@ namespace LoopSorting
             }
             if (_boosterPurchaseCoinsRect != null)
             {
-                _boosterPurchaseCoinsRect.anchoredPosition = new Vector2(-210f, -520f);
+                _boosterPurchaseCoinsRect.anchoredPosition = new Vector2(-210f, -480f);
                 _boosterPurchaseCoinsRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseCoinsRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseAdRect != null)
             {
-                _boosterPurchaseAdRect.anchoredPosition = new Vector2(210f, -520f);
+                _boosterPurchaseAdRect.anchoredPosition = new Vector2(210f, -480f);
                 _boosterPurchaseAdRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseAdRect.gameObject).alpha = 1f;
             }
@@ -6212,6 +6377,34 @@ namespace LoopSorting
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
 
+            if (TryInstantiateUiPrefab(ShopPanelPrefabResourcePath, out ShopPanelPrefabRefs prefab))
+            {
+                prefab.AutoAssign();
+
+                _shopPanel = prefab.gameObject;
+                _shopTitle = prefab.title;
+                _shopScroll = prefab.scroll;
+                _shopContentRoot = prefab.contentRoot != null ? prefab.contentRoot : (_shopScroll != null ? _shopScroll.content : null);
+                _shopCoinValue = prefab.coinValue;
+                _shopLifeValue = prefab.lifeValue;
+                _shopScrollFadeTop = prefab.scrollFadeTop;
+                _shopScrollFadeBottom = prefab.scrollFadeBottom;
+
+                if (prefab.closeButton != null)
+                {
+                    prefab.closeButton.onClick.RemoveAllListeners();
+                    prefab.closeButton.onClick.AddListener(() =>
+                    {
+                        PlaySfx(SfxId.UiPopupClose);
+                        AnimateUiPanel(_shopPanel, false, seconds: 0.18f);
+                    });
+                }
+
+                RebindShopPanelPrefabSprites(prefab, hasKit);
+                _shopPanel.SetActive(false);
+                return;
+            }
+
             _shopPanel = new GameObject("ShopPanel");
             _shopPanel.transform.SetParent(_uiCanvas.transform, false);
 
@@ -6237,11 +6430,11 @@ namespace LoopSorting
             var panelGO = new GameObject("Panel");
             panelGO.transform.SetParent(_shopPanel.transform, false);
             var panelRect = panelGO.AddComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.52f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.52f);
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = new Vector2(900f, 1060f);
+            panelRect.anchoredPosition = ModalPopupAnchoredPos;
+            panelRect.sizeDelta = ModalPopupSize;
 
             var panelImg = panelGO.AddComponent<Image>();
             panelImg.raycastTarget = false;
@@ -6269,7 +6462,7 @@ namespace LoopSorting
                     parent: panelGO.transform,
                     panelRect: panelRect,
                     sprite: baseSprite,
-                    desiredVisibleSizeUnits: new Vector2(900f, 1060f),
+                    desiredVisibleSizeUnits: ModalPopupSize,
                     centerStretchFraction: 1f / 3f);
             }
             else
@@ -6296,15 +6489,15 @@ namespace LoopSorting
                 parent: layoutParent,
                 name: "CloseButton",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-26f, -26f),
+                anchoredPos: ModalCloseInset,
                 size: new Vector2(128f, 128f),
                 normal: hasKit ? "ui.button.close_red.normal" : null,
                 pressed: hasKit ? "ui.button.close_red.pressed" : null,
                 disabled: hasKit ? "ui.button.close_red.disabled" : null,
-                icon: null);
+                icon: hasKit ? "ui.icon.close" : null);
             var closeRect = closeBtn.GetComponent<RectTransform>();
             closeRect.pivot = new Vector2(1f, 1f);
-            closeRect.anchoredPosition = new Vector2(-26f, -26f);
+            closeRect.anchoredPosition = ModalCloseInset;
             closeBtn.onClick.AddListener(() =>
             {
                 PlaySfx(SfxId.UiPopupClose);
@@ -7223,6 +7416,323 @@ namespace LoopSorting
             return btn;
         }
 
+        private bool TryInstantiateUiPrefab<T>(string resourcePath, out T component) where T : Component
+        {
+            component = null;
+            if (_uiCanvas == null) return false;
+            if (string.IsNullOrWhiteSpace(resourcePath)) return false;
+
+            var prefab = Resources.Load<GameObject>(resourcePath.Trim());
+            if (prefab == null) return false;
+
+            var instance = Instantiate(prefab, _uiCanvas.transform, false);
+            instance.name = prefab.name;
+            component = instance.GetComponent<T>();
+            if (component == null)
+            {
+                Destroy(instance);
+                return false;
+            }
+            return true;
+        }
+
+        private void RebindSettingsPanelPrefabSprites(SettingsPanelPrefabRefs prefab, bool hasKit)
+        {
+            if (prefab == null) return;
+
+            if (hasKit)
+            {
+                var popupImg = prefab.popupRect != null ? prefab.popupRect.GetComponent<Image>() : null;
+                if (popupImg != null)
+                {
+                    var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                    ApplySplitBackground(
+                        baseImage: popupImg,
+                        parent: popupImg.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                        decorPath: null,
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
+                }
+            }
+
+            if (prefab.closeButton != null)
+            {
+                var closeImg = prefab.closeImage != null ? prefab.closeImage : prefab.closeButton.GetComponent<Image>();
+                if (closeImg != null)
+                {
+                    ApplyUIKitButtonSprites(prefab.closeButton, closeImg, "ui.button.close_red.normal", "ui.button.close_red.pressed", "ui.button.close_red.disabled");
+                    if (hasKit)
+                    {
+                        var iconSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.close");
+                        if (iconSprite != null)
+                        {
+                            var iconImg = EnsureOverlayImage(closeImg.transform, "Icon", iconSprite);
+                            if (iconImg != null)
+                            {
+                                iconImg.preserveAspect = true;
+                                var r = iconImg.rectTransform;
+                                float side = Mathf.Min(closeImg.rectTransform.rect.width, closeImg.rectTransform.rect.height) * 0.62f;
+                                r.anchorMin = new Vector2(0.5f, 0.5f);
+                                r.anchorMax = new Vector2(0.5f, 0.5f);
+                                r.pivot = new Vector2(0.5f, 0.5f);
+                                r.anchoredPosition = Vector2.zero;
+                                r.sizeDelta = new Vector2(side, side);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (prefab.retryButton != null)
+            {
+                var retryImg = prefab.retryImage != null ? prefab.retryImage : prefab.retryButton.GetComponent<Image>();
+                if (retryImg != null)
+                {
+                    ApplyUIKitButtonSprites(prefab.retryButton, retryImg, "ui.button.orange_long.normal", "ui.button.orange_long.pressed", "ui.button.orange_long.disabled");
+                }
+            }
+        }
+
+        private void RebindShopPanelPrefabSprites(ShopPanelPrefabRefs prefab, bool hasKit)
+        {
+            if (prefab == null) return;
+
+            if (hasKit && prefab.panelRect != null)
+            {
+                var panelImg = prefab.panelRect.GetComponent<Image>();
+                if (panelImg != null)
+                {
+                    var baseSprite =
+                        LoopSortingUIKit.LoadSprite("UI_Sprites/panel_gold_blue_base_9slice.png") ??
+                        LoopSortingUIKit.LoadSprite("UI_Sprites/panel_modal_base_9slice.png") ??
+                        LoopSortingUIKit.LoadSpriteByKey("ui.panel_shop") ??
+                        LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+
+                    panelImg.sprite = baseSprite;
+                    panelImg.type = panelImg.sprite != null && panelImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    panelImg.color = Color.white;
+                    ApplyFakeDecorShadow(panelImg, alpha: 0.22f);
+
+                    var existingDecor = prefab.panelRect.transform.Find("Decor");
+                    if (existingDecor != null) existingDecor.gameObject.SetActive(false);
+                }
+            }
+
+            if (hasKit && prefab.closeButton != null)
+            {
+                var closeImg = prefab.closeButton.GetComponent<Image>();
+                if (closeImg != null)
+                {
+                    ApplyUIKitButtonSprites(prefab.closeButton, closeImg, "ui.button.close_red.normal", "ui.button.close_red.pressed", "ui.button.close_red.disabled");
+                    var iconSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.close");
+                    if (iconSprite != null)
+                    {
+                        var iconImg = EnsureOverlayImage(closeImg.transform, "Icon", iconSprite);
+                        if (iconImg != null)
+                        {
+                            iconImg.preserveAspect = true;
+                            var r = iconImg.rectTransform;
+                            float side = Mathf.Min(closeImg.rectTransform.rect.width, closeImg.rectTransform.rect.height) * 0.68f;
+                            r.anchorMin = new Vector2(0.5f, 0.5f);
+                            r.anchorMax = new Vector2(0.5f, 0.5f);
+                            r.pivot = new Vector2(0.5f, 0.5f);
+                            r.anchoredPosition = new Vector2(0f, side * 0.05f);
+                            r.sizeDelta = new Vector2(side, side);
+                        }
+                    }
+                }
+            }
+
+            if (hasKit)
+            {
+                if (prefab.scrollFadeTop != null)
+                {
+                    prefab.scrollFadeTop.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_scroll_fade_top.png", pixelsPerUnit: 100f, applyNineSlice: false);
+                    prefab.scrollFadeTop.color = Color.white;
+                }
+                if (prefab.scrollFadeBottom != null)
+                {
+                    prefab.scrollFadeBottom.sprite = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_scroll_fade_bottom.png", pixelsPerUnit: 100f, applyNineSlice: false);
+                    prefab.scrollFadeBottom.color = Color.white;
+                }
+            }
+
+            if (hasKit)
+            {
+                void RebindStrip(TMP_Text valueText, string iconKey)
+                {
+                    if (valueText == null) return;
+                    var strip = valueText.transform.parent;
+                    if (strip == null) return;
+
+                    var bg = strip.GetComponent<Image>();
+                    if (bg != null)
+                    {
+                        var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.counter.bg");
+                        ApplySplitBackground(
+                            baseImage: bg,
+                            parent: strip,
+                            decorName: "Decor",
+                            basePath: "UI_Sprites/hud_pill_dark_small_base_9slice.png",
+                            decorPath: "UI_Sprites/hud_pill_dark_small_decor.png",
+                            fallbackSprite: fallback,
+                            noSpriteColor: new Color(0f, 0f, 0f, 0.35f));
+                    }
+
+                    var icon = strip.Find("Icon");
+                    if (icon != null)
+                    {
+                        var img = icon.GetComponent<Image>();
+                        if (img != null)
+                        {
+                            img.sprite = LoopSortingUIKit.LoadSpriteByKey(iconKey);
+                            img.color = Color.white;
+                            img.preserveAspect = true;
+                        }
+                    }
+                }
+
+                RebindStrip(prefab.lifeValue, "ui.icon.heart");
+                RebindStrip(prefab.coinValue, "ui.icon.coin");
+            }
+        }
+
+        private void RebindResultPanelPrefabSprites(bool hasKit)
+        {
+            if (_resultPanel == null) return;
+            if (!hasKit) return;
+
+            var box = _resultPanel.transform.Find("Panel");
+            if (box != null)
+            {
+                var img = box.GetComponent<Image>();
+                if (img != null)
+                {
+                    var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
+                    ApplySplitBackground(
+                        baseImage: img,
+                        parent: box.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/panel_result_base_9slice.png",
+                        decorPath: "UI_Sprites/panel_result_decor.png",
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
+                }
+            }
+
+            var banner = _resultPanel.transform.Find("Panel/LayoutRoot/Banner") ?? _resultPanel.transform.Find("Panel/Banner") ?? _resultPanel.transform.Find("Banner");
+            if (banner != null)
+            {
+                var bannerImg = banner.GetComponent<Image>();
+                if (bannerImg != null)
+                {
+                    bannerImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_fast.info");
+                    bannerImg.type = bannerImg.sprite != null && bannerImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    bannerImg.color = Color.white;
+                }
+            }
+
+            if (_primaryButton != null)
+            {
+                var img = _primaryButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    ApplyUIKitButtonSprites(_primaryButton, img, "ui.button.mint_long.normal", "ui.button.mint_long.pressed", "ui.button.mint_long.disabled");
+                }
+            }
+            if (_secondaryButton != null)
+            {
+                var img = _secondaryButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    ApplyUIKitButtonSprites(_secondaryButton, img, "ui.button.orange_long.normal", "ui.button.orange_long.pressed", "ui.button.orange_long.disabled");
+                }
+            }
+        }
+
+        private void RebindBoosterPurchasePanelPrefabSprites(BoosterPurchasePanelPrefabRefs prefab, bool hasKit)
+        {
+            if (prefab == null) return;
+
+            if (hasKit && prefab.popupRect != null)
+            {
+                var popupImg = prefab.popupRect.GetComponent<Image>();
+                if (popupImg != null)
+                {
+                    var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                    ApplySplitBackground(
+                        baseImage: popupImg,
+                        parent: popupImg.transform,
+                        decorName: "Decor",
+                        basePath: "UI_Sprites/panel_modal_base_9slice.png",
+                        decorPath: null,
+                        fallbackSprite: fallback,
+                        noSpriteColor: new Color(1f, 1f, 1f, 0.92f));
+                }
+            }
+
+            if (hasKit && prefab.headerRect != null)
+            {
+                var headerImg = prefab.headerRect.GetComponent<Image>();
+                if (headerImg != null)
+                {
+                    var s = LoopSortingUIKit.LoadSpriteByKey("ui.button.orange_long.normal");
+                    headerImg.sprite = s;
+                    headerImg.type = s != null && s.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    headerImg.color = Color.white;
+                }
+            }
+
+            if (hasKit && prefab.subtitleBg != null)
+            {
+                var pill = LoopSortingUIKit.LoadSpriteByKey("ui.tag_small.info");
+                if (pill != null)
+                {
+                    prefab.subtitleBg.sprite = pill;
+                    prefab.subtitleBg.type = pill.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    prefab.subtitleBg.color = Color.white;
+                }
+                else
+                {
+                    prefab.subtitleBg.sprite = null;
+                    prefab.subtitleBg.color = new Color(1f, 1f, 1f, 0.55f);
+                }
+            }
+
+            if (prefab.closeImage != null)
+            {
+                var s = TryLoadBoosterPurchaseSprite("btn_close") ?? (hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.button.close_red.normal") : null);
+                prefab.closeImage.sprite = s;
+                prefab.closeImage.type = s != null && s.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                prefab.closeImage.color = Color.white;
+            }
+
+            if (prefab.coinsImage != null)
+            {
+                var s = TryLoadBoosterPurchaseSprite("btn_buy_coins_80") ?? (hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.button.price_green.normal") : null);
+                prefab.coinsImage.sprite = s;
+                prefab.coinsImage.type = s != null && s.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                prefab.coinsImage.color = Color.white;
+            }
+
+            if (prefab.adImage != null)
+            {
+                var authored = TryLoadBoosterPurchaseSprite("btn_watch_ad_free");
+                var s = authored ?? (hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.button.mint_long.normal") : null);
+                prefab.adImage.sprite = s;
+                prefab.adImage.type = s != null && s.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                prefab.adImage.color = Color.white;
+
+                // Keep TMP label hidden when authored PNG already contains "FREE".
+                if (prefab.adLabel != null && authored != null)
+                {
+                    prefab.adLabel.gameObject.SetActive(false);
+                }
+            }
+        }
+
         private Button CreateLongButton(
             Transform parent,
             string name,
@@ -7232,7 +7742,8 @@ namespace LoopSorting
             string pressed,
             string disabled,
             string label,
-            out TMP_Text labelText)
+            out TMP_Text labelText,
+            bool reserveIconSpace = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -7258,9 +7769,16 @@ namespace LoopSorting
             var tRect = tmp.GetComponent<RectTransform>();
             tRect.anchorMin = Vector2.zero;
             tRect.anchorMax = Vector2.one;
-            // Leave room for the left-side icon in result buttons.
-            tRect.offsetMin = new Vector2(160f, 0f);
-            tRect.offsetMax = new Vector2(-60f, 0f);
+            if (reserveIconSpace)
+            {
+                tRect.offsetMin = new Vector2(160f, 0f);
+                tRect.offsetMax = new Vector2(-60f, 0f);
+            }
+            else
+            {
+                tRect.offsetMin = new Vector2(0f, 0f);
+                tRect.offsetMax = new Vector2(0f, 0f);
+            }
             labelText = tmp;
 
             return btn;

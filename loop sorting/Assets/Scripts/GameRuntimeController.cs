@@ -174,6 +174,13 @@ namespace LoopSorting
         private RectTransform _boosterPurchaseSubtitleRect;
         private RectTransform _boosterPurchaseCoinsRect;
         private RectTransform _boosterPurchaseAdRect;
+        private bool _boosterPurchaseBasePoseCaptured;
+        private Vector2 _boosterPurchaseHeaderBasePos;
+        private Vector2 _boosterPurchaseIconBasePos;
+        private Vector2 _boosterPurchaseSubtitleBasePos;
+        private Vector2 _boosterPurchaseCoinsBasePos;
+        private Vector2 _boosterPurchaseAdBasePos;
+        private Vector2 _boosterPurchaseCloseBasePos;
         private Image _boosterPurchaseSubtitleBg;
         private Coroutine _boosterPurchaseIntroRoutine;
         private Coroutine _boosterPurchaseIdleRoutine;
@@ -5359,6 +5366,7 @@ namespace LoopSorting
                 ApplyButtonPressScale(_boosterPurchaseAdButton, pressedScale: 0.96f);
 
                 RebindBoosterPurchasePanelPrefabSprites(prefab, hasKit);
+                CaptureBoosterPurchaseBasePose();
                 _boosterPurchasePanel.SetActive(false);
                 return;
             }
@@ -5589,6 +5597,7 @@ namespace LoopSorting
             ApplyButtonPressScale(_boosterPurchaseCoinsButton, pressedScale: 0.96f);
             ApplyButtonPressScale(_boosterPurchaseAdButton, pressedScale: 0.96f);
 
+            CaptureBoosterPurchaseBasePose();
             _boosterPurchasePanel.SetActive(false);
         }
 
@@ -5838,43 +5847,70 @@ namespace LoopSorting
 
         private void ResetBoosterPurchasePose()
         {
+            if (!_boosterPurchaseBasePoseCaptured)
+            {
+                CaptureBoosterPurchaseBasePose();
+            }
+
             if (_boosterPurchaseHeaderRect != null)
             {
-                _boosterPurchaseHeaderRect.anchoredPosition = new Vector2(0f, -70f);
+                _boosterPurchaseHeaderRect.anchoredPosition = _boosterPurchaseHeaderBasePos;
                 _boosterPurchaseHeaderRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseHeaderRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseIconRect != null)
             {
-                _boosterPurchaseIconRect.anchoredPosition = new Vector2(0f, 150f);
+                _boosterPurchaseIconRect.anchoredPosition = _boosterPurchaseIconBasePos;
                 _boosterPurchaseIconRect.localScale = Vector3.one;
                 _boosterPurchaseIconRect.localRotation = Quaternion.identity;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseIconRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseSubtitleRect != null)
             {
-                _boosterPurchaseSubtitleRect.anchoredPosition = new Vector2(0f, -240f);
+                _boosterPurchaseSubtitleRect.anchoredPosition = _boosterPurchaseSubtitleBasePos;
                 _boosterPurchaseSubtitleRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseSubtitleRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseCoinsRect != null)
             {
-                _boosterPurchaseCoinsRect.anchoredPosition = new Vector2(-210f, -480f);
+                _boosterPurchaseCoinsRect.anchoredPosition = _boosterPurchaseCoinsBasePos;
                 _boosterPurchaseCoinsRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseCoinsRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseAdRect != null)
             {
-                _boosterPurchaseAdRect.anchoredPosition = new Vector2(210f, -480f);
+                _boosterPurchaseAdRect.anchoredPosition = _boosterPurchaseAdBasePos;
                 _boosterPurchaseAdRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseAdRect.gameObject).alpha = 1f;
             }
             if (_boosterPurchaseCloseRect != null)
             {
-                _boosterPurchaseCloseRect.anchoredPosition = new Vector2(-36f, -36f);
+                _boosterPurchaseCloseRect.anchoredPosition = _boosterPurchaseCloseBasePos;
                 _boosterPurchaseCloseRect.localScale = Vector3.one;
                 MotionUtil.EnsureCanvasGroup(_boosterPurchaseCloseRect.gameObject).alpha = 1f;
             }
+        }
+
+        private void CaptureBoosterPurchaseBasePose()
+        {
+            if (_boosterPurchaseHeaderRect == null ||
+                _boosterPurchaseIconRect == null ||
+                _boosterPurchaseSubtitleRect == null ||
+                _boosterPurchaseCoinsRect == null ||
+                _boosterPurchaseAdRect == null ||
+                _boosterPurchaseCloseRect == null)
+            {
+                _boosterPurchaseBasePoseCaptured = false;
+                return;
+            }
+
+            _boosterPurchaseHeaderBasePos = _boosterPurchaseHeaderRect.anchoredPosition;
+            _boosterPurchaseIconBasePos = _boosterPurchaseIconRect.anchoredPosition;
+            _boosterPurchaseSubtitleBasePos = _boosterPurchaseSubtitleRect.anchoredPosition;
+            _boosterPurchaseCoinsBasePos = _boosterPurchaseCoinsRect.anchoredPosition;
+            _boosterPurchaseAdBasePos = _boosterPurchaseAdRect.anchoredPosition;
+            _boosterPurchaseCloseBasePos = _boosterPurchaseCloseRect.anchoredPosition;
+            _boosterPurchaseBasePoseCaptured = true;
         }
 
         private IEnumerator AnimateBoosterPurchaseIntro()

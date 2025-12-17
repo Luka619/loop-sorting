@@ -1356,10 +1356,33 @@ namespace LoopSorting
                 rect.offsetMax = Vector2.zero;
             }
             img.sprite = sprite;
-            img.type = Image.Type.Simple;
+            img.type = sprite.border.sqrMagnitude > 0.0001f ? Image.Type.Sliced : Image.Type.Simple;
             img.preserveAspect = false;
             img.color = Color.white;
             return img;
+        }
+
+        private static void ApplyFakeDecorShadow(Image image, float alpha = 0.22f, float yOffsetFrac = 0.012f)
+        {
+            if (image == null) return;
+
+            float h = image.rectTransform != null ? image.rectTransform.sizeDelta.y : 0f;
+            if (h <= 0.01f) h = 900f;
+            float dy = -Mathf.Clamp(h * Mathf.Clamp(yOffsetFrac, 0f, 0.2f), 3f, 18f);
+
+            var shadow = image.GetComponent<Shadow>();
+            if (shadow == null) shadow = image.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, Mathf.Clamp01(alpha));
+            shadow.effectDistance = new Vector2(0f, dy);
+            shadow.useGraphicAlpha = true;
+        }
+
+        private static float GetSpriteAspect(Sprite sprite)
+        {
+            if (sprite == null) return 1f;
+            var r = sprite.rect;
+            if (r.height <= 0.0001f) return 1f;
+            return r.width / r.height;
         }
 
         private static void ApplySplitBackground(
@@ -1378,19 +1401,11 @@ namespace LoopSorting
             baseImage.type = baseSprite != null && baseSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
             baseImage.color = baseSprite != null ? Color.white : noSpriteColor;
 
-            if (!string.IsNullOrEmpty(decorPath))
-            {
-                var decor = LoopSortingUIKit.LoadSprite(decorPath);
-                if (decor != null)
-                {
-                    EnsureOverlayImage(parent, decorName, decor);
-                }
-                else
-                {
-                    var existing = parent.Find(decorName);
-                    if (existing != null) existing.gameObject.SetActive(false);
-                }
-            }
+            // Do not use authored decor overlays: many of them are mismatched aspect and warp when stretched.
+            // Simulate a subtle drop shadow by reusing the base silhouette (via UI Shadow effect).
+            var existingDecor = !string.IsNullOrEmpty(decorName) ? parent.Find(decorName) : null;
+            if (existingDecor != null) existingDecor.gameObject.SetActive(false);
+            ApplyFakeDecorShadow(baseImage);
         }
 
         public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
@@ -6015,6 +6030,7 @@ namespace LoopSorting
 
             var panelImg = panelGO.AddComponent<Image>();
             panelImg.raycastTarget = false;
+            Transform layoutParent = panelGO.transform;
             if (hasKit)
             {
                 // Prefer split panel (base + decor) if available; otherwise fall back to the legacy combined sprite.
@@ -6027,13 +6043,43 @@ namespace LoopSorting
                 panelImg.sprite = baseSprite;
                 panelImg.type = panelImg.sprite != null && panelImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 panelImg.color = Color.white;
+                ApplyFakeDecorShadow(panelImg, alpha: 0.22f);
 
-                var decorSprite =
-                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_gold_blue_decor.png") ??
-                    LoopSortingUIKit.LoadSprite("UI_Sprites/panel_modal_decor.png");
-                if (decorSprite != null)
+                var existingDecor = panelGO.transform.Find("Decor");
+                if (existingDecor != null) existingDecor.gameObject.SetActive(false);
+
+                // Layout should be based on the visible silhouette (excluding transparent padding), otherwise UI elements
+                // appear misaligned and 9-slice guides look "wrong" when the source texture has large margins.
+                if (baseSprite != null)
                 {
-                    EnsureOverlayImage(panelGO.transform, "Decor", decorSprite);
+                    const float assumedBorderPx = 120f;
+                    float padL = Mathf.Max(0f, baseSprite.border.x - assumedBorderPx);
+                    float padB = Mathf.Max(0f, baseSprite.border.y - assumedBorderPx);
+                    float padR = Mathf.Max(0f, baseSprite.border.z - assumedBorderPx);
+                    float padT = Mathf.Max(0f, baseSprite.border.w - assumedBorderPx);
+
+                    float wPx = Mathf.Max(1f, baseSprite.rect.width);
+                    float hPx = Mathf.Max(1f, baseSprite.rect.height);
+                    float visibleFracX = Mathf.Clamp01((wPx - padL - padR) / wPx);
+                    float visibleFracY = Mathf.Clamp01((hPx - padB - padT) / hPx);
+
+                    var desiredVisible = new Vector2(900f, 1060f);
+                    panelRect.sizeDelta = new Vector2(
+                        desiredVisible.x / Mathf.Max(0.05f, visibleFracX),
+                        desiredVisible.y / Mathf.Max(0.05f, visibleFracY));
+
+                    float unitsPerPxX = panelRect.sizeDelta.x / wPx;
+                    float unitsPerPxY = panelRect.sizeDelta.y / hPx;
+
+                    var layoutRootGO = new GameObject("LayoutRoot");
+                    layoutRootGO.transform.SetParent(panelGO.transform, false);
+                    var contentRect = layoutRootGO.AddComponent<RectTransform>();
+                    contentRect.anchorMin = Vector2.zero;
+                    contentRect.anchorMax = Vector2.one;
+                    contentRect.pivot = new Vector2(0.5f, 0.5f);
+                    contentRect.offsetMin = new Vector2(padL * unitsPerPxX, padB * unitsPerPxY);
+                    contentRect.offsetMax = new Vector2(-padR * unitsPerPxX, -padT * unitsPerPxY);
+                    layoutParent = layoutRootGO.transform;
                 }
             }
             else
@@ -6042,7 +6088,7 @@ namespace LoopSorting
             }
 
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(panelGO.transform, false);
+            titleGO.transform.SetParent(layoutParent, false);
             _shopTitle = titleGO.AddComponent<TextMeshProUGUI>();
             _shopTitle.raycastTarget = false;
             _shopTitle.text = "SHOP";
@@ -6053,19 +6099,22 @@ namespace LoopSorting
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -70f);
+            titleRect.anchoredPosition = new Vector2(0f, -60f);
             titleRect.sizeDelta = new Vector2(700f, 100f);
 
             var closeBtn = CreateIconButton(
-                parent: panelGO.transform,
+                parent: layoutParent,
                 name: "CloseButton",
                 anchor: new Vector2(1f, 1f),
-                anchoredPos: new Vector2(-90f, -90f),
+                anchoredPos: new Vector2(-26f, -26f),
                 size: new Vector2(128f, 128f),
                 normal: hasKit ? "ui.button.close_red.normal" : null,
                 pressed: hasKit ? "ui.button.close_red.pressed" : null,
                 disabled: hasKit ? "ui.button.close_red.disabled" : null,
                 icon: null);
+            var closeRect = closeBtn.GetComponent<RectTransform>();
+            closeRect.pivot = new Vector2(1f, 1f);
+            closeRect.anchoredPosition = new Vector2(-26f, -26f);
             closeBtn.onClick.AddListener(() =>
             {
                 PlaySfx(SfxId.UiPopupClose);
@@ -6074,12 +6123,12 @@ namespace LoopSorting
 
             // Currency row (matches UI kit blueprint intent).
             var currencyRowGO = new GameObject("CurrencyRow");
-            currencyRowGO.transform.SetParent(panelGO.transform, false);
+            currencyRowGO.transform.SetParent(layoutParent, false);
             var currencyRowRect = currencyRowGO.AddComponent<RectTransform>();
             currencyRowRect.anchorMin = new Vector2(0.5f, 1f);
             currencyRowRect.anchorMax = new Vector2(0.5f, 1f);
             currencyRowRect.pivot = new Vector2(0.5f, 1f);
-            currencyRowRect.anchoredPosition = new Vector2(0f, -250f);
+            currencyRowRect.anchoredPosition = new Vector2(0f, -190f);
             currencyRowRect.sizeDelta = new Vector2(860f, 120f);
 
             var heartsStrip = CreateCurrencyStrip(currencyRowGO.transform, "Hearts", Vector2.zero, hasKit ? "ui.icon.heart" : null, out _shopLifeValue);
@@ -6098,14 +6147,14 @@ namespace LoopSorting
 
             // Scroll list (v04_3 spec): ScrollRect -> Viewport (RectMask2D) -> Content (VerticalLayoutGroup + ContentSizeFitter)
             var scrollGO = new GameObject("ShopScrollList");
-            scrollGO.transform.SetParent(panelGO.transform, false);
+            scrollGO.transform.SetParent(layoutParent, false);
             var scrollRect = scrollGO.AddComponent<RectTransform>();
             scrollRect.anchorMin = Vector2.zero;
             scrollRect.anchorMax = Vector2.one;
             scrollRect.pivot = new Vector2(0.5f, 0.5f);
             // Leave space at the top for title + currency row, and at the bottom for breathing room.
-            scrollRect.offsetMin = new Vector2(60f, 90f);
-            scrollRect.offsetMax = new Vector2(-60f, -340f);
+            scrollRect.offsetMin = new Vector2(50f, 100f);
+            scrollRect.offsetMax = new Vector2(-50f, -300f);
 
             _shopScroll = scrollGO.AddComponent<ScrollRect>();
             _shopScroll.horizontal = false;
@@ -6312,11 +6361,13 @@ namespace LoopSorting
                 img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+                ApplyFakeDecorShadow(img, alpha: 0.18f);
 
                 var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_card_beige_decor.png");
                 if (decor != null)
                 {
-                    EnsureOverlayImage(itemGO.transform, "Decor", decor);
+                    var existingDecor = itemGO.transform.Find("Decor");
+                    if (existingDecor != null) existingDecor.gameObject.SetActive(false);
                 }
             }
             else
@@ -6406,11 +6457,13 @@ namespace LoopSorting
                 img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+                ApplyFakeDecorShadow(img, alpha: 0.14f);
 
                 var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_group_bar_decor.png");
                 if (decor != null)
                 {
-                    EnsureOverlayImage(go.transform, "Decor", decor);
+                    var existingDecor = go.transform.Find("Decor");
+                    if (existingDecor != null) existingDecor.gameObject.SetActive(false);
                 }
             }
             else
@@ -6458,11 +6511,13 @@ namespace LoopSorting
                 img.sprite = baseSprite;
                 img.type = img.sprite != null && img.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 img.color = Color.white;
+                ApplyFakeDecorShadow(img, alpha: 0.14f);
 
                 var decor = LoopSortingUIKit.LoadSprite("UI_Sprites/shop_row_yellow_decor.png");
                 if (decor != null)
                 {
-                    EnsureOverlayImage(itemGO.transform, "Decor", decor);
+                    var existingDecor = itemGO.transform.Find("Decor");
+                    if (existingDecor != null) existingDecor.gameObject.SetActive(false);
                 }
             }
             else

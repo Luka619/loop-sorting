@@ -1852,9 +1852,10 @@
       "background": "transparent",
       "template": "PANEL_DECOR",
       "tags": [
-        "split_decor"
+        "split_decor",
+        "deprecated"
       ],
-      "positive": "Modal panel decor overlay: outline + outer shadow/highlight ring; center area transparent (hole) so base shows through.\n- Content: outer outline/frame + soft drop shadow + highlight only; center is transparent (cut-out) so it can overlay the base panel.\n- IMPORTANT: no full-rectangle haze/vignette; only the panel silhouette and its shadow.\nTransparent background, centered, no cropping, keep small safe padding, smooth toy-like creamy plastic UI, rounded corners, soft bevel, subtle specular highlight from top-left, soft ambient occlusion, orthographic front view, sRGB, PNG.",
+      "positive": "DEPRECATED (v0.5 default): runtime simulates decor shadow from the base silhouette (black + slight down offset + alpha), so this separate decor overlay is not used by default.\nIf you still generate it: outline + outer shadow/highlight ring; center area transparent (hole) so base shows through.\n- Content: outer outline/frame + soft drop shadow + highlight only; center is transparent (cut-out) so it can overlay the base panel.\n- IMPORTANT: must match base size/aspect exactly; otherwise it will warp when stretched.\nTransparent background, centered, no cropping, keep small safe padding, smooth toy-like creamy plastic UI, rounded corners, soft bevel, subtle specular highlight from top-left, soft ambient occlusion, orthographic front view, sRGB, PNG.",
       "negative": "photorealistic, realistic materials, wood grain, leather, fabric, paper texture, metal, brushed texture, background scene, vignette, glow, haze, background gradient, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "UI_Sprites/panel_gold_blue_base_9slice.png": {
@@ -1902,9 +1903,10 @@
       "background": "transparent",
       "template": "PANEL_DECOR",
       "tags": [
-        "split_decor"
+        "split_decor",
+        "deprecated"
       ],
-      "positive": "Result panel decor overlay: outline + soft drop shadow + highlight; center transparent.\n- Content: outer outline/frame + soft drop shadow + highlight only; center is transparent (cut-out) so it can overlay the base panel.\n- IMPORTANT: no full-rectangle haze/vignette; only the panel silhouette and its shadow.\nTransparent background, centered, no cropping, keep small safe padding, smooth toy-like creamy plastic UI, rounded corners, soft bevel, subtle specular highlight from top-left, soft ambient occlusion, orthographic front view, sRGB, PNG.",
+      "positive": "DEPRECATED (v0.5 default): runtime simulates decor shadow from the base silhouette (black + slight down offset + alpha), so this separate decor overlay is not used by default.\nIf you still generate it: outline + soft drop shadow + highlight; center transparent.\n- Content: outer outline/frame + soft drop shadow + highlight only; center is transparent (cut-out) so it can overlay the base panel.\n- IMPORTANT: must match base size/aspect exactly; otherwise it will warp when stretched.\nTransparent background, centered, no cropping, keep small safe padding, smooth toy-like creamy plastic UI, rounded corners, soft bevel, subtle specular highlight from top-left, soft ambient occlusion, orthographic front view, sRGB, PNG.",
       "negative": "photorealistic, realistic materials, wood grain, leather, fabric, paper texture, metal, brushed texture, background scene, vignette, glow, haze, background gradient, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "UI_Sprites/shop_row_yellow_base_9slice.png": {

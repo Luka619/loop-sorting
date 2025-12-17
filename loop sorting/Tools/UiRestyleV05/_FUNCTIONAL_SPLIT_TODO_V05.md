@@ -4,7 +4,7 @@
 
 默认规则（除非你特别说明某资源不用拆）：
 - 可交互组件（button/toggle/tab/slider）默认拆成：`base`（可 9-slice）+ `icon_glyph`（可选）+ `text`（TMP/Text）+ `decor`（shadow/outline/highlight，按需）。
-- 列表/卡片/面板默认拆成：`panel_base`（9-slice）+ `panel_decor`（边缘/高光/阴影，按需）+ 内容层（icon/text 分离）。
+- 列表/卡片/面板默认拆成：`panel_base`（9-slice）+ 内容层（icon/text 分离）；`panel_decor` 不再作为默认依赖，阴影/暗边统一由运行时用 base 轮廓模拟（黑色 + 轻微下移 + 透明度）。
 - 透明 PNG：画布外必须 100% 透明；不要把 vignette/雾化背景/大面积渐变“画进透明图里”（那会影响叠加与裁切判断）。
 - 关于尺寸：**生成图不需要“真实尺寸”对齐**，对齐/裁切会截断透明资产；只要留足 padding，保证完整轮廓和阴影都在画布内即可。
 
@@ -79,7 +79,7 @@
 
 ### 目标资源拆分规则（默认）
 - `panel_*_base_9slice.png`：9-slice 面板底（保持可拉伸）
-- `panel_*_decor.png`：装饰边/高光/阴影（独立层）
+- `panel_*_decor.png`：不再默认使用（避免尺寸/比例不一致导致拉伸变形）；如确有需要，必须保证与 base 同尺寸同长宽比。
 
 ### 需要改的功能点（你改代码/Prefab）
 - Prefab：9-slice 只挂在 base 上；decor 用独立 Image（不参与拉伸，或按需拉伸）
@@ -88,7 +88,7 @@
 - Modal_Settings
   - `panel_modal.png`（916x794）→
     - `panel_modal_base_9slice.png`（916x794）
-    - `panel_modal_decor.png`（916x794）
+    - `panel_modal_decor.png`（916x794，已不再默认使用；阴影/暗边改为运行时基于 base 统一模拟）
 - Modal_MoreLives / Modal_Settings_Full
   - `panel_thick_gold_blue.png`（960x1140）→
     - `panel_gold_blue_base_9slice.png`（960x1140）
@@ -96,7 +96,7 @@
 - Modal_Result
   - `panel_result.png`（956x794）→
     - `panel_result_base_9slice.png`（956x794）
-    - `panel_result_decor.png`（956x794）
+    - `panel_result_decor.png`（956x794，已不再默认使用；阴影/暗边改为运行时基于 base 统一模拟）
 - Screen_Shop
   - `shop_card_beige.png` / `shop_row_yellow.png` 建议按“base 9-slice + decor”拆（否则行高变化/适配时容易拉伸变形）
 
@@ -105,7 +105,7 @@
 ## 4) Shop 列表组件（行/卡片/分组）
 
 ### 目标资源拆分规则（默认）
-- Row/Card：`*_base_9slice` + `*_decor` + 内容（icon/text 分离）
+- Row/Card：`*_base_9slice` + 内容（icon/text 分离）；阴影/暗边由运行时基于 base 统一模拟。
 - Section bar：`shop_group_bar_base` + `shop_group_bar_decor`
 - Scroll fade：保持单图（`shop_scroll_fade_top/bottom.png`）即可
 - Topbar scallop：保持 tile 单图（`shop_topbar_scallop_tile_512x128.png`）即可
@@ -160,11 +160,11 @@
 ## 6) HUD 计数条 / 胶囊底（coin/heart/time）
 
 ### 目标资源拆分规则（默认）
-- 胶囊底：`hud_pill_*_base_9slice.png` +（可选）`hud_pill_*_decor.png`
+- 胶囊底：`hud_pill_*_base_9slice.png`；阴影/暗边由运行时基于 base 统一模拟（默认不再依赖 `hud_pill_*_decor.png`）。
 - 内容（图标/数字/加号）全部独立（TMP + Icon）
 
 ### 现有资源映射（来自 `_ui_screen_usage_report.md`）
-- `hud_pill_dark_small.png`（352x126）→ `hud_pill_dark_small_base_9slice.png`（352x126）+（可选）`hud_pill_dark_small_decor.png`
+- `hud_pill_dark_small.png`（352x126）→ `hud_pill_dark_small_base_9slice.png`（352x126）（阴影/暗边由运行时基于 base 统一模拟）
 - `pill_bg.png`（392x162）→ `hud_pill_light_base_9slice.png`（392x162）+（可选）`hud_pill_light_decor.png`
 - `pill_timer_beige.png`（464x178）→ `hud_pill_timer_beige_base_9slice.png`（464x178）+（可选）`hud_pill_timer_beige_decor.png`
 

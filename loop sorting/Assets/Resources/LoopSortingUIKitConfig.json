@@ -37,9 +37,11 @@
     { "pattern": "pink_long_*", "border": [140, 140, 90, 90] },
 
     { "pattern": "pill_bg*", "border": [90, 90, 60, 60] },
+    { "pattern": "panel_gold_blue_base_9slice.png", "border": [320, 320, 222, 237] },
     { "pattern": "panel_modal.png", "border": [120, 120, 120, 120] },
     { "pattern": "panel_result.png", "border": [120, 120, 120, 120] },
     { "pattern": "panel_thick_gold_blue.png", "border": [140, 140, 140, 140] },
+    { "pattern": "panel_*", "border": [120, 120, 120, 120] },
 
     { "pattern": "tag_fast_*", "border": [60, 60, 40, 40] },
     { "pattern": "tag_small_*", "border": [50, 50, 30, 30] },
@@ -47,10 +49,10 @@
     { "pattern": "lock_chip_plate.png", "border": [60, 60, 40, 40] },
     { "pattern": "lock_overlay.png", "border": [60, 60, 60, 60] },
     { "pattern": "card_setting_row.png", "border": [70, 70, 50, 50] },
-    { "pattern": "hud_pill_dark*.png", "border": [40, 40, 30, 30] },
-    { "pattern": "shop_row_*.png", "border": [90, 90, 60, 60] },
-    { "pattern": "shop_card_*.png", "border": [90, 90, 60, 60] },
-    { "pattern": "shop_group_bar.png", "border": [48, 48, 30, 30] },
+    { "pattern": "hud_pill_dark*", "border": [40, 40, 30, 30] },
+    { "pattern": "shop_row_*", "border": [90, 90, 60, 60] },
+    { "pattern": "shop_card_*", "border": [90, 90, 60, 60] },
+    { "pattern": "shop_group_bar*", "border": [48, 48, 30, 30] },
     { "pattern": "btn_small_*", "border": [80, 80, 55, 55] },
     { "pattern": "btn_price_green_*", "border": [60, 60, 40, 40] },
     { "pattern": "lock_node_label_bg.png", "border": [30, 30, 20, 20] }

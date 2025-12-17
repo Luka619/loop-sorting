@@ -153,10 +153,10 @@ powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -Sou
 
 补充（实现状态）：
 - 当前运行时代码已支持以下“拆分文件名”组合（存在则启用；不存在会回退到旧单图）：
-  - `UI_Sprites/panel_modal_base_9slice.png` + `UI_Sprites/panel_modal_decor.png`
-  - `UI_Sprites/panel_result_base_9slice.png` + `UI_Sprites/panel_result_decor.png`
-  - `UI_Sprites/hud_pill_dark_small_base_9slice.png` + `UI_Sprites/hud_pill_dark_small_decor.png`
-  - `UI_Sprites/hud_pill_dark_base_9slice.png` + `UI_Sprites/hud_pill_dark_decor.png`
+  - `UI_Sprites/panel_modal_base_9slice.png` (decor handled at runtime via base silhouette shadow)
+  - `UI_Sprites/panel_result_base_9slice.png` (decor handled at runtime via base silhouette shadow)
+  - `UI_Sprites/hud_pill_dark_small_base_9slice.png` (decor handled at runtime via base silhouette shadow)
+  - `UI_Sprites/hud_pill_dark_base_9slice.png` (decor handled at runtime via base silhouette shadow)
 - Booster badge 数字使用 TMP（无需 digit 贴图；旧 digit 方式仍兼容）
 3) **有哪些状态**：`normal / pressed / disabled / on / off`，并明确“状态差异来自哪里”（颜色、阴影、凹凸、位置）。
 4) **不可变约束**（必须遵守的运行时约束）：

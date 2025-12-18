@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -410,6 +411,7 @@ namespace LoopSorting.Editor
             }
 
             CopyLayoutComponents(src, dst);
+            CopyTextComponents(src, dst);
 
             var dstChildrenByName = new Dictionary<string, Transform>();
             for (int i = 0; i < dst.childCount; i++)
@@ -427,6 +429,62 @@ namespace LoopSorting.Editor
                 if (sc == null) continue;
                 if (!dstChildrenByName.TryGetValue(sc.name, out var dc) || dc == null) continue;
                 CopyRectTransforms(sc, dc);
+            }
+        }
+
+        private static void CopyTextComponents(Transform src, Transform dst)
+        {
+            if (src == null || dst == null) return;
+
+            var srcTmp = src.GetComponent<TMP_Text>();
+            var dstTmp = dst.GetComponent<TMP_Text>();
+            if (srcTmp != null && dstTmp != null)
+            {
+                dstTmp.enabled = srcTmp.enabled;
+                dstTmp.text = srcTmp.text;
+                dstTmp.font = srcTmp.font;
+                dstTmp.fontSize = srcTmp.fontSize;
+                dstTmp.enableAutoSizing = srcTmp.enableAutoSizing;
+                dstTmp.fontSizeMin = srcTmp.fontSizeMin;
+                dstTmp.fontSizeMax = srcTmp.fontSizeMax;
+                dstTmp.color = srcTmp.color;
+                dstTmp.alignment = srcTmp.alignment;
+                dstTmp.enableWordWrapping = srcTmp.enableWordWrapping;
+                dstTmp.overflowMode = srcTmp.overflowMode;
+                dstTmp.fontStyle = srcTmp.fontStyle;
+                dstTmp.characterSpacing = srcTmp.characterSpacing;
+                dstTmp.lineSpacing = srcTmp.lineSpacing;
+                dstTmp.paragraphSpacing = srcTmp.paragraphSpacing;
+                dstTmp.raycastTarget = srcTmp.raycastTarget;
+                dstTmp.margin = srcTmp.margin;
+
+                // Avoid copying runtime-created material instances; only copy persistent material presets.
+                var srcMat = srcTmp.fontSharedMaterial;
+                if (srcMat != null && EditorUtility.IsPersistent(srcMat))
+                {
+                    dstTmp.fontSharedMaterial = srcMat;
+                }
+            }
+
+            var srcText = src.GetComponent<Text>();
+            var dstText = dst.GetComponent<Text>();
+            if (srcText != null && dstText != null)
+            {
+                dstText.enabled = srcText.enabled;
+                dstText.text = srcText.text;
+                dstText.font = srcText.font;
+                dstText.fontSize = srcText.fontSize;
+                dstText.fontStyle = srcText.fontStyle;
+                dstText.alignment = srcText.alignment;
+                dstText.lineSpacing = srcText.lineSpacing;
+                dstText.supportRichText = srcText.supportRichText;
+                dstText.horizontalOverflow = srcText.horizontalOverflow;
+                dstText.verticalOverflow = srcText.verticalOverflow;
+                dstText.resizeTextForBestFit = srcText.resizeTextForBestFit;
+                dstText.resizeTextMinSize = srcText.resizeTextMinSize;
+                dstText.resizeTextMaxSize = srcText.resizeTextMaxSize;
+                dstText.color = srcText.color;
+                dstText.raycastTarget = srcText.raycastTarget;
             }
         }
 

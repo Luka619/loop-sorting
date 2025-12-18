@@ -431,7 +431,47 @@ namespace LoopSorting
 
         public static Material CreateUnlitTextureMaterial(Texture2D texture, Color color, int renderQueue)
         {
+            // Prefer our project shader/material so it survives build stripping and supports tinting + ZTest override.
+            // Resources/LoopSortingUnlitTexture.mat uses shader "LoopSorting/UnlitTexture".
+            const string templatePath = "LoopSortingUnlitTexture";
+            if (_unlitTextureMaterialTemplate == null && !_unlitTextureMaterialTemplateTriedLoad)
+            {
+                _unlitTextureMaterialTemplateTriedLoad = true;
+                _unlitTextureMaterialTemplate = Resources.Load<Material>(templatePath);
+                if (_unlitTextureMaterialTemplate == null)
+                {
+                    var s = Shader.Find("LoopSorting/UnlitTexture");
+                    if (s != null && s.isSupported)
+                    {
+                        _unlitTextureMaterialTemplate = new Material(s)
+                        {
+                            name = "LoopSortingUnlitTexture_RuntimeTemplate",
+                            hideFlags = HideFlags.HideAndDontSave,
+                        };
+                    }
+                }
+            }
+
+            if (_unlitTextureMaterialTemplate != null)
+            {
+                var templateMat = new Material(_unlitTextureMaterialTemplate);
+                if (templateMat.HasProperty("_MainTex")) templateMat.SetTexture("_MainTex", texture);
+                else templateMat.mainTexture = texture;
+                if (templateMat.HasProperty("_Color")) templateMat.SetColor("_Color", color);
+                else if (templateMat.HasProperty("_BaseColor")) templateMat.SetColor("_BaseColor", color);
+                else if (templateMat.HasProperty("_TintColor")) templateMat.SetColor("_TintColor", color);
+                templateMat.renderQueue = renderQueue;
+
+                // Overlays should not write or depend on depth (mobile can have low-precision depth buffers).
+                if (templateMat.HasProperty("_ZWrite")) templateMat.SetInt("_ZWrite", 0);
+                if (templateMat.HasProperty("_ZTest")) templateMat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                if (templateMat.HasProperty("_Cull")) templateMat.SetInt("_Cull", 0); // Off
+                if (templateMat.HasProperty("_CullMode")) templateMat.SetInt("_CullMode", 0);
+                return templateMat;
+            }
+
             var shader =
+                Shader.Find("Unlit/Transparent Colored") ??
                 Shader.Find("Unlit/Transparent") ??
                 Shader.Find("Unlit/Texture") ??
                 Shader.Find("Sprites/Default") ??
@@ -445,13 +485,21 @@ namespace LoopSorting
 
             var mat = new Material(shader);
             mat.mainTexture = texture;
-            mat.color = color;
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+            else if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+            else if (mat.HasProperty("_TintColor")) mat.SetColor("_TintColor", color);
             mat.renderQueue = renderQueue;
 
             // Best-effort: keep it from writing depth so overlays behave nicely.
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0);
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
             return mat;
         }
+
+        private static Material _unlitTextureMaterialTemplate;
+        private static bool _unlitTextureMaterialTemplateTriedLoad;
 
         private static void EnsureConfig()
         {

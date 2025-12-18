@@ -811,13 +811,6 @@ namespace LoopSorting
                 var discCol = _lockMarkerDisc.GetComponent<Collider>();
                 if (discCol != null) GameObject.Destroy(discCol);
 
-                // Always-visible color halo behind the (possibly textured) disc so unlockColor is readable even if the disc texture can't tint.
-                _lockMarkerColorHalo = RuntimePrimitives.CreateQuad("MarkerColorHalo");
-                _lockMarkerColorHalo.transform.SetParent(_lockBadge.transform, false);
-                _lockMarkerColorHalo.transform.localPosition = new Vector3(0f, 0f, -0.005f);
-                var haloCol = _lockMarkerColorHalo.GetComponent<Collider>();
-                if (haloCol != null) GameObject.Destroy(haloCol);
-
                 _lockMarkerIcon = RuntimePrimitives.CreateQuad("MarkerLockIcon");
                 _lockMarkerIcon.transform.SetParent(_lockBadge.transform, false);
                 _lockMarkerIcon.transform.localPosition = new Vector3(0f, 0f, -0.02f);
@@ -827,7 +820,7 @@ namespace LoopSorting
                 if (LoopSortingUIKit.IsAvailable())
                 {
                     var plateTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_plate");
-                    var discTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_color_disc");
+                    var discTex = TryLoadBlockColorTexture(unlockColor) ?? LoopSortingUIKit.LoadTextureByKey("world.lock_marker_color_disc");
                     var iconTex = LoopSortingUIKit.LoadTextureByKey("world.lock_marker_lock_icon");
 
                     if (plateTex != null)
@@ -861,10 +854,15 @@ namespace LoopSorting
 
                 // Fallback materials if textures aren't available (avoid pink default).
                 EnsureUnlitColorMaterial(_lockMarkerPlate, Color.white, LockBadgeQueue);
-                EnsureUnlitColorMaterial(_lockMarkerColorHalo, Color.white, LockBadgeQueue + 1);
                 EnsureUnlitColorMaterial(_lockMarkerDisc, Color.white, LockBadgeQueue + 1);
                 EnsureUnlitColorMaterial(_lockMarkerIcon, Color.white, LockBadgeQueue + 2);
             }
+
+            // Sorting: SpriteRenderer uses sortingOrder, while MeshRenderer defaults to 0.
+            // Without explicitly setting this, the lock overlay (sortingOrder=LockOverlayQueue) can render above the badge.
+            SetWorldOverlaySorting(_lockMarkerPlate, LockBadgeQueue);
+            SetWorldOverlaySorting(_lockMarkerDisc, LockBadgeQueue + 1);
+            SetWorldOverlaySorting(_lockMarkerIcon, LockBadgeQueue + 2);
 
             float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
             float plateWidth = badgeBase * 0.42f;
@@ -882,18 +880,6 @@ namespace LoopSorting
             {
                 _lockMarkerPlate.transform.localScale = new Vector3(plateWidth, plateHeight, 1f);
             }
-            if (_lockMarkerColorHalo != null)
-            {
-                float halo = plateWidth * 0.78f;
-                _lockMarkerColorHalo.transform.localScale = new Vector3(halo, halo, 1f);
-                var haloR = _lockMarkerColorHalo.GetComponent<Renderer>();
-                if (haloR != null && haloR.sharedMaterial != null)
-                {
-                    var c = BlockVisual.ToUnityColor(unlockColor);
-                    c.a = 1f;
-                    TrySetMaterialColor(haloR.sharedMaterial, c);
-                }
-            }
             if (_lockMarkerDisc != null)
             {
                 // Make the tinted disc slightly larger than the lock icon so a colored edge is visible.
@@ -902,9 +888,19 @@ namespace LoopSorting
                 var discR = _lockMarkerDisc.GetComponent<Renderer>();
                 if (discR != null && discR.sharedMaterial != null)
                 {
-                    var c = BlockVisual.ToUnityColor(unlockColor);
-                    c.a = 1f;
-                    TrySetMaterialColor(discR.sharedMaterial, c);
+                    var blockTex = TryLoadBlockColorTexture(unlockColor);
+                    if (blockTex != null)
+                    {
+                        if (discR.sharedMaterial.HasProperty("_MainTex")) discR.sharedMaterial.SetTexture("_MainTex", blockTex);
+                        else discR.sharedMaterial.mainTexture = blockTex;
+                        TrySetMaterialColor(discR.sharedMaterial, Color.white);
+                    }
+                    else
+                    {
+                        var c = BlockVisual.ToUnityColor(unlockColor);
+                        c.a = 1f;
+                        TrySetMaterialColor(discR.sharedMaterial, c);
+                    }
                 }
             }
             if (_lockMarkerIcon != null)
@@ -1592,13 +1588,17 @@ namespace LoopSorting
                 {
                     r.sharedMaterial.renderQueue = renderQueue;
                     if (r.sharedMaterial.HasProperty("_ZWrite")) r.sharedMaterial.SetInt("_ZWrite", 0);
+                    if (r.sharedMaterial.HasProperty("_ZTest")) r.sharedMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                    if (r.sharedMaterial.HasProperty("_Cull")) r.sharedMaterial.SetInt("_Cull", 0);
+                    if (r.sharedMaterial.HasProperty("_CullMode")) r.sharedMaterial.SetInt("_CullMode", 0);
                     return;
                 }
 
                 // Material is textured but not tintable (e.g. Unlit/Transparent). Replace with a tintable shader.
                 var tintShader =
-                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("LoopSorting/UnlitTexture") ??
                     Shader.Find("Unlit/Transparent Colored") ??
+                    Shader.Find("Sprites/Default") ??
                     Shader.Find("Unlit/Texture") ??
                     Shader.Find("UI/Default") ??
                     Shader.Find("Standard");
@@ -1610,6 +1610,9 @@ namespace LoopSorting
                 TrySetMaterialColor(tintMat, color);
                 tintMat.renderQueue = renderQueue;
                 if (tintMat.HasProperty("_ZWrite")) tintMat.SetInt("_ZWrite", 0);
+                if (tintMat.HasProperty("_ZTest")) tintMat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                if (tintMat.HasProperty("_Cull")) tintMat.SetInt("_Cull", 0);
+                if (tintMat.HasProperty("_CullMode")) tintMat.SetInt("_CullMode", 0);
                 r.sharedMaterial = tintMat;
                 return;
             }
@@ -1621,10 +1624,15 @@ namespace LoopSorting
                 r.sharedMaterial.renderQueue == renderQueue)
             {
                 TrySetMaterialColor(r.sharedMaterial, color);
+                if (r.sharedMaterial.HasProperty("_ZWrite")) r.sharedMaterial.SetInt("_ZWrite", 0);
+                if (r.sharedMaterial.HasProperty("_ZTest")) r.sharedMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                if (r.sharedMaterial.HasProperty("_Cull")) r.sharedMaterial.SetInt("_Cull", 0);
+                if (r.sharedMaterial.HasProperty("_CullMode")) r.sharedMaterial.SetInt("_CullMode", 0);
                 return;
             }
 
             var shader =
+                Shader.Find("LoopSorting/UnlitTexture") ??
                 Shader.Find("Unlit/Color") ??
                 Shader.Find("Sprites/Default") ??
                 Shader.Find("UI/Default") ??
@@ -1632,9 +1640,55 @@ namespace LoopSorting
             if (shader == null) return;
 
             var mat = new Material(shader);
+            if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", Texture2D.whiteTexture);
+            else mat.mainTexture = Texture2D.whiteTexture;
             TrySetMaterialColor(mat, color);
             mat.renderQueue = renderQueue;
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0);
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
             r.sharedMaterial = mat;
+        }
+
+        private static void SetWorldOverlaySorting(GameObject go, int sortingOrder)
+        {
+            if (go == null) return;
+            var r = go.GetComponent<Renderer>();
+            if (r == null) return;
+            r.sortingLayerID = 0;
+            r.sortingOrder = sortingOrder;
+        }
+
+        private static Texture2D TryLoadBlockColorTexture(BlockColor color)
+        {
+            string file;
+            switch (color)
+            {
+                case BlockColor.Red:
+                    file = "block_red.png";
+                    break;
+                case BlockColor.Blue:
+                    file = "block_blue.png";
+                    break;
+                case BlockColor.Yellow:
+                    file = "block_yellow.png";
+                    break;
+                case BlockColor.Green:
+                    file = "block_green.png";
+                    break;
+                case BlockColor.Purple:
+                    file = "block_purple.png";
+                    break;
+                case BlockColor.Orange:
+                    file = "block_orange.png";
+                    break;
+                default:
+                    file = "block_red.png";
+                    break;
+            }
+
+            return LoopSortingUIKit.LoadTexture("Blocks/" + file);
         }
 
         public void SetCompleted(bool val)

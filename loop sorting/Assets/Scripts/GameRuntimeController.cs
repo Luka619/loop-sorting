@@ -145,6 +145,27 @@ namespace LoopSorting
         private Image _settingsCloseImage;
         private Button _settingsRetryButton;
         private Image _settingsRetryImage;
+        private RectTransform _settingsPopupRect;
+        private RectTransform _settingsTitleRect;
+        private RectTransform _settingsCloseRect;
+        private RectTransform _settingsMusicRowRect;
+        private RectTransform _settingsSfxRowRect;
+        private RectTransform _settingsVibrationRowRect;
+        private RectTransform _settingsRetryRect;
+        private bool _settingsBasePoseCaptured;
+        private Vector2 _settingsTitleBasePos;
+        private Vector3 _settingsTitleBaseScale = Vector3.one;
+        private Vector2 _settingsCloseBasePos;
+        private Vector3 _settingsCloseBaseScale = Vector3.one;
+        private Vector2 _settingsMusicRowBasePos;
+        private Vector3 _settingsMusicRowBaseScale = Vector3.one;
+        private Vector2 _settingsSfxRowBasePos;
+        private Vector3 _settingsSfxRowBaseScale = Vector3.one;
+        private Vector2 _settingsVibrationRowBasePos;
+        private Vector3 _settingsVibrationRowBaseScale = Vector3.one;
+        private Vector2 _settingsRetryBasePos;
+        private Vector3 _settingsRetryBaseScale = Vector3.one;
+        private Coroutine _settingsIntroRoutine;
         private bool _didLogOrangeLongNineSlice;
         private int _coins = 810;
         private int _lives = 5;
@@ -1356,10 +1377,16 @@ namespace LoopSorting
 	        {
 	            if (_settingsPanel == null) return;
 	            PlaySfx(show ? SfxId.UiPopupOpen : SfxId.UiPopupClose);
-	            AnimateUiPanel(_settingsPanel, show);
 	            if (show)
 	            {
+	                AnimateUiPanel(_settingsPanel, true);
 	                RefreshSettingsToggleVisuals();
+	                StartSettingsPanelEffects();
+	            }
+	            else
+	            {
+	                StopSettingsPanelEffects();
+	                AnimateUiPanel(_settingsPanel, false);
 	            }
 	        }
 
@@ -1387,7 +1414,215 @@ namespace LoopSorting
 	
 	        private void HideSettingsPanelImmediate()
 	        {
+	            StopSettingsPanelEffects();
 	            HideUiPanelImmediate(_settingsPanel);
+	        }
+
+	        private static RectTransform FindRectTransformByName(Transform root, string name)
+	        {
+	            if (root == null || string.IsNullOrEmpty(name)) return null;
+	            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+	            {
+	                if (t != null && t.name == name) return t as RectTransform;
+	            }
+	            return null;
+	        }
+
+	        private void CaptureSettingsPanelBasePose()
+	        {
+	            _settingsBasePoseCaptured = true;
+
+	            if (_settingsTitleRect != null)
+	            {
+	                _settingsTitleBasePos = _settingsTitleRect.anchoredPosition;
+	                _settingsTitleBaseScale = _settingsTitleRect.localScale;
+	            }
+	            if (_settingsCloseRect != null)
+	            {
+	                _settingsCloseBasePos = _settingsCloseRect.anchoredPosition;
+	                _settingsCloseBaseScale = _settingsCloseRect.localScale;
+	            }
+	            if (_settingsMusicRowRect != null)
+	            {
+	                _settingsMusicRowBasePos = _settingsMusicRowRect.anchoredPosition;
+	                _settingsMusicRowBaseScale = _settingsMusicRowRect.localScale;
+	            }
+	            if (_settingsSfxRowRect != null)
+	            {
+	                _settingsSfxRowBasePos = _settingsSfxRowRect.anchoredPosition;
+	                _settingsSfxRowBaseScale = _settingsSfxRowRect.localScale;
+	            }
+	            if (_settingsVibrationRowRect != null)
+	            {
+	                _settingsVibrationRowBasePos = _settingsVibrationRowRect.anchoredPosition;
+	                _settingsVibrationRowBaseScale = _settingsVibrationRowRect.localScale;
+	            }
+	            if (_settingsRetryRect != null)
+	            {
+	                _settingsRetryBasePos = _settingsRetryRect.anchoredPosition;
+	                _settingsRetryBaseScale = _settingsRetryRect.localScale;
+	            }
+	        }
+
+	        private void ResetSettingsPanelPose()
+	        {
+	            if (!_settingsBasePoseCaptured) CaptureSettingsPanelBasePose();
+	            if (!_settingsBasePoseCaptured) return;
+
+	            static void ResetRect(RectTransform rect, Vector2 basePos, Vector3 baseScale)
+	            {
+	                if (rect == null) return;
+	                rect.anchoredPosition = basePos;
+	                rect.localScale = baseScale;
+	                var cg = rect.GetComponent<CanvasGroup>();
+	                if (cg != null)
+	                {
+	                    cg.alpha = 1f;
+	                    cg.interactable = true;
+	                    cg.blocksRaycasts = true;
+	                }
+	            }
+
+	            ResetRect(_settingsTitleRect, _settingsTitleBasePos, _settingsTitleBaseScale);
+	            ResetRect(_settingsCloseRect, _settingsCloseBasePos, _settingsCloseBaseScale);
+	            ResetRect(_settingsMusicRowRect, _settingsMusicRowBasePos, _settingsMusicRowBaseScale);
+	            ResetRect(_settingsSfxRowRect, _settingsSfxRowBasePos, _settingsSfxRowBaseScale);
+	            ResetRect(_settingsVibrationRowRect, _settingsVibrationRowBasePos, _settingsVibrationRowBaseScale);
+	            ResetRect(_settingsRetryRect, _settingsRetryBasePos, _settingsRetryBaseScale);
+	        }
+
+	        private void StartSettingsPanelEffects()
+	        {
+	            StopSettingsPanelEffects();
+	            if (_settingsPanel == null || !_settingsPanel.activeInHierarchy) return;
+	            ResetSettingsPanelPose();
+	            _settingsIntroRoutine = StartCoroutine(AnimateSettingsPanelIntro());
+	        }
+
+	        private void StopSettingsPanelEffects()
+	        {
+	            if (_settingsIntroRoutine != null) StopCoroutine(_settingsIntroRoutine);
+	            _settingsIntroRoutine = null;
+	        }
+
+	        private IEnumerator AnimateSettingsPanelIntro()
+	        {
+	            if (_settingsPanel == null) yield break;
+
+	            // Let the panel's fade/scale animation apply first (matches BoosterPurchase flow).
+	            yield return null;
+
+	            if (_settingsPanel == null || !_settingsPanel.activeInHierarchy) yield break;
+
+	            var title = _settingsTitleRect;
+	            var close = _settingsCloseRect;
+	            var music = _settingsMusicRowRect;
+	            var sfx = _settingsSfxRowRect;
+	            var vibration = _settingsVibrationRowRect;
+	            var retry = _settingsRetryRect;
+
+	            if (title == null && close == null && music == null && sfx == null && vibration == null && retry == null)
+	            {
+	                _settingsIntroRoutine = null;
+	                yield break;
+	            }
+
+	            var titleCg = title != null ? MotionUtil.EnsureCanvasGroup(title.gameObject) : null;
+	            var closeCg = close != null ? MotionUtil.EnsureCanvasGroup(close.gameObject) : null;
+	            var musicCg = music != null ? MotionUtil.EnsureCanvasGroup(music.gameObject) : null;
+	            var sfxCg = sfx != null ? MotionUtil.EnsureCanvasGroup(sfx.gameObject) : null;
+	            var vibrationCg = vibration != null ? MotionUtil.EnsureCanvasGroup(vibration.gameObject) : null;
+	            var retryCg = retry != null ? MotionUtil.EnsureCanvasGroup(retry.gameObject) : null;
+
+	            Vector2 titlePos0 = _settingsTitleBasePos + new Vector2(0f, 26f);
+	            Vector3 titleScale0 = _settingsTitleBaseScale * 0.92f;
+	            Vector2 closePos0 = _settingsCloseBasePos + new Vector2(0f, 18f);
+	            Vector3 closeScale0 = _settingsCloseBaseScale * 0.9f;
+	            Vector2 musicPos0 = _settingsMusicRowBasePos + new Vector2(0f, -22f);
+	            Vector3 musicScale0 = _settingsMusicRowBaseScale * 0.98f;
+	            Vector2 sfxPos0 = _settingsSfxRowBasePos + new Vector2(0f, -22f);
+	            Vector3 sfxScale0 = _settingsSfxRowBaseScale * 0.98f;
+	            Vector2 vibrationPos0 = _settingsVibrationRowBasePos + new Vector2(0f, -22f);
+	            Vector3 vibrationScale0 = _settingsVibrationRowBaseScale * 0.98f;
+	            Vector2 retryPos0 = _settingsRetryBasePos + new Vector2(0f, -28f);
+	            Vector3 retryScale0 = _settingsRetryBaseScale * 0.96f;
+
+	            void InitElement(RectTransform rect, CanvasGroup cg, Vector2 startPos, Vector3 startScale, bool interactive)
+	            {
+	                if (rect == null || cg == null) return;
+	                rect.anchoredPosition = startPos;
+	                rect.localScale = startScale;
+	                cg.alpha = 0f;
+	                cg.interactable = !interactive ? cg.interactable : false;
+	                cg.blocksRaycasts = !interactive ? cg.blocksRaycasts : false;
+	            }
+
+	            InitElement(title, titleCg, titlePos0, titleScale0, interactive: false);
+	            InitElement(close, closeCg, closePos0, closeScale0, interactive: true);
+	            InitElement(music, musicCg, musicPos0, musicScale0, interactive: true);
+	            InitElement(sfx, sfxCg, sfxPos0, sfxScale0, interactive: true);
+	            InitElement(vibration, vibrationCg, vibrationPos0, vibrationScale0, interactive: true);
+	            InitElement(retry, retryCg, retryPos0, retryScale0, interactive: true);
+
+	            static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
+	            static float Stagger01(float u, float start, float duration) => Clamp01((u - start) / Mathf.Max(0.0001f, duration));
+
+	            float seconds = 0.34f;
+	            float t = 0f;
+	            while (t < seconds)
+	            {
+	                if (_settingsPanel == null || !_settingsPanel.activeInHierarchy) yield break;
+	                t += Time.unscaledDeltaTime;
+	                float u = Mathf.Clamp01(t / Mathf.Max(0.0001f, seconds));
+
+	                void AnimateElement(
+	                    RectTransform rect,
+	                    CanvasGroup cg,
+	                    Vector2 startPos,
+	                    Vector3 startScale,
+	                    Vector2 endPos,
+	                    Vector3 endScale,
+	                    float uLocal)
+	                {
+	                    if (rect == null || cg == null) return;
+	                    float e0 = MotionUtil.EaseOutCubic(uLocal);
+	                    float eBack = MotionUtil.EaseOutBack(uLocal);
+	                    cg.alpha = Mathf.Lerp(0f, 1f, e0);
+	                    rect.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, eBack);
+	                    rect.localScale = Vector3.LerpUnclamped(startScale, endScale, eBack);
+	                }
+
+	                AnimateElement(title, titleCg, titlePos0, titleScale0, _settingsTitleBasePos, _settingsTitleBaseScale, Stagger01(u, start: 0.00f, duration: 0.80f));
+	                AnimateElement(close, closeCg, closePos0, closeScale0, _settingsCloseBasePos, _settingsCloseBaseScale, Stagger01(u, start: 0.02f, duration: 0.78f));
+	                AnimateElement(music, musicCg, musicPos0, musicScale0, _settingsMusicRowBasePos, _settingsMusicRowBaseScale, Stagger01(u, start: 0.10f, duration: 0.78f));
+	                AnimateElement(sfx, sfxCg, sfxPos0, sfxScale0, _settingsSfxRowBasePos, _settingsSfxRowBaseScale, Stagger01(u, start: 0.16f, duration: 0.78f));
+	                AnimateElement(vibration, vibrationCg, vibrationPos0, vibrationScale0, _settingsVibrationRowBasePos, _settingsVibrationRowBaseScale, Stagger01(u, start: 0.22f, duration: 0.78f));
+	                AnimateElement(retry, retryCg, retryPos0, retryScale0, _settingsRetryBasePos, _settingsRetryBaseScale, Stagger01(u, start: 0.28f, duration: 0.78f));
+
+	                yield return null;
+	            }
+
+	            void FinishElement(RectTransform rect, CanvasGroup cg, Vector2 basePos, Vector3 baseScale, bool interactive)
+	            {
+	                if (rect == null || cg == null) return;
+	                rect.anchoredPosition = basePos;
+	                rect.localScale = baseScale;
+	                cg.alpha = 1f;
+	                if (interactive)
+	                {
+	                    cg.interactable = true;
+	                    cg.blocksRaycasts = true;
+	                }
+	            }
+
+	            FinishElement(title, titleCg, _settingsTitleBasePos, _settingsTitleBaseScale, interactive: false);
+	            FinishElement(close, closeCg, _settingsCloseBasePos, _settingsCloseBaseScale, interactive: true);
+	            FinishElement(music, musicCg, _settingsMusicRowBasePos, _settingsMusicRowBaseScale, interactive: true);
+	            FinishElement(sfx, sfxCg, _settingsSfxRowBasePos, _settingsSfxRowBaseScale, interactive: true);
+	            FinishElement(vibration, vibrationCg, _settingsVibrationRowBasePos, _settingsVibrationRowBaseScale, interactive: true);
+	            FinishElement(retry, retryCg, _settingsRetryBasePos, _settingsRetryBaseScale, interactive: true);
+
+	            _settingsIntroRoutine = null;
 	        }
 
         private void RefreshSettingsToggleVisuals()
@@ -1670,7 +1905,11 @@ namespace LoopSorting
 	        private void OnModalPanelHidden(GameObject panel)
 	        {
 	            if (panel == null) return;
-	            if (panel == _settingsPanel) SetUiModalInputLock(ref _settingsModalInputLockHeld, false);
+	            if (panel == _settingsPanel)
+	            {
+	                SetUiModalInputLock(ref _settingsModalInputLockHeld, false);
+	                StopSettingsPanelEffects();
+	            }
 	            else if (panel == _shopPanel) SetUiModalInputLock(ref _shopModalInputLockHeld, false);
 	            else if (panel == _boosterPurchasePanel)
 	            {
@@ -5276,6 +5515,17 @@ namespace LoopSorting
 
                 RebindSettingsPanelPrefabSprites(prefab, hasKit);
                 RefreshSettingsToggleVisuals();
+
+                _settingsPopupRect = prefab.popupRect;
+                _settingsTitleRect = FindRectTransformByName(_settingsPanel != null ? _settingsPanel.transform : null, "Title");
+                _settingsCloseRect = _settingsCloseButton != null ? _settingsCloseButton.GetComponent<RectTransform>() : null;
+                _settingsRetryRect = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<RectTransform>() : null;
+                _settingsMusicRowRect = _settingsMusicToggleButton != null ? _settingsMusicToggleButton.transform.parent as RectTransform : null;
+                _settingsSfxRowRect = _settingsSfxToggleButton != null ? _settingsSfxToggleButton.transform.parent as RectTransform : null;
+                _settingsVibrationRowRect = _settingsVibrationToggleButton != null ? _settingsVibrationToggleButton.transform.parent as RectTransform : null;
+                _settingsBasePoseCaptured = false;
+                CaptureSettingsPanelBasePose();
+
                 _settingsPanel.SetActive(false);
                 return;
             }
@@ -5477,6 +5727,17 @@ namespace LoopSorting
                 }
 
                 RefreshSettingsToggleVisuals();
+
+                _settingsPopupRect = popupRect;
+                _settingsTitleRect = titleRect;
+                _settingsCloseRect = closeRect;
+                _settingsRetryRect = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<RectTransform>() : null;
+                _settingsMusicRowRect = _settingsMusicToggleButton != null ? _settingsMusicToggleButton.transform.parent as RectTransform : null;
+                _settingsSfxRowRect = _settingsSfxToggleButton != null ? _settingsSfxToggleButton.transform.parent as RectTransform : null;
+                _settingsVibrationRowRect = _settingsVibrationToggleButton != null ? _settingsVibrationToggleButton.transform.parent as RectTransform : null;
+                _settingsBasePoseCaptured = false;
+                CaptureSettingsPanelBasePose();
+
                 _settingsPanel.SetActive(false);
                 return;
             }
@@ -5730,6 +5991,16 @@ namespace LoopSorting
             });
 
             RefreshSettingsToggleVisuals();
+
+            _settingsPopupRect = popupRect;
+            _settingsTitleRect = null;
+            _settingsCloseRect = _settingsCloseButton != null ? _settingsCloseButton.GetComponent<RectTransform>() : null;
+            _settingsRetryRect = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<RectTransform>() : null;
+            _settingsMusicRowRect = _settingsMusicToggleButton != null ? _settingsMusicToggleButton.GetComponent<RectTransform>() : null;
+            _settingsSfxRowRect = _settingsSfxToggleButton != null ? _settingsSfxToggleButton.GetComponent<RectTransform>() : null;
+            _settingsVibrationRowRect = _settingsVibrationToggleButton != null ? _settingsVibrationToggleButton.GetComponent<RectTransform>() : null;
+            _settingsBasePoseCaptured = false;
+            CaptureSettingsPanelBasePose();
 
             _settingsPanel.SetActive(false);
         }

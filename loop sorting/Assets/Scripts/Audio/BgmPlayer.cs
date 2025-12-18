@@ -13,7 +13,12 @@ namespace LoopSorting
             VerticalLayering = 1,
         }
 
-        public Implementation implementation = Implementation.VerticalLayering;
+        public Implementation implementation =
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Implementation.CrossfadeLoops;
+#else
+            Implementation.VerticalLayering;
+#endif
 
         [Range(0f, 1f)]
         public float masterVolume = 1f;

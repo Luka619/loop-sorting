@@ -65,6 +65,7 @@
 - Booster 选择、执行、结果反馈
 - 失败重试弹窗
 - 轻提示（规则解释型）：空箱延后、Busy、Locked
+- FreeSlotsCounter（剩余槽位数字）的低槽/满槽警示
 
 ---
 
@@ -176,6 +177,20 @@
   - 表现：整体慢停（0.2s）→ 彩带/星星（0.8s）→ 下一关按钮入场
 - 失败：满槽快进一圈仍满
   - 表现：Panic 停止 → 轻震（很克制）→ 失败弹窗
+
+### 5.13 HUD_FreeSlotsCounter_Warn / HUD_FreeSlotsCounter_Danger
+- 触发：
+  - Warning：传送带空槽 `emptySlots <= 5`
+  - Danger：传送带空槽 `emptySlots == 0`
+- 表现：
+  - Warning：数字变为琥珀色，并做轻微呼吸脉冲（scale 轻放大，不位移）
+  - Danger：数字变为红色，并做更快的呼吸脉冲；进入 Danger 的瞬间额外做一次短促“被挡住”反馈（scale punch + 轻微水平抖动）
+- 时长/节奏（默认）：
+  - Warning pulse：周期 0.90s，最大 +6%
+  - Danger pulse：周期 0.55s，最大 +10%
+  - Enter Warning：0.12s scale punch
+  - Enter Danger：0.18s scale punch + shake
+- 实现：`Assets/Scripts/BeltCounterUI.cs`（使用 unscaled time；阈值/颜色/幅度均可在组件参数中调整）
 
 ---
 

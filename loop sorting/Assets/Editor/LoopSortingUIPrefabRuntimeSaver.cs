@@ -19,6 +19,7 @@ namespace LoopSorting.Editor
 
             var candidates = new[]
             {
+                "MainMenuCanvas",
                 "SettingsPanel",
                 "ShopPanel",
                 "ResultPanel",
@@ -42,6 +43,50 @@ namespace LoopSorting.Editor
             EditorUtility.DisplayDialog("Apply Runtime Layout", $"Applied layout for {applied} prefab(s).", "OK");
         }
 
+        [MenuItem("LoopSorting/UI/Save Runtime UI To Prefabs (FULL overwrite)")]
+        public static void SaveRuntimeUiToPrefabsFull()
+        {
+            if (!Application.isPlaying)
+            {
+                EditorUtility.DisplayDialog("Save Runtime UI", "Enter Play Mode, adjust the UI, then run this action.", "OK");
+                return;
+            }
+
+            if (!EditorUtility.DisplayDialog(
+                    "Save Runtime UI",
+                    "This will OVERWRITE prefab assets under Assets/Resources/UI using the current runtime instances (full object save, not just RectTransform).\n\nContinue?",
+                    "Overwrite",
+                    "Cancel"))
+            {
+                return;
+            }
+
+            var candidates = new[]
+            {
+                "MainMenuCanvas",
+                "SettingsPanel",
+                "ShopPanel",
+                "ResultPanel",
+                "BoosterPurchasePanel",
+            };
+
+            int saved = 0;
+            foreach (var name in candidates)
+            {
+                var instanceRoot = FindByNameInScene(name);
+                if (instanceRoot == null) continue;
+                if (TrySaveFullPrefab(instanceRoot))
+                {
+                    saved++;
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            EditorUtility.DisplayDialog("Save Runtime UI", $"Saved {saved} prefab(s).", "OK");
+        }
+
         private static GameObject FindByNameInScene(string name)
         {
             // Unity 2021 LTS doesn't have Object.FindObjectsByType/FindObjectsInactive/FindObjectsSortMode.
@@ -62,6 +107,29 @@ namespace LoopSorting.Editor
                 }
             }
             return null;
+        }
+
+        private static bool TrySaveFullPrefab(GameObject instanceRoot)
+        {
+            if (instanceRoot == null) return false;
+
+            string assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(instanceRoot);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                assetPath = $"Assets/Resources/UI/{instanceRoot.name}.prefab";
+            }
+
+            if (instanceRoot.name == "MainMenuCanvas")
+            {
+                var refs = instanceRoot.GetComponent<LoopSorting.MainMenuCanvasPrefabRefs>();
+                if (refs == null) refs = instanceRoot.AddComponent<LoopSorting.MainMenuCanvasPrefabRefs>();
+                refs.AutoAssign();
+            }
+
+            EnsureFolderForAsset(assetPath);
+            PrefabUtility.SaveAsPrefabAsset(instanceRoot, assetPath);
+            Debug.Log($"[LoopSortingUIPrefabRuntimeSaver] Saved full prefab: {assetPath}");
+            return true;
         }
 
         private static bool TryApplyRectTransformLayout(GameObject instanceRoot)
@@ -121,6 +189,27 @@ namespace LoopSorting.Editor
             }
 
             return null;
+        }
+
+        private static void EnsureFolderForAsset(string assetPath)
+        {
+            if (string.IsNullOrEmpty(assetPath)) return;
+            assetPath = assetPath.Replace('\\', '/');
+            var folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+            if (string.IsNullOrEmpty(folder)) return;
+            if (AssetDatabase.IsValidFolder(folder)) return;
+
+            string[] parts = folder.Split('/');
+            string cur = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = $"{cur}/{parts[i]}";
+                if (!AssetDatabase.IsValidFolder(next))
+                {
+                    AssetDatabase.CreateFolder(cur, parts[i]);
+                }
+                cur = next;
+            }
         }
 
         private static void CopyRectTransforms(Transform src, Transform dst)

@@ -60,6 +60,7 @@ namespace LoopSorting
         private const string ResultPanelPrefabResourcePath = "UI/ResultPanel";
         private const string BoosterPurchasePanelPrefabResourcePath = "UI/BoosterPurchasePanel";
         private const string GameplayHudPrefabResourcePath = "UI/GameplayHUD";
+        private const string MainMenuCanvasPrefabResourcePath = "UI/MainMenuCanvas";
         private const string RuntimeUnlitTextureMaterialResourcePath = "LoopSortingUnlitTexture";
 
         private bool _hasLoadedSave;
@@ -240,6 +241,7 @@ namespace LoopSorting
 	        private static bool _backgroundMaterialFailedLogged;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
+        private CurrencyFlyFx _currencyFlyFx;
         private Canvas _mainMenuCanvas;
         private Button _mainMenuPlayButton;
         private RectTransform _hudRootRect;
@@ -257,6 +259,29 @@ namespace LoopSorting
         private Button _secondaryButton;
         private TMP_Text _primaryLabel;
         private TMP_Text _secondaryLabel;
+        private Button _resultCloseButton;
+        private Image _resultCloseImage;
+        private enum ResultPanelMode { None, Win, Lose }
+        private ResultPanelMode _resultPanelMode = ResultPanelMode.None;
+
+        private bool _resultButtonsBaseLayoutCaptured;
+        private Vector2 _resultPrimaryBaseAnchorMin;
+        private Vector2 _resultPrimaryBaseAnchorMax;
+        private Vector2 _resultPrimaryBaseAnchoredPosition;
+        private Vector2 _resultPrimaryBaseSizeDelta;
+        private Vector2 _resultSecondaryBaseAnchorMin;
+        private Vector2 _resultSecondaryBaseAnchorMax;
+        private Vector2 _resultSecondaryBaseAnchoredPosition;
+        private Vector2 _resultSecondaryBaseSizeDelta;
+
+        private RectTransform _resultWinRewardRootPrimary;
+        private Image _resultWinRewardAdPrimary;
+        private TMP_Text _resultWinRewardAmountPrimary;
+        private Image _resultWinRewardCoinPrimary;
+        private RectTransform _resultWinRewardRootSecondary;
+        private Image _resultWinRewardAdSecondary;
+        private TMP_Text _resultWinRewardAmountSecondary;
+        private Image _resultWinRewardCoinSecondary;
         private bool _gameOver;
         private Coroutine _endSequenceRoutine;
         private const float WinEndSequenceDelaySeconds = 0.75f;
@@ -265,6 +290,9 @@ namespace LoopSorting
         private int _fullBeltStepsRemaining;
         private Image _resultPrimaryIcon;
         private Image _resultSecondaryIcon;
+        private const int WinCoinsReward = 40;
+        private const int WinAdRewardMultiplier = 5;
+        private const int LoseReviveCoinsCost = 900;
         private const int InitialBoosterCount = 0;
         private const int SortPurchaseCoinsPrice = 300;
         private const int ShufflePurchaseCoinsPrice = 400;
@@ -684,6 +712,65 @@ namespace LoopSorting
                 _mainMenuPlayButton = null;
             }
 
+            // Prefer prefab-driven main menu so layout can be tweaked manually.
+            var menuPrefab = Resources.Load<GameObject>(MainMenuCanvasPrefabResourcePath);
+            if (menuPrefab != null)
+            {
+                var instance = Instantiate(menuPrefab);
+                instance.name = menuPrefab.name;
+                if (Application.isPlaying) DontDestroyOnLoad(instance);
+
+                _mainMenuCanvas = instance.GetComponent<Canvas>();
+                if (_mainMenuCanvas != null)
+                {
+                    _mainMenuCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    _mainMenuCanvas.overrideSorting = true;
+                    _mainMenuCanvas.sortingOrder = 10; // above gameplay HUD
+
+                    var refs = instance.GetComponent<MainMenuCanvasPrefabRefs>();
+                    if (refs != null) refs.AutoAssign();
+
+                    _mainMenuPlayButton = refs != null ? refs.playButton : null;
+                    if (_mainMenuPlayButton == null)
+                    {
+                        var playT = instance.transform.Find("SafeArea/PlayButton") ?? instance.transform.Find("PlayButton");
+                        if (playT != null) _mainMenuPlayButton = playT.GetComponent<Button>();
+                    }
+
+                    if (_mainMenuPlayButton != null)
+                    {
+                        _mainMenuPlayButton.onClick.RemoveAllListeners();
+                        _mainMenuPlayButton.onClick.AddListener(() =>
+                        {
+                            PlaySfx(SfxId.UiConfirm);
+                            StartPendingGame();
+                        });
+                    }
+
+                    var settingsButton = refs != null ? refs.settingsButton : null;
+                    if (settingsButton == null)
+                    {
+                        var settingsT = instance.transform.Find("SafeArea/SettingsButton") ?? instance.transform.Find("SettingsButton");
+                        if (settingsT != null) settingsButton = settingsT.GetComponent<Button>();
+                    }
+
+                    if (settingsButton != null)
+                    {
+                        settingsButton.onClick.RemoveAllListeners();
+                        settingsButton.onClick.AddListener(() =>
+                        {
+                            EnsureSettingsUI();
+                            ToggleSettingsPanel(true);
+                        });
+                    }
+
+                    RebindMainMenuCanvasPrefabSprites(refs, hasKit: LoopSortingUIKit.IsAvailable());
+                    return;
+                }
+
+                Destroy(instance);
+            }
+
             var canvasGO = new GameObject("MainMenuCanvas");
             _mainMenuCanvas = canvasGO.AddComponent<Canvas>();
             _mainMenuCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -811,26 +898,47 @@ namespace LoopSorting
             // Title
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(safeAreaGO.transform, false);
-            var title = titleGO.AddComponent<TextMeshProUGUI>();
-            title.raycastTarget = false;
-            title.text = "LOOP\nSORTING";
-            title.alignment = TextAlignmentOptions.Center;
-            title.fontSize = 96;
-            title.color = Color.white;
-            var titleRect = titleGO.GetComponent<RectTransform>();
+            var titleRect = titleGO.AddComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0.5f, 0.8f);
             titleRect.anchorMax = new Vector2(0.5f, 0.8f);
             titleRect.pivot = new Vector2(0.5f, 0.5f);
             titleRect.anchoredPosition = new Vector2(0f, -80f);
             titleRect.sizeDelta = new Vector2(700f, 260f);
-            ApplyTmpOutlineUnderlay(
-                title,
-                outlineWidth: 0.18f,
-                outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
-                underlayColor: new Color(0f, 0f, 0f, 0.35f),
-                underlayOffset: new Vector2(2f, -4f),
-                underlaySoftness: 0.38f,
-                underlayDilate: 0.06f);
+
+            Sprite titleSprite = null;
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                titleSprite =
+                    LoopSortingUIKit.LoadSpriteByKey("ui.title.main") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/title_fangkuai_zhuan_bu_ting.png", pixelsPerUnit: 100f, applyNineSlice: false);
+            }
+
+            if (titleSprite != null)
+            {
+                var titleImg = titleGO.AddComponent<Image>();
+                titleImg.raycastTarget = false;
+                titleImg.sprite = titleSprite;
+                titleImg.color = Color.white;
+                titleImg.type = Image.Type.Simple;
+                titleImg.preserveAspect = true;
+            }
+            else
+            {
+                var title = titleGO.AddComponent<TextMeshProUGUI>();
+                title.raycastTarget = false;
+                title.text = "LOOP\nSORTING";
+                title.alignment = TextAlignmentOptions.Center;
+                title.fontSize = 96;
+                title.color = Color.white;
+                ApplyTmpOutlineUnderlay(
+                    title,
+                    outlineWidth: 0.18f,
+                    outlineColor: new Color(0.04f, 0.08f, 0.16f, 1f),
+                    underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                    underlayOffset: new Vector2(2f, -4f),
+                    underlaySoftness: 0.38f,
+                    underlayDilate: 0.06f);
+            }
 
             // Level pill (optional but matches UI kit blueprint)
             if (LoopSortingUIKit.IsAvailable())
@@ -2298,7 +2406,7 @@ namespace LoopSorting
             }
         }
 
-	        private IEnumerator BoosterSortSequence()
+	        private IEnumerator BoosterSortSequence(bool consumeBooster = true)
 	        {
 	            if (_game == null || IsGameplayInputLocked) yield break;
 	            _inputLocked = true;
@@ -2332,7 +2440,7 @@ namespace LoopSorting
             if (ok) StartCoroutine(PlayBoosterSortFx(before, after));
             PlaySfx(ok ? SfxId.BoosterFillSort : SfxId.BoosterFail);
             EmitSfxFromStateChanges();
-            if (ok) ConsumeBooster(BoosterType.Sort, 1);
+            if (ok && consumeBooster) ConsumeBooster(BoosterType.Sort, 1);
 
             _speedMultiplier = prevSpeed;
                 if (!_fullBeltFastForward && prevSpeed < 4.99f)
@@ -4352,33 +4460,533 @@ namespace LoopSorting
                 _bgm.FadeOutLoops(fadeSeconds: 0.9f);
             }
             EnsureResultPanel();
+            EnsureResultCloseButton();
+            CaptureResultButtonsBaseLayoutIfNeeded();
+
             AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
             _resultText.text = win ? "VICTORY" : "FAILED";
-            if (_primaryLabel != null) _primaryLabel.text = win ? "NEXT" : "RETRY";
-            if (_secondaryLabel != null) _secondaryLabel.text = win ? "RETRY" : "CLOSE";
+            _resultPanelMode = win ? ResultPanelMode.Win : ResultPanelMode.Lose;
 
-            if (LoopSortingUIKit.IsAvailable())
+            if (win)
             {
-                if (_resultPrimaryIcon != null)
-                {
-                    _resultPrimaryIcon.sprite = LoopSortingUIKit.LoadSpriteByKey(win ? "ui.icon.next" : "ui.icon.retry");
-                    _resultPrimaryIcon.color = Color.white;
-                    _resultPrimaryIcon.gameObject.SetActive(_resultPrimaryIcon.sprite != null);
-                }
-                if (_resultSecondaryIcon != null)
-                {
-                    _resultSecondaryIcon.sprite = LoopSortingUIKit.LoadSpriteByKey(win ? "ui.icon.retry" : "ui.icon.close");
-                    _resultSecondaryIcon.color = Color.white;
-                    _resultSecondaryIcon.gameObject.SetActive(_resultSecondaryIcon.sprite != null);
-                }
+                ConfigureResultWinRewardLayout();
+            }
+            else
+            {
+                ConfigureResultLoseReviveLayout();
             }
         }
 
         private void OnPrimaryClicked()
         {
+            if (_resultPanelMode == ResultPanelMode.Win)
+            {
+                PlaySfx(SfxId.UiConfirm);
+                PlayCoinFlyToHud(_resultWinRewardCoinPrimary, WinCoinsReward);
+                GrantCoins(WinCoinsReward);
+                HideUiPanelImmediate(_resultPanel);
+                _resultPanelMode = ResultPanelMode.None;
+                AdvanceAfterWinResult();
+                return;
+            }
+
+            if (_resultPanelMode == ResultPanelMode.Lose)
+            {
+                if (_coins < LoseReviveCoinsCost)
+                {
+                    PlaySfx(SfxId.UiDenied);
+                    return;
+                }
+
+                PlaySfx(SfxId.UiConfirm);
+                SpendCoins(LoseReviveCoinsCost);
+                BeginReviveFromResultPanel(useAd: false);
+                return;
+            }
+
+            // Legacy fallback.
             PlaySfx(SfxId.UiConfirm);
             if (_resultPanel != null) _resultPanel.SetActive(false);
-            if (_flow != null && _flow.levels.Count > 0 && _primaryLabel != null && _primaryLabel.text == "NEXT")
+            PlaySfx(SfxId.LevelRetry);
+            RestartCurrent();
+        }
+
+        private void OnSecondaryClicked()
+        {
+            if (_resultPanelMode == ResultPanelMode.Win)
+            {
+                // Placeholder: grant immediately. Hook your ad SDK here.
+                PlaySfx(SfxId.UiConfirm);
+                PlayCoinFlyToHud(_resultWinRewardCoinSecondary, WinCoinsReward * WinAdRewardMultiplier);
+                GrantCoins(WinCoinsReward * WinAdRewardMultiplier);
+                HideUiPanelImmediate(_resultPanel);
+                _resultPanelMode = ResultPanelMode.None;
+                AdvanceAfterWinResult();
+                return;
+            }
+
+            if (_resultPanelMode == ResultPanelMode.Lose)
+            {
+                // Placeholder: revive immediately. Hook your ad SDK here.
+                PlaySfx(SfxId.UiConfirm);
+                BeginReviveFromResultPanel(useAd: true);
+                return;
+            }
+
+            // Legacy fallback.
+            PlaySfx(SfxId.UiClick);
+            if (_resultPanel != null) _resultPanel.SetActive(false);
+            PlaySfx(SfxId.LevelRetry);
+            RestartCurrent();
+        }
+
+        private void CaptureResultButtonsBaseLayoutIfNeeded()
+        {
+            if (_resultButtonsBaseLayoutCaptured) return;
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            _resultPrimaryBaseAnchorMin = primaryRect.anchorMin;
+            _resultPrimaryBaseAnchorMax = primaryRect.anchorMax;
+            _resultPrimaryBaseAnchoredPosition = primaryRect.anchoredPosition;
+            _resultPrimaryBaseSizeDelta = primaryRect.sizeDelta;
+            _resultSecondaryBaseAnchorMin = secondaryRect.anchorMin;
+            _resultSecondaryBaseAnchorMax = secondaryRect.anchorMax;
+            _resultSecondaryBaseAnchoredPosition = secondaryRect.anchoredPosition;
+            _resultSecondaryBaseSizeDelta = secondaryRect.sizeDelta;
+            _resultButtonsBaseLayoutCaptured = true;
+        }
+
+        private void ApplyResultButtonsLayoutForWinRewards()
+        {
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (!_resultButtonsBaseLayoutCaptured) return;
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            // Swap Y layout: ad button (secondary) goes above, normal reward (primary) goes below.
+            primaryRect.anchorMin = _resultSecondaryBaseAnchorMin;
+            primaryRect.anchorMax = _resultSecondaryBaseAnchorMax;
+            primaryRect.anchoredPosition = _resultSecondaryBaseAnchoredPosition;
+
+            secondaryRect.anchorMin = _resultPrimaryBaseAnchorMin;
+            secondaryRect.anchorMax = _resultPrimaryBaseAnchorMax;
+            secondaryRect.anchoredPosition = _resultPrimaryBaseAnchoredPosition;
+        }
+
+        private void ApplyResultButtonsSizeForWinRewards()
+        {
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (!_resultButtonsBaseLayoutCaptured) return;
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            float primaryW = Mathf.Abs(_resultPrimaryBaseSizeDelta.x);
+            float secondaryW = Mathf.Abs(_resultSecondaryBaseSizeDelta.x);
+            float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
+            float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
+
+            // Use a consistent long-button size for the win rewards, like the reference.
+            float targetW = (primaryW > 1f && secondaryW > 1f) ? Mathf.Min(primaryW, secondaryW) : 760f;
+            float targetH = (primaryH > 1f && secondaryH > 1f) ? Mathf.Min(primaryH, secondaryH) : 180f;
+
+            var targetSize = new Vector2(targetW, targetH);
+            primaryRect.sizeDelta = targetSize;
+            secondaryRect.sizeDelta = targetSize;
+
+            var pPos = primaryRect.anchoredPosition;
+            pPos.x = 0f;
+            primaryRect.anchoredPosition = pPos;
+
+            var sPos = secondaryRect.anchoredPosition;
+            sPos.x = 0f;
+            secondaryRect.anchoredPosition = sPos;
+        }
+
+        private void RestoreResultButtonsLayoutBase()
+        {
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (!_resultButtonsBaseLayoutCaptured) return;
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            primaryRect.anchorMin = _resultPrimaryBaseAnchorMin;
+            primaryRect.anchorMax = _resultPrimaryBaseAnchorMax;
+            primaryRect.anchoredPosition = _resultPrimaryBaseAnchoredPosition;
+            primaryRect.sizeDelta = _resultPrimaryBaseSizeDelta;
+
+            secondaryRect.anchorMin = _resultSecondaryBaseAnchorMin;
+            secondaryRect.anchorMax = _resultSecondaryBaseAnchorMax;
+            secondaryRect.anchoredPosition = _resultSecondaryBaseAnchoredPosition;
+            secondaryRect.sizeDelta = _resultSecondaryBaseSizeDelta;
+        }
+
+        private void ConfigureResultWinRewardLayout()
+        {
+            ApplyResultButtonsLayoutForWinRewards();
+            ApplyResultButtonsSizeForWinRewards();
+
+            if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(false);
+
+            // Hide the default label + left icon layout, and use a centered reward row like the reference image.
+            if (_primaryLabel != null) _primaryLabel.gameObject.SetActive(false);
+            if (_secondaryLabel != null) _secondaryLabel.gameObject.SetActive(false);
+            if (_resultPrimaryIcon != null) _resultPrimaryIcon.gameObject.SetActive(false);
+            if (_resultSecondaryIcon != null) _resultSecondaryIcon.gameObject.SetActive(false);
+
+            EnsureWinRewardLayoutPrimary();
+            EnsureWinRewardLayoutSecondary();
+
+            if (_resultWinRewardRootPrimary != null) _resultWinRewardRootPrimary.gameObject.SetActive(true);
+            if (_resultWinRewardRootSecondary != null) _resultWinRewardRootSecondary.gameObject.SetActive(true);
+
+            if (_resultWinRewardAmountPrimary != null) _resultWinRewardAmountPrimary.text = WinCoinsReward.ToString();
+            if (_resultWinRewardAmountSecondary != null) _resultWinRewardAmountSecondary.text = (WinCoinsReward * WinAdRewardMultiplier).ToString();
+        }
+
+        private void EnsureWinRewardLayoutPrimary()
+        {
+            EnsureWinRewardLayout(
+                button: _primaryButton,
+                ref _resultWinRewardRootPrimary,
+                ref _resultWinRewardAdPrimary,
+                ref _resultWinRewardAmountPrimary,
+                ref _resultWinRewardCoinPrimary,
+                includeAdIcon: false);
+        }
+
+        private void EnsureWinRewardLayoutSecondary()
+        {
+            EnsureWinRewardLayout(
+                button: _secondaryButton,
+                ref _resultWinRewardRootSecondary,
+                ref _resultWinRewardAdSecondary,
+                ref _resultWinRewardAmountSecondary,
+                ref _resultWinRewardCoinSecondary,
+                includeAdIcon: true);
+        }
+
+        private void EnsureWinRewardLayout(
+            Button button,
+            ref RectTransform root,
+            ref Image adIcon,
+            ref TMP_Text amountText,
+            ref Image coinIcon,
+            bool includeAdIcon)
+        {
+            if (button == null) return;
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            var btnRect = button.GetComponent<RectTransform>();
+            float btnH = 180f;
+            if (btnRect != null && btnRect.rect.height > 1f) btnH = btnRect.rect.height;
+            float iconSize = Mathf.Clamp(btnH * 0.56f, 64f, 132f);
+
+            bool createdRoot = false;
+
+            if (root == null)
+            {
+                var existing = button.transform.Find("WinRewardLayout") as RectTransform;
+                if (existing != null) root = existing;
+            }
+
+            if (root != null)
+            {
+                if (adIcon == null)
+                {
+                    var t = root.Find("AdIcon");
+                    if (t != null) adIcon = t.GetComponent<Image>();
+                }
+                if (amountText == null)
+                {
+                    var t = root.Find("Amount");
+                    if (t != null) amountText = t.GetComponent<TMP_Text>();
+                }
+                if (coinIcon == null)
+                {
+                    var t = root.Find("CoinIcon");
+                    if (t != null) coinIcon = t.GetComponent<Image>();
+                }
+            }
+
+            if (root == null)
+            {
+                var rootGO = new GameObject("WinRewardLayout");
+                rootGO.transform.SetParent(button.transform, false);
+                root = rootGO.AddComponent<RectTransform>();
+                root.anchorMin = new Vector2(0.5f, 0.5f);
+                root.anchorMax = new Vector2(0.5f, 0.5f);
+                root.pivot = new Vector2(0.5f, 0.5f);
+                root.anchoredPosition = Vector2.zero;
+                root.sizeDelta = Vector2.zero;
+                rootGO.SetActive(false);
+                createdRoot = true;
+
+                var layout = rootGO.AddComponent<HorizontalLayoutGroup>();
+                layout.childAlignment = TextAnchor.MiddleCenter;
+                layout.spacing = 18f;
+                layout.childControlWidth = false;
+                layout.childControlHeight = false;
+                layout.childForceExpandWidth = false;
+                layout.childForceExpandHeight = false;
+
+                var fitter = rootGO.AddComponent<ContentSizeFitter>();
+                fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                // Ad icon (optional)
+                var adGO = new GameObject("AdIcon");
+                adGO.transform.SetParent(rootGO.transform, false);
+                adIcon = adGO.AddComponent<Image>();
+                adIcon.raycastTarget = false;
+                adIcon.preserveAspect = true;
+                var adRect = adGO.GetComponent<RectTransform>();
+                adRect.sizeDelta = new Vector2(iconSize, iconSize);
+
+                // Amount
+                var amountGO = new GameObject("Amount");
+                amountGO.transform.SetParent(rootGO.transform, false);
+                var tmp = amountGO.AddComponent<TextMeshProUGUI>();
+                tmp.raycastTarget = false;
+                var fallbackFont =
+                    (_primaryLabel != null && _primaryLabel.font != null) ? _primaryLabel.font :
+                    (_resultText != null && _resultText.font != null) ? _resultText.font :
+                    TMP_Settings.defaultFontAsset;
+                if (fallbackFont != null) tmp.font = fallbackFont;
+                if (tmp.fontSharedMaterial == null && fallbackFont != null && fallbackFont.material != null)
+                {
+                    tmp.fontSharedMaterial = fallbackFont.material;
+                }
+                tmp.text = "0";
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.enableWordWrapping = false;
+                tmp.overflowMode = TextOverflowModes.Overflow;
+                tmp.color = Color.white;
+                tmp.enableAutoSizing = true;
+                float fontMax = Mathf.Clamp(btnH * 0.50f, 54f, 88f);
+                tmp.fontSizeMax = fontMax;
+                tmp.fontSizeMin = Mathf.Clamp(fontMax * 0.62f, 36f, fontMax);
+                tmp.fontSize = fontMax;
+                ApplyTmpOutlineUnderlay(
+                    tmp,
+                    outlineWidth: 0.22f,
+                    outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                    underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                    underlayOffset: new Vector2(2f, -2f),
+                    underlaySoftness: 0.30f,
+                    underlayDilate: 0.03f);
+
+                var amountRect = tmp.GetComponent<RectTransform>();
+                amountRect.sizeDelta = new Vector2(0f, iconSize);
+                amountRect.pivot = new Vector2(0.5f, 0.5f);
+                amountRect.anchorMin = new Vector2(0.5f, 0.5f);
+                amountRect.anchorMax = new Vector2(0.5f, 0.5f);
+                amountRect.anchoredPosition = Vector2.zero;
+                amountText = tmp;
+
+                var amountFitter = amountGO.AddComponent<ContentSizeFitter>();
+                amountFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                amountFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                // Coin icon
+                var coinGO = new GameObject("CoinIcon");
+                coinGO.transform.SetParent(rootGO.transform, false);
+                coinIcon = coinGO.AddComponent<Image>();
+                coinIcon.raycastTarget = false;
+                coinIcon.preserveAspect = true;
+                var coinRect = coinGO.GetComponent<RectTransform>();
+                coinRect.sizeDelta = new Vector2(iconSize, iconSize);
+            }
+
+            if (adIcon != null)
+            {
+                adIcon.gameObject.SetActive(includeAdIcon);
+                var s =
+                    (hasKit ? LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false) : null) ??
+                    TryLoadBoosterPurchaseSprite("icon_video");
+                adIcon.sprite = s;
+                adIcon.color = s != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                adIcon.raycastTarget = false;
+                adIcon.preserveAspect = true;
+                if (createdRoot)
+                {
+                    var r = adIcon.rectTransform;
+                    r.sizeDelta = new Vector2(iconSize, iconSize);
+                }
+            }
+
+            if (coinIcon != null)
+            {
+                var s = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin") : null;
+                coinIcon.sprite = s;
+                coinIcon.color = s != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                coinIcon.raycastTarget = false;
+                coinIcon.preserveAspect = true;
+                if (createdRoot)
+                {
+                    var r = coinIcon.rectTransform;
+                    r.sizeDelta = new Vector2(iconSize, iconSize);
+                }
+            }
+
+            if (amountText != null)
+            {
+                // Keep prefab-authored typography when the layout exists in the prefab.
+                if (createdRoot)
+                {
+                    float fontMax = Mathf.Clamp(btnH * 0.50f, 54f, 88f);
+                    amountText.enableAutoSizing = true;
+                    amountText.fontSizeMax = fontMax;
+                    amountText.fontSizeMin = Mathf.Clamp(fontMax * 0.62f, 36f, fontMax);
+                }
+            }
+        }
+
+        private void ConfigureResultLoseReviveLayout()
+        {
+            RestoreResultButtonsLayoutBase();
+
+            if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(true);
+
+            if (_resultWinRewardRootPrimary != null) _resultWinRewardRootPrimary.gameObject.SetActive(false);
+            if (_resultWinRewardRootSecondary != null) _resultWinRewardRootSecondary.gameObject.SetActive(false);
+
+            if (_primaryLabel != null)
+            {
+                _primaryLabel.text = $"REVIVE {LoseReviveCoinsCost}";
+                _primaryLabel.gameObject.SetActive(true);
+            }
+            if (_secondaryLabel != null)
+            {
+                _secondaryLabel.text = "REVIVE (AD)";
+                _secondaryLabel.gameObject.SetActive(true);
+            }
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+            if (hasKit)
+            {
+                if (_resultPrimaryIcon != null)
+                {
+                    _resultPrimaryIcon.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
+                    _resultPrimaryIcon.color = Color.white;
+                    _resultPrimaryIcon.preserveAspect = true;
+                    _resultPrimaryIcon.gameObject.SetActive(_resultPrimaryIcon.sprite != null);
+                }
+                if (_resultSecondaryIcon != null)
+                {
+                    var video =
+                        LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false) ??
+                        TryLoadBoosterPurchaseSprite("icon_video");
+                    _resultSecondaryIcon.sprite = video != null ? video : LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
+                    _resultSecondaryIcon.color = Color.white;
+                    _resultSecondaryIcon.preserveAspect = true;
+                    _resultSecondaryIcon.gameObject.SetActive(_resultSecondaryIcon.sprite != null);
+                }
+            }
+            else
+            {
+                if (_resultPrimaryIcon != null) _resultPrimaryIcon.gameObject.SetActive(false);
+                if (_resultSecondaryIcon != null) _resultSecondaryIcon.gameObject.SetActive(false);
+            }
+
+            if (_primaryButton != null)
+            {
+                _primaryButton.interactable = _coins >= LoseReviveCoinsCost;
+            }
+        }
+
+        private void EnsureResultCloseButton()
+        {
+            if (_resultPanel == null) return;
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+
+            if (_resultCloseButton == null)
+            {
+                foreach (var b in _resultPanel.GetComponentsInChildren<Button>(true))
+                {
+                    if (b != null && b.name == "CloseButton")
+                    {
+                        _resultCloseButton = b;
+                        break;
+                    }
+                }
+            }
+
+            if (_resultCloseButton == null)
+            {
+                var parent = _resultPanel.transform.Find("Panel") ?? _resultPanel.transform;
+                _resultCloseButton = CreateIconButton(
+                    parent: parent,
+                    name: "CloseButton",
+                    anchor: new Vector2(1f, 1f),
+                    anchoredPos: ModalCloseInset,
+                    size: new Vector2(128f, 128f),
+                    normal: hasKit ? "ui.button.close_red.normal" : null,
+                    pressed: hasKit ? "ui.button.close_red.pressed" : null,
+                    disabled: hasKit ? "ui.button.close_red.disabled" : null,
+                    icon: hasKit ? "ui.icon.close" : null);
+                var rect = _resultCloseButton.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    rect.pivot = new Vector2(1f, 1f);
+                    rect.anchoredPosition = ModalCloseInset;
+                }
+            }
+
+            if (_resultCloseButton != null)
+            {
+                _resultCloseImage = _resultCloseButton.GetComponent<Image>();
+                _resultCloseButton.onClick.RemoveAllListeners();
+                _resultCloseButton.onClick.AddListener(OnResultCloseClicked);
+                _resultCloseButton.gameObject.SetActive(false);
+            }
+        }
+
+        private void OnResultCloseClicked()
+        {
+            PlaySfx(SfxId.UiCancel);
+            HideUiPanelImmediate(_resultPanel);
+            _resultPanelMode = ResultPanelMode.None;
+            ReturnToMainMenuFromResultPanel();
+        }
+
+        private void ReturnToMainMenuFromResultPanel()
+        {
+            // Keep the current level as pending selection so "Play" resumes where the player left off.
+            if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
+            {
+                _pendingFlow = _flow;
+                _pendingFlowIndex = Mathf.Clamp(_flowIndex, 0, Mathf.Max(0, _flow.levels.Count - 1));
+                _pendingLevel = null;
+            }
+            else
+            {
+                _pendingLevel = _currentLayout;
+                _pendingFlow = null;
+                _pendingFlowIndex = 0;
+            }
+
+            ShowMainMenu();
+            RequestSave(SaveDelayStrongSeconds);
+        }
+
+        private void AdvanceAfterWinResult()
+        {
+            if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
             {
                 int next = _flowIndex + 1;
                 if (next < _flow.levels.Count)
@@ -4393,38 +5001,76 @@ namespace LoopSorting
                     return;
                 }
             }
+
             PlaySfx(SfxId.LevelRetry);
             RestartCurrent();
         }
 
-        private void OnSecondaryClicked()
+        private void BeginReviveFromResultPanel(bool useAd)
         {
-            bool isClose = _secondaryLabel != null && _secondaryLabel.text == "CLOSE";
-            PlaySfx(isClose ? SfxId.UiCancel : SfxId.UiClick);
-            if (_resultPanel != null) _resultPanel.SetActive(false);
-            if (isClose)
-            {
-                // "CLOSE" on lose returns to main menu (keeping the current level as pending selection).
-                if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
-                {
-                    _pendingFlow = _flow;
-                    _pendingFlowIndex = Mathf.Clamp(_flowIndex, 0, Mathf.Max(0, _flow.levels.Count - 1));
-                    _pendingLevel = null;
-                }
-                else
-                {
-                    _pendingLevel = _currentLayout;
-                    _pendingFlow = null;
-                    _pendingFlowIndex = 0;
-                }
+            if (_game == null) return;
 
-                ShowMainMenu();
-                RequestSave(SaveDelayStrongSeconds);
-                return;
+            _resultPanelMode = ResultPanelMode.None;
+            HideUiPanelImmediate(_resultPanel);
+            if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(false);
+
+            _gameOver = false;
+            _inputLocked = false;
+            StopFullBeltFastForward();
+
+            EnsureBgm();
+
+            // Apply one Sort (Fill) booster use as the revive benefit (no inventory consumption).
+            StartCoroutine(BoosterSortSequence(consumeBooster: false));
+        }
+
+        private void GrantCoins(int amount)
+        {
+            amount = Mathf.Max(0, amount);
+            if (amount == 0) return;
+            _coins = Mathf.Max(0, _coins + amount);
+            RefreshEconomyHUD();
+            RequestSave(SaveDelayStrongSeconds);
+        }
+
+        private void PlayCoinFlyToHud(Image sourceCoinIcon, int amount)
+        {
+            if (amount <= 0) return;
+            if (_currencyFlyFx == null) return;
+            if (_coinText == null) return;
+
+            RectTransform from = sourceCoinIcon != null ? sourceCoinIcon.rectTransform : null;
+            RectTransform to = null;
+            Sprite sprite = null;
+
+            var pillRoot = _coinText.transform != null ? _coinText.transform.parent as RectTransform : null;
+            var iconRt = pillRoot != null ? pillRoot.Find("Icon") as RectTransform : null;
+            if (iconRt != null)
+            {
+                to = iconRt;
+                var iconImg = iconRt.GetComponent<Image>();
+                if (iconImg != null && iconImg.sprite != null) sprite = iconImg.sprite;
+            }
+            else
+            {
+                to = pillRoot != null ? pillRoot : _coinText.rectTransform;
             }
 
-            PlaySfx(SfxId.LevelRetry);
-            RestartCurrent();
+            if (to == null) return;
+
+            if (sprite == null && sourceCoinIcon != null) sprite = sourceCoinIcon.sprite;
+            _currencyFlyFx.PlayCoins(from, to, sprite, amount);
+        }
+
+        private bool SpendCoins(int amount)
+        {
+            amount = Mathf.Max(0, amount);
+            if (amount == 0) return true;
+            if (_coins < amount) return false;
+            _coins -= amount;
+            RefreshEconomyHUD();
+            RequestSave(SaveDelayStrongSeconds);
+            return true;
         }
 
         private void RestartCurrent()
@@ -4575,6 +5221,7 @@ namespace LoopSorting
 
                 SyncBeltVisuals();
                 SyncContainersVisuals();
+                UpdateBeltCounter();
                 StartBeltSpawnFromBox(containerIndex, peek);
 
                 // Keep the operable outline in sync with the remaining run.
@@ -4603,6 +5250,8 @@ namespace LoopSorting
         {
             if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
             {
+                if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.GetComponent<CurrencyFlyFx>();
+                if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.gameObject.AddComponent<CurrencyFlyFx>();
                 if (_hudRootRect == null)
                 {
                     var hudRoot = _uiCanvas.transform.Find("HUDRoot");
@@ -4616,6 +5265,7 @@ namespace LoopSorting
             {
                 Destroy(_uiCanvas.gameObject);
                 _uiCanvas = null;
+                _currencyFlyFx = null;
                 _hudRootRect = null;
                 _lockChipLayer = null;
                 _lockChipByBox.Clear();
@@ -4651,6 +5301,7 @@ namespace LoopSorting
             _uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _uiCanvas.overrideSorting = true;
             _uiCanvas.sortingOrder = 0;
+            _currencyFlyFx = canvasGO.AddComponent<CurrencyFlyFx>();
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -8280,11 +8931,22 @@ namespace LoopSorting
             float underlayDilate)
         {
             if (tmp == null) return;
-            if (tmp.fontMaterial == null) return;
+            var source = tmp.fontSharedMaterial;
+            if (source == null)
+            {
+                var font = tmp.font != null ? tmp.font : TMP_Settings.defaultFontAsset;
+                if (font != null) tmp.font = font;
+                if (tmp.fontSharedMaterial == null && font != null && font.material != null)
+                {
+                    tmp.fontSharedMaterial = font.material;
+                }
+                source = tmp.fontSharedMaterial;
+            }
+            if (source == null) return;
 
             // Clone material so we don't mutate shared TMP materials globally.
-            var mat = new Material(tmp.fontMaterial);
-            tmp.fontMaterial = mat;
+            var mat = new Material(source) { hideFlags = HideFlags.HideAndDontSave };
+            tmp.fontSharedMaterial = mat;
 
             if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
             {
@@ -8392,6 +9054,118 @@ namespace LoopSorting
                 return false;
             }
             return true;
+        }
+
+        private void RebindMainMenuCanvasPrefabSprites(MainMenuCanvasPrefabRefs prefab, bool hasKit)
+        {
+            if (!hasKit) return;
+
+            var root = prefab != null ? prefab.transform : (_mainMenuCanvas != null ? _mainMenuCanvas.transform : null);
+            if (root == null) return;
+
+            var bg = prefab != null ? prefab.backgroundImage : null;
+            if (bg == null)
+            {
+                var bgT = root.Find("BG");
+                if (bgT != null) bg = bgT.GetComponent<Image>();
+            }
+            if (bg != null)
+            {
+                var bgSprite = LoopSortingUIKit.LoadSpriteByKey("ui.bg_main");
+                if (bgSprite != null)
+                {
+                    bg.sprite = bgSprite;
+                    bg.color = Color.white;
+                    bg.type = Image.Type.Simple;
+                    bg.preserveAspect = false;
+                }
+            }
+
+            var settingsButton = prefab != null ? prefab.settingsButton : null;
+            if (settingsButton == null)
+            {
+                var t = root.Find("SafeArea/SettingsButton") ?? root.Find("SettingsButton");
+                if (t != null) settingsButton = t.GetComponent<Button>();
+            }
+            if (settingsButton != null)
+            {
+                var img = settingsButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    ApplyUIKitButtonSprites(settingsButton, img, "ui.button.mint_square.normal", "ui.button.mint_square.pressed", "ui.button.mint_square.disabled");
+                    var iconSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.gear");
+                    if (iconSprite != null)
+                    {
+                        var iconImg = EnsureOverlayImage(img.transform, "Icon", iconSprite);
+                        if (iconImg != null)
+                        {
+                            iconImg.raycastTarget = false;
+                            iconImg.preserveAspect = true;
+                            var r = iconImg.rectTransform;
+                            float side = Mathf.Min(img.rectTransform.rect.width, img.rectTransform.rect.height) * 0.62f;
+                            if (side <= 1f) side = 80f;
+                            r.anchorMin = new Vector2(0.5f, 0.5f);
+                            r.anchorMax = new Vector2(0.5f, 0.5f);
+                            r.pivot = new Vector2(0.5f, 0.5f);
+                            r.anchoredPosition = Vector2.zero;
+                            r.sizeDelta = new Vector2(side, side);
+                        }
+                    }
+                }
+            }
+
+            var playButton = prefab != null ? prefab.playButton : null;
+            if (playButton == null)
+            {
+                var t = root.Find("SafeArea/PlayButton") ?? root.Find("PlayButton");
+                if (t != null) playButton = t.GetComponent<Button>();
+            }
+            if (playButton != null)
+            {
+                var img = playButton.GetComponent<Image>();
+                if (img != null)
+                {
+                    ApplyUIKitButtonSprites(playButton, img, "ui.button.orange_long.normal", "ui.button.orange_long.pressed", "ui.button.orange_long.disabled");
+                }
+            }
+
+            var titleImg = prefab != null ? prefab.titleImage : null;
+            if (titleImg == null)
+            {
+                var t = root.Find("SafeArea/Title") ?? root.Find("Title");
+                if (t != null) titleImg = t.GetComponent<Image>();
+            }
+            if (titleImg != null)
+            {
+                var titleSprite =
+                    LoopSortingUIKit.LoadSpriteByKey("ui.title.main") ??
+                    LoopSortingUIKit.LoadSprite("UI_Sprites/title_fangkuai_zhuan_bu_ting.png", pixelsPerUnit: 100f, applyNineSlice: false);
+                if (titleSprite != null)
+                {
+                    titleImg.sprite = titleSprite;
+                    titleImg.color = Color.white;
+                    titleImg.type = Image.Type.Simple;
+                    titleImg.preserveAspect = true;
+                }
+            }
+
+            var levelPillBg = prefab != null ? prefab.levelPillBackground : null;
+            if (levelPillBg == null)
+            {
+                var t = root.Find("SafeArea/LevelPill") ?? root.Find("LevelPill");
+                if (t != null) levelPillBg = t.GetComponent<Image>();
+            }
+            if (levelPillBg != null)
+            {
+                var pillSprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_small.info");
+                if (pillSprite != null)
+                {
+                    levelPillBg.sprite = pillSprite;
+                    levelPillBg.color = Color.white;
+                    levelPillBg.type = pillSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                    levelPillBg.preserveAspect = false;
+                }
+            }
         }
 
         private void RebindSettingsPanelPrefabSprites(SettingsPanelPrefabRefs prefab, bool hasKit)

@@ -104,11 +104,23 @@ def _apply_mapping(dst_png: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url", default=os.environ.get("APIYI_BASE_URL") or os.environ.get("OPENAI_BASE_URL") or "")
+    ap.add_argument("--api-base", default="", help="Alias for --base-url (matches UiRestyleV05 scripts).")
     ap.add_argument("--api-key", default=os.environ.get("APIYI_API_KEY") or os.environ.get("OPENAI_API_KEY") or "")
+    ap.add_argument("--api-key-file", default="", help="Optional path to a file that contains the API key.")
     ap.add_argument("--endpoint", default="")
     ap.add_argument("--model", default="gpt-image-1.5")
     ap.add_argument("--prompt", required=True)
     ap.add_argument("--size", default="512x512")
+    ap.add_argument(
+        "--quality",
+        default="",
+        help="Optional quality hint (e.g. low/medium/high). Omitted by default for compatibility.",
+    )
+    ap.add_argument(
+        "--background",
+        default="",
+        help="Optional background hint (e.g. transparent). Omitted by default for compatibility.",
+    )
     ap.add_argument("--out", required=True)
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--auth-header", default="Authorization")
@@ -118,12 +130,17 @@ def main() -> int:
     ap.add_argument("--apply-mapping", action="store_true")
     args = ap.parse_args()
 
-    if not args.api_key.strip():
-        print("Missing API key (set APIYI_API_KEY or pass --api-key).", file=sys.stderr)
+    base_url = (args.api_base or args.base_url).strip()
+    api_key = args.api_key.strip()
+    if not api_key and args.api_key_file:
+        api_key = Path(args.api_key_file).read_text(encoding="utf-8-sig").strip()
+
+    if not api_key:
+        print("Missing API key (set APIYI_API_KEY/OPENAI_API_KEY or pass --api-key/--api-key-file).", file=sys.stderr)
         return 2
 
-    endpoint = args.endpoint.strip() or _join_images_endpoint(args.base_url)
-    headers = {args.auth_header: args.auth_prefix + args.api_key.strip()}
+    endpoint = args.endpoint.strip() or _join_images_endpoint(base_url)
+    headers = {args.auth_header: args.auth_prefix + api_key}
 
     payload = {
         "model": args.model,
@@ -132,6 +149,10 @@ def main() -> int:
         "n": 1,
         "response_format": args.response_format,
     }
+    if args.quality:
+        payload["quality"] = args.quality
+    if args.background:
+        payload["background"] = args.background
 
     resp = _http_json(endpoint, payload, headers, timeout_s=args.timeout)
     data = resp.get("data") or []
@@ -164,4 +185,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

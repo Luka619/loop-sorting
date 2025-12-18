@@ -41,7 +41,7 @@
 - 状态机（Normal/InputLocked/FastForward/ModalOpen），每个状态下哪些按钮可点
 - 层级结构树（含 TopBar.Left/Center/RightCluster，RightCluster 需要 CapsuleInset）
 - 布局策略（只允许 LayoutGroup/锚点/约束；禁止“整体缩进 safeArea”）
-- 动效时序（按压反馈、HUD 入场、FAST tag 切换）
+- 动效时序（按压反馈、HUD 入场、FAST tag 切换、FreeSlotsCounter 低槽/满槽警示）
 - 验收点（safeArea + 胶囊 + 最小点击区 + 多分辨率）
 
 ### 3.2 资源清单（输出 JSON diff 思路）
@@ -71,3 +71,4 @@
 1) 顶栏 **一排**（TopBar 单行布局）
 2) Boosters **常显**（仅在必要的输入锁定时禁用交互，不隐藏）
 3) FAST tag 文案 **随倍率变化**（例如 `FAST x2` / `FAST x5`）
+4) FreeSlotsCounter（剩余槽位数字）在 **低槽/满槽** 时必须有明确的警示动效（见 `Assets/Resources/LoopSorting_MotionPack/LoopSorting_MotionDesign.md`）

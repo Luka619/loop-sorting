@@ -598,6 +598,7 @@ namespace LoopSorting
                 sprites = new[]
                 {
                     new SpriteEntry { key = "ui.bg_main", path = "UI_Sprites/bg_main.png", pixelsPerUnit = 100f, applyNineSlice = false },
+                    new SpriteEntry { key = "ui.title.main", path = "UI_Sprites/title_fangkuai_zhuan_bu_ting.png", pixelsPerUnit = 100f, applyNineSlice = false },
                     new SpriteEntry { key = "ui.counter.bg", path = "UI_Sprites/pill_bg.png", pixelsPerUnit = 100f, applyNineSlice = true },
                     new SpriteEntry { key = "ui.counter.icon", path = "UI_Sprites/icon_loop.png", pixelsPerUnit = 100f, applyNineSlice = false },
 

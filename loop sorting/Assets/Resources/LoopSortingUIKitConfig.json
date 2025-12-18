@@ -630,6 +630,7 @@
   ],
   "sprites": [
     { "key": "ui.bg_main", "path": "UI_Sprites/bg_main.png", "pixelsPerUnit": 100, "applyNineSlice": false },
+    { "key": "ui.title.main", "path": "UI_Sprites/title_fangkuai_zhuan_bu_ting.png", "pixelsPerUnit": 100, "applyNineSlice": false },
     { "key": "ui.counter.bg", "path": "UI_Sprites/hud_pill_dark_small.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.hud.pill_dark", "path": "UI_Sprites/hud_pill_dark.png", "pixelsPerUnit": 100, "applyNineSlice": true },
     { "key": "ui.counter.icon", "path": "UI_Sprites/icon_loop.png", "pixelsPerUnit": 100, "applyNineSlice": false },

@@ -60,6 +60,7 @@ namespace LoopSorting
         private const string ResultPanelPrefabResourcePath = "UI/ResultPanel";
         private const string BoosterPurchasePanelPrefabResourcePath = "UI/BoosterPurchasePanel";
         private const string GameplayHudPrefabResourcePath = "UI/GameplayHUD";
+        private const string RuntimeUnlitTextureMaterialResourcePath = "LoopSortingUnlitTexture";
 
         private bool _hasLoadedSave;
         private int _savedFlowIndex;
@@ -72,6 +73,8 @@ namespace LoopSorting
         public bool shopEnabled = false;
         [Tooltip("Show stamina (lives) pill in the HUD.")]
         public bool livesHudEnabled = false;
+        [Tooltip("Use separate state sprites for buttons (pressed/disabled via SpriteSwap). Disable if state sprites have mismatched size/border and cause visual jitter/misalignment.")]
+        public bool usePressedButtonSprites = false;
         [Header("Debug/Visuals")]
         public bool showSlotGizmos = true;
         [Tooltip("Log each box's resolved belt port mapping (slot index + world position). Useful when blocks don't enter the expected box.")]
@@ -211,6 +214,9 @@ namespace LoopSorting
 	        private GameObject _backgroundQuad;
 	        private bool _backgroundDebugLogged;
 	        private GameObject _conveyorBelt;
+	        private static bool _beltMaterialDebugLogged;
+	        private static bool _beltMaterialFailedLogged;
+	        private static bool _backgroundMaterialFailedLogged;
         private GameObject _eventSystem;
         private Canvas _uiCanvas;
         private Canvas _mainMenuCanvas;
@@ -247,6 +253,37 @@ namespace LoopSorting
         private static readonly Dictionary<string, Sprite> BoosterPurchaseSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, Sprite> SettingsPageSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
         private static BoosterPurchaseManifest _boosterPurchaseManifestCache;
+        private static Material _runtimeUnlitTextureMaterialTemplate;
+        private static bool _runtimeUnlitTextureMaterialTemplateLoggedMissing;
+
+        private static Material GetRuntimeUnlitTextureMaterialTemplate()
+        {
+            if (_runtimeUnlitTextureMaterialTemplate != null) return _runtimeUnlitTextureMaterialTemplate;
+            _runtimeUnlitTextureMaterialTemplate = Resources.Load<Material>(RuntimeUnlitTextureMaterialResourcePath);
+            if (_runtimeUnlitTextureMaterialTemplate == null)
+            {
+                // Fallback: create a runtime template from the shader if the material asset isn't packed for some reason.
+                var shader = Shader.Find("LoopSorting/UnlitTexture");
+                if (shader != null && shader.isSupported)
+                {
+                    _runtimeUnlitTextureMaterialTemplate = new Material(shader)
+                    {
+                        name = "LoopSortingUnlitTexture_RuntimeTemplate",
+                    };
+                    _runtimeUnlitTextureMaterialTemplate.hideFlags = HideFlags.HideAndDontSave;
+                }
+            }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (_runtimeUnlitTextureMaterialTemplate == null && !_runtimeUnlitTextureMaterialTemplateLoggedMissing)
+            {
+                _runtimeUnlitTextureMaterialTemplateLoggedMissing = true;
+                Debug.LogError(
+                    $"[WorldMaterial] Missing '{RuntimeUnlitTextureMaterialResourcePath}.mat' in Resources and can't find shader 'LoopSorting/UnlitTexture'.");
+            }
+#endif
+            return _runtimeUnlitTextureMaterialTemplate;
+        }
 
         [Serializable]
         private sealed class BoosterPurchaseManifest
@@ -1162,8 +1199,7 @@ namespace LoopSorting
             }
             if (cam == null) return;
 
-            _backgroundQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            _backgroundQuad.name = "BackgroundQuad";
+            _backgroundQuad = RuntimePrimitives.CreateQuad("BackgroundQuad");
             int layer = cam.gameObject.layer;
             if ((cam.cullingMask & (1 << layer)) == 0)
             {
@@ -1180,7 +1216,9 @@ namespace LoopSorting
             _backgroundQuad.transform.localRotation = Quaternion.identity;
 
             // Match camera viewport size with padding.
-            float viewHeight = cam.orthographic ? cam.orthographicSize * 2f : 30f;
+            float viewHeight = cam.orthographic
+                ? cam.orthographicSize * 2f
+                : (2f * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad * 0.5f) * dist);
             float aspect = Mathf.Max(0.01f, cam.aspect);
             float padding = 1.2f;
             _backgroundQuad.transform.localScale = new Vector3(viewHeight * aspect * padding, viewHeight * padding, 1f);
@@ -1206,22 +1244,52 @@ namespace LoopSorting
                 tex.Apply();
             }
 
-            var shader =
-                Shader.Find("Unlit/Texture") ??
-                Shader.Find("Unlit/Transparent") ??
-                Shader.Find("Sprites/Default") ??
-                Shader.Find("UI/Default") ??
-                Shader.Find("Standard");
+            Material mat = null;
+            Shader shader = null;
 
-            if (shader != null)
+            // Prefer a shipped runtime material so WebGL/WX builds don't lose shaders to stripping.
+            // In the Editor we keep using built-in shaders for easier iteration/debugging.
+            Material runtimeMat = GetRuntimeUnlitTextureMaterialTemplate();
+            if (runtimeMat != null)
             {
-                var mat = new Material(shader);
+                if (runtimeMat.shader != null && runtimeMat.shader.isSupported)
+                {
+                    mat = new Material(runtimeMat);
+                    shader = mat.shader;
+                }
+                else if (!_backgroundDebugLogged)
+                {
+                    _backgroundDebugLogged = true;
+                    Debug.LogWarning(
+                        $"[Background] Runtime material shader unsupported: '{runtimeMat.shader?.name ?? "null"}' (falling back to Shader.Find).");
+                }
+            }
+
+            if (mat == null)
+            {
+                shader =
+                    Shader.Find("LoopSorting/UnlitTexture") ??
+                    Shader.Find("Unlit/Texture") ??
+                    Shader.Find("Unlit/Transparent") ??
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
+                if (shader != null)
+                {
+                    mat = new Material(shader);
+                }
+            }
+
+            if (mat != null)
+            {
                 mat.mainTexture = tex;
                 if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
                 if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
+                mat.color = Color.white;
                 mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Background;
-                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
-                if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                // Write depth so later-drawn far geometry can't overwrite the background; use normal depth test to avoid accidental overlay.
+                if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 1);
+                if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
                 // WebGL/WeChat can be sensitive to backface culling on MeshRenderer backgrounds.
                 if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0); // 0=Off
                 if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
@@ -1229,6 +1297,9 @@ namespace LoopSorting
                 renderer.sharedMaterial = mat;
                 renderer.sortingLayerID = 0;
                 renderer.sortingOrder = int.MinValue;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                renderer.allowOcclusionWhenDynamic = false;
 
                 if (Debug.isDebugBuild && !_backgroundDebugLogged)
                 {
@@ -1238,6 +1309,16 @@ namespace LoopSorting
                         $"near={cam.nearClipPlane:0.###} far={cam.farClipPlane:0.###} " +
                         $"shader='{shader.name}', tex='{(tex != null ? tex.name : "null")}' {tex?.width}x{tex?.height}");
                 }
+            }
+            else
+            {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if (!_backgroundMaterialFailedLogged)
+                {
+                    _backgroundMaterialFailedLogged = true;
+                    Debug.LogError("[Background] Failed to create a material (all Shader.Find fallbacks returned null).");
+                }
+#endif
             }
 
             // Disable collider
@@ -3279,6 +3360,9 @@ namespace LoopSorting
 
             var mf = go.AddComponent<MeshFilter>();
             var mr = go.AddComponent<MeshRenderer>();
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = false;
+            mr.allowOcclusionWhenDynamic = false;
             mf.sharedMesh = BuildRibbonMesh(pts, beltWidth, out float totalLen);
 
             var mat = CreateConveyorBeltMaterial(totalLen, spacing, loop);
@@ -3375,41 +3459,93 @@ namespace LoopSorting
                 tex = LoopSortingUIKit.LoadTextureByKey("world.conveyor_belt");
             }
 
-            // Render early and don't write depth so blocks/markers always appear on top.
-            // Important: prefer a shader that supports alpha; otherwise a missing texture can turn into an opaque white band.
-            var shader =
-                Shader.Find("Unlit/Transparent") ??
-                Shader.Find("Sprites/Default") ??
-                Shader.Find("UI/Default") ??
-                Shader.Find("Unlit/Texture");
-            if (shader == null)
+            Material mat = null;
+
+            // Prefer a shipped runtime material so WebGL/WX builds don't lose shaders to stripping.
+            // In the Editor we keep using built-in shaders for easier iteration/debugging.
+            Material runtimeMat = GetRuntimeUnlitTextureMaterialTemplate();
+            if (runtimeMat != null)
             {
-                // Can't create a custom material; return null so callers can fall back gracefully.
+                if (runtimeMat.shader != null && runtimeMat.shader.isSupported)
+                {
+                    mat = new Material(runtimeMat);
+                }
+                else if (!_beltMaterialDebugLogged)
+                {
+                    _beltMaterialDebugLogged = true;
+                    Debug.LogWarning(
+                        $"[ConveyorBelt] Runtime material shader unsupported: '{runtimeMat.shader?.name ?? "null"}' (falling back to Shader.Find).");
+                }
+            }
+
+            if (mat == null)
+            {
+                // Render early and don't write depth so blocks/markers always appear on top.
+                // Important: prefer a shader that supports alpha; otherwise a missing texture can turn into an opaque white band.
+                var shader =
+                    Shader.Find("LoopSorting/UnlitTexture") ??
+                    Shader.Find("Unlit/Transparent") ??
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Unlit/Texture") ??
+                    Shader.Find("Standard");
+                if (shader != null)
+                {
+                    mat = new Material(shader);
+                }
+            }
+
+            if (mat == null)
+            {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if (!_beltMaterialFailedLogged)
+                {
+                    _beltMaterialFailedLogged = true;
+                    Debug.LogError("[ConveyorBelt] Failed to create a material (all Shader.Find fallbacks returned null).");
+                }
+#endif
                 return null;
             }
 
-            var mat = new Material(shader);
             mat.renderQueue = 1800;
-            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            // Write depth so the belt can't be overwritten by later-drawn far geometry; keep normal depth testing.
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 1);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0);
 
             if (tex != null)
             {
-                tex.wrapMode = TextureWrapMode.Repeat;
                 mat.mainTexture = tex;
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
 
                 // Tile U by world length (normalized UVs): 1 tile per belt slot spacing by default.
                 float worldPerTile = Mathf.Max(0.1f, tileWorld);
                 float rawTilingU = Mathf.Max(0.01f, totalLength / worldPerTile);
                 // For loops, force an integer repeat count so the seam meets perfectly (u=0 and u=1 sample same texel).
                 float tilingU = loop ? Mathf.Max(1f, Mathf.Round(rawTilingU)) : rawTilingU;
-                mat.mainTextureScale = new Vector2(tilingU, 1f);
+
+                // WebGL can be strict about NPOT repeat; fall back to clamp to avoid an invisible belt.
+                if (Mathf.IsPowerOfTwo(tex.width) && Mathf.IsPowerOfTwo(tex.height))
+                {
+                    tex.wrapMode = TextureWrapMode.Repeat;
+                    mat.mainTextureScale = new Vector2(tilingU, 1f);
+                }
+                else
+                {
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    mat.mainTextureScale = Vector2.one;
+                }
+
+                if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
                 mat.color = Color.white;
             }
             else
             {
                 // Placeholder: subtle band until art is dropped in.
                 mat.mainTexture = Texture2D.whiteTexture;
-                mat.color = new Color(0.12f, 0.16f, 0.22f, 0.45f);
+                var c = new Color(0.12f, 0.16f, 0.22f, 0.45f);
+                if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
+                mat.color = c;
             }
 
             return mat;
@@ -5134,6 +5270,10 @@ namespace LoopSorting
                     });
                 }
 
+                ApplyButtonPressScale(_settingsMusicToggleButton, pressedScale: 0.96f);
+                ApplyButtonPressScale(_settingsSfxToggleButton, pressedScale: 0.96f);
+                ApplyButtonPressScale(_settingsVibrationToggleButton, pressedScale: 0.96f);
+
                 RebindSettingsPanelPrefabSprites(prefab, hasKit);
                 RefreshSettingsToggleVisuals();
                 _settingsPanel.SetActive(false);
@@ -5278,6 +5418,7 @@ namespace LoopSorting
                     button = toggleGO.AddComponent<Button>();
                     button.targetGraphic = image;
                     button.transition = Selectable.Transition.ColorTint;
+                    ApplyButtonPressScale(button, pressedScale: 0.96f);
                 }
 
                 CreateToggleRow("MUSIC", topY: -320f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
@@ -5444,6 +5585,7 @@ namespace LoopSorting
                 button = go.AddComponent<Button>();
                 button.targetGraphic = image;
                 button.transition = Selectable.Transition.SpriteSwap;
+                ApplyButtonPressScale(button, pressedScale: 0.96f);
             }
 
             CreateOverlayButton("CloseButton", rectClose, out _settingsCloseButton, out _settingsCloseImage);
@@ -7090,6 +7232,7 @@ namespace LoopSorting
             colors.pressedColor = new Color(0.9f, 0.9f, 0.9f, 0.95f);
             btn.colors = colors;
             if (onClick != null) btn.onClick.AddListener(() => onClick());
+            ApplyButtonPressScale(btn, pressedScale: 0.98f);
 
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(itemGO.transform, false);
@@ -7240,6 +7383,7 @@ namespace LoopSorting
             colors.pressedColor = new Color(0.9f, 0.9f, 0.9f, 0.95f);
             btn.colors = colors;
             if (onClick != null) btn.onClick.AddListener(() => onClick());
+            ApplyButtonPressScale(btn, pressedScale: 0.98f);
 
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(itemGO.transform, false);
@@ -7382,6 +7526,7 @@ namespace LoopSorting
                 var btn = segGO.AddComponent<Button>();
                 btn.targetGraphic = hit;
                 btn.transition = Selectable.Transition.None;
+                ApplyButtonPressScale(btn, pressedScale: 0.98f);
 
                 // Plus icon (left)
                 var plusGO = new GameObject("Plus");
@@ -7606,6 +7751,7 @@ namespace LoopSorting
                 if (uiTheme != null && uiTheme.buttonSprite != null) image.sprite = uiTheme.buttonSprite;
                 button.targetGraphic = image;
                 button.transition = Selectable.Transition.ColorTint;
+                ApplyButtonPressScale(button, pressedScale: 0.96f);
                 return;
             }
 
@@ -7618,20 +7764,24 @@ namespace LoopSorting
                 if (uiTheme != null && uiTheme.buttonSprite != null) image.sprite = uiTheme.buttonSprite;
                 button.targetGraphic = image;
                 button.transition = Selectable.Transition.ColorTint;
+                ApplyButtonPressScale(button, pressedScale: 0.96f);
                 return;
             }
 
             image.sprite = normalSprite;
             image.type = normalSprite != null && normalSprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
             image.color = Color.white;
+            image.preserveAspect = false;
             button.targetGraphic = image;
             button.transition = Selectable.Transition.SpriteSwap;
 
             var state = button.spriteState;
             state.highlightedSprite = normalSprite;
-            state.pressedSprite = pressedSprite;
-            state.disabledSprite = disabledSprite;
+            state.pressedSprite = usePressedButtonSprites && pressedSprite != null ? pressedSprite : normalSprite;
+            state.disabledSprite = usePressedButtonSprites && disabledSprite != null ? disabledSprite : normalSprite;
             button.spriteState = state;
+
+            ApplyButtonPressScale(button, pressedScale: 0.96f);
 
             if (!_didLogOrangeLongNineSlice && string.Equals(normal, "ui.button.orange_long.normal", StringComparison.Ordinal))
             {
@@ -8621,6 +8771,7 @@ namespace LoopSorting
             var rowBtn = rowGO.AddComponent<Button>();
             rowBtn.transition = Selectable.Transition.None;
             rowBtn.onClick.AddListener(() => toggle.isOn = !toggle.isOn);
+            ApplyButtonPressScale(rowBtn, pressedScale: 0.98f);
 
             UpdateToggleVisual(toggleImage, initial);
             return toggle;
@@ -8750,8 +8901,7 @@ namespace LoopSorting
             for (int i = 0; i < slotPositions.Count; i++)
             {
                 var pos = slotPositions[i];
-                var marker = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                marker.name = "SlotMarker";
+                var marker = RuntimePrimitives.CreateQuad("SlotMarker");
                 marker.transform.SetParent(parent.transform, false);
                 marker.transform.position = pos;
                 marker.transform.rotation = ComputeSlotMarkerRotation(i, slotPositions, _beltLoop, markerRotation);

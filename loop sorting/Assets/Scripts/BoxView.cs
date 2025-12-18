@@ -799,30 +799,26 @@ namespace LoopSorting
                 _lockBadge.transform.localRotation = Quaternion.identity;
                 _lockBadge.transform.localScale = Vector3.one;
 
-                _lockMarkerPlate = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockMarkerPlate.name = "MarkerPlate";
+                _lockMarkerPlate = RuntimePrimitives.CreateQuad("MarkerPlate");
                 _lockMarkerPlate.transform.SetParent(_lockBadge.transform, false);
                 _lockMarkerPlate.transform.localPosition = Vector3.zero;
                 var plateCol = _lockMarkerPlate.GetComponent<Collider>();
                 if (plateCol != null) GameObject.Destroy(plateCol);
 
-                _lockMarkerDisc = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockMarkerDisc.name = "MarkerColorDisc";
+                _lockMarkerDisc = RuntimePrimitives.CreateQuad("MarkerColorDisc");
                 _lockMarkerDisc.transform.SetParent(_lockBadge.transform, false);
                 _lockMarkerDisc.transform.localPosition = new Vector3(0f, 0f, -0.01f);
                 var discCol = _lockMarkerDisc.GetComponent<Collider>();
                 if (discCol != null) GameObject.Destroy(discCol);
 
                 // Always-visible color halo behind the (possibly textured) disc so unlockColor is readable even if the disc texture can't tint.
-                _lockMarkerColorHalo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockMarkerColorHalo.name = "MarkerColorHalo";
+                _lockMarkerColorHalo = RuntimePrimitives.CreateQuad("MarkerColorHalo");
                 _lockMarkerColorHalo.transform.SetParent(_lockBadge.transform, false);
                 _lockMarkerColorHalo.transform.localPosition = new Vector3(0f, 0f, -0.005f);
                 var haloCol = _lockMarkerColorHalo.GetComponent<Collider>();
                 if (haloCol != null) GameObject.Destroy(haloCol);
 
-                _lockMarkerIcon = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                _lockMarkerIcon.name = "MarkerLockIcon";
+                _lockMarkerIcon = RuntimePrimitives.CreateQuad("MarkerLockIcon");
                 _lockMarkerIcon.transform.SetParent(_lockBadge.transform, false);
                 _lockMarkerIcon.transform.localPosition = new Vector3(0f, 0f, -0.02f);
                 var iconCol = _lockMarkerIcon.GetComponent<Collider>();
@@ -1107,7 +1103,7 @@ namespace LoopSorting
 
             EnsureMouthFlashTexture();
 
-            _mouthFlash = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _mouthFlash = RuntimePrimitives.CreateQuad("MouthFlash");
             _mouthFlash.name = "MouthFlash";
             _mouthFlash.transform.SetParent(transform, false);
             RemoveCollider(_mouthFlash);
@@ -1147,7 +1143,7 @@ namespace LoopSorting
 
             if (_mouthIndicator == null)
             {
-                _mouthIndicator = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                _mouthIndicator = RuntimePrimitives.CreateQuad("MouthIndicator");
                 _mouthIndicator.name = "MouthIndicator";
                 _mouthIndicator.transform.SetParent(transform, false);
                 RemoveCollider(_mouthIndicator);
@@ -1227,7 +1223,7 @@ namespace LoopSorting
 
             EnsureMouthFlashTexture();
 
-            _mouthRipple = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _mouthRipple = RuntimePrimitives.CreateQuad("MouthRipple");
             _mouthRipple.name = "MouthRipple";
             _mouthRipple.transform.SetParent(transform, false);
             RemoveCollider(_mouthRipple);
@@ -1645,7 +1641,7 @@ namespace LoopSorting
                 _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: 0.01f);
             }
 
-            _completedBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            _completedBadge = RuntimePrimitives.CreateQuad("CompletedBadge");
             _completedBadge.name = "Badge";
             _completedBadge.transform.SetParent(_completedOverlay.transform, false);
             _completedBadge.transform.localPosition = new Vector3(0f, 0f, 0.02f);

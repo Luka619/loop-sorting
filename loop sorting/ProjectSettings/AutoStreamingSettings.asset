@@ -11,6 +11,18 @@ AutoStreamingSettings:
   mTextures:
   - serializedVersion: 2
     onDemandDownload: 0
+    assetPath: Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset
+    localFileId: 28684132378477856
+    rtMem: 1048576
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 589856
+    width: 1024
+    height: 1024
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
     assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/UI_Sprites/btn_close_red_normal.png
     localFileId: 2800000
     rtMem: 1936
@@ -1364,6 +1376,18 @@ AutoStreamingSettings:
     maxPlaceholderSize: 0
     width: 2048
     height: 1024
+    abSize: 0
+  - serializedVersion: 2
+    onDemandDownload: 0
+    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/conveyor_slot_gray.png
+    localFileId: 2800000
+    rtMem: 3872
+    warningFlag: 0
+    refs:
+    - res
+    maxPlaceholderSize: 0
+    width: 128
+    height: 64
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
@@ -4787,18 +4811,6 @@ AutoStreamingSettings:
     abSize: 0
   - serializedVersion: 2
     onDemandDownload: 0
-    assetPath: Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset
-    localFileId: 28684132378477856
-    rtMem: 1048576
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 589856
-    width: 1024
-    height: 1024
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
     assetPath: Assets/TextMesh Pro/Sprites/EmojiOne.png
     localFileId: 2800000
     rtMem: 29584
@@ -4808,18 +4820,6 @@ AutoStreamingSettings:
     maxPlaceholderSize: 196640
     width: 256
     height: 256
-    abSize: 0
-  - serializedVersion: 2
-    onDemandDownload: 0
-    assetPath: Assets/Resources/loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/conveyor_slot_gray.png
-    localFileId: 2800000
-    rtMem: 3872
-    warningFlag: 0
-    refs:
-    - res
-    maxPlaceholderSize: 0
-    width: 128
-    height: 64
     abSize: 0
   mAudios:
   - onDemandDownload: 0

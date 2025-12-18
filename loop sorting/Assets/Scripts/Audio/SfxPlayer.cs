@@ -22,6 +22,12 @@ namespace LoopSorting
 
         private AudioSource _loopSource;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private static bool _wxVisibilityHooksRegistered;
+        private static float _wxVisibilityHooksRetryAt;
+        private static bool _wxIsHidden;
+#endif
+
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
@@ -37,6 +43,13 @@ namespace LoopSorting
             {
                 return;
             }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (!CanOperateAudioNow())
+            {
+                return;
+            }
+#endif
 
             EnsurePool();
 
@@ -90,6 +103,13 @@ namespace LoopSorting
                 return;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (!CanOperateAudioNow())
+            {
+                return;
+            }
+#endif
+
             EnsurePool();
             EnsureLoopSource();
 
@@ -118,6 +138,12 @@ namespace LoopSorting
         {
             if (_loopSource != null)
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if (!CanOperateAudioNow())
+                {
+                    return;
+                }
+#endif
                 _loopSource.Stop();
                 _loopSource.clip = null;
             }
@@ -129,6 +155,38 @@ namespace LoopSorting
             if (!_loopSource.isPlaying) return;
             _loopSource.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
         }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private static bool CanOperateAudioNow()
+        {
+            EnsureWeChatVisibilityHooks();
+            if (!_wxVisibilityHooksRegistered)
+            {
+                // Best-effort fallback when WX hooks aren't available (e.g. running the WebGL build in a normal browser).
+                return Application.isFocused;
+            }
+
+            return !_wxIsHidden;
+        }
+
+        private static void EnsureWeChatVisibilityHooks()
+        {
+            if (_wxVisibilityHooksRegistered) return;
+            if (_wxVisibilityHooksRetryAt > 0f && Time.realtimeSinceStartup < _wxVisibilityHooksRetryAt) return;
+
+            try
+            {
+                WeChatWASM.WX.OnHide(_ => { _wxIsHidden = true; });
+                WeChatWASM.WX.OnShow(_ => { _wxIsHidden = false; });
+                _wxVisibilityHooksRegistered = true;
+            }
+            catch
+            {
+                // WX SDK can be unavailable early during boot; retry later.
+                _wxVisibilityHooksRetryAt = Time.realtimeSinceStartup + 2f;
+            }
+        }
+#endif
 
         private AudioClip[] GetClips(SfxId id)
         {

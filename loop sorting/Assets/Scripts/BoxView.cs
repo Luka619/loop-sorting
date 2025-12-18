@@ -43,6 +43,12 @@ namespace LoopSorting
         private Coroutine _completedFxRoutine;
 
         private const float CompletedNineSliceBorderFrac = 0.32f;
+        private const float CompletedCapAlpha = 0.92f;
+        private const float CompletedGlassAlpha = 0.22f;
+        private const float CompletedBadgeAlpha = 0.95f;
+        private const float CompletedCapScale = 1.04f;
+        private const float CompletedGlassScale = 1.00f;
+        private const float CompletedOverlayPopSeconds = 0.18f;
         private const float LockNineSliceBorderFrac = 0.09f;
         private const float LockOverlayScale = 1.0f;
         private LineRenderer _frontOutline;
@@ -1578,6 +1584,14 @@ namespace LoopSorting
 
             if (!wasCompleted)
             {
+                // Start from invisible + slightly squashed so the overlay feels like a "cap" settling on the box.
+                bool useCap = _completedFrameGlow != null && _completedFrameGlow.GetComponent<SpriteRenderer>() != null;
+                if (useCap)
+                {
+                    SetCompletedOverlayFade(0f);
+                    _completedOverlay.transform.localScale = Vector3.one * 0.92f;
+                }
+
                 if (_completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
                 _completedFxRoutine = StartCoroutine(PlayCompletedFx());
             }
@@ -1604,8 +1618,32 @@ namespace LoopSorting
             _completedOverlay.transform.localRotation = Quaternion.identity;
             _completedOverlay.transform.localScale = Vector3.one;
 
-            _completedFrameGlow = CreateNineSliceLayer(_completedOverlay.transform, "FrameGlow", z: 0f);
-            _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: 0.01f);
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+            if (hasKit)
+            {
+                _completedFrameGlow = CreateSlicedSpriteLayer(
+                    parent: _completedOverlay.transform,
+                    name: "Cap",
+                    z: 0f,
+                    spritePath: "World_Sprites/completed_overlay.png",
+                    pixelsPerUnit: 500f,
+                    sortingOrder: CompletedQueue,
+                    renderQueue: CompletedQueue);
+
+                _completedGlass = CreateSlicedSpriteLayer(
+                    parent: _completedOverlay.transform,
+                    name: "Glass",
+                    z: 0.01f,
+                    spritePath: "World_Sprites/box_completed_glass_overlay_512.png",
+                    pixelsPerUnit: 500f,
+                    sortingOrder: CompletedQueue + 1,
+                    renderQueue: CompletedQueue + 1);
+            }
+            else
+            {
+                _completedFrameGlow = CreateNineSliceLayer(_completedOverlay.transform, "FrameGlow", z: 0f);
+                _completedGlass = CreateNineSliceLayer(_completedOverlay.transform, "Glass", z: 0.01f);
+            }
 
             _completedBadge = GameObject.CreatePrimitive(PrimitiveType.Quad);
             _completedBadge.name = "Badge";
@@ -1614,28 +1652,7 @@ namespace LoopSorting
             RemoveCollider(_completedBadge);
 
             // Textures live under the active UI kit resources root.
-            var frameTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_frame_glow_512.png");
-            var glassTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_glass_overlay_512.png");
             var badgeTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_badge_check_256.png");
-
-            if (frameTex != null)
-            {
-                var r = _completedFrameGlow.GetComponent<Renderer>();
-                if (r != null)
-                {
-                    var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(frameTex, Color.white, CompletedQueue);
-                    if (mat != null) r.sharedMaterial = mat;
-                }
-            }
-            if (glassTex != null)
-            {
-                var r = _completedGlass.GetComponent<Renderer>();
-                if (r != null)
-                {
-                    var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(glassTex, Color.white, CompletedQueue + 1);
-                    if (mat != null) r.sharedMaterial = mat;
-                }
-            }
             if (badgeTex != null)
             {
                 var r = _completedBadge.GetComponent<Renderer>();
@@ -1646,50 +1663,126 @@ namespace LoopSorting
                 }
             }
 
-            // Fallback so we never show magenta.
-            EnsureUnlitColorMaterial(_completedFrameGlow, new Color(1f, 1f, 1f, 0.35f), CompletedQueue);
-            EnsureUnlitColorMaterial(_completedGlass, new Color(1f, 1f, 1f, 0.25f), CompletedQueue + 1);
+            // Fallback so we never show magenta (mesh path).
+            if (!hasKit)
+            {
+                var frameTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_frame_glow_512.png");
+                var glassTex = LoopSortingUIKit.LoadTexture("World_Sprites/box_completed_glass_overlay_512.png");
+
+                if (frameTex != null)
+                {
+                    var r = _completedFrameGlow.GetComponent<Renderer>();
+                    if (r != null)
+                    {
+                        var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(frameTex, Color.white, CompletedQueue);
+                        if (mat != null) r.sharedMaterial = mat;
+                    }
+                }
+                if (glassTex != null)
+                {
+                    var r = _completedGlass.GetComponent<Renderer>();
+                    if (r != null)
+                    {
+                        var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(glassTex, Color.white, CompletedQueue + 1);
+                        if (mat != null) r.sharedMaterial = mat;
+                    }
+                }
+
+                EnsureUnlitColorMaterial(_completedFrameGlow, new Color(1f, 1f, 1f, 0.35f), CompletedQueue);
+                EnsureUnlitColorMaterial(_completedGlass, new Color(1f, 1f, 1f, 0.25f), CompletedQueue + 1);
+            }
+
             EnsureUnlitColorMaterial(_completedBadge, new Color(1f, 1f, 1f, 1f), CompletedQueue + 2);
 
             _completedOverlay.SetActive(false);
+        }
+
+        private void SetCompletedOverlayFade(float fade01)
+        {
+            fade01 = Mathf.Clamp01(fade01);
+            SetQuadAlpha(_completedFrameGlow, CompletedCapAlpha * fade01);
+            SetQuadAlpha(_completedGlass, CompletedGlassAlpha * fade01);
         }
 
         private void UpdateCompletedOverlayVisuals()
         {
             var boxTint = GetCompletedTintColor();
 
-            // Keep the overlay tightly matched to the box size (avoid "stretched mask" look).
-            float sx = _boxSize.x * 1.02f;
-            float sy = _boxSize.y * 1.02f;
-            if (_completedFrameGlow != null) UpdateNineSliceMesh(_completedFrameGlow, sx, sy, CompletedNineSliceBorderFrac);
+            void FitLayer(GameObject go, float w, float h, float borderFrac)
+            {
+                if (go == null) return;
+                var sr = go.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                {
+                    if (sr.drawMode == SpriteDrawMode.Sliced)
+                    {
+                        sr.size = new Vector2(w, h);
+                        go.transform.localScale = Vector3.one;
+                        return;
+                    }
 
-            float gx = _boxSize.x;
-            float gy = _boxSize.y;
-            if (_completedGlass != null) UpdateNineSliceMesh(_completedGlass, gx, gy, CompletedNineSliceBorderFrac);
+                    var b = sr.sprite.bounds;
+                    float sx = b.size.x > 0.0001f ? w / b.size.x : 1f;
+                    float sy = b.size.y > 0.0001f ? h / b.size.y : 1f;
+                    go.transform.localScale = new Vector3(sx, sy, 1f);
+                    return;
+                }
+
+                UpdateNineSliceMesh(go, w, h, borderFrac);
+            }
+
+            // Keep the overlay tightly matched to the box size (avoid "stretched mask" look).
+            float capW = _boxSize.x * CompletedCapScale;
+            float capH = _boxSize.y * CompletedCapScale;
+            FitLayer(_completedFrameGlow, capW, capH, CompletedNineSliceBorderFrac);
+
+            float glassW = _boxSize.x * CompletedGlassScale;
+            float glassH = _boxSize.y * CompletedGlassScale;
+            FitLayer(_completedGlass, glassW, glassH, CompletedNineSliceBorderFrac);
 
             // For very wide/tall boxes, use the 1024 textures to keep edge quality when stretched.
             bool useHiRes = ShouldUseHiResCompletedTextures();
             if (_completedFrameGlow != null)
             {
-                var r = _completedFrameGlow.GetComponent<Renderer>();
-                if (r != null && r.sharedMaterial != null)
+                var sr = _completedFrameGlow.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
                 {
-                    var tex = LoopSortingUIKit.LoadTexture(useHiRes
-                        ? "World_Sprites/box_completed_frame_glow_1024.png"
-                        : "World_Sprites/box_completed_frame_glow_512.png");
-                    if (tex != null) r.sharedMaterial.mainTexture = tex;
+                    // Cap uses a single authored sprite (no hi-res variant).
+                }
+                else
+                {
+                    var r = _completedFrameGlow.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                            ? "World_Sprites/box_completed_frame_glow_1024.png"
+                            : "World_Sprites/box_completed_frame_glow_512.png");
+                        if (tex != null) r.sharedMaterial.mainTexture = tex;
+                    }
                 }
             }
 
             if (_completedGlass != null)
             {
-                var r = _completedGlass.GetComponent<Renderer>();
-                if (r != null && r.sharedMaterial != null)
+                var sr = _completedGlass.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
                 {
-                    var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                    // Sprite renderer path: optionally swap to hi-res sprite if present.
+                    var sprite = LoopSortingUIKit.LoadSprite(useHiRes
                         ? "World_Sprites/box_completed_glass_overlay_1024.png"
-                        : "World_Sprites/box_completed_glass_overlay_512.png");
-                    if (tex != null) r.sharedMaterial.mainTexture = tex;
+                        : "World_Sprites/box_completed_glass_overlay_512.png", pixelsPerUnit: 500f, applyNineSlice: true);
+                    if (sprite != null) sr.sprite = sprite;
+                }
+                else
+                {
+                    var r = _completedGlass.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        var tex = LoopSortingUIKit.LoadTexture(useHiRes
+                            ? "World_Sprites/box_completed_glass_overlay_1024.png"
+                            : "World_Sprites/box_completed_glass_overlay_512.png");
+                        if (tex != null) r.sharedMaterial.mainTexture = tex;
+                    }
                 }
             }
 
@@ -1701,25 +1794,45 @@ namespace LoopSorting
                 _completedBadge.transform.localPosition = new Vector3(_boxSize.x * 0.54f, _boxSize.y * 0.54f, 0.02f);
             }
 
-            // Tint: glow uses the box color, glass is subtle, badge stays mostly white.
+            // Tint: cap is subtly tinted, glass is semi-transparent, badge stays mostly white.
             if (_completedFrameGlow != null)
             {
-                var r = _completedFrameGlow.GetComponent<Renderer>();
-                if (r != null && r.sharedMaterial != null)
+                var sr = _completedFrameGlow.GetComponent<SpriteRenderer>();
+                if (sr != null)
                 {
-                    var c = boxTint * 0.78f;
-                    c.a = 0.5f;
-                    r.sharedMaterial.color = c;
+                    var c = Color.Lerp(Color.white, boxTint, 0.22f);
+                    c.a = CompletedCapAlpha;
+                    sr.color = c;
+                }
+                else
+                {
+                    var r = _completedFrameGlow.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        var c = boxTint * 0.78f;
+                        c.a = 0.5f;
+                        r.sharedMaterial.color = c;
+                    }
                 }
             }
             if (_completedGlass != null)
             {
-                var r = _completedGlass.GetComponent<Renderer>();
-                if (r != null && r.sharedMaterial != null)
+                var sr = _completedGlass.GetComponent<SpriteRenderer>();
+                if (sr != null)
                 {
                     var c = Color.white;
-                    c.a = 0.22f;
-                    r.sharedMaterial.color = c;
+                    c.a = CompletedGlassAlpha;
+                    sr.color = c;
+                }
+                else
+                {
+                    var r = _completedGlass.GetComponent<Renderer>();
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        var c = Color.white;
+                        c.a = 0.22f;
+                        r.sharedMaterial.color = c;
+                    }
                 }
             }
             if (_completedBadge != null)
@@ -1728,10 +1841,50 @@ namespace LoopSorting
                 if (r != null && r.sharedMaterial != null)
                 {
                     var c = Color.white;
-                    c.a = 0.9f;
+                    c.a = CompletedBadgeAlpha;
                     r.sharedMaterial.color = c;
                 }
             }
+        }
+
+        private static GameObject CreateSlicedSpriteLayer(
+            Transform parent,
+            string name,
+            float z,
+            string spritePath,
+            float pixelsPerUnit,
+            int sortingOrder,
+            int renderQueue)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, 0f, z);
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            sr.receiveShadows = false;
+            sr.color = Color.white;
+            sr.sortingOrder = sortingOrder;
+
+            var sprite = LoopSortingUIKit.LoadSprite(spritePath, pixelsPerUnit: pixelsPerUnit, applyNineSlice: true);
+            if (sprite != null)
+            {
+                sr.sprite = sprite;
+                sr.drawMode = sprite.border.sqrMagnitude > 0.0001f ? SpriteDrawMode.Sliced : SpriteDrawMode.Simple;
+            }
+
+            // Ensure deterministic ordering against other world overlays.
+            var shader = Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.renderQueue = renderQueue;
+                sr.sharedMaterial = mat;
+            }
+
+            return go;
         }
 
         private bool ShouldUseHiResCompletedTextures()
@@ -1866,12 +2019,34 @@ namespace LoopSorting
 
         private IEnumerator PlayCompletedFx()
         {
+            bool useCap = _completedFrameGlow != null && _completedFrameGlow.GetComponent<SpriteRenderer>() != null;
+
             // Badge pop: 0 -> 1.08 -> 1.0 in ~0.22s.
             float t = 0f;
             float dur = 0.22f;
             if (_completedBadge != null)
             {
                 _completedBadge.transform.localScale = Vector3.zero;
+            }
+
+            // Cap/glass pop-in first (gives a more 3D "cap settling" feel).
+            if (useCap && _completedOverlay != null)
+            {
+                float popT = 0f;
+                float popDur = Mathf.Max(0.05f, CompletedOverlayPopSeconds);
+                while (popT < popDur)
+                {
+                    popT += Time.deltaTime;
+                    float u = Mathf.Clamp01(popT / popDur);
+                    float e = MotionUtil.EaseOutCubic(u);
+                    SetCompletedOverlayFade(e);
+                    float s = Mathf.Lerp(0.92f, 1f, MotionUtil.EaseOutBack(u));
+                    _completedOverlay.transform.localScale = Vector3.one * s;
+                    yield return null;
+                }
+
+                SetCompletedOverlayFade(1f);
+                _completedOverlay.transform.localScale = Vector3.one;
             }
 
             // Confetti-only (more natural, avoids sprite-sheet square edge artifacts).

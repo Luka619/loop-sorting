@@ -547,6 +547,24 @@
       ]
     },
     {
+      "pattern": "completed_overlay.png",
+      "border": [
+        120,
+        120,
+        120,
+        120
+      ]
+    },
+    {
+      "pattern": "box_completed_glass_overlay_*",
+      "border": [
+        120,
+        120,
+        120,
+        120
+      ]
+    },
+    {
       "pattern": "hud_pill_dark*",
       "border": [
         40,

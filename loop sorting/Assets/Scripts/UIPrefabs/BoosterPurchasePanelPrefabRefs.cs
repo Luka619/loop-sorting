@@ -166,15 +166,20 @@ namespace LoopSorting
                 var coinSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
                 if (coinSprite != null)
                 {
+                    var existed = coinsImage.transform.Find("Icon") != null;
                     var img = UIPrefabPreviewUtil.EnsureChildImage(coinsImage.transform, "Icon", coinSprite);
                     if (img != null)
                     {
-                        var r = img.rectTransform;
-                        r.anchorMin = new Vector2(0f, 0.5f);
-                        r.anchorMax = new Vector2(0f, 0.5f);
-                        r.pivot = new Vector2(0.5f, 0.5f);
-                        r.anchoredPosition = new Vector2(86f, 0f);
-                        r.sizeDelta = new Vector2(84f, 84f);
+                        // Only apply defaults when the Icon is first created; preserve authored layout edits afterwards.
+                        if (!existed)
+                        {
+                            var r = img.rectTransform;
+                            r.anchorMin = new Vector2(0f, 0.5f);
+                            r.anchorMax = new Vector2(0f, 0.5f);
+                            r.pivot = new Vector2(0.5f, 0.5f);
+                            r.anchoredPosition = new Vector2(86f, 0f);
+                            r.sizeDelta = new Vector2(84f, 84f);
+                        }
                     }
                 }
             }
@@ -186,15 +191,20 @@ namespace LoopSorting
                     LoopSortingUIKit.LoadSpriteByKey("ui.icon.video");
                 if (videoSprite != null)
                 {
+                    var existed = adImage.transform.Find("Icon") != null;
                     var img = UIPrefabPreviewUtil.EnsureChildImage(adImage.transform, "Icon", videoSprite);
                     if (img != null)
                     {
-                        var r = img.rectTransform;
-                        r.anchorMin = new Vector2(0f, 0.5f);
-                        r.anchorMax = new Vector2(0f, 0.5f);
-                        r.pivot = new Vector2(0.5f, 0.5f);
-                        r.anchoredPosition = new Vector2(86f, 0f);
-                        r.sizeDelta = new Vector2(84f, 84f);
+                        // Only apply defaults when the Icon is first created; preserve authored layout edits afterwards.
+                        if (!existed)
+                        {
+                            var r = img.rectTransform;
+                            r.anchorMin = new Vector2(0f, 0.5f);
+                            r.anchorMax = new Vector2(0f, 0.5f);
+                            r.pivot = new Vector2(0.5f, 0.5f);
+                            r.anchoredPosition = new Vector2(86f, 0f);
+                            r.sizeDelta = new Vector2(84f, 84f);
+                        }
                     }
                 }
             }

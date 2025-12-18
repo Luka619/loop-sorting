@@ -8276,22 +8276,7 @@ namespace LoopSorting
                 var icon = buttonTransform.Find("Icon")?.GetComponent<Image>();
                 if (icon == null) icon = CreateButtonIcon(buttonTransform);
                 if (icon == null) return null;
-
-                var rect = icon.rectTransform;
-                rect.anchorMin = new Vector2(0.18f, 0.5f);
-                rect.anchorMax = new Vector2(0.18f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = Vector2.zero;
-
-                float side = 150f;
-                var btnRect = buttonTransform.GetComponent<RectTransform>();
-                if (btnRect != null)
-                {
-                    side = Mathf.Clamp(btnRect.rect.height * 0.72f, 110f, 150f);
-                }
-                rect.sizeDelta = new Vector2(side, side);
                 icon.raycastTarget = false;
-
                 return icon;
             }
 

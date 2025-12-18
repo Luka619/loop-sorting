@@ -11,6 +11,9 @@ namespace LoopSorting
         [Min(1)]
         public int poolSize = 8;
 
+        [Header("Debug")]
+        public bool debugLog;
+
         public bool Enabled { get; private set; } = true;
 
         private readonly Dictionary<SfxId, AudioClip[]> _clips = new Dictionary<SfxId, AudioClip[]>();
@@ -18,10 +21,12 @@ namespace LoopSorting
         private readonly HashSet<SfxId> _missingLogged = new HashSet<SfxId>();
 
         private AudioSource[] _sources;
+        private float[] _sourceBusyUntil;
         private int _nextSource;
 
         private AudioSource _loopSource;
         private float _webglLoopRetryAt;
+        private bool _weChatConveyorLoopSuppressed;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         private static bool _wxVisibilityHooksRegistered;
@@ -48,6 +53,10 @@ namespace LoopSorting
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (!CanOperateAudioNow())
             {
+                if (debugLog && Debug.isDebugBuild)
+                {
+                    Debug.Log($"SfxPlayer: skip '{id}' (WX hidden/unfocused).");
+                }
                 return;
             }
 #endif
@@ -71,7 +80,7 @@ namespace LoopSorting
             }
             _lastTime[id] = now;
 
-            var src = GetNextSource();
+            var src = GetNextSource(out int sourceIndex);
             float pitch = profile.Pitch;
             if (profile.PitchRandom > 0f)
             {
@@ -86,7 +95,6 @@ namespace LoopSorting
             {
 #if UNITY_WEBGL && !UNITY_EDITOR
                 // WeChat WebGL audio backend can behave inconsistently with PlayOneShot; use explicit clip playback.
-                src.Stop();
                 src.clip = clip;
                 src.loop = false;
                 src.volume = vol;
@@ -94,6 +102,12 @@ namespace LoopSorting
 #else
                 src.PlayOneShot(clip, vol);
 #endif
+                MarkSourceBusy(sourceIndex, clip, src.pitch);
+
+                if (debugLog && Debug.isDebugBuild)
+                {
+                    Debug.Log($"SfxPlayer: play '{id}' clip='{clip.name}' src={sourceIndex} vol={vol:0.00} pitch={src.pitch:0.00}");
+                }
             }
         }
 
@@ -105,6 +119,27 @@ namespace LoopSorting
             }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
+            // WeChat mini-games route larger clips through InnerAudioContext, which can spam `operateAudio` permission
+            // errors on some devices/states. The conveyor loop is the only large SFX clip; keep gameplay SFX but suppress
+            // this loop when running under WeChat.
+            if (id == SfxId.ConveyorLoop)
+            {
+                EnsureWeChatVisibilityHooks();
+                if (_wxVisibilityHooksRegistered)
+                {
+                    if (!_weChatConveyorLoopSuppressed)
+                    {
+                        StopLoop();
+                        _weChatConveyorLoopSuppressed = true;
+                        if (debugLog && Debug.isDebugBuild)
+                        {
+                            Debug.Log("SfxPlayer: suppressing ConveyorLoop on WeChat WebGL.");
+                        }
+                    }
+                    return;
+                }
+            }
+
             if (_webglLoopRetryAt > 0f && Time.realtimeSinceStartup < _webglLoopRetryAt)
             {
                 return;
@@ -239,7 +274,10 @@ namespace LoopSorting
 
         private void EnsurePool()
         {
-            if (_sources != null && _sources.Length == poolSize)
+            if (_sources != null &&
+                _sources.Length == poolSize &&
+                _sourceBusyUntil != null &&
+                _sourceBusyUntil.Length == _sources.Length)
             {
                 return;
             }
@@ -259,6 +297,7 @@ namespace LoopSorting
             }
 
             _sources = list.ToArray();
+            _sourceBusyUntil = new float[_sources.Length];
             _nextSource = 0;
 
             EnsureAudioListener();
@@ -279,13 +318,45 @@ namespace LoopSorting
             _loopSource.rolloffMode = AudioRolloffMode.Linear;
         }
 
-        private AudioSource GetNextSource()
+        private AudioSource GetNextSource(out int index)
         {
             if (_sources == null || _sources.Length == 0)
             {
                 EnsurePool();
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // On some WebGL/WeChat builds, AudioSource.isPlaying can be unreliable; track a predicted end time instead.
+            float now = Time.realtimeSinceStartup;
+            for (int i = 0; i < _sources.Length; i++)
+            {
+                int idx = (_nextSource + i) % _sources.Length;
+                var s = _sources[idx];
+                if (s != null && (_sourceBusyUntil == null || idx >= _sourceBusyUntil.Length || _sourceBusyUntil[idx] <= now))
+                {
+                    _nextSource = (idx + 1) % _sources.Length;
+                    index = idx;
+                    return s;
+                }
+            }
+
+            // All sources are busy; pick the earliest-to-finish as a fallback.
+            int bestIdx = _nextSource % _sources.Length;
+            float bestUntil = _sourceBusyUntil != null && bestIdx < _sourceBusyUntil.Length ? _sourceBusyUntil[bestIdx] : 0f;
+            for (int i = 0; i < _sources.Length; i++)
+            {
+                float until = _sourceBusyUntil != null && i < _sourceBusyUntil.Length ? _sourceBusyUntil[i] : 0f;
+                if (until < bestUntil)
+                {
+                    bestUntil = until;
+                    bestIdx = i;
+                }
+            }
+
+            _nextSource = (bestIdx + 1) % _sources.Length;
+            index = bestIdx;
+            return _sources[bestIdx];
+#else
             for (int i = 0; i < _sources.Length; i++)
             {
                 int idx = (_nextSource + i) % _sources.Length;
@@ -293,13 +364,27 @@ namespace LoopSorting
                 if (s != null && !s.isPlaying)
                 {
                     _nextSource = (idx + 1) % _sources.Length;
+                    index = idx;
                     return s;
                 }
             }
 
             var fallback = _sources[_nextSource % _sources.Length];
+            index = _nextSource % _sources.Length;
             _nextSource = (_nextSource + 1) % _sources.Length;
             return fallback;
+#endif
+        }
+
+        private void MarkSourceBusy(int sourceIndex, AudioClip clip, float pitch)
+        {
+            if (_sourceBusyUntil == null) return;
+            if (sourceIndex < 0 || sourceIndex >= _sourceBusyUntil.Length) return;
+            if (clip == null) return;
+
+            float duration = clip.length / Mathf.Max(0.01f, pitch);
+            float until = Time.realtimeSinceStartup + Mathf.Max(0f, duration);
+            _sourceBusyUntil[sourceIndex] = Mathf.Max(_sourceBusyUntil[sourceIndex], until);
         }
 
         private void EnsureAudioListener()

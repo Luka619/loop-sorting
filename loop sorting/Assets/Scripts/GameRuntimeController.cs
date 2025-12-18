@@ -4904,7 +4904,7 @@ namespace LoopSorting
             }
             if (_secondaryLabel != null)
             {
-                _secondaryLabel.text = "REVIVE (AD)";
+                _secondaryLabel.text = "REVIVE";
                 _secondaryLabel.gameObject.SetActive(true);
             }
 

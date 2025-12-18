@@ -49,7 +49,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 39
     locked: 0
     unlockColor: 0
   - name: Box 2
@@ -71,7 +71,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 2
     locked: 1
     unlockColor: 0
   - name: Box 3
@@ -93,7 +93,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 22
     locked: 1
     unlockColor: 0
   - name: Box 4
@@ -115,7 +115,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 20
     locked: 1
     unlockColor: 0
   - name: Box 5
@@ -137,7 +137,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 32
     locked: 0
     unlockColor: 0
   - name: Box 6
@@ -159,7 +159,7 @@ MonoBehaviour:
       count: 12
       hidden: 1
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 29
     locked: 0
     unlockColor: 0
   - name: Box 7
@@ -172,7 +172,7 @@ MonoBehaviour:
     autoAlignSlot: 1
     colorCounts: []
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 9
     locked: 1
     unlockColor: 1
   - name: Box 8
@@ -185,6 +185,6 @@ MonoBehaviour:
     autoAlignSlot: 1
     colorCounts: []
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 11
     locked: 0
     unlockColor: 0

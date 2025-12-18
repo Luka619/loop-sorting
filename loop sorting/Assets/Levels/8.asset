@@ -21,17 +21,17 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -4.5, y: 2}
-    - {x: 3, y: 2}
-    - {x: 3, y: 0.5}
-    - {x: -4.5, y: 0.5}
-    - {x: -4.5, y: -1}
-    - {x: 3, y: -1}
+    - {x: -3, y: 2}
+    - {x: 1.5, y: 2}
+    - {x: 1.5, y: 0.5}
+    - {x: -3, y: 0.5}
+    - {x: -3, y: -1}
+    - {x: 1.5, y: -1}
     loop: 0
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -2.0626256, y: 4.119963}
+    position: {x: -1.5, y: 4}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -49,11 +49,11 @@ MonoBehaviour:
       count: 9
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 5
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 1.0533907, y: 4.1184382}
+    position: {x: 0.5, y: 4}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -68,11 +68,11 @@ MonoBehaviour:
       count: 15
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 11
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: -3.1894913, y: -3.3861597}
+    position: {x: -2, y: -3.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -90,11 +90,11 @@ MonoBehaviour:
       count: 9
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 39
     locked: 0
     unlockColor: 4
   - name: Box 4
-    position: {x: -0.41628745, y: -3.409978}
+    position: {x: -0.5, y: -3.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
@@ -112,11 +112,11 @@ MonoBehaviour:
       count: 6
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 44
     locked: 0
     unlockColor: 0
   - name: Box 5
-    position: {x: 2.0699885, y: -3.3524814}
+    position: {x: 1, y: -3.5}
     size: {x: 0.90000004, y: 3}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
@@ -134,6 +134,6 @@ MonoBehaviour:
       count: 9
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 0
+    beltSlotIndex: 48
     locked: 0
     unlockColor: 0

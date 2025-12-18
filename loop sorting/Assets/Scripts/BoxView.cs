@@ -891,7 +891,7 @@ namespace LoopSorting
                 {
                     var c = BlockVisual.ToUnityColor(unlockColor);
                     c.a = 1f;
-                    haloR.sharedMaterial.color = c;
+                    TrySetMaterialColor(haloR.sharedMaterial, c);
                 }
             }
             if (_lockMarkerDisc != null)
@@ -904,7 +904,7 @@ namespace LoopSorting
                 {
                     var c = BlockVisual.ToUnityColor(unlockColor);
                     c.a = 1f;
-                    discR.sharedMaterial.color = c;
+                    TrySetMaterialColor(discR.sharedMaterial, c);
                 }
             }
             if (_lockMarkerIcon != null)
@@ -1194,7 +1194,7 @@ namespace LoopSorting
                 {
                     var c = Color.white;
                     c.a = 0.14f;
-                    r.sharedMaterial.color = c;
+                    TrySetMaterialColor(r.sharedMaterial, c);
                 }
             }
 
@@ -1272,7 +1272,7 @@ namespace LoopSorting
             {
                 var c = color;
                 c.a = 0f;
-                r.sharedMaterial.color = c;
+                TrySetMaterialColor(r.sharedMaterial, c);
             }
 
             _mouthRipple.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.07f);
@@ -1295,7 +1295,7 @@ namespace LoopSorting
                 {
                     var c = color;
                     c.a = 0.55f * fade * Mathf.Clamp01(color.a);
-                    r.sharedMaterial.color = c;
+                    TrySetMaterialColor(r.sharedMaterial, c);
                 }
 
                 yield return null;
@@ -1311,7 +1311,7 @@ namespace LoopSorting
 
             var r = _mouthIndicator.GetComponent<Renderer>();
             Color baseColor = Color.white;
-            if (r != null && r.sharedMaterial != null) baseColor = r.sharedMaterial.color;
+            if (r != null && r.sharedMaterial != null) baseColor = GetMaterialColor(r.sharedMaterial, Color.white);
 
             // Thickness axis depends on opening orientation (indicator is a strip across the mouth).
             bool leftRight = _opening == OpeningSide.Left || _opening == OpeningSide.Right;
@@ -1361,7 +1361,7 @@ namespace LoopSorting
                     float impact = 1f - Mathf.Abs(u - 0.35f) / 0.35f;
                     impact = Mathf.Clamp01(impact);
                     c.a = Mathf.Lerp(baseColor.a, 0.26f, impact) * Mathf.Clamp01(color.a);
-                    r.sharedMaterial.color = c;
+                    TrySetMaterialColor(r.sharedMaterial, c);
                 }
 
                 yield return null;
@@ -1369,7 +1369,7 @@ namespace LoopSorting
 
             // Restore.
             _mouthIndicator.transform.localScale = _mouthIndicatorBaseScale;
-            if (r != null && r.sharedMaterial != null) r.sharedMaterial.color = baseColor;
+            if (r != null && r.sharedMaterial != null) TrySetMaterialColor(r.sharedMaterial, baseColor);
         }
 
         private void PlayMouthFlash(Color color, float sizeFactor, float seconds)
@@ -1399,7 +1399,7 @@ namespace LoopSorting
             {
                 var c = color;
                 c.a = 0f;
-                r.sharedMaterial.color = c;
+                TrySetMaterialColor(r.sharedMaterial, c);
             }
 
             float t = 0f;
@@ -1415,7 +1415,7 @@ namespace LoopSorting
                 {
                     var c = color;
                     c.a = (0.7f * fade) * Mathf.Clamp01(color.a);
-                    r.sharedMaterial.color = c;
+                    TrySetMaterialColor(r.sharedMaterial, c);
                 }
                 yield return null;
             }
@@ -1446,9 +1446,88 @@ namespace LoopSorting
             }
             var r = go.GetComponent<Renderer>();
             if (r == null || r.sharedMaterial == null) return;
-            var materialColor = r.sharedMaterial.color;
-            materialColor.a = a;
-            r.sharedMaterial.color = materialColor;
+            if (TrySetMaterialAlpha(r.sharedMaterial, a))
+            {
+                if (!r.enabled) r.enabled = true;
+                return;
+            }
+
+            // Some built-in shaders (e.g. Unlit/Transparent) don't expose a color property.
+            // Fall back to toggling renderer visibility (no smooth fade, but avoids errors).
+            r.enabled = a > 0.001f;
+        }
+
+        private static bool TrySetMaterialAlpha(Material mat, float a)
+        {
+            if (mat == null) return false;
+
+            // Common property names across pipelines/shaders.
+            if (mat.HasProperty("_Color"))
+            {
+                var c = mat.GetColor("_Color");
+                c.a = a;
+                mat.SetColor("_Color", c);
+                return true;
+            }
+            if (mat.HasProperty("_BaseColor"))
+            {
+                var c = mat.GetColor("_BaseColor");
+                c.a = a;
+                mat.SetColor("_BaseColor", c);
+                return true;
+            }
+            if (mat.HasProperty("_TintColor"))
+            {
+                var c = mat.GetColor("_TintColor");
+                c.a = a;
+                mat.SetColor("_TintColor", c);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TrySetMaterialColor(Material mat, Color color)
+        {
+            if (mat == null) return false;
+
+            if (mat.HasProperty("_Color"))
+            {
+                mat.SetColor("_Color", color);
+                return true;
+            }
+            if (mat.HasProperty("_BaseColor"))
+            {
+                mat.SetColor("_BaseColor", color);
+                return true;
+            }
+            if (mat.HasProperty("_TintColor"))
+            {
+                mat.SetColor("_TintColor", color);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static Color GetMaterialColor(Material mat, Color fallback)
+        {
+            if (mat == null) return fallback;
+
+            if (mat.HasProperty("_Color"))
+            {
+                return mat.GetColor("_Color");
+            }
+            if (mat.HasProperty("_BaseColor"))
+            {
+                return mat.GetColor("_BaseColor");
+            }
+            if (mat.HasProperty("_TintColor"))
+            {
+                return mat.GetColor("_TintColor");
+            }
+
+            return fallback;
         }
 
         private IEnumerator AnimateLockAlpha(float from, float to, float seconds)
@@ -1508,9 +1587,30 @@ namespace LoopSorting
             // If a textured material is already assigned, keep it (this function is meant as a fallback to avoid magenta).
             if (r.sharedMaterial != null && r.sharedMaterial.mainTexture != null)
             {
-                r.sharedMaterial.color = color;
-                r.sharedMaterial.renderQueue = renderQueue;
-                if (r.sharedMaterial.HasProperty("_ZWrite")) r.sharedMaterial.SetInt("_ZWrite", 0);
+                var tex = r.sharedMaterial.mainTexture;
+                if (TrySetMaterialColor(r.sharedMaterial, color))
+                {
+                    r.sharedMaterial.renderQueue = renderQueue;
+                    if (r.sharedMaterial.HasProperty("_ZWrite")) r.sharedMaterial.SetInt("_ZWrite", 0);
+                    return;
+                }
+
+                // Material is textured but not tintable (e.g. Unlit/Transparent). Replace with a tintable shader.
+                var tintShader =
+                    Shader.Find("Sprites/Default") ??
+                    Shader.Find("Unlit/Transparent Colored") ??
+                    Shader.Find("Unlit/Texture") ??
+                    Shader.Find("UI/Default") ??
+                    Shader.Find("Standard");
+                if (tintShader == null) return;
+
+                var tintMat = new Material(tintShader);
+                if (tintMat.HasProperty("_MainTex")) tintMat.SetTexture("_MainTex", tex);
+                else tintMat.mainTexture = tex;
+                TrySetMaterialColor(tintMat, color);
+                tintMat.renderQueue = renderQueue;
+                if (tintMat.HasProperty("_ZWrite")) tintMat.SetInt("_ZWrite", 0);
+                r.sharedMaterial = tintMat;
                 return;
             }
 
@@ -1520,12 +1620,7 @@ namespace LoopSorting
                 r.sharedMaterial.shader.name == "Unlit/Color" &&
                 r.sharedMaterial.renderQueue == renderQueue)
             {
-                var existing = r.sharedMaterial.color;
-                existing.r = color.r;
-                existing.g = color.g;
-                existing.b = color.b;
-                existing.a = color.a;
-                r.sharedMaterial.color = existing;
+                TrySetMaterialColor(r.sharedMaterial, color);
                 return;
             }
 
@@ -1536,10 +1631,8 @@ namespace LoopSorting
                 Shader.Find("Standard");
             if (shader == null) return;
 
-            var mat = new Material(shader)
-            {
-                color = color
-            };
+            var mat = new Material(shader);
+            TrySetMaterialColor(mat, color);
             mat.renderQueue = renderQueue;
             r.sharedMaterial = mat;
         }
@@ -1807,7 +1900,7 @@ namespace LoopSorting
                     {
                         var c = boxTint * 0.78f;
                         c.a = 0.5f;
-                        r.sharedMaterial.color = c;
+                        TrySetMaterialColor(r.sharedMaterial, c);
                     }
                 }
             }
@@ -1827,7 +1920,7 @@ namespace LoopSorting
                     {
                         var c = Color.white;
                         c.a = 0.22f;
-                        r.sharedMaterial.color = c;
+                        TrySetMaterialColor(r.sharedMaterial, c);
                     }
                 }
             }
@@ -1838,7 +1931,7 @@ namespace LoopSorting
                 {
                     var c = Color.white;
                     c.a = CompletedBadgeAlpha;
-                    r.sharedMaterial.color = c;
+                    TrySetMaterialColor(r.sharedMaterial, c);
                 }
             }
         }
@@ -2245,7 +2338,7 @@ namespace LoopSorting
             var mat = new Material(shader);
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
             else mat.mainTexture = texture;
-            mat.color = color;
+            TrySetMaterialColor(mat, color);
             mat.renderQueue = renderQueue;
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
             return mat;

@@ -4562,13 +4562,20 @@ namespace LoopSorting
 
         private void ApplyResultButtonsLayoutForWinRewards()
         {
-            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
-            if (!_resultButtonsBaseLayoutCaptured) return;
             if (_primaryButton == null || _secondaryButton == null) return;
 
             var primaryRect = _primaryButton.GetComponent<RectTransform>();
             var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
             if (primaryRect == null || secondaryRect == null) return;
+
+            // If the prefab was already authored/saved in win order (secondary above primary), keep it.
+            if (secondaryRect.localPosition.y > primaryRect.localPosition.y + 0.01f)
+            {
+                return;
+            }
+
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (!_resultButtonsBaseLayoutCaptured) return;
 
             // Swap Y layout: ad button (secondary) goes above, normal reward (primary) goes below.
             primaryRect.anchorMin = _resultSecondaryBaseAnchorMin;
@@ -4636,7 +4643,16 @@ namespace LoopSorting
         private void ConfigureResultWinRewardLayout()
         {
             ApplyResultButtonsLayoutForWinRewards();
-            ApplyResultButtonsSizeForWinRewards();
+
+            // Don't override prefab-authored button layout. This lets "Apply Runtime Layout To Prefabs" persist
+            // manual tweaks for the win result screen (positions/sizes of Primary/Secondary buttons).
+            bool hasAuthoredWinLayout =
+                (_primaryButton != null && _primaryButton.transform.Find("WinRewardLayout") != null) ||
+                (_secondaryButton != null && _secondaryButton.transform.Find("WinRewardLayout") != null);
+            if (!hasAuthoredWinLayout)
+            {
+                ApplyResultButtonsSizeForWinRewards();
+            }
 
             if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(false);
 
@@ -4844,6 +4860,23 @@ namespace LoopSorting
 
             if (amountText != null)
             {
+                if (amountText.font == null)
+                {
+                    var fallbackFont =
+                        (_primaryLabel != null && _primaryLabel.font != null) ? _primaryLabel.font :
+                        (_resultText != null && _resultText.font != null) ? _resultText.font :
+                        TMP_Settings.defaultFontAsset;
+                    if (fallbackFont != null) amountText.font = fallbackFont;
+                }
+                if (amountText.fontSharedMaterial == null)
+                {
+                    var font = amountText.font != null ? amountText.font : TMP_Settings.defaultFontAsset;
+                    if (font != null && font.material != null)
+                    {
+                        amountText.fontSharedMaterial = font.material;
+                    }
+                }
+
                 // Keep prefab-authored typography when the layout exists in the prefab.
                 if (createdRoot)
                 {
@@ -4950,6 +4983,37 @@ namespace LoopSorting
             if (_resultCloseButton != null)
             {
                 _resultCloseImage = _resultCloseButton.GetComponent<Image>();
+                if (_resultCloseImage != null)
+                {
+                    ApplyUIKitButtonSprites(
+                        _resultCloseButton,
+                        _resultCloseImage,
+                        normal: hasKit ? "ui.button.close_red.normal" : null,
+                        pressed: hasKit ? "ui.button.close_red.pressed" : null,
+                        disabled: hasKit ? "ui.button.close_red.disabled" : null);
+
+                    if (hasKit)
+                    {
+                        var iconSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.close");
+                        if (iconSprite != null)
+                        {
+                            var iconImg = EnsureOverlayImage(_resultCloseImage.transform, "Icon", iconSprite);
+                            if (iconImg != null)
+                            {
+                                iconImg.raycastTarget = false;
+                                iconImg.preserveAspect = true;
+                                var r = iconImg.rectTransform;
+                                float side = Mathf.Min(_resultCloseImage.rectTransform.rect.width, _resultCloseImage.rectTransform.rect.height) * 0.62f;
+                                if (side <= 1f) side = 80f;
+                                r.anchorMin = new Vector2(0.5f, 0.5f);
+                                r.anchorMax = new Vector2(0.5f, 0.5f);
+                                r.pivot = new Vector2(0.5f, 0.5f);
+                                r.anchoredPosition = Vector2.zero;
+                                r.sizeDelta = new Vector2(side, side);
+                            }
+                        }
+                    }
+                }
                 _resultCloseButton.onClick.RemoveAllListeners();
                 _resultCloseButton.onClick.AddListener(OnResultCloseClicked);
                 _resultCloseButton.gameObject.SetActive(false);
@@ -9334,7 +9398,6 @@ namespace LoopSorting
         private void RebindResultPanelPrefabSprites(bool hasKit)
         {
             if (_resultPanel == null) return;
-            if (!hasKit) return;
 
             var box = _resultPanel.transform.Find("Panel");
             if (box != null)
@@ -9342,15 +9405,25 @@ namespace LoopSorting
                 var img = box.GetComponent<Image>();
                 if (img != null)
                 {
-                    var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
-                    ApplySplitBackground(
-                        baseImage: img,
-                        parent: box.transform,
-                        decorName: "Decor",
-                        basePath: "UI_Sprites/panel_result_base_9slice.png",
-                        decorPath: "UI_Sprites/panel_result_decor.png",
-                        fallbackSprite: fallback,
-                        noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
+                    if (hasKit)
+                    {
+                        var fallback = LoopSortingUIKit.LoadSpriteByKey("ui.panel_result");
+                        ApplySplitBackground(
+                            baseImage: img,
+                            parent: box.transform,
+                            decorName: "Decor",
+                            basePath: "UI_Sprites/panel_result_base_9slice.png",
+                            decorPath: "UI_Sprites/panel_result_decor.png",
+                            fallbackSprite: fallback,
+                            noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
+                    }
+                    else
+                    {
+                        img.sprite = null;
+                        img.type = Image.Type.Simple;
+                        img.color = new Color(0.12f, 0.12f, 0.12f, 0.95f);
+                        img.preserveAspect = false;
+                    }
                 }
             }
 
@@ -9360,9 +9433,17 @@ namespace LoopSorting
                 var bannerImg = banner.GetComponent<Image>();
                 if (bannerImg != null)
                 {
-                    bannerImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_fast.info");
-                    bannerImg.type = bannerImg.sprite != null && bannerImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-                    bannerImg.color = Color.white;
+                    if (hasKit)
+                    {
+                        bannerImg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.tag_fast.info");
+                        bannerImg.type = bannerImg.sprite != null && bannerImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                        bannerImg.color = Color.white;
+                    }
+                    else
+                    {
+                        bannerImg.sprite = null;
+                        bannerImg.color = new Color(1f, 1f, 1f, 0f);
+                    }
                 }
             }
 
@@ -9371,7 +9452,12 @@ namespace LoopSorting
                 var img = _primaryButton.GetComponent<Image>();
                 if (img != null)
                 {
-                    ApplyUIKitButtonSprites(_primaryButton, img, "ui.button.mint_long.normal", "ui.button.mint_long.pressed", "ui.button.mint_long.disabled");
+                    ApplyUIKitButtonSprites(
+                        _primaryButton,
+                        img,
+                        normal: hasKit ? "ui.button.mint_long.normal" : null,
+                        pressed: hasKit ? "ui.button.mint_long.pressed" : null,
+                        disabled: hasKit ? "ui.button.mint_long.disabled" : null);
                 }
             }
             if (_secondaryButton != null)
@@ -9379,7 +9465,12 @@ namespace LoopSorting
                 var img = _secondaryButton.GetComponent<Image>();
                 if (img != null)
                 {
-                    ApplyUIKitButtonSprites(_secondaryButton, img, "ui.button.orange_long.normal", "ui.button.orange_long.pressed", "ui.button.orange_long.disabled");
+                    ApplyUIKitButtonSprites(
+                        _secondaryButton,
+                        img,
+                        normal: hasKit ? "ui.button.orange_long.normal" : null,
+                        pressed: hasKit ? "ui.button.orange_long.pressed" : null,
+                        disabled: hasKit ? "ui.button.orange_long.disabled" : null);
                 }
             }
         }

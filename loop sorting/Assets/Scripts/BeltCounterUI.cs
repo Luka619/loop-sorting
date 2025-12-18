@@ -20,10 +20,10 @@ namespace LoopSorting
         [Header("Thresholds")]
         [Min(0)]
         [Tooltip("When empty slots <= this value, the counter enters Warning visuals.")]
-        [SerializeField] private int warningThreshold = 5;
+        [SerializeField] private int warningThreshold = 20;
         [Min(0)]
         [Tooltip("When empty slots <= this value, the counter enters Danger visuals. Typically 0.")]
-        [SerializeField] private int dangerThreshold = 0;
+        [SerializeField] private int dangerThreshold = 10;
 
         [Header("Colors")]
         [Tooltip("Text color in Warning state.")]

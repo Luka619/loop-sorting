@@ -21,6 +21,7 @@ namespace LoopSorting
         private int _nextSource;
 
         private AudioSource _loopSource;
+        private float _webglLoopRetryAt;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         private static bool _wxVisibilityHooksRegistered;
@@ -104,6 +105,10 @@ namespace LoopSorting
             }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
+            if (_webglLoopRetryAt > 0f && Time.realtimeSinceStartup < _webglLoopRetryAt)
+            {
+                return;
+            }
             if (!CanOperateAudioNow())
             {
                 return;
@@ -132,6 +137,19 @@ namespace LoopSorting
             {
                 _loopSource.Play();
             }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // If WeChat denies audio operations (e.g. runningState=background), Play() can silently fail and we end up
+            // re-attempting every frame; back off to avoid log spam + perf spikes.
+            if (!_loopSource.isPlaying)
+            {
+                _webglLoopRetryAt = Time.realtimeSinceStartup + 2f;
+            }
+            else
+            {
+                _webglLoopRetryAt = 0f;
+            }
+#endif
         }
 
         public void StopLoop()

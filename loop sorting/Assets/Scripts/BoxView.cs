@@ -42,7 +42,7 @@ namespace LoopSorting
         private GameObject _completedConfetti;
         private Coroutine _completedFxRoutine;
 
-        private const float CompletedNineSliceBorderFrac = 0.14f;
+        private const float CompletedNineSliceBorderFrac = 0.32f;
         private const float LockNineSliceBorderFrac = 0.09f;
         private const float LockOverlayScale = 1.0f;
         private LineRenderer _frontOutline;
@@ -1658,14 +1658,13 @@ namespace LoopSorting
         {
             var boxTint = GetCompletedTintColor();
 
-            // Scale a bit larger so the frame reads like an outer glow (and doesn't fight the dashed box outline).
-            float sx = _boxSize.x * 1.12f;
-            float sy = _boxSize.y * 1.12f;
+            // Keep the overlay tightly matched to the box size (avoid "stretched mask" look).
+            float sx = _boxSize.x * 1.02f;
+            float sy = _boxSize.y * 1.02f;
             if (_completedFrameGlow != null) UpdateNineSliceMesh(_completedFrameGlow, sx, sy, CompletedNineSliceBorderFrac);
 
-            // Keep glass slightly inside to avoid adding another strong border.
-            float gx = _boxSize.x * 0.98f;
-            float gy = _boxSize.y * 0.98f;
+            float gx = _boxSize.x;
+            float gy = _boxSize.y;
             if (_completedGlass != null) UpdateNineSliceMesh(_completedGlass, gx, gy, CompletedNineSliceBorderFrac);
 
             // For very wide/tall boxes, use the 1024 textures to keep edge quality when stretched.
@@ -1719,7 +1718,7 @@ namespace LoopSorting
                 if (r != null && r.sharedMaterial != null)
                 {
                     var c = Color.white;
-                    c.a = 0.12f;
+                    c.a = 0.22f;
                     r.sharedMaterial.color = c;
                 }
             }

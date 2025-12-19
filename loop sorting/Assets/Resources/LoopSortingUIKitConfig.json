@@ -547,6 +547,15 @@
       ]
     },
     {
+      "pattern": "box_outline_dashed_open_*",
+      "border": [
+        140,
+        140,
+        140,
+        140
+      ]
+    },
+    {
       "pattern": "completed_overlay.png",
       "border": [
         120,

@@ -54,6 +54,8 @@ namespace LoopSorting
         private const float LockOverlayBaseAlpha = 0.50f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
+        private GameObject _boxRim;
+        private SpriteRenderer _boxRimRenderer;
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
         private readonly HashSet<int> _incomingAnimatingSlots = new HashSet<int>();
         private readonly Dictionary<int, Vector3> _slotFinalLocalPos = new Dictionary<int, Vector3>();
@@ -88,6 +90,8 @@ namespace LoopSorting
         // so keep it small to align visually with the box face.
         private const float OutlineZ = 0.08f;
         private const float BoxOutlineZ = -0.12f;
+        private const int BoxRimQueue = 2950;
+        private const float BoxRimPixelsPerUnit = 1000f;
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 
@@ -380,12 +384,13 @@ namespace LoopSorting
                 row = _cellOrder[slotIndex].y;
             }
 
+            var rect = GetBlocksLocalRect();
             var cellSize = new Vector2(
-                _boxSize.x / _columns,
-                _boxSize.y / _rows
+                rect.width / _columns,
+                rect.height / _rows
             );
 
-            var origin = new Vector2(-_boxSize.x * 0.5f + cellSize.x * 0.5f, _boxSize.y * 0.5f - cellSize.y * 0.5f);
+            var origin = new Vector2(rect.xMin + cellSize.x * 0.5f, rect.yMax - cellSize.y * 0.5f);
             var pos = origin + new Vector2(col * cellSize.x, -row * cellSize.y);
 
             var finalPos = new Vector3(pos.x, pos.y, 0f);
@@ -403,6 +408,28 @@ namespace LoopSorting
             bool hidden = _slotHidden[slotIndex] && slotIndex > 0;
             var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
             BlockVisual.ApplyColor(_blockVisuals[slotIndex], matColor);
+        }
+
+        private Rect GetBlocksLocalRect()
+        {
+            // When using the authored rim sprite, inset blocks so they sit inside the "box" walls.
+            // If the rim sprite isn't available (fallback dashed outline), keep legacy full-bleed layout.
+            bool hasRimSprite = _boxRimRenderer != null && _boxRimRenderer.sprite != null;
+            if (!hasRimSprite)
+            {
+                return new Rect(-_boxSize.x * 0.5f, -_boxSize.y * 0.5f, _boxSize.x, _boxSize.y);
+            }
+
+            float minDim = Mathf.Max(0.0001f, Mathf.Min(_boxSize.x, _boxSize.y));
+            float cell = Mathf.Min(_boxSize.x / Mathf.Max(1, _columns), _boxSize.y / Mathf.Max(1, _rows));
+
+            // Keep padding mostly constant in world units across different box capacities.
+            float pad = Mathf.Min(cell * 0.12f, minDim * 0.08f);
+            pad = Mathf.Clamp(pad, 0.02f, minDim * 0.25f);
+
+            float w = Mathf.Max(0.001f, _boxSize.x - pad * 2f);
+            float h = Mathf.Max(0.001f, _boxSize.y - pad * 2f);
+            return new Rect(-_boxSize.x * 0.5f + pad, -_boxSize.y * 0.5f + pad, w, h);
         }
 
         private void CacheMouth()
@@ -514,7 +541,8 @@ namespace LoopSorting
                 return;
             }
 
-            var cellSize = new Vector2(_boxSize.x / _columns, _boxSize.y / _rows);
+            var rect = GetBlocksLocalRect();
+            var cellSize = new Vector2(rect.width / _columns, rect.height / _rows);
 
             // Build exact outline around the occupied cells (instead of a bounding rectangle),
             // so the outline matches the block count even when the last row is partial.
@@ -600,8 +628,8 @@ namespace LoopSorting
             {
                 int vx = KeyX(cur);
                 int vy = KeyY(cur);
-                float px = -_boxSize.x * 0.5f + vx * cellSize.x;
-                float py = _boxSize.y * 0.5f - vy * cellSize.y;
+                float px = rect.xMin + vx * cellSize.x;
+                float py = rect.yMax - vy * cellSize.y;
                 path.Add(new Vector3(px, py, OutlineZ));
 
                 if (!next.TryGetValue(cur, out var nxt))
@@ -667,6 +695,22 @@ namespace LoopSorting
 
         private void BuildBoxOutline()
         {
+            if (TryBuildBoxRim())
+            {
+                // Clear legacy dashed segments if present.
+                for (int i = 0; i < _boxOutlineSegments.Count; i++)
+                {
+                    var seg = _boxOutlineSegments[i];
+                    if (seg != null) Destroy(seg.gameObject);
+                }
+                _boxOutlineSegments.Clear();
+                return;
+            }
+
+            // Fallback: legacy dashed outline (keeps game usable if rim sprite is missing).
+            if (_boxRim != null) _boxRim.SetActive(false);
+            if (_boxRimRenderer != null) _boxRimRenderer.sprite = null;
+
             // clear previous
             foreach (var seg in _boxOutlineSegments)
             {
@@ -693,6 +737,118 @@ namespace LoopSorting
             {
                 BuildDashedEdge(edge.Item1, edge.Item2);
             }
+        }
+
+        private static string GetBoxRimSpritePath(OpeningSide opening)
+        {
+            switch (opening)
+            {
+                case OpeningSide.Top:
+                    return "World_Sprites/box_outline_dashed_open_top.png";
+                case OpeningSide.Right:
+                    return "World_Sprites/box_outline_dashed_open_right.png";
+                case OpeningSide.Bottom:
+                    return "World_Sprites/box_outline_dashed_open_bottom.png";
+                case OpeningSide.Left:
+                    return "World_Sprites/box_outline_dashed_open_left.png";
+                default:
+                    return "World_Sprites/box_outline_dashed_open_top.png";
+            }
+        }
+
+        private static float GetBoxRimFallbackRotationDegFromTop(OpeningSide opening)
+        {
+            switch (opening)
+            {
+                case OpeningSide.Top: return 0f;
+                case OpeningSide.Right: return -90f;
+                case OpeningSide.Bottom: return 180f;
+                case OpeningSide.Left: return 90f;
+                default: return 0f;
+            }
+        }
+
+        private bool TryBuildBoxRim()
+        {
+            if (!LoopSortingUIKit.IsAvailable())
+            {
+                return false;
+            }
+
+            if (_boxRim == null)
+            {
+                _boxRim = new GameObject("BoxRim");
+                _boxRim.transform.SetParent(transform, false);
+                _boxRim.transform.localPosition = new Vector3(0f, 0f, BoxOutlineZ);
+                _boxRim.transform.localScale = Vector3.one;
+
+                _boxRimRenderer = _boxRim.AddComponent<SpriteRenderer>();
+                _boxRimRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _boxRimRenderer.receiveShadows = false;
+                _boxRimRenderer.color = Color.white;
+                _boxRimRenderer.sortingOrder = BoxRimQueue;
+
+                var shader = Shader.Find("Sprites/Default");
+                if (shader != null)
+                {
+                    var mat = new Material(shader);
+                    mat.renderQueue = BoxRimQueue;
+                    _boxRimRenderer.sharedMaterial = mat;
+                }
+            }
+
+            if (_boxRimRenderer == null)
+            {
+                _boxRimRenderer = _boxRim != null ? _boxRim.GetComponent<SpriteRenderer>() : null;
+            }
+            if (_boxRimRenderer == null)
+            {
+                return false;
+            }
+
+            // Prefer an authored sprite per opening direction. If missing, rotate the TOP sprite as fallback.
+            string spritePath = GetBoxRimSpritePath(_opening);
+            var sprite = LoopSortingUIKit.LoadSprite(spritePath, pixelsPerUnit: BoxRimPixelsPerUnit, applyNineSlice: true);
+            float rotationDeg = 0f;
+            if (sprite == null && _opening != OpeningSide.Top)
+            {
+                spritePath = GetBoxRimSpritePath(OpeningSide.Top);
+                sprite = LoopSortingUIKit.LoadSprite(spritePath, pixelsPerUnit: BoxRimPixelsPerUnit, applyNineSlice: true);
+                rotationDeg = GetBoxRimFallbackRotationDegFromTop(_opening);
+            }
+
+            if (sprite == null)
+            {
+                return false;
+            }
+
+            _boxRimRenderer.sprite = sprite;
+            _boxRimRenderer.drawMode = sprite.border.sqrMagnitude > 0.0001f ? SpriteDrawMode.Sliced : SpriteDrawMode.Simple;
+            _boxRimRenderer.sortingOrder = BoxRimQueue;
+            if (_boxRimRenderer.sharedMaterial != null)
+            {
+                _boxRimRenderer.sharedMaterial.renderQueue = BoxRimQueue;
+            }
+
+            // Use SpriteRenderer's native 9-slice when possible.
+            float w = _boxSize.x;
+            float h = _boxSize.y;
+            if (_boxRimRenderer.drawMode == SpriteDrawMode.Sliced)
+            {
+                _boxRimRenderer.size = new Vector2(w, h);
+                _boxRim.transform.localScale = Vector3.one;
+            }
+            else
+            {
+                var b = sprite.bounds;
+                float sx = b.size.x > 0.0001f ? w / b.size.x : 1f;
+                float sy = b.size.y > 0.0001f ? h / b.size.y : 1f;
+                _boxRim.transform.localScale = new Vector3(sx, sy, 1f);
+            }
+
+            _boxRim.transform.localRotation = Quaternion.Euler(0f, 0f, rotationDeg);
+            _boxRim.SetActive(true);
+            return true;
         }
 
         private void BuildDashedEdge(Vector3 start, Vector3 end)
@@ -1752,6 +1908,7 @@ namespace LoopSorting
 
         private void SetBoxOutlineVisible(bool visible)
         {
+            if (_boxRim != null) _boxRim.SetActive(visible);
             if (_boxOutlineSegments == null) return;
             for (int i = 0; i < _boxOutlineSegments.Count; i++)
             {

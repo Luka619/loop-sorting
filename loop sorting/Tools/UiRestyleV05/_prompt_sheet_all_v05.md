@@ -1807,12 +1807,12 @@ photorealistic, realistic materials, wood texture, metal texture, fabric, excess
 
 **Positive prompt**
 ~~~
-UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view
+3D creamy plastic toy storage box rim frame for holding lego-like bricks, rounded-square outer frame with visible wall thickness, soft bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along the inside edge, hollow CENTER cutout is fully transparent (alpha 0), NO background fill, OPENING GAP on the RIGHT edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique corner decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10% of canvas), all shadows fully inside frame, crisp edges, sRGB PNG, orthographic front view
 ~~~
 
 **Negative prompt**
 ~~~
-photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
 ~~~
 
 ## World_Sprites/box_outline_dashed_open_top.png (1024x1024)
@@ -1821,12 +1821,40 @@ photorealistic, realistic materials, wood texture, metal texture, fabric, excess
 
 **Positive prompt**
 ~~~
-UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view
+3D creamy plastic toy storage box rim frame for holding lego-like bricks, rounded-square outer frame with visible wall thickness, soft bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along the inside edge, hollow CENTER cutout is fully transparent (alpha 0), NO background fill, OPENING GAP on the TOP edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique corner decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10% of canvas), all shadows fully inside frame, crisp edges, sRGB PNG, orthographic front view
 ~~~
 
 **Negative prompt**
 ~~~
-photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
+## World_Sprites/box_outline_dashed_open_bottom.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+3D creamy plastic toy storage box rim frame for holding lego-like bricks, rounded-square outer frame with visible wall thickness, soft bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along the inside edge, hollow CENTER cutout is fully transparent (alpha 0), NO background fill, OPENING GAP on the BOTTOM edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique corner decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10% of canvas), all shadows fully inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
+## World_Sprites/box_outline_dashed_open_left.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+3D creamy plastic toy storage box rim frame for holding lego-like bricks, rounded-square outer frame with visible wall thickness, soft bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along the inside edge, hollow CENTER cutout is fully transparent (alpha 0), NO background fill, OPENING GAP on the LEFT edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique corner decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10% of canvas), all shadows fully inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
 ~~~
 
 ## World_Sprites/completed_overlay.png (1024x1024)

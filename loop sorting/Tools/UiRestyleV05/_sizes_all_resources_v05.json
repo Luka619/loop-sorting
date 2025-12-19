@@ -745,6 +745,18 @@
     },
     {
         "dir":  "World_Sprites",
+        "name":  "box_outline_dashed_open_bottom.png",
+        "w":  552,
+        "h":  562
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_outline_dashed_open_left.png",
+        "w":  552,
+        "h":  562
+    },
+    {
+        "dir":  "World_Sprites",
         "name":  "completed_overlay.png",
         "w":  520,
         "h":  520

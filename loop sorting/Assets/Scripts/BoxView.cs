@@ -51,6 +51,7 @@ namespace LoopSorting
         private const float CompletedOverlayPopSeconds = 0.18f;
         private const float LockNineSliceBorderFrac = 0.09f;
         private const float LockOverlayScale = 1.0f;
+        private const float LockOverlayBaseAlpha = 0.50f;
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
@@ -864,8 +865,9 @@ namespace LoopSorting
             SetWorldOverlaySorting(_lockMarkerDisc, LockBadgeQueue + 1);
             SetWorldOverlaySorting(_lockMarkerIcon, LockBadgeQueue + 2);
 
-            float badgeBase = Mathf.Min(_boxSize.x, _boxSize.y);
-            float plateWidth = badgeBase * 0.42f;
+            float badgeWidth = _boxSize.x * 0.96f;
+            float badgeHeightMax = _boxSize.y * 0.92f;
+            float plateWidth = Mathf.Max(0.05f, badgeWidth);
             float plateHeight = plateWidth;
             if (LoopSortingUIKit.IsAvailable())
             {
@@ -875,6 +877,12 @@ namespace LoopSorting
                     plateHeight = plateWidth * ((float)plateTex.height / plateTex.width);
                 }
             }
+            if (plateHeight > badgeHeightMax && badgeHeightMax > 0.05f)
+            {
+                float s = badgeHeightMax / plateHeight;
+                plateWidth *= s;
+                plateHeight *= s;
+            }
 
             if (_lockMarkerPlate != null)
             {
@@ -883,7 +891,8 @@ namespace LoopSorting
             if (_lockMarkerDisc != null)
             {
                 // Make the tinted disc slightly larger than the lock icon so a colored edge is visible.
-                float disc = plateWidth * 0.68f;
+                float baseSize = Mathf.Min(plateWidth, plateHeight);
+                float disc = baseSize * 0.92f;
                 _lockMarkerDisc.transform.localScale = new Vector3(disc, disc, 1f);
                 var discR = _lockMarkerDisc.GetComponent<Renderer>();
                 if (discR != null && discR.sharedMaterial != null)
@@ -905,7 +914,8 @@ namespace LoopSorting
             }
             if (_lockMarkerIcon != null)
             {
-                float iconW = plateWidth * 0.56f;
+                float baseSize = Mathf.Min(plateWidth, plateHeight);
+                float iconW = baseSize * 0.70f;
                 float iconH = iconW;
                 if (LoopSortingUIKit.IsAvailable())
                 {
@@ -1421,7 +1431,7 @@ namespace LoopSorting
 
         private void SetLockVisualAlpha(float a)
         {
-            SetQuadAlpha(_lockOverlay, a);
+            SetQuadAlpha(_lockOverlay, a * LockOverlayBaseAlpha);
             SetQuadAlpha(_lockMarkerPlate, a);
             SetQuadAlpha(_lockMarkerColorHalo, a);
             SetQuadAlpha(_lockMarkerDisc, a);

@@ -4331,53 +4331,53 @@
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_128.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_confetti_stream_128.png",
-      "size": "1024x1024",
+      "size": "128x128",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: single curved confetti streamer/ribbon piece, centered, white (tintable), subtle 3D shading with gentle highlight, soft edges, transparent background, no text, exact 128x128px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_256.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_confetti_stream_256.png",
-      "size": "1024x1024",
+      "size": "256x256",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: single curved confetti streamer/ribbon piece, centered, white (tintable), subtle 3D shading with gentle highlight, soft edges, transparent background, no text, exact 256x256px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_128.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_confetti_tri_128.png",
-      "size": "1024x1024",
+      "size": "128x128",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: single confetti triangle piece, centered, white (tintable), subtle 3D shading with tiny specular highlight, soft edges, transparent background, no text, exact 128x128px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_256.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_confetti_tri_256.png",
-      "size": "1024x1024",
+      "size": "256x256",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: single confetti triangle piece, centered, white (tintable), subtle 3D shading with tiny specular highlight, soft edges, transparent background, no text, exact 256x256px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_firework_confetti_burst_sheet_16f_1024x1024.png": {
@@ -4390,46 +4390,46 @@
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX sprite sheet for firework confetti burst, 16 frames arranged in a 4x4 grid, each cell 256x256, radial explosion with confetti pieces + sparkles expanding outward over time, bright white core with soft glow, transparent background, frames aligned to the grid with no spacing and no padding, no frame separators, no UI panels, no text, exact 1024x1024px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_firework_confetti_burst_sheet_16f_2048x2048.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_firework_confetti_burst_sheet_16f_2048x2048.png",
-      "size": "1024x1024",
+      "size": "2048x2048",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX sprite sheet for firework confetti burst, 16 frames arranged in a 4x4 grid, each cell 512x512, radial explosion with confetti pieces + sparkles expanding outward over time, bright white core with soft glow, transparent background, frames aligned to the grid with no spacing and no padding, no frame separators, no UI panels, no text, exact 2048x2048px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_128.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_sparkle_star_128.png",
-      "size": "1024x1024",
+      "size": "128x128",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: sparkle star glint (4-point or 8-point), bright white core with soft glow falloff, designed for additive blending, centered, transparent background, no text, exact 128x128px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_256.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
       "filename": "vfx_sparkle_star_256.png",
-      "size": "1024x1024",
+      "size": "256x256",
       "background": "transparent",
       "template": "GENERIC",
       "tags": [
         "legacy_pack",
         "copied_from_top_level"
       ],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 1024x1024px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
+      "positive": "VFX particle texture: sparkle star glint (4-point or 8-point), bright white core with soft glow falloff, designed for additive blending, centered, transparent background, no text, exact 256x256px, sRGB, PNG",
       "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     }
   }

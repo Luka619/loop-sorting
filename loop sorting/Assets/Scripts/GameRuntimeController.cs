@@ -4200,8 +4200,8 @@ namespace LoopSorting
                 bool locked = i < _boxLocked.Count && _boxLocked[i];
                 var unlockColor = i < _boxSpecs.Count && _boxSpecs[i] != null ? _boxSpecs[i].unlockColor : BlockColor.Red;
                 _boxViews[i].SetLocked(locked, unlockColor);
-                // Locked boxes must hide all contents until unlocked.
-                _boxViews[i].SyncBlocks(locked ? null : _game.Containers[i].Blocks);
+                // Keep showing blocks under the lock overlay (frosted glass effect).
+                _boxViews[i].SyncBlocks(_game.Containers[i].Blocks);
             }
         }
 

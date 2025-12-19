@@ -734,26 +734,50 @@
     {
         "dir":  "World_Sprites",
         "name":  "box_outline_dashed_open_right.png",
-        "w":  552,
-        "h":  562
+        "w":  1024,
+        "h":  1024
     },
     {
         "dir":  "World_Sprites",
         "name":  "box_outline_dashed_open_top.png",
-        "w":  552,
-        "h":  562
+        "w":  1024,
+        "h":  1024
     },
     {
         "dir":  "World_Sprites",
         "name":  "box_outline_dashed_open_bottom.png",
-        "w":  552,
-        "h":  562
+        "w":  1024,
+        "h":  1024
     },
     {
         "dir":  "World_Sprites",
         "name":  "box_outline_dashed_open_left.png",
-        "w":  552,
-        "h":  562
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_cavity_open_top.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_cavity_open_right.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_cavity_open_bottom.png",
+        "w":  1024,
+        "h":  1024
+    },
+    {
+        "dir":  "World_Sprites",
+        "name":  "box_cavity_open_left.png",
+        "w":  1024,
+        "h":  1024
     },
     {
         "dir":  "World_Sprites",

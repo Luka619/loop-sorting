@@ -55,7 +55,16 @@ namespace LoopSorting
         private LineRenderer _frontOutline;
         private readonly List<LineRenderer> _boxOutlineSegments = new List<LineRenderer>();
         private GameObject _boxRim;
-        private SpriteRenderer _boxRimRenderer;
+        private GameObject _boxCavity;
+        private Renderer _boxCavityRenderer;
+        private readonly GameObject[] _boxRimEdges = new GameObject[4]; // Top, Right, Bottom, Left
+        private readonly Renderer[] _boxRimEdgeRenderers = new Renderer[4];
+        private readonly GameObject[] _boxRimCorners = new GameObject[4]; // TL, TR, BR, BL
+        private readonly Renderer[] _boxRimCornerRenderers = new Renderer[4];
+        private Material _boxRimEdgeMaterial;
+        private Material _boxRimCornerMaterial;
+        private Material _boxCavityMaterial;
+        private bool _hasBoxFrame;
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
         private readonly HashSet<int> _incomingAnimatingSlots = new HashSet<int>();
         private readonly Dictionary<int, Vector3> _slotFinalLocalPos = new Dictionary<int, Vector3>();
@@ -89,9 +98,21 @@ namespace LoopSorting
         // Depth offset for the black "front outline". With a tilted orthographic camera this also affects screen-Y,
         // so keep it small to align visually with the box face.
         private const float OutlineZ = 0.08f;
-        private const float BoxOutlineZ = -0.12f;
-        private const int BoxRimQueue = 2950;
-        private const float BoxRimPixelsPerUnit = 1000f;
+        private const int FrontOutlineQueue = 2990;
+        // Box rim/cavity should stay behind the black outline, but still in front of the background.
+        private const float BoxOutlineZ = 0.10f;
+        private const float BoxVisualScale = 1.00f;
+        private const float BoxWallFracOfCell = 0.22f;
+        private const float BoxWallMinFracOfMinDim = 0.06f;
+        private const float BoxWallMaxFracOfMinDim = 0.14f;
+        private const float BoxPadClosedMul = 1.05f;
+        private const float BoxPadOpenMul = 0.25f;
+        // Keep box rim/cavity behind mouth FX and overlays, but still in the transparent pipeline so "Order in Layer" works.
+        private const int BoxCavitySortingOrder = 2800;
+        private const int BoxCavityRenderQueue = 2800;
+        private const int BoxRimSortingOrder = 2810;
+        private const int BoxRimRenderQueue = 2810;
+        private const float BoxCavityZ = 0.11f;
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 
@@ -123,6 +144,7 @@ namespace LoopSorting
 
             EnsureSlotCapacity();
             BuildBoxOutline();
+            TryBuildBoxCavity();
         }
 
         public void SyncBlocks(IReadOnlyList<Block> blocks)
@@ -410,26 +432,51 @@ namespace LoopSorting
             BlockVisual.ApplyColor(_blockVisuals[slotIndex], matColor);
         }
 
+        private struct BoxMetrics
+        {
+            public Vector2 outerSize;
+            public float wall;
+            public Rect contentRect;
+        }
+
+        private BoxMetrics ComputeBoxMetrics()
+        {
+            var m = new BoxMetrics();
+            m.outerSize = _boxSize * BoxVisualScale;
+
+            float minDim = Mathf.Max(0.0001f, Mathf.Min(m.outerSize.x, m.outerSize.y));
+            float cell = Mathf.Min(m.outerSize.x / Mathf.Max(1, _columns), m.outerSize.y / Mathf.Max(1, _rows));
+
+            m.wall = Mathf.Clamp(
+                cell * BoxWallFracOfCell,
+                minDim * BoxWallMinFracOfMinDim,
+                minDim * BoxWallMaxFracOfMinDim);
+
+            float padClosed = Mathf.Clamp(m.wall * BoxPadClosedMul, 0.02f, minDim * 0.25f);
+            float padOpen = Mathf.Clamp(m.wall * BoxPadOpenMul, 0f, padClosed);
+
+            float leftPad = _opening == OpeningSide.Left ? padOpen : padClosed;
+            float rightPad = _opening == OpeningSide.Right ? padOpen : padClosed;
+            float topPad = _opening == OpeningSide.Top ? padOpen : padClosed;
+            float bottomPad = _opening == OpeningSide.Bottom ? padOpen : padClosed;
+
+            float w = Mathf.Max(0.001f, m.outerSize.x - leftPad - rightPad);
+            float h = Mathf.Max(0.001f, m.outerSize.y - topPad - bottomPad);
+            m.contentRect = new Rect(-m.outerSize.x * 0.5f + leftPad, -m.outerSize.y * 0.5f + bottomPad, w, h);
+            return m;
+        }
+
         private Rect GetBlocksLocalRect()
         {
-            // When using the authored rim sprite, inset blocks so they sit inside the "box" walls.
-            // If the rim sprite isn't available (fallback dashed outline), keep legacy full-bleed layout.
-            bool hasRimSprite = _boxRimRenderer != null && _boxRimRenderer.sprite != null;
-            if (!hasRimSprite)
+            // Decouple visuals from layout:
+            // - Blocks always align to a computed "content rect"
+            // - Box rim/cavity visuals use the same metrics, without relying on 9-slice borders.
+            if (!_hasBoxFrame)
             {
                 return new Rect(-_boxSize.x * 0.5f, -_boxSize.y * 0.5f, _boxSize.x, _boxSize.y);
             }
 
-            float minDim = Mathf.Max(0.0001f, Mathf.Min(_boxSize.x, _boxSize.y));
-            float cell = Mathf.Min(_boxSize.x / Mathf.Max(1, _columns), _boxSize.y / Mathf.Max(1, _rows));
-
-            // Keep padding mostly constant in world units across different box capacities.
-            float pad = Mathf.Min(cell * 0.12f, minDim * 0.08f);
-            pad = Mathf.Clamp(pad, 0.02f, minDim * 0.25f);
-
-            float w = Mathf.Max(0.001f, _boxSize.x - pad * 2f);
-            float h = Mathf.Max(0.001f, _boxSize.y - pad * 2f);
-            return new Rect(-_boxSize.x * 0.5f + pad, -_boxSize.y * 0.5f + pad, w, h);
+            return ComputeBoxMetrics().contentRect;
         }
 
         private void CacheMouth()
@@ -650,18 +697,9 @@ namespace LoopSorting
                 _frontOutline = go.AddComponent<LineRenderer>();
                 _frontOutline.useWorldSpace = false;
                 _frontOutline.loop = true;
-                var shader =
-                    Shader.Find("Unlit/Color") ??
-                    Shader.Find("Sprites/Default") ??
-                    Shader.Find("UI/Default") ??
-                    Shader.Find("Standard");
-                if (shader != null)
-                {
-                    _frontOutline.sharedMaterial = new Material(shader)
-                    {
-                        color = Color.black
-                    };
-                }
+                _frontOutline.sortingLayerID = 0;
+                _frontOutline.sortingOrder = FrontOutlineQueue;
+                EnsureUnlitColorMaterial(go, Color.black, FrontOutlineQueue);
                 _frontOutline.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 _frontOutline.receiveShadows = false;
                 _frontOutline.numCapVertices = 2;
@@ -707,9 +745,9 @@ namespace LoopSorting
                 return;
             }
 
-            // Fallback: legacy dashed outline (keeps game usable if rim sprite is missing).
+            // Fallback: legacy dashed outline (keeps game usable if the new box frame textures are missing).
+            _hasBoxFrame = false;
             if (_boxRim != null) _boxRim.SetActive(false);
-            if (_boxRimRenderer != null) _boxRimRenderer.sprite = null;
 
             // clear previous
             foreach (var seg in _boxOutlineSegments)
@@ -739,39 +777,121 @@ namespace LoopSorting
             }
         }
 
-        private static string GetBoxRimSpritePath(OpeningSide opening)
+        private const string BoxRimEdgeTexturePath = "World_Sprites/box_rim_edge_tile.png";
+        private const string BoxRimCornerTexturePath = "World_Sprites/box_rim_corner.png";
+        private const string BoxCavityTexturePath = "World_Sprites/box_cavity_fill.png";
+
+        private static Material CreateBoxTextureMaterial(Texture2D texture, int renderQueue)
         {
-            switch (opening)
-            {
-                case OpeningSide.Top:
-                    return "World_Sprites/box_outline_dashed_open_top.png";
-                case OpeningSide.Right:
-                    return "World_Sprites/box_outline_dashed_open_right.png";
-                case OpeningSide.Bottom:
-                    return "World_Sprites/box_outline_dashed_open_bottom.png";
-                case OpeningSide.Left:
-                    return "World_Sprites/box_outline_dashed_open_left.png";
-                default:
-                    return "World_Sprites/box_outline_dashed_open_top.png";
-            }
+            if (texture == null) return null;
+
+            var shader =
+                Shader.Find("LoopSorting/UnlitTexture") ??
+                Shader.Find("Unlit/Transparent") ??
+                Shader.Find("Unlit/Texture") ??
+                Shader.Find("Sprites/Default") ??
+                Shader.Find("UI/Default") ??
+                Shader.Find("Standard");
+
+            if (shader == null) return null;
+
+            var mat = new Material(shader);
+            if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
+            else mat.mainTexture = texture;
+
+            TrySetMaterialColor(mat, Color.white);
+            mat.renderQueue = renderQueue;
+
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0);
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
+
+            return mat;
         }
 
-        private static float GetBoxRimFallbackRotationDegFromTop(OpeningSide opening)
+        private static GameObject EnsureQuadChild(GameObject parent, string name, out Renderer renderer)
         {
-            switch (opening)
+            renderer = null;
+            if (parent == null) return null;
+
+            Transform existing = parent.transform.Find(name);
+            GameObject go;
+            if (existing != null)
             {
-                case OpeningSide.Top: return 0f;
-                case OpeningSide.Right: return -90f;
-                case OpeningSide.Bottom: return 180f;
-                case OpeningSide.Left: return 90f;
-                default: return 0f;
+                go = existing.gameObject;
             }
+            else
+            {
+                go = RuntimePrimitives.CreateQuad(name);
+                go.name = name;
+                go.transform.SetParent(parent.transform, false);
+                RemoveCollider(go);
+            }
+
+            renderer = go.GetComponent<Renderer>();
+            return go;
+        }
+
+        private bool TryBuildBoxCavity()
+        {
+            if (!LoopSortingUIKit.IsAvailable())
+            {
+                return false;
+            }
+
+            var tex = LoopSortingUIKit.LoadTexture(BoxCavityTexturePath);
+            if (tex == null)
+            {
+                if (_boxCavity != null) _boxCavity.SetActive(false);
+                return false;
+            }
+
+            if (_boxCavity == null)
+            {
+                _boxCavity = RuntimePrimitives.CreateQuad("BoxCavity");
+                _boxCavity.transform.SetParent(transform, false);
+                RemoveCollider(_boxCavity);
+            }
+
+            _boxCavityRenderer = _boxCavity.GetComponent<Renderer>();
+            if (_boxCavityRenderer != null)
+            {
+                if (_boxCavityMaterial == null || _boxCavityMaterial.mainTexture != tex || _boxCavityMaterial.renderQueue != BoxCavityRenderQueue)
+                {
+                    _boxCavityMaterial = CreateBoxTextureMaterial(tex, BoxCavityRenderQueue);
+                }
+                if (_boxCavityMaterial != null)
+                {
+                    _boxCavityRenderer.sharedMaterial = _boxCavityMaterial;
+                }
+            }
+
+            SetWorldOverlaySorting(_boxCavity, BoxCavitySortingOrder);
+
+            var metrics = ComputeBoxMetrics();
+            var c = metrics.contentRect.center;
+            _boxCavity.transform.localPosition = new Vector3(c.x, c.y, BoxCavityZ); // behind blocks (bigger Z)
+            _boxCavity.transform.localRotation = Quaternion.identity;
+            _boxCavity.transform.localScale = new Vector3(metrics.contentRect.width, metrics.contentRect.height, 1f);
+            _boxCavity.SetActive(true);
+            return true;
         }
 
         private bool TryBuildBoxRim()
         {
             if (!LoopSortingUIKit.IsAvailable())
             {
+                _hasBoxFrame = false;
+                return false;
+            }
+
+            var edgeTex = LoopSortingUIKit.LoadTexture(BoxRimEdgeTexturePath);
+            var cornerTex = LoopSortingUIKit.LoadTexture(BoxRimCornerTexturePath);
+            if (edgeTex == null || cornerTex == null)
+            {
+                _hasBoxFrame = false;
+                if (_boxRim != null) _boxRim.SetActive(false);
                 return false;
             }
 
@@ -779,75 +899,138 @@ namespace LoopSorting
             {
                 _boxRim = new GameObject("BoxRim");
                 _boxRim.transform.SetParent(transform, false);
-                _boxRim.transform.localPosition = new Vector3(0f, 0f, BoxOutlineZ);
                 _boxRim.transform.localScale = Vector3.one;
+            }
+            _boxRim.transform.localPosition = new Vector3(0f, 0f, BoxOutlineZ);
+            _boxRim.transform.localRotation = Quaternion.identity;
 
-                _boxRimRenderer = _boxRim.AddComponent<SpriteRenderer>();
-                _boxRimRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                _boxRimRenderer.receiveShadows = false;
-                _boxRimRenderer.color = Color.white;
-                _boxRimRenderer.sortingOrder = BoxRimQueue;
+            if (_boxRimEdgeMaterial == null || _boxRimEdgeMaterial.mainTexture != edgeTex || _boxRimEdgeMaterial.renderQueue != BoxRimRenderQueue)
+            {
+                _boxRimEdgeMaterial = CreateBoxTextureMaterial(edgeTex, BoxRimRenderQueue);
+            }
+            if (_boxRimCornerMaterial == null || _boxRimCornerMaterial.mainTexture != cornerTex || _boxRimCornerMaterial.renderQueue != (BoxRimRenderQueue + 1))
+            {
+                _boxRimCornerMaterial = CreateBoxTextureMaterial(cornerTex, BoxRimRenderQueue + 1);
+            }
+            if (_boxRimEdgeMaterial == null || _boxRimCornerMaterial == null)
+            {
+                _hasBoxFrame = false;
+                return false;
+            }
 
-                var shader = Shader.Find("Sprites/Default");
-                if (shader != null)
+            // Edge/corner quad setup.
+            _boxRimEdges[0] = EnsureQuadChild(_boxRim, "RimEdge_Top", out _boxRimEdgeRenderers[0]);
+            _boxRimEdges[1] = EnsureQuadChild(_boxRim, "RimEdge_Right", out _boxRimEdgeRenderers[1]);
+            _boxRimEdges[2] = EnsureQuadChild(_boxRim, "RimEdge_Bottom", out _boxRimEdgeRenderers[2]);
+            _boxRimEdges[3] = EnsureQuadChild(_boxRim, "RimEdge_Left", out _boxRimEdgeRenderers[3]);
+
+            _boxRimCorners[0] = EnsureQuadChild(_boxRim, "RimCorner_TL", out _boxRimCornerRenderers[0]);
+            _boxRimCorners[1] = EnsureQuadChild(_boxRim, "RimCorner_TR", out _boxRimCornerRenderers[1]);
+            _boxRimCorners[2] = EnsureQuadChild(_boxRim, "RimCorner_BR", out _boxRimCornerRenderers[2]);
+            _boxRimCorners[3] = EnsureQuadChild(_boxRim, "RimCorner_BL", out _boxRimCornerRenderers[3]);
+
+            for (int i = 0; i < _boxRimEdges.Length; i++)
+            {
+                if (_boxRimEdgeRenderers[i] != null) _boxRimEdgeRenderers[i].sharedMaterial = _boxRimEdgeMaterial;
+                if (_boxRimEdges[i] != null) SetWorldOverlaySorting(_boxRimEdges[i], BoxRimSortingOrder);
+            }
+            for (int i = 0; i < _boxRimCorners.Length; i++)
+            {
+                if (_boxRimCornerRenderers[i] != null) _boxRimCornerRenderers[i].sharedMaterial = _boxRimCornerMaterial;
+                if (_boxRimCorners[i] != null) SetWorldOverlaySorting(_boxRimCorners[i], BoxRimSortingOrder + 1);
+            }
+
+            var metrics = ComputeBoxMetrics();
+            float halfW = metrics.outerSize.x * 0.5f;
+            float halfH = metrics.outerSize.y * 0.5f;
+            float wall = Mathf.Max(0.001f, metrics.wall);
+            float corner = wall;
+
+            bool edgeTop = _opening != OpeningSide.Top;
+            bool edgeRight = _opening != OpeningSide.Right;
+            bool edgeBottom = _opening != OpeningSide.Bottom;
+            bool edgeLeft = _opening != OpeningSide.Left;
+
+            bool cornerTL = edgeTop && edgeLeft;
+            bool cornerTR = edgeTop && edgeRight;
+            bool cornerBR = edgeBottom && edgeRight;
+            bool cornerBL = edgeBottom && edgeLeft;
+
+            // Corners (square patches). Keep orientation consistent (no per-corner rotation) so highlights stay stable.
+            if (_boxRimCorners[0] != null)
+            {
+                _boxRimCorners[0].transform.localRotation = Quaternion.identity;
+                _boxRimCorners[0].transform.localPosition = new Vector3(-halfW + corner * 0.5f, halfH - corner * 0.5f, 0f);
+                _boxRimCorners[0].transform.localScale = new Vector3(corner, corner, 1f);
+                _boxRimCorners[0].SetActive(cornerTL);
+            }
+            if (_boxRimCorners[1] != null)
+            {
+                _boxRimCorners[1].transform.localRotation = Quaternion.identity;
+                _boxRimCorners[1].transform.localPosition = new Vector3(halfW - corner * 0.5f, halfH - corner * 0.5f, 0f);
+                _boxRimCorners[1].transform.localScale = new Vector3(corner, corner, 1f);
+                _boxRimCorners[1].SetActive(cornerTR);
+            }
+            if (_boxRimCorners[2] != null)
+            {
+                _boxRimCorners[2].transform.localRotation = Quaternion.identity;
+                _boxRimCorners[2].transform.localPosition = new Vector3(halfW - corner * 0.5f, -halfH + corner * 0.5f, 0f);
+                _boxRimCorners[2].transform.localScale = new Vector3(corner, corner, 1f);
+                _boxRimCorners[2].SetActive(cornerBR);
+            }
+            if (_boxRimCorners[3] != null)
+            {
+                _boxRimCorners[3].transform.localRotation = Quaternion.identity;
+                _boxRimCorners[3].transform.localPosition = new Vector3(-halfW + corner * 0.5f, -halfH + corner * 0.5f, 0f);
+                _boxRimCorners[3].transform.localScale = new Vector3(corner, corner, 1f);
+                _boxRimCorners[3].SetActive(cornerBL);
+            }
+
+            // Edges: build as quads with a constant wall thickness; missing edge indicates opening direction.
+            void SetEdge(int idx, bool visible, Vector3 pos, float length, float rotDeg)
+            {
+                var go = _boxRimEdges[idx];
+                if (go == null)
                 {
-                    var mat = new Material(shader);
-                    mat.renderQueue = BoxRimQueue;
-                    _boxRimRenderer.sharedMaterial = mat;
+                    return;
                 }
+
+                if (!visible || length <= 0.001f)
+                {
+                    go.SetActive(false);
+                    return;
+                }
+
+                go.transform.localPosition = pos;
+                go.transform.localRotation = Quaternion.Euler(0f, 0f, rotDeg);
+                go.transform.localScale = new Vector3(length, wall, 1f);
+                go.SetActive(true);
             }
 
-            if (_boxRimRenderer == null)
-            {
-                _boxRimRenderer = _boxRim != null ? _boxRim.GetComponent<SpriteRenderer>() : null;
-            }
-            if (_boxRimRenderer == null)
-            {
-                return false;
-            }
+            // Horizontal edges (rotation 0, length along X).
+            float topLeftInset = cornerTL ? corner : 0f;
+            float topRightInset = cornerTR ? corner : 0f;
+            float topLen = Mathf.Max(0f, metrics.outerSize.x - topLeftInset - topRightInset);
+            SetEdge(0, edgeTop, new Vector3((-halfW + topLeftInset) + topLen * 0.5f, halfH - wall * 0.5f, 0f), topLen, 0f);
 
-            // Prefer an authored sprite per opening direction. If missing, rotate the TOP sprite as fallback.
-            string spritePath = GetBoxRimSpritePath(_opening);
-            var sprite = LoopSortingUIKit.LoadSprite(spritePath, pixelsPerUnit: BoxRimPixelsPerUnit, applyNineSlice: true);
-            float rotationDeg = 0f;
-            if (sprite == null && _opening != OpeningSide.Top)
-            {
-                spritePath = GetBoxRimSpritePath(OpeningSide.Top);
-                sprite = LoopSortingUIKit.LoadSprite(spritePath, pixelsPerUnit: BoxRimPixelsPerUnit, applyNineSlice: true);
-                rotationDeg = GetBoxRimFallbackRotationDegFromTop(_opening);
-            }
+            float bottomLeftInset = cornerBL ? corner : 0f;
+            float bottomRightInset = cornerBR ? corner : 0f;
+            float bottomLen = Mathf.Max(0f, metrics.outerSize.x - bottomLeftInset - bottomRightInset);
+            SetEdge(2, edgeBottom, new Vector3((-halfW + bottomLeftInset) + bottomLen * 0.5f, -halfH + wall * 0.5f, 0f), bottomLen, 0f);
 
-            if (sprite == null)
-            {
-                return false;
-            }
+            // Vertical edges (rotation 90, length along local X -> world Y).
+            float rightTopInset = cornerTR ? corner : 0f;
+            float rightBottomInset = cornerBR ? corner : 0f;
+            float rightLen = Mathf.Max(0f, metrics.outerSize.y - rightTopInset - rightBottomInset);
+            SetEdge(1, edgeRight, new Vector3(halfW - wall * 0.5f, (-halfH + rightBottomInset) + rightLen * 0.5f, 0f), rightLen, 90f);
 
-            _boxRimRenderer.sprite = sprite;
-            _boxRimRenderer.drawMode = sprite.border.sqrMagnitude > 0.0001f ? SpriteDrawMode.Sliced : SpriteDrawMode.Simple;
-            _boxRimRenderer.sortingOrder = BoxRimQueue;
-            if (_boxRimRenderer.sharedMaterial != null)
-            {
-                _boxRimRenderer.sharedMaterial.renderQueue = BoxRimQueue;
-            }
+            float leftTopInset = cornerTL ? corner : 0f;
+            float leftBottomInset = cornerBL ? corner : 0f;
+            float leftLen = Mathf.Max(0f, metrics.outerSize.y - leftTopInset - leftBottomInset);
+            SetEdge(3, edgeLeft, new Vector3(-halfW + wall * 0.5f, (-halfH + leftBottomInset) + leftLen * 0.5f, 0f), leftLen, 90f);
 
-            // Use SpriteRenderer's native 9-slice when possible.
-            float w = _boxSize.x;
-            float h = _boxSize.y;
-            if (_boxRimRenderer.drawMode == SpriteDrawMode.Sliced)
-            {
-                _boxRimRenderer.size = new Vector2(w, h);
-                _boxRim.transform.localScale = Vector3.one;
-            }
-            else
-            {
-                var b = sprite.bounds;
-                float sx = b.size.x > 0.0001f ? w / b.size.x : 1f;
-                float sy = b.size.y > 0.0001f ? h / b.size.y : 1f;
-                _boxRim.transform.localScale = new Vector3(sx, sy, 1f);
-            }
-
-            _boxRim.transform.localRotation = Quaternion.Euler(0f, 0f, rotationDeg);
             _boxRim.SetActive(true);
+            _hasBoxFrame = true;
             return true;
         }
 
@@ -1908,7 +2091,6 @@ namespace LoopSorting
 
         private void SetBoxOutlineVisible(bool visible)
         {
-            if (_boxRim != null) _boxRim.SetActive(visible);
             if (_boxOutlineSegments == null) return;
             for (int i = 0; i < _boxOutlineSegments.Count; i++)
             {

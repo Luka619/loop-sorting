@@ -1268,6 +1268,46 @@
       "positive": "storage box rim frame (open-left), 3D creamy plastic toy tray frame for holding lego-like bricks, rounded-square outer rim with visible thickness, smooth bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along inner edge, CENTER hole fully transparent (alpha 0), NO background fill, opening gap on the LEFT edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shadows inside frame, crisp edges, sRGB, PNG, orthographic front view",
       "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
+    "World_Sprites/box_cavity_open_top.png": {
+      "dir": "World_Sprites",
+      "filename": "box_cavity_open_top.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [],
+      "positive": "box cavity floor insert (open-top), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the TOP edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "World_Sprites/box_cavity_open_right.png": {
+      "dir": "World_Sprites",
+      "filename": "box_cavity_open_right.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [],
+      "positive": "box cavity floor insert (open-right), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the RIGHT edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "World_Sprites/box_cavity_open_bottom.png": {
+      "dir": "World_Sprites",
+      "filename": "box_cavity_open_bottom.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [],
+      "positive": "box cavity floor insert (open-bottom), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the BOTTOM edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "World_Sprites/box_cavity_open_left.png": {
+      "dir": "World_Sprites",
+      "filename": "box_cavity_open_left.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [],
+      "positive": "box cavity floor insert (open-left), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the LEFT edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
     "World_Sprites/completed_overlay.png": {
       "dir": "World_Sprites",
       "filename": "completed_overlay.png",
@@ -4191,6 +4231,58 @@
       ],
       "positive": "storage box rim frame (open-left), 3D creamy plastic toy tray frame for holding lego-like bricks, rounded-square outer rim with visible thickness, smooth bevel, subtle top-left highlight, gentle ambient occlusion, soft inner shadow along inner edge, CENTER hole fully transparent (alpha 0), NO background fill, opening gap on the LEFT edge (missing wall segment), clean smooth opening, 9-slice friendly: uniform rim thickness and smooth corners, no unique decorations, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shadows inside frame, crisp edges, sRGB, PNG, orthographic front view",
       "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_cavity_open_top.png": {
+      "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
+      "filename": "box_cavity_open_top.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [
+        "legacy_pack",
+        "copied_from_top_level"
+      ],
+      "positive": "box cavity floor insert (open-top), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the TOP edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_cavity_open_right.png": {
+      "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
+      "filename": "box_cavity_open_right.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [
+        "legacy_pack",
+        "copied_from_top_level"
+      ],
+      "positive": "box cavity floor insert (open-right), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the RIGHT edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_cavity_open_bottom.png": {
+      "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
+      "filename": "box_cavity_open_bottom.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [
+        "legacy_pack",
+        "copied_from_top_level"
+      ],
+      "positive": "box cavity floor insert (open-bottom), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the BOTTOM edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+    },
+    "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/box_cavity_open_left.png": {
+      "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",
+      "filename": "box_cavity_open_left.png",
+      "size": "1024x1024",
+      "background": "transparent",
+      "template": "GENERIC",
+      "tags": [
+        "legacy_pack",
+        "copied_from_top_level"
+      ],
+      "positive": "box cavity floor insert (open-left), recessed inner cavity shading behind bricks, soft inner shadow along inside edge, gentle ambient occlusion, faint top-left highlight, creamy plastic feel, center lightly darkened (not opaque), outside fully transparent (alpha 0), no rim frame, opening gap on the LEFT edge (shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
     },
     "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/completed_overlay.png": {
       "dir": "loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites",

@@ -549,6 +549,15 @@
     {
       "pattern": "box_outline_dashed_open_*",
       "border": [
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "pattern": "box_cavity_open_*",
+      "border": [
         140,
         140,
         140,

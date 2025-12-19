@@ -1857,6 +1857,62 @@ photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 
 photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, dashed, dotted, outline-only stroke, flat 2D line art, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
 ~~~
 
+## World_Sprites/box_cavity_open_top.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+inner cavity floor insert for a toy storage box (open-top), subtle recessed cavity shading that sits BEHIND the blocks: soft inner shadow around the inside edge, gentle ambient occlusion, faint top-left highlight, smooth creamy plastic feel, CENTER area lightly darkened but not opaque, OUTSIDE the cavity is fully transparent (alpha 0), no rim frame, no thick outline, OPENING GAP on the TOP edge (recess shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
+## World_Sprites/box_cavity_open_right.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+inner cavity floor insert for a toy storage box (open-right), subtle recessed cavity shading that sits BEHIND the blocks: soft inner shadow around the inside edge, gentle ambient occlusion, faint top-left highlight, smooth creamy plastic feel, CENTER area lightly darkened but not opaque, OUTSIDE the cavity is fully transparent (alpha 0), no rim frame, no thick outline, OPENING GAP on the RIGHT edge (recess shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
+## World_Sprites/box_cavity_open_bottom.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+inner cavity floor insert for a toy storage box (open-bottom), subtle recessed cavity shading that sits BEHIND the blocks: soft inner shadow around the inside edge, gentle ambient occlusion, faint top-left highlight, smooth creamy plastic feel, CENTER area lightly darkened but not opaque, OUTSIDE the cavity is fully transparent (alpha 0), no rim frame, no thick outline, OPENING GAP on the BOTTOM edge (recess shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
+## World_Sprites/box_cavity_open_left.png (1024x1024)
+- template: GENERIC
+- background: transparent
+
+**Positive prompt**
+~~~
+inner cavity floor insert for a toy storage box (open-left), subtle recessed cavity shading that sits BEHIND the blocks: soft inner shadow around the inside edge, gentle ambient occlusion, faint top-left highlight, smooth creamy plastic feel, CENTER area lightly darkened but not opaque, OUTSIDE the cavity is fully transparent (alpha 0), no rim frame, no thick outline, OPENING GAP on the LEFT edge (recess shadow breaks/open), 9-slice friendly: uniform border region, no unique corner details, no repeating patterns, no dashed lines, no text, exact 1024x1024px, centered, no cropping, generous safe padding (~10%), all shading inside frame, crisp edges, sRGB PNG, orthographic front view
+~~~
+
+**Negative prompt**
+~~~
+photorealistic, hyper-real photo, realistic scene, isometric, perspective skew, 3D scene, background scene, opaque background, gradient background, checkerboard background, alpha grid, transparency grid, thick outer rim frame, stroke-only outline, dashed, dotted, wood texture, metal texture, fabric, harsh reflections, excessive noise, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts
+~~~
+
 ## World_Sprites/completed_overlay.png (1024x1024)
 - template: GENERIC
 - background: transparent

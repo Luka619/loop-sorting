@@ -113,6 +113,9 @@ namespace LoopSorting
         private const int BoxRimSortingOrder = 2810;
         private const int BoxRimRenderQueue = 2810;
         private const float BoxCavityZ = 0.11f;
+        // Visual tuning: make the rim clearly distinct from the cavity so the missing edge (opening direction) reads.
+        private static readonly Color BoxRimTint = new Color(1.00f, 0.82f, 0.42f, 1.00f);
+        private static readonly Color BoxCavityTint = new Color(0.78f, 0.82f, 0.92f, 0.88f);
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 
@@ -781,7 +784,7 @@ namespace LoopSorting
         private const string BoxRimCornerTexturePath = "World_Sprites/box_rim_corner.png";
         private const string BoxCavityTexturePath = "World_Sprites/box_cavity_fill.png";
 
-        private static Material CreateBoxTextureMaterial(Texture2D texture, int renderQueue)
+        private static Material CreateBoxTextureMaterial(Texture2D texture, int renderQueue, Color tint)
         {
             if (texture == null) return null;
 
@@ -799,7 +802,7 @@ namespace LoopSorting
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
             else mat.mainTexture = texture;
 
-            TrySetMaterialColor(mat, Color.white);
+            TrySetMaterialColor(mat, tint);
             mat.renderQueue = renderQueue;
 
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
@@ -859,7 +862,11 @@ namespace LoopSorting
             {
                 if (_boxCavityMaterial == null || _boxCavityMaterial.mainTexture != tex || _boxCavityMaterial.renderQueue != BoxCavityRenderQueue)
                 {
-                    _boxCavityMaterial = CreateBoxTextureMaterial(tex, BoxCavityRenderQueue);
+                    _boxCavityMaterial = CreateBoxTextureMaterial(tex, BoxCavityRenderQueue, BoxCavityTint);
+                }
+                else
+                {
+                    TrySetMaterialColor(_boxCavityMaterial, BoxCavityTint);
                 }
                 if (_boxCavityMaterial != null)
                 {
@@ -906,11 +913,20 @@ namespace LoopSorting
 
             if (_boxRimEdgeMaterial == null || _boxRimEdgeMaterial.mainTexture != edgeTex || _boxRimEdgeMaterial.renderQueue != BoxRimRenderQueue)
             {
-                _boxRimEdgeMaterial = CreateBoxTextureMaterial(edgeTex, BoxRimRenderQueue);
+                _boxRimEdgeMaterial = CreateBoxTextureMaterial(edgeTex, BoxRimRenderQueue, BoxRimTint);
             }
+            else
+            {
+                TrySetMaterialColor(_boxRimEdgeMaterial, BoxRimTint);
+            }
+
             if (_boxRimCornerMaterial == null || _boxRimCornerMaterial.mainTexture != cornerTex || _boxRimCornerMaterial.renderQueue != (BoxRimRenderQueue + 1))
             {
-                _boxRimCornerMaterial = CreateBoxTextureMaterial(cornerTex, BoxRimRenderQueue + 1);
+                _boxRimCornerMaterial = CreateBoxTextureMaterial(cornerTex, BoxRimRenderQueue + 1, BoxRimTint);
+            }
+            else
+            {
+                TrySetMaterialColor(_boxRimCornerMaterial, BoxRimTint);
             }
             if (_boxRimEdgeMaterial == null || _boxRimCornerMaterial == null)
             {

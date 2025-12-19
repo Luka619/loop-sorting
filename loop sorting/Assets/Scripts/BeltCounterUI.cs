@@ -25,6 +25,11 @@ namespace LoopSorting
         [Tooltip("When empty slots <= this value, the counter enters Danger visuals. Typically 0.")]
         [SerializeField] private int dangerThreshold = 10;
 
+        [Header("Normal")]
+        [Tooltip("When enabled, Normal state uses this explicit color instead of capturing the initial TMP/Text color.")]
+        [SerializeField] private bool useExplicitNormalColor = true;
+        [SerializeField] private Color normalColor = Color.white;
+
         [Header("Colors")]
         [Tooltip("Text color in Warning state.")]
         [SerializeField] private Color warningColor = new Color(1f, 0.78f, 0.25f, 1f);
@@ -104,11 +109,13 @@ namespace LoopSorting
         public void SetValue(int empty, int total)
         {
             empty = Mathf.Max(0, empty);
+            total = Mathf.Max(0, total);
             string value = empty.ToString();
             if (_tmp != null) _tmp.text = value;
             if (_text != null) _text.text = value;
 
-            var nextState = ComputeState(empty);
+            ComputeEffectiveThresholds(total, out int effectiveWarningThreshold, out int effectiveDangerThreshold);
+            var nextState = ComputeState(empty, effectiveWarningThreshold, effectiveDangerThreshold);
             bool stateChanged = nextState != _state;
             var prevState = _state;
             int prevEmpty = _lastEmpty;
@@ -123,18 +130,24 @@ namespace LoopSorting
 
             if (stateChanged)
             {
-                HandleStateTransition(prevState, nextState, prevEmpty, empty);
+                HandleStateTransition(prevState, nextState, prevEmpty, empty, effectiveWarningThreshold, effectiveDangerThreshold);
             }
         }
 
-        private CounterState ComputeState(int empty)
+        private static CounterState ComputeState(int empty, int effectiveWarningThreshold, int effectiveDangerThreshold)
         {
-            if (empty <= dangerThreshold) return CounterState.Danger;
-            if (empty <= warningThreshold) return CounterState.Warning;
+            if (empty <= effectiveDangerThreshold) return CounterState.Danger;
+            if (empty <= effectiveWarningThreshold) return CounterState.Warning;
             return CounterState.Normal;
         }
 
-        private void HandleStateTransition(CounterState prev, CounterState next, int prevEmpty, int nextEmpty)
+        private void HandleStateTransition(
+            CounterState prev,
+            CounterState next,
+            int prevEmpty,
+            int nextEmpty,
+            int effectiveWarningThreshold,
+            int effectiveDangerThreshold)
         {
             if (next == CounterState.Normal)
             {
@@ -145,19 +158,28 @@ namespace LoopSorting
             bool enteringWarning = prev != CounterState.Warning && next == CounterState.Warning;
             bool enteringDanger = prev != CounterState.Danger && next == CounterState.Danger;
 
-            if (enteringDanger && prevEmpty > dangerThreshold && nextEmpty <= dangerThreshold)
+            if (enteringDanger && prevEmpty > effectiveDangerThreshold && nextEmpty <= effectiveDangerThreshold)
             {
                 PlayEnterStateOneShot(next);
                 return;
             }
 
-            if (enteringWarning && prevEmpty > warningThreshold && nextEmpty <= warningThreshold)
+            if (enteringWarning && prevEmpty > effectiveWarningThreshold && nextEmpty <= effectiveWarningThreshold)
             {
                 PlayEnterStateOneShot(next);
                 return;
             }
 
             ApplyStateVisuals(next, immediate: true);
+        }
+
+        private void ComputeEffectiveThresholds(int total, out int effectiveWarningThreshold, out int effectiveDangerThreshold)
+        {
+            // Avoid showing Warning/Danger when the belt is completely empty on very small conveyors.
+            int maxThreshold = Mathf.Max(0, total - 1);
+            effectiveDangerThreshold = Mathf.Clamp(dangerThreshold, 0, maxThreshold);
+            effectiveWarningThreshold = Mathf.Clamp(warningThreshold, 0, maxThreshold);
+            effectiveWarningThreshold = Mathf.Max(effectiveWarningThreshold, effectiveDangerThreshold);
         }
 
         private void PlayEnterStateOneShot(CounterState state)
@@ -297,7 +319,7 @@ namespace LoopSorting
             {
                 CounterState.Warning => warningColor,
                 CounterState.Danger => dangerColor,
-                _ => _baseColor
+                _ => useExplicitNormalColor ? normalColor : _baseColor
             };
         }
 

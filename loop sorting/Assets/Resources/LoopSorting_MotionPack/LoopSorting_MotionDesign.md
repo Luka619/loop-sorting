@@ -180,8 +180,8 @@
 
 ### 5.13 HUD_FreeSlotsCounter_Warn / HUD_FreeSlotsCounter_Danger
 - 触发：
-  - Warning：传送带空槽 `emptySlots <= 5`
-  - Danger：传送带空槽 `emptySlots == 0`
+  - Warning：传送带空槽 `emptySlots <= min(20, totalSlots - 1)`（避免“初始空传送带但总槽位很少”时误触发）
+  - Danger：传送带空槽 `emptySlots <= min(10, totalSlots - 1)`（避免“初始空传送带但总槽位很少”时误触发）
 - 表现：
   - Warning：数字变为琥珀色，并做轻微呼吸脉冲（scale 轻放大，不位移）
   - Danger：数字变为红色，并做更快的呼吸脉冲；进入 Danger 的瞬间额外做一次短促“被挡住”反馈（scale punch + 轻微水平抖动）

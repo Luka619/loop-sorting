@@ -46,6 +46,8 @@ namespace LoopSorting
         public bool vibrationEnabled = true;
         public bool soundEnabled = true;
         public bool musicEnabled = true;
+        [Tooltip("Enable conveyor ambience SFX (loop + intermittent ticks).")]
+        public bool conveyorAmbienceEnabled = false;
         public bool useSavedProgress = true;
 
         private const float SaveDelayStrongSeconds = 0.20f;
@@ -1112,6 +1114,7 @@ namespace LoopSorting
         private void UpdateConveyorLoopSfx()
         {
             if (_sfx == null) return;
+            if (!conveyorAmbienceEnabled) { _sfx.StopLoop(); return; }
             if (!soundEnabled) { _sfx.StopLoop(); return; }
 
             // Only run loop SFX during active gameplay.
@@ -3063,7 +3066,10 @@ namespace LoopSorting
                 _conveyorTickSfxCountdown--;
                 if (_conveyorTickSfxCountdown <= 0)
                 {
-                    PlaySfx(SfxId.ConveyorTick);
+                    if (conveyorAmbienceEnabled)
+                    {
+                        PlaySfx(SfxId.ConveyorTick);
+                    }
                     _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
                 }
                 SyncBeltVisuals();

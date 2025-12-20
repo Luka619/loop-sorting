@@ -23,17 +23,17 @@ MonoBehaviour:
     points:
     - {x: -0, y: 7.5}
     - {x: 4, y: 7.5}
-    - {x: 6.5, y: -0}
-    - {x: 4.5, y: -8}
-    - {x: -4.5, y: -8}
-    - {x: -7, y: -0}
-    - {x: -4.5, y: 7.5}
+    - {x: 5, y: -0}
+    - {x: 3, y: -8}
+    - {x: -3, y: -8}
+    - {x: -5, y: -0}
+    - {x: -4, y: 7.5}
     - {x: -0, y: 7.5}
     loop: 1
     width: 20
   boxes:
   - name: Box 1
-    position: {x: -0.5, y: 4}
+    position: {x: -2.5, y: 4}
     size: {x: 1.53, y: 5.1}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -71,7 +71,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: -3.5, y: -0}
+    position: {x: -1, y: -0.5}
     size: {x: 5.1, y: 1.53}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
@@ -90,7 +90,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 4
-    position: {x: 3, y: 0}
+    position: {x: 1.5, y: 2}
     size: {x: 5.1, y: 1.53}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10

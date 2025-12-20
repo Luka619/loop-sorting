@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -384,6 +383,7 @@ namespace LoopSorting
         private readonly List<bool> _sfxPrevLockedStates = new List<bool>();
         private readonly List<bool> _sfxPrevCompletedStates = new List<bool>();
         private int _conveyorTickSfxCountdown;
+        private int _sfxInsertEventsThisTick;
 
         public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : _speedMultiplier;
 
@@ -1149,6 +1149,7 @@ namespace LoopSorting
             switch (id)
             {
                 case SfxId.UiDenied:
+                case SfxId.BlockInsert:
                 case SfxId.BlockReject:
                 case SfxId.BlockRejectLocked:
                 case SfxId.BlockRejectBusy:
@@ -1180,9 +1181,7 @@ namespace LoopSorting
 #else
             try
             {
-                var handheldType = Type.GetType("UnityEngine.Handheld, UnityEngine");
-                var vibrate = handheldType?.GetMethod("Vibrate", BindingFlags.Public | BindingFlags.Static);
-                vibrate?.Invoke(null, null);
+                Handheld.Vibrate();
             }
             catch
             {
@@ -1235,6 +1234,8 @@ namespace LoopSorting
             }
 
             int inserts = 0;
+            int insertEvents = _sfxInsertEventsThisTick;
+            _sfxInsertEventsThisTick = 0;
             int completions = 0;
             int unlocks = 0;
 
@@ -1243,7 +1244,7 @@ namespace LoopSorting
             {
                 int countNow = _game.Containers[i].Count;
                 int countPrev = i < _sfxPrevContainerCounts.Count ? _sfxPrevContainerCounts[i] : 0;
-                if (countNow > countPrev)
+                if (insertEvents <= 0 && countNow > countPrev)
                 {
                     inserts += (countNow - countPrev);
                 }
@@ -1263,6 +1264,10 @@ namespace LoopSorting
                 }
             }
 
+            if (insertEvents > 0)
+            {
+                inserts = insertEvents;
+            }
             if (inserts > 0)
             {
                 float vol = 1f + Mathf.Min(0.6f, inserts * 0.08f);
@@ -3109,6 +3114,7 @@ namespace LoopSorting
         {
             if (events == null || events.Count == 0) return;
             _rejectGate ??= new RejectFeedbackGate();
+            _sfxInsertEventsThisTick = 0;
 
             ConveyorPortOutcome? bestSfxOutcome = null;
             int bestSfxContainerIndex = -1;
@@ -3138,6 +3144,7 @@ namespace LoopSorting
                 }
                 else if (e.Outcome == ConveyorPortOutcome.Inserted)
                 {
+                    _sfxInsertEventsThisTick++;
                     StartBeltBlockEnterBoxAnimation(e.BeltIndex, containerIndex, e.Block);
                     if (containerIndex >= 0 && containerIndex < _boxViews.Count)
                     {

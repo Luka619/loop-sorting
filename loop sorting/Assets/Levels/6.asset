@@ -21,12 +21,12 @@ MonoBehaviour:
   conveyors:
   - name: Conveyor
     points:
-    - {x: -3, y: 6}
-    - {x: 1, y: 6}
+    - {x: -3, y: 6.5}
+    - {x: 1, y: 6.5}
     - {x: 1, y: 1.5}
     - {x: -3, y: 1.5}
-    - {x: -3, y: -3.5}
-    - {x: 2, y: -3.5}
+    - {x: -3, y: -4}
+    - {x: 2, y: -4}
     loop: 0
     width: 20
   boxes:
@@ -69,7 +69,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: -1.1800447, y: 2.9525788}
+    position: {x: -1.5, y: 3}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10
@@ -88,7 +88,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 4
   - name: Box 4
-    position: {x: -1.1714749, y: 5.039102}
+    position: {x: -1.5, y: 5}
     size: {x: 3, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 10

@@ -10,18 +10,20 @@
 ## 1) 你需要准备什么
 - 生成的文件名必须与工程内目标文件一致（同名覆盖）。  
 - 生成的目录结构建议保持一致（例如 `UI_Sprites/`、`World_Sprites/`、`setting_page_assets/`、`BoosterPurchase/`、`ResourcesRoot/`）。
-- API Key：放到 `Tools/UiRestyleV05/_secrets/openai_api_key.txt`（一行，不要引号，不提交）。
+- API Key：放到 `Tools/UiRestyleV05/_secrets/openai_api_key.txt`（一行，不要引号，不提交；这是**代理**的 Key）。
+- **禁止使用官方 API（`https://api.openai.com/v1`）**，必须通过代理调用。
 
 ## 2) Prompt（主存储：Prompt DB）
 - Prompt DB：`Tools/UiRestyleV05/_prompt_db_all_v05.json`
 - （可选）导出浏览版 Markdown：`python Tools/UiRestyleV05/PromptDbCli.py export-md --out Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
 
-## 3) 用 API 易批量出图（推荐）
-默认走 API 代理（API 易）：`https://api.apiyi.com/v1`。
+## 3) 用代理批量出图（必须）
+统一使用代理（示例：`https://api.apiyi.com/v1`），不要直连官方 API。
 
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --quality low `
   --gen-size auto `
@@ -38,6 +40,7 @@ python Tools/UiRestyleV05/GenerateOpenAiImages.py `
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --quality low `
   --gen-size auto `

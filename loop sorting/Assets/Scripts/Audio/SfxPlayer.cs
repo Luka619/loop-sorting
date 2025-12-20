@@ -475,6 +475,7 @@ namespace LoopSorting
             if (_wxVisibilityHooksRegistered) return;
             if (_wxVisibilityHooksRetryAt > 0f && Time.realtimeSinceStartup < _wxVisibilityHooksRetryAt) return;
 
+#if WECHAT_WASM || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME
             try
             {
                 WeChatWASM.WX.OnHide(_ => { _wxIsHidden = true; });
@@ -486,6 +487,7 @@ namespace LoopSorting
                 // WX SDK can be unavailable early during boot; retry later.
                 _wxVisibilityHooksRetryAt = Time.realtimeSinceStartup + 2f;
             }
+#endif
         }
 #endif
 

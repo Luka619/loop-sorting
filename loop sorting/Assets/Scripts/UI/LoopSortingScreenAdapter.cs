@@ -154,7 +154,7 @@ namespace LoopSorting
             _menuButtonRightInsetPx = 0f;
             _statusBarHeightPx = 0f;
 
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
             if (preferWeChatSafeAreaOnWebGL)
             {
                 try
@@ -312,7 +312,7 @@ namespace LoopSorting
             return safeArea;
         }
 
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
         private static bool TryGetWeChatScale(
             int screenW,
             int screenH,

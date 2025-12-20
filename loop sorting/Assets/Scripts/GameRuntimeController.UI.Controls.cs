@@ -325,8 +325,12 @@ namespace LoopSorting
             var slotTex = hasKit ? LoopSortingUIKit.LoadTextureByKey("world.conveyor_slot") : null;
 
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
-            float baseSide = Mathf.Max(0.02f, spacing * Mathf.Max(0.01f, slotMarkerScale));
             float aspect = slotTex != null && slotTex.width > 0 ? (float)slotTex.height / slotTex.width : 1f;
+            float beltWidth = _beltWidthUsed > 0.0001f ? _beltWidthUsed : spacing;
+            float baseSide = Mathf.Max(0.02f, spacing * Mathf.Max(0.01f, slotMarkerScale));
+            // Ensure marker height is one-third of the belt width (keeps slots readable without overpowering the belt).
+            float minSideForBelt = Mathf.Max(0.02f, (beltWidth / 3f) / Mathf.Max(0.01f, aspect));
+            baseSide = Mathf.Max(baseSide, minSideForBelt);
             var scale = new Vector3(baseSide, baseSide * aspect, 1f);
 
             for (int i = 0; i < _slotBasePositions.Count; i++)

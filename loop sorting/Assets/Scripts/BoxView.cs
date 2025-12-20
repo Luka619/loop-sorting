@@ -105,6 +105,7 @@ namespace LoopSorting
         private const float BoxWallFracOfCell = 0.22f;
         private const float BoxWallMinFracOfMinDim = 0.06f;
         private const float BoxWallMaxFracOfMinDim = 0.14f;
+        private const float BoxWallWidthScale = 2.25f;
         private const float BoxPadClosedMul = 1.05f;
         private const float BoxPadOpenMul = 0.25f;
         // Keep box rim/cavity behind mouth FX and overlays, but still in the transparent pipeline so "Order in Layer" works.
@@ -451,9 +452,9 @@ namespace LoopSorting
             float cell = Mathf.Min(m.outerSize.x / Mathf.Max(1, _columns), m.outerSize.y / Mathf.Max(1, _rows));
 
             m.wall = Mathf.Clamp(
-                cell * BoxWallFracOfCell,
-                minDim * BoxWallMinFracOfMinDim,
-                minDim * BoxWallMaxFracOfMinDim);
+                cell * BoxWallFracOfCell * BoxWallWidthScale,
+                minDim * BoxWallMinFracOfMinDim * BoxWallWidthScale,
+                minDim * BoxWallMaxFracOfMinDim * BoxWallWidthScale);
 
             float padClosed = Mathf.Clamp(m.wall * BoxPadClosedMul, 0.02f, minDim * 0.25f);
             float padOpen = Mathf.Clamp(m.wall * BoxPadOpenMul, 0f, padClosed);

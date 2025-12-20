@@ -82,7 +82,7 @@ namespace LoopSorting
 
         private void Pulse(HapticsPulse pulse)
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
             TryWeChatPulse(pulse);
 #elif UNITY_ANDROID && !UNITY_EDITOR
             if (TryAndroidPulse(pulse)) return;
@@ -94,7 +94,7 @@ namespace LoopSorting
 #endif
         }
 
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
         private static void TryWeChatPulse(HapticsPulse pulse)
         {
             try
@@ -185,4 +185,3 @@ namespace LoopSorting
 #endif
     }
 }
-

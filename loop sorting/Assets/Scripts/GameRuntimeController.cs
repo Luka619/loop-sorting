@@ -104,12 +104,13 @@ namespace LoopSorting
         private GameObject _fastTag;
 	        private System.Random _rng = new System.Random();
 	        private bool _inputLocked = false;
-	        private GameObject _backgroundQuad;
-	        private bool _backgroundDebugLogged;
-	        private GameObject _conveyorBelt;
-	        private static bool _beltMaterialDebugLogged;
-	        private static bool _beltMaterialFailedLogged;
-	        private static bool _backgroundMaterialFailedLogged;
+        private GameObject _backgroundQuad;
+        private bool _backgroundDebugLogged;
+        private GameObject _conveyorBelt;
+        private static bool _beltMaterialDebugLogged;
+        private static bool _beltMaterialFailedLogged;
+        private static bool _backgroundMaterialFailedLogged;
+        private float _beltWidthUsed;
         private LevelFlow _pendingFlow;
         private int _pendingFlowIndex;
         private LevelLayout _pendingLevel;
@@ -441,7 +442,7 @@ namespace LoopSorting
 
         private static void TryVibrate()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
             try
             {
                 WeChatWASM.WX.VibrateShort(new WeChatWASM.VibrateShortOption { type = "light" });
@@ -1899,6 +1900,7 @@ namespace LoopSorting
             float requestedWidth = path != null ? path.width : 1f;
             // Keep belt width visually reasonable relative to slot spacing (prevents "screen-Sorting" ribbon).
             float beltWidth = Mathf.Clamp(requestedWidth, spacing * 0.8f, spacing * 1.6f);
+            _beltWidthUsed = beltWidth;
 
             bool loop = path != null && path.loop;
             var pts = BuildBeltPolylinePoints(path, spacing, smoothCorners, smoothTension, smoothSubdivisions, loop, z: 0.2f);

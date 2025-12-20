@@ -258,7 +258,8 @@ namespace LoopSorting
             _activeReleasePort = null;
             _tickTimer = 0f;
 	            _beltSpacingUsed = 0f;
-	            _gameOver = false;
+		            _beltWidthUsed = 0f;
+            _gameOver = false;
 	            _inputLocked = false;
             _uiModalService.Reset();
 	            _endSequenceRoutine = null;

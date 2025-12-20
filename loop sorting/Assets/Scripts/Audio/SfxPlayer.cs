@@ -53,6 +53,14 @@ namespace LoopSorting
         private static bool _wxIsHidden;
 #endif
 
+        private void LogBlockInsert(string message)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (!Debug.isDebugBuild) return;
+            Debug.Log($"[Sfx][BlockInsert] {message}");
+#endif
+        }
+
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
@@ -265,12 +273,17 @@ namespace LoopSorting
         {
             if (!Enabled)
             {
+                if (id == SfxId.BlockInsert) LogBlockInsert("skip: disabled.");
                 return;
             }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (!CanOperateAudioNow())
             {
+                if (id == SfxId.BlockInsert)
+                {
+                    LogBlockInsert($"skip: cannot operate audio now. wxHidden={_wxIsHidden} focused={Application.isFocused}");
+                }
                 if (debugLog && Debug.isDebugBuild)
                 {
                     Debug.Log($"SfxPlayer: skip '{id}' (WX hidden/unfocused).");
@@ -284,6 +297,11 @@ namespace LoopSorting
             var clips = GetClips(id);
             if (clips == null || clips.Length == 0)
             {
+                if (id == SfxId.BlockInsert)
+                {
+                    var example = SfxCatalog.GetResourcesPath(id, 1);
+                    LogBlockInsert($"missing clips. examplePath={example}");
+                }
                 return;
             }
 
@@ -314,6 +332,10 @@ namespace LoopSorting
                 int priority = GetWebglSfxPriority(id);
                 if (TryGetFreeSourceWebgl(nowRealtime, out int freeIndex))
                 {
+                    if (id == SfxId.BlockInsert)
+                    {
+                        LogBlockInsert($"play immediate clip={clip.name} vol={vol:0.00} pitch={pitch:0.00} src={freeIndex}");
+                    }
                     PlayWebglOnSource(freeIndex, new WebglQueuedSfx
                     {
                         id = id,
@@ -326,6 +348,10 @@ namespace LoopSorting
                 }
                 else if (TryStealSourceWebgl(priority, nowRealtime, out int stealIndex))
                 {
+                    if (id == SfxId.BlockInsert)
+                    {
+                        LogBlockInsert($"play steal clip={clip.name} vol={vol:0.00} pitch={pitch:0.00} src={stealIndex}");
+                    }
                     PlayWebglOnSource(stealIndex, new WebglQueuedSfx
                     {
                         id = id,
@@ -339,6 +365,10 @@ namespace LoopSorting
                 else
                 {
                     EnqueueWebglSfx(id, clip, vol, pitch);
+                    if (id == SfxId.BlockInsert)
+                    {
+                        LogBlockInsert($"queued clip={clip.name} vol={vol:0.00} pitch={pitch:0.00} queue={_webglQueue.Count}");
+                    }
                     if (debugLog && Debug.isDebugBuild)
                     {
                         Debug.Log($"SfxPlayer: queue '{id}' clip='{clip.name}' vol={vol:0.00} pitch={pitch:0.00}");
@@ -350,12 +380,20 @@ namespace LoopSorting
                 src.volume = 1f;
                 src.PlayOneShot(clip, vol);
                 MarkSourceBusy(sourceIndex, clip, src.pitch);
+                if (id == SfxId.BlockInsert)
+                {
+                    LogBlockInsert($"play clip={clip.name} vol={vol:0.00} pitch={pitch:0.00} src={sourceIndex}");
+                }
 
                 if (debugLog && Debug.isDebugBuild)
                 {
                     Debug.Log($"SfxPlayer: play '{id}' clip='{clip.name}' src={sourceIndex} vol={vol:0.00} pitch={src.pitch:0.00}");
                 }
 #endif
+            }
+            else if (id == SfxId.BlockInsert)
+            {
+                LogBlockInsert($"clip is null. clips={clips.Length}");
             }
         }
 
@@ -475,7 +513,7 @@ namespace LoopSorting
             if (_wxVisibilityHooksRegistered) return;
             if (_wxVisibilityHooksRetryAt > 0f && Time.realtimeSinceStartup < _wxVisibilityHooksRetryAt) return;
 
-#if WECHAT_WASM || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME
+#if UNITY_WEBGL || WEIXINMINIGAME
             try
             {
                 WeChatWASM.WX.OnHide(_ => { _wxIsHidden = true; });

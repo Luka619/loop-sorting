@@ -2,7 +2,8 @@
   "name": "LoopSorting.UI",
   "references": [
     "LoopSorting.Common",
-    "Unity.TextMeshPro"
+    "Unity.TextMeshPro",
+    "Wx"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

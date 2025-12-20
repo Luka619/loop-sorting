@@ -442,7 +442,7 @@ namespace LoopSorting
 
         private static void TryVibrate()
         {
-#if (UNITY_WEBGL || WEIXINMINIGAME || PLATFORM_WEIXINMINIGAME) && !UNITY_EDITOR
+#if (UNITY_WEBGL || WEIXINMINIGAME) && !UNITY_EDITOR
             try
             {
                 WeChatWASM.WX.VibrateShort(new WeChatWASM.VibrateShortOption { type = "light" });

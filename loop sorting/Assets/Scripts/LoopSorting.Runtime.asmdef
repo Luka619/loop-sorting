@@ -5,7 +5,8 @@
     "LoopSorting.UI",
     "LoopSorting.Audio",
     "LoopSorting.Save",
-    "Unity.TextMeshPro"
+    "Unity.TextMeshPro",
+    "Wx"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

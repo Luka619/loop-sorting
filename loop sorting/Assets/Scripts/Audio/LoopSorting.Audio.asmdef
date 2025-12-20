@@ -1,6 +1,8 @@
 ﻿{
   "name": "LoopSorting.Audio",
-  "references": [],
+  "references": [
+    "Wx"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

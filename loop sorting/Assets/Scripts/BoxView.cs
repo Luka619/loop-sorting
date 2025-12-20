@@ -881,8 +881,20 @@ namespace LoopSorting
             _boxCavity.transform.localPosition = new Vector3(c.x, c.y, BoxCavityZ); // behind blocks (bigger Z)
             _boxCavity.transform.localRotation = Quaternion.identity;
             _boxCavity.transform.localScale = new Vector3(metrics.contentRect.width, metrics.contentRect.height, 1f);
+            UpdateBoxCavityTiling();
             _boxCavity.SetActive(true);
             return true;
+        }
+
+        private void UpdateBoxCavityTiling()
+        {
+            if (_boxCavityMaterial == null) return;
+            if (!_boxCavityMaterial.HasProperty("_MainTex")) return;
+
+            int cols = Mathf.Max(1, _columns);
+            int rows = Mathf.Max(1, _rows);
+            _boxCavityMaterial.SetTextureScale("_MainTex", new Vector2(cols, rows));
+            _boxCavityMaterial.SetTextureOffset("_MainTex", Vector2.zero);
         }
 
         private bool TryBuildBoxRim()

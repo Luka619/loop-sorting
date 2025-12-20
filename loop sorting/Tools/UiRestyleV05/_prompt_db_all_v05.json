@@ -1555,8 +1555,8 @@
       "background": "transparent",
       "template": "GENERIC",
       "tags": [],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 512x128px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
-      "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+      "positive": "seamless conveyor belt surface texture, horizontal candy plastic belt in rich purple, subtle repeating ridges/segments along the belt, gentle top highlight and soft inner shading for depth, straight edges, no rounded corners, no outline, no button styling, no text or symbols, full-bleed with no padding or empty margins, left/right edges perfectly tileable, top/bottom edges clean and consistent, exact 512x128px, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "UI button, rounded corners, thick outline, centered sticker, drop shadow, large transparent margins, non-seamless edges, left-to-right lighting gradient, perspective, isometric, background scene, text, watermark, logo, photorealistic, harsh reflections, excessive noise, blurry, low-res, artifacts"
     },
     "conveyor_belt_texture_v02_candy/conveyor_belt_candy_mint_512x128_alphaEdges.png": {
       "dir": "conveyor_belt_texture_v02_candy",
@@ -1565,8 +1565,8 @@
       "background": "transparent",
       "template": "GENERIC",
       "tags": [],
-      "positive": "UI element background, creamy plastic toy style, rounded corners, thick outline, soft inner shadow, no text, exact 512x128px, centered, no cropping, leave generous padding on all sides (at least ~8% of canvas), ensure the full silhouette and all shadows are fully inside the frame, no element touches the image border, crisp edges, sRGB, PNG, soft 3D plastic UI, creamy warm candy style, rounded corners, thick outline, subtle specular highlight from top-left, soft ambient occlusion, soft inner shadow, gentle drop shadow inside the canvas padding, clean silhouette, fine grain, mobile game UI asset, orthographic front view",
-      "negative": "photorealistic, realistic materials, wood texture, metal texture, fabric, excessive noise, harsh reflections, isometric, 3D scene, perspective skew, background scene, checkerboard background, alpha grid, transparency grid, tight framing, cropped, cut off, clipped, truncated edges, extra decorations, extra text, watermark, logo, blurry, low-res, artifacts"
+      "positive": "seamless conveyor belt surface texture, horizontal candy plastic belt in rich purple, subtle repeating ridges/segments along the belt, gentle top highlight and soft inner shading for depth, straight edges, no rounded corners, no outline, no button styling, no text or symbols, full-bleed with no padding or empty margins, left/right edges perfectly tileable, top/bottom edges clean and consistent, exact 512x128px, crisp edges, sRGB, PNG, orthographic front view",
+      "negative": "UI button, rounded corners, thick outline, centered sticker, drop shadow, large transparent margins, non-seamless edges, left-to-right lighting gradient, perspective, isometric, background scene, text, watermark, logo, photorealistic, harsh reflections, excessive noise, blurry, low-res, artifacts"
     },
     "conveyor_belt_texture_v02_candy/conveyor_belt_candy_orange_256x64.png": {
       "dir": "conveyor_belt_texture_v02_candy",

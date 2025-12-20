@@ -221,13 +221,34 @@ namespace WeChatWASM
                     else
                     {
                         var rootPath = Directory.GetParent(Application.dataPath).FullName;
-                        string webglDir = WXExtEnvDef.GETDEF("WEIXINMINIGAME") ? "WeixinMiniGame" : "WebGL";
+                        // Unity Bee artifacts directory name can vary by Unity version / subplatform.
+                        // For WeixinMiniGame builds, Bee may still output to `WebGL` (not `WeixinMiniGame`).
+                        var artifactDirCandidates = new List<string>();
 #if PLATFORM_PLAYABLEADS
-                        webglDir = "PlayableAds";
+                        artifactDirCandidates.Add("PlayableAds");
+#else
+                        artifactDirCandidates.Add("WeixinMiniGame");
+                        artifactDirCandidates.Add("WebGL");
 #endif
-                        symFile1 = Path.Combine(rootPath, "Library", "Bee", "artifacts", webglDir, "build", "debug_WebGL_wasm", "build.js.symbols");
+                        symFile1 = null;
+                        foreach (var artifactDir in artifactDirCandidates)
+                        {
+                            var candidate = Path.Combine(rootPath, "Library", "Bee", "artifacts", artifactDir, "build", "debug_WebGL_wasm", "build.js.symbols");
+                            if (File.Exists(candidate))
+                            {
+                                symFile1 = candidate;
+                                break;
+                            }
+                        }
                     }
-                    WeChatWASM.UnityUtil.preprocessSymbols(symFile1, GetWebGLSymbolPath());
+                    if (!string.IsNullOrEmpty(symFile1) && File.Exists(symFile1))
+                    {
+                        WeChatWASM.UnityUtil.preprocessSymbols(symFile1, GetWebGLSymbolPath());
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[WX] preprocessSymbols skipped: symbols file not found. Expected one of Bee artifacts dirs (WeixinMiniGame/WebGL). Export path: {GetWebGLSymbolPath()}");
+                    }
                     // WeChatWASM.UnityUtil.preprocessSymbols(GetWebGLSymbolPath());
                 }
 

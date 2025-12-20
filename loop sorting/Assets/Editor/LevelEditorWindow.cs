@@ -7,6 +7,10 @@ using LoopSorting;
 
 public class LevelEditorWindow : EditorWindow
 {
+    private const string LevelsFolder = "Assets/Levels";
+    private const string FlowsFolder = "Assets/Flows";
+    private const string RuntimeConfigResourcesFolder = "Assets/Levels/Resources/Levels";
+
     private LevelLayout _level;
     private SerializedObject _serializedLevel;
     private ReorderableList _conveyorsList;
@@ -1593,7 +1597,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void RefreshLevelList()
     {
-        var guids = AssetDatabase.FindAssets("t:LevelLayout", new[] { "Assets/Levels" });
+        var guids = AssetDatabase.FindAssets("t:LevelLayout", new[] { LevelsFolder });
         var list = new List<LevelLayout>();
         var names = new List<string>();
         foreach (var guid in guids)
@@ -1613,7 +1617,7 @@ public class LevelEditorWindow : EditorWindow
 
         if (_levelOptions.Length == 0)
         {
-            Debug.Log("LevelEditorWindow: No LevelLayout assets found under Assets/Levels.");
+            Debug.Log($"LevelEditorWindow: No LevelLayout assets found under {LevelsFolder}.");
         }
     }
 
@@ -1743,14 +1747,13 @@ public class LevelEditorWindow : EditorWindow
 
     private void CreateNewLevelAsset()
     {
-        const string levelsFolder = "Assets/Flows";
-        if (!Directory.Exists(levelsFolder))
+        if (!Directory.Exists(LevelsFolder))
         {
-            Directory.CreateDirectory(levelsFolder);
+            Directory.CreateDirectory(LevelsFolder);
             AssetDatabase.Refresh();
         }
 
-        var path = EditorUtility.SaveFilePanelInProject("Create Level Layout", "LevelLayout", "asset", "Save LevelLayout asset", levelsFolder);
+        var path = EditorUtility.SaveFilePanelInProject("Create Level Layout", "LevelLayout", "asset", "Save LevelLayout asset", LevelsFolder);
         if (string.IsNullOrEmpty(path))
         {
             return;
@@ -1766,14 +1769,13 @@ public class LevelEditorWindow : EditorWindow
 
     private void CreateNewFlowAsset()
     {
-        const string levelsFolder = "Assets/Levels";
-        if (!Directory.Exists(levelsFolder))
+        if (!Directory.Exists(FlowsFolder))
         {
-            Directory.CreateDirectory(levelsFolder);
+            Directory.CreateDirectory(FlowsFolder);
             AssetDatabase.Refresh();
         }
 
-        var path = EditorUtility.SaveFilePanelInProject("Create Level Flow", "LevelFlow", "asset", "Save LevelFlow asset", levelsFolder);
+        var path = EditorUtility.SaveFilePanelInProject("Create Level Flow", "LevelFlow", "asset", "Save LevelFlow asset", FlowsFolder);
         if (string.IsNullOrEmpty(path))
         {
             return;
@@ -1790,13 +1792,12 @@ public class LevelEditorWindow : EditorWindow
 
     private static void SetActiveRuntimeLevel(LevelLayout layout)
     {
-        var resourcePath = "Assets/Levels/Resources/Levels";
-        if (!Directory.Exists(resourcePath))
+        if (!Directory.Exists(RuntimeConfigResourcesFolder))
         {
-            Directory.CreateDirectory(resourcePath);
+            Directory.CreateDirectory(RuntimeConfigResourcesFolder);
         }
 
-        var assetPath = $"{resourcePath}/LevelRuntimeConfig.asset";
+        var assetPath = $"{RuntimeConfigResourcesFolder}/LevelRuntimeConfig.asset";
         var config = AssetDatabase.LoadAssetAtPath<LevelRuntimeConfig>(assetPath);
         if (config == null)
         {
@@ -1813,13 +1814,12 @@ public class LevelEditorWindow : EditorWindow
 
     private static void SetActiveRuntimeFlow(LevelFlow flow)
     {
-        var resourcePath = "Assets/Levels/Resources/Levels";
-        if (!Directory.Exists(resourcePath))
+        if (!Directory.Exists(RuntimeConfigResourcesFolder))
         {
-            Directory.CreateDirectory(resourcePath);
+            Directory.CreateDirectory(RuntimeConfigResourcesFolder);
         }
 
-        var assetPath = $"{resourcePath}/LevelRuntimeConfig.asset";
+        var assetPath = $"{RuntimeConfigResourcesFolder}/LevelRuntimeConfig.asset";
         var config = AssetDatabase.LoadAssetAtPath<LevelRuntimeConfig>(assetPath);
         if (config == null)
         {

@@ -1,0 +1,19 @@
+﻿{
+  "name": "LoopSorting.Runtime",
+  "references": [
+    "LoopSorting.Common",
+    "LoopSorting.UI",
+    "LoopSorting.Audio",
+    "LoopSorting.Save",
+    "Unity.TextMeshPro"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

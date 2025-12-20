@@ -4580,7 +4580,7 @@
         "box",
         "rim"
       ],
-      "positive": "seamless straight box rim edge tile texture (usable for any side), creamy warm candy plastic, smooth bevel with subtle ambient occlusion, neutral lighting (no obvious directional cue), UNIFORM along the long axis (no left/right variation), NO endcaps, NO rounded ends, NO corners, NO notch, NO interior cavity, NO background margins; the rim band MUST fill the entire canvas and touch all 4 edges (full-bleed), crisp edges, exact 512x512px, orthographic front view, PNG",
+      "positive": "seamless straight box rim edge tile texture (usable for any side), warm amber/caramel plastic with baked deep brown outer rim and lighter inner bevel (higher contrast vs creamy background), smooth bevel with subtle ambient occlusion, neutral lighting (no obvious directional cue, shading symmetric), UNIFORM along the long axis (no left/right variation), NO endcaps, NO rounded ends, NO corners, NO notch, NO interior cavity, NO background margins; the rim band MUST fill the entire canvas and touch all 4 edges (full-bleed), crisp edges, exact 512x512px, orthographic front view, PNG",
       "negative": "drop shadow, outer shadow, vignette, empty whitespace margins, centered strip with big background, background scene, lighting gradients across the long axis, non-seamless edges, visible seams, perspective, isometric, text, watermark, logo"
     },
     "World_Sprites/box_rim_corner.png": {
@@ -4593,7 +4593,7 @@
         "box",
         "rim"
       ],
-      "positive": "square rim material CORNER tile patch (not an L-shape object), creamy warm candy plastic, smooth bevel with subtle ambient occlusion, neutral lighting (no obvious directional cue), constant thickness, looks like a seamless square swatch that can sit at the junction of two rim edges, NO long arms, NO full frame, NO notch, NO interior cavity, NO background margins; MUST be full-bleed and touch all 4 edges, crisp edges, exact 256x256px, orthographic front view, PNG",
+      "positive": "square rim material CORNER tile patch (not an L-shape object), warm amber/caramel plastic with baked deep brown outer rim and lighter inner bevel (higher contrast vs creamy background), smooth bevel with subtle ambient occlusion, neutral lighting (no obvious directional cue, shading symmetric), constant thickness, looks like a seamless square swatch that can sit at the junction of two rim edges, NO long arms, NO full frame, NO notch, NO interior cavity, NO background margins; MUST be full-bleed and touch all 4 edges, crisp edges, exact 256x256px, orthographic front view, PNG",
       "negative": "L-shape, corner object, full tray/frame, centered object with big background, drop shadow, outer shadow, vignette, empty whitespace margins, perspective, isometric, text, watermark, logo, non-matching style, visible seams"
     },
     "World_Sprites/box_cavity_fill.png": {
@@ -4606,7 +4606,7 @@
         "box",
         "cavity"
       ],
-      "positive": "neutral box cavity interior fill texture (no direction), creamy translucent plastic / frosted glass feel, soft inner shadow around edges, gentle center gradient, subtle fine grain, NO opening notch, NO bottom weighting, no symbols, no text, NO drop shadow, NO vignette, full-bleed (touches all canvas edges), exact 512x512px, orthographic front view, PNG",
+      "positive": "cool desaturated blue-gray cavity interior fill texture (no direction), slightly translucent frosted plastic feel, soft inner shadow around edges, gentle center gradient, subtle fine grain, NO opening notch, NO bottom weighting, no symbols, no text, NO drop shadow, NO vignette, full-bleed (touches all canvas edges), exact 512x512px, orthographic front view, PNG",
       "negative": "directional lighting that implies a bottom, visible notch, arrows, icons, text, watermark, logo, strong perspective, background scene, heavy noise"
     }
   }

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace LoopSorting
 {
-    internal static class UIPrefabPreviewUtil
+    public static class UIPrefabPreviewUtil
     {
         public static void ApplyNineSliceIfMissing(Image image, Sprite sprite)
         {
@@ -78,4 +78,3 @@ namespace LoopSorting
         }
     }
 }
-

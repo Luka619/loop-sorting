@@ -113,9 +113,9 @@ namespace LoopSorting
         private const int BoxRimSortingOrder = 2810;
         private const int BoxRimRenderQueue = 2810;
         private const float BoxCavityZ = 0.11f;
-        // Visual tuning: make the rim clearly distinct from the cavity so the missing edge (opening direction) reads.
-        private static readonly Color BoxRimTint = new Color(1.00f, 0.82f, 0.42f, 1.00f);
-        private static readonly Color BoxCavityTint = new Color(0.78f, 0.82f, 0.92f, 0.88f);
+        // Textures now carry final colors; keep tint neutral (cavity alpha keeps translucency).
+        private static readonly Color BoxRimTint = new Color(1f, 1f, 1f, 1f);
+        private static readonly Color BoxCavityTint = new Color(1f, 1f, 1f, 0.88f);
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 

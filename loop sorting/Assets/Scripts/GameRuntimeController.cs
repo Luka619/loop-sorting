@@ -1391,6 +1391,7 @@ namespace LoopSorting
                     if (containerIndex >= 0 && containerIndex < _boxViews.Count)
                     {
                         _boxViews[containerIndex].PlayMouthSquash(Color.white, seconds: 0.12f);
+                        _boxViews[containerIndex].PlayBoxBounce();
                     }
                 }
                 else if (e.Outcome == ConveyorPortOutcome.SkippedEmptyBoxPreferredTarget)

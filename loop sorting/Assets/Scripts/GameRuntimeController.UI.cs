@@ -1437,6 +1437,10 @@ namespace LoopSorting
                 SyncContainersVisuals();
                 UpdateBeltCounter();
                 StartBeltSpawnFromBox(containerIndex, peek);
+                if (containerIndex < _boxViews.Count)
+                {
+                    _boxViews[containerIndex].PlayBoxBounce();
+                }
 
                 // Keep the operable outline in sync with the remaining run.
                 if (containerIndex < _boxViews.Count)

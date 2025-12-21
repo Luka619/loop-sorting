@@ -76,6 +76,7 @@ namespace LoopSorting
         private Coroutine _denyRoutine;
         private Coroutine _shuffleRoutine;
         private Coroutine _lockAnimRoutine;
+        private Coroutine _boxBounceRoutine;
         private Coroutine _mouthFlashRoutine;
         private GameObject _mouthFlash;
         private GameObject _mouthIndicator;
@@ -117,8 +118,27 @@ namespace LoopSorting
         // Textures now carry final colors; keep tint neutral (cavity alpha keeps translucency).
         private static readonly Color BoxRimTint = new Color(1f, 1f, 1f, 1f);
         private static readonly Color BoxCavityTint = new Color(1f, 1f, 1f, 0.88f);
+        private const string Box3DPrefabResourceBase = "Art3D/Box3x8";
+        private const float Box3DFrontZ = 0.06f;
+        private const float Box3DLidOpenFrac = 0.55f;
+        private const float Box3DLidCloseSeconds = 0.22f;
+        private const float Box3DBlockInsetFrac = 0.18f;
+        private const float Box3DBlockInsetMin = 0.02f;
+        private const float Box3DBlockInsetMax = 0.12f;
+        private const float BoxBouncePunchScale = 0.05f;
+        private const float BoxBounceSeconds = 0.12f;
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
+
+        private static GameObject _box3DPrefabCached;
+        private static bool _box3DPrefabLoggedMissing;
+        private GameObject _box3D;
+        private Transform _box3DLid;
+        private Vector3 _box3DLidClosedLocal;
+        private Coroutine _box3DLidRoutine;
+        private Renderer _box3DCavityRenderer;
+        private float _box3DFrontLocalZ;
+        private float _box3DBlockLocalZ;
 
         public void Init(int containerIndex, GameRuntimeController controller, Vector2 size, int columns, int rows, Vector2 blockSize, OpeningSide opening)
         {
@@ -147,8 +167,16 @@ namespace LoopSorting
             collider.center = Vector3.zero;
 
             EnsureSlotCapacity();
-            BuildBoxOutline();
-            TryBuildBoxCavity();
+            if (TryBuildBox3D())
+            {
+                _hasBoxFrame = true;
+                Hide2DBoxVisuals();
+            }
+            else
+            {
+                BuildBoxOutline();
+                TryBuildBoxCavity();
+            }
         }
 
         public void SyncBlocks(IReadOnlyList<Block> blocks)
@@ -420,6 +448,10 @@ namespace LoopSorting
             var pos = origin + new Vector2(col * cellSize.x, -row * cellSize.y);
 
             var finalPos = new Vector3(pos.x, pos.y, 0f);
+            if (_box3D != null)
+            {
+                finalPos.z = _box3DBlockLocalZ;
+            }
             _slotFinalLocalPos[slotIndex] = finalPos;
             if (!_incomingAnimatingSlots.Contains(slotIndex))
             {
@@ -522,7 +554,7 @@ namespace LoopSorting
 
             float cell = Mathf.Min(_boxSize.x / Mathf.Max(1, _columns), _boxSize.y / Mathf.Max(1, _rows));
             float pad = Mathf.Max(0.05f, cell * 0.7f);
-            var start = _mouthLocalPos + _mouthLocalNormal * pad;
+            var start = GetMouthLocalPosition() + _mouthLocalNormal * pad;
 
             go.transform.localPosition = start;
             var co = StartCoroutine(AnimateIncoming(slotIndex, start, end));
@@ -779,6 +811,338 @@ namespace LoopSorting
             {
                 BuildDashedEdge(edge.Item1, edge.Item2);
             }
+        }
+
+        private bool TryBuildBox3D()
+        {
+            if (_box3D != null)
+            {
+                _box3D.transform.localRotation = GetBox3DRotation(_opening);
+                UpdateBox3DTransform();
+                Update3DLidState(_completed, forceShow: false);
+                UpdateMouthIndicatorVisibility();
+                return true;
+            }
+
+            if (!TryLoadBox3DPrefab(_opening, out var prefab, out var rotation))
+            {
+                return false;
+            }
+
+            _box3D = Instantiate(prefab, transform);
+            _box3D.name = "Box3D";
+            _box3D.transform.localPosition = Vector3.zero;
+            _box3D.transform.localRotation = rotation;
+            _box3D.transform.localScale = Vector3.one;
+
+            UpdateBox3DTransform();
+            Update3DLidState(_completed, forceShow: false);
+            UpdateMouthIndicatorVisibility();
+            return true;
+        }
+
+        private void UpdateBox3DTransform()
+        {
+            if (_box3D == null) return;
+            Cache3DLid();
+            _box3D.transform.localScale = Vector3.one;
+            _box3D.transform.localPosition = Vector3.zero;
+
+            var localBounds = CalculateRendererBoundsLocal(_box3D, _box3DLid);
+            if (localBounds.size.sqrMagnitude <= 0.0001f) return;
+
+            bool swapAxes = _opening == OpeningSide.Left || _opening == OpeningSide.Right;
+            float targetX = swapAxes ? _boxSize.y : _boxSize.x;
+            float targetY = swapAxes ? _boxSize.x : _boxSize.y;
+            float scaleX = targetX / Mathf.Max(0.0001f, localBounds.size.x);
+            float scaleY = targetY / Mathf.Max(0.0001f, localBounds.size.y);
+            float scaleZ = Mathf.Min(scaleX, scaleY);
+            _box3D.transform.localScale = new Vector3(scaleX, scaleY, scaleZ);
+
+            var bounds = CalculateRendererBounds(_box3D, _box3DLid);
+            var localCenter = _box3D.transform.InverseTransformPoint(bounds.center);
+            var frontWorld = new Vector3(bounds.center.x, bounds.center.y, bounds.min.z);
+            var localFront = _box3D.transform.InverseTransformPoint(frontWorld);
+            float zOffset = Box3DFrontZ - localFront.z;
+            _box3D.transform.localPosition = new Vector3(-localCenter.x, -localCenter.y, zOffset);
+
+            Cache3DDepths();
+        }
+
+        private void Cache3DLid()
+        {
+            if (_box3D == null) return;
+            _box3DLid = null;
+            _box3DCavityRenderer = null;
+            var lid = _box3D.transform.Find("Lid");
+            if (lid != null)
+            {
+                _box3DLid = lid;
+                _box3DLidClosedLocal = lid.localPosition;
+            }
+
+            var cavity = _box3D.transform.Find("CavityGrid");
+            if (cavity != null)
+            {
+                _box3DCavityRenderer = cavity.GetComponent<Renderer>();
+            }
+        }
+
+        private void Update3DLidState(bool completed, bool forceShow)
+        {
+            if (_box3DLid == null) return;
+
+            if (!completed)
+            {
+                Stop3DLidAnimation();
+                _box3DLid.gameObject.SetActive(false);
+                return;
+            }
+
+            _box3DLid.gameObject.SetActive(true);
+            if (!forceShow)
+            {
+                Stop3DLidAnimation();
+                _box3DLid.localPosition = Get3DLidClosedLocal();
+                return;
+            }
+
+            Stop3DLidAnimation();
+            _box3DLidRoutine = StartCoroutine(Animate3DLidClose());
+        }
+
+        private void Stop3DLidAnimation()
+        {
+            if (_box3DLidRoutine != null)
+            {
+                StopCoroutine(_box3DLidRoutine);
+                _box3DLidRoutine = null;
+            }
+        }
+
+        private Vector3 Get3DLidClosedLocal()
+        {
+            return new Vector3(0f, _box3DLidClosedLocal.y, _box3DLidClosedLocal.z);
+        }
+
+        private Vector3 Get3DLidOpenLocal()
+        {
+            if (_box3D == null) return _box3DLidClosedLocal;
+            float baseSize = Mathf.Min(_boxSize.x, _boxSize.y);
+            float openDistance = Mathf.Clamp(baseSize * Box3DLidOpenFrac, baseSize * 0.25f, baseSize * 1.2f);
+            var dir = _mouthLocalNormal.sqrMagnitude > 0.0001f ? _mouthLocalNormal.normalized : Vector3.up;
+            var openOffset = _box3D.transform.InverseTransformVector(dir * openDistance);
+            return Get3DLidClosedLocal() + openOffset;
+        }
+
+        private void Cache3DDepths()
+        {
+            _box3DFrontLocalZ = 0f;
+            _box3DBlockLocalZ = 0f;
+            if (_box3D == null) return;
+
+            var baseBounds = CalculateRendererBounds(_box3D, _box3DLid);
+            if (baseBounds.size.sqrMagnitude <= 0.0001f) return;
+
+            var frontWorld = new Vector3(baseBounds.center.x, baseBounds.center.y, baseBounds.min.z);
+            var backWorld = new Vector3(baseBounds.center.x, baseBounds.center.y, baseBounds.max.z);
+            var frontLocal = transform.InverseTransformPoint(frontWorld);
+            var backLocal = transform.InverseTransformPoint(backWorld);
+            _box3DFrontLocalZ = frontLocal.z;
+
+            float targetZ;
+            if (_box3DCavityRenderer != null)
+            {
+                var cavityBounds = _box3DCavityRenderer.bounds;
+                var cavityFrontWorld = new Vector3(cavityBounds.center.x, cavityBounds.center.y, cavityBounds.min.z);
+                var cavityFrontLocal = transform.InverseTransformPoint(cavityFrontWorld);
+                float inset = Mathf.Clamp(Mathf.Min(_blockSize.x, _blockSize.y) * Box3DBlockInsetFrac, Box3DBlockInsetMin, Box3DBlockInsetMax);
+                targetZ = cavityFrontLocal.z - inset;
+            }
+            else
+            {
+                targetZ = Mathf.Lerp(frontLocal.z, backLocal.z, 0.6f);
+            }
+
+            float minZ = Mathf.Min(frontLocal.z, backLocal.z) + 0.01f;
+            float maxZ = Mathf.Max(frontLocal.z, backLocal.z) - 0.01f;
+            _box3DBlockLocalZ = Mathf.Clamp(targetZ, minZ, maxZ);
+        }
+
+        private Vector3 GetMouthLocalPosition()
+        {
+            var pos = _mouthLocalPos;
+            if (_box3D != null)
+            {
+                pos.z = _box3DFrontLocalZ;
+            }
+            return pos;
+        }
+
+        private IEnumerator Animate3DLidClose()
+        {
+            if (_box3DLid == null) yield break;
+
+            Vector3 open = Get3DLidOpenLocal();
+            Vector3 closed = Get3DLidClosedLocal();
+            _box3DLid.localPosition = open;
+
+            float duration = Box3DLidCloseSeconds;
+            if (Controller != null)
+            {
+                duration = Mathf.Clamp(Controller.conveyorTickSeconds * 0.65f, 0.12f, 0.35f);
+            }
+
+            float t = 0f;
+            while (t < duration)
+            {
+                if (_box3DLid == null) yield break;
+                float speed = Controller != null ? Mathf.Max(0.0001f, Controller.EffectiveSpeedMultiplier) : 1f;
+                t += Time.deltaTime * speed;
+                float u = Mathf.Clamp01(t / duration);
+                float e = MotionUtil.EaseOutCubic(u);
+                _box3DLid.localPosition = Vector3.LerpUnclamped(open, closed, e);
+                yield return null;
+            }
+
+            if (_box3DLid != null)
+            {
+                _box3DLid.localPosition = closed;
+            }
+
+            _box3DLidRoutine = null;
+        }
+
+        private static bool TryLoadBox3DPrefab(OpeningSide opening, out GameObject prefab, out Quaternion rotation)
+        {
+            rotation = Quaternion.identity;
+            prefab = null;
+
+            prefab = _box3DPrefabCached;
+            if (prefab == null)
+            {
+                prefab = Resources.Load<GameObject>(Box3DPrefabResourceBase);
+                _box3DPrefabCached = prefab;
+            }
+
+            if (prefab == null)
+            {
+                if (!_box3DPrefabLoggedMissing)
+                {
+                    _box3DPrefabLoggedMissing = true;
+                    Debug.LogWarning($"BoxView: missing 3D box prefab at Resources/{Box3DPrefabResourceBase}.prefab");
+                }
+                return false;
+            }
+
+            rotation = GetBox3DRotation(opening);
+
+            return true;
+        }
+
+        private static Bounds CalculateRendererBounds(GameObject root, Transform excludeRoot)
+        {
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0)
+            {
+                return new Bounds(root.transform.position, Vector3.zero);
+            }
+
+            bool initialized = false;
+            var bounds = new Bounds(root.transform.position, Vector3.zero);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r == null) continue;
+                if (excludeRoot != null && r.transform.IsChildOf(excludeRoot)) continue;
+
+                if (!initialized)
+                {
+                    bounds = r.bounds;
+                    initialized = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(r.bounds);
+                }
+            }
+
+            if (!initialized)
+            {
+                return new Bounds(root.transform.position, Vector3.zero);
+            }
+
+            return bounds;
+        }
+
+        private static Bounds CalculateRendererBoundsLocal(GameObject root, Transform excludeRoot)
+        {
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0)
+            {
+                return new Bounds(Vector3.zero, Vector3.zero);
+            }
+
+            bool initialized = false;
+            var localBounds = new Bounds(Vector3.zero, Vector3.zero);
+            var rootTransform = root.transform;
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r == null) continue;
+                if (excludeRoot != null && r.transform.IsChildOf(excludeRoot)) continue;
+
+                var b = r.bounds;
+                var min = b.min;
+                var max = b.max;
+                for (int xi = 0; xi < 2; xi++)
+                {
+                    float x = xi == 0 ? min.x : max.x;
+                    for (int yi = 0; yi < 2; yi++)
+                    {
+                        float y = yi == 0 ? min.y : max.y;
+                        for (int zi = 0; zi < 2; zi++)
+                        {
+                            float z = zi == 0 ? min.z : max.z;
+                            var local = rootTransform.InverseTransformPoint(new Vector3(x, y, z));
+                            if (!initialized)
+                            {
+                                localBounds = new Bounds(local, Vector3.zero);
+                                initialized = true;
+                            }
+                            else
+                            {
+                                localBounds.Encapsulate(local);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!initialized)
+            {
+                return new Bounds(Vector3.zero, Vector3.zero);
+            }
+
+            return localBounds;
+        }
+
+        private static Quaternion GetBox3DRotation(OpeningSide opening)
+        {
+            return opening switch
+            {
+                OpeningSide.Right => Quaternion.Euler(0f, 0f, -90f),
+                OpeningSide.Bottom => Quaternion.Euler(0f, 0f, 180f),
+                OpeningSide.Left => Quaternion.Euler(0f, 0f, 90f),
+                _ => Quaternion.identity
+            };
+        }
+
+        private void Hide2DBoxVisuals()
+        {
+            if (_boxRim != null) _boxRim.SetActive(false);
+            if (_boxCavity != null) _boxCavity.SetActive(false);
         }
 
         private const string BoxRimEdgeTexturePath = "World_Sprites/box_rim_edge_tile.png";
@@ -1355,7 +1719,7 @@ namespace LoopSorting
 
         public void PlayTapFeedback()
         {
-            if (_tapRoutine != null) StopCoroutine(_tapRoutine);
+            StopBoxScalePunch();
             _tapRoutine = StartCoroutine(MotionUtil.ScalePunch(transform, _baseLocalScale, punchScale: 0.06f, seconds: 0.14f));
         }
 
@@ -1364,6 +1728,12 @@ namespace LoopSorting
             if (_denyRoutine != null) StopCoroutine(_denyRoutine);
             _denyRoutine = StartCoroutine(MotionUtil.ShakeLocalPosition(transform, _baseLocalPos, amplitude: Mathf.Max(0.04f, _boxSize.x * 0.04f), seconds: 0.18f, shakes: 8));
             PlayMouthFlash(new Color(1f, 0.3f, 0.3f, 1f), sizeFactor: 1.0f, seconds: 0.18f);
+        }
+
+        public void PlayBoxBounce(float punchScale = BoxBouncePunchScale, float seconds = BoxBounceSeconds)
+        {
+            StopBoxScalePunch();
+            _boxBounceRoutine = StartCoroutine(MotionUtil.ScalePunch(transform, _baseLocalScale, punchScale, seconds));
         }
 
         public void PlayInfoHint(Color color, float sizeFactor = 1.1f, float seconds = 0.18f)
@@ -1406,6 +1776,21 @@ namespace LoopSorting
                 case ConveyorPortOutcome.RejectedMismatch: c = new Color(1f, 0.35f, 0.35f, 1f); break;
             }
             PlayMouthFlash(c, sizeFactor: 1.05f, seconds: 0.16f);
+        }
+
+        private void StopBoxScalePunch()
+        {
+            if (_tapRoutine != null)
+            {
+                StopCoroutine(_tapRoutine);
+                _tapRoutine = null;
+            }
+            if (_boxBounceRoutine != null)
+            {
+                StopCoroutine(_boxBounceRoutine);
+                _boxBounceRoutine = null;
+            }
+            transform.localScale = _baseLocalScale;
         }
 
         private IEnumerator AnimateShuffleJiggle(float seconds)
@@ -1551,7 +1936,7 @@ namespace LoopSorting
             // Placement/scale: a subtle "portal" at the box opening so players know where the entry check happens.
             if (_mouthIndicator != null)
             {
-                _mouthIndicator.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
+            _mouthIndicator.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
                 _mouthIndicator.transform.localRotation = Quaternion.identity;
 
                 float edge = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? _boxSize.y : _boxSize.x;
@@ -1578,12 +1963,13 @@ namespace LoopSorting
         private void UpdateMouthIndicatorVisibility()
         {
             if (_mouthIndicator == null) return;
+            _mouthIndicator.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
             _mouthIndicator.SetActive(!_locked && !_completed);
         }
 
         public Vector3 GetMouthWorldPosition()
         {
-            return transform.TransformPoint(_mouthLocalPos);
+            return transform.TransformPoint(GetMouthLocalPosition());
         }
 
         public Vector3 GetMouthWorldNormal()
@@ -1649,7 +2035,7 @@ namespace LoopSorting
                 TrySetMaterialColor(r.sharedMaterial, c);
             }
 
-            _mouthRipple.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.07f);
+            _mouthRipple.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.07f);
             _mouthRipple.transform.localRotation = Quaternion.identity;
             _mouthRipple.transform.localScale = new Vector3(sx * 0.75f, sy * 0.75f, 1f);
             _mouthRipple.SetActive(true);
@@ -1765,7 +2151,7 @@ namespace LoopSorting
             float s0 = Mathf.Max(0.08f, baseSize * 0.35f);
             float s1 = Mathf.Max(0.10f, baseSize * sizeFactor);
 
-            _mouthFlash.transform.localPosition = _mouthLocalPos + _mouthLocalNormal * 0.03f + new Vector3(0f, 0f, -0.10f);
+            _mouthFlash.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.03f + new Vector3(0f, 0f, -0.10f);
             _mouthFlash.transform.localRotation = Quaternion.identity;
 
             var r = _mouthFlash.GetComponent<Renderer>();
@@ -2078,6 +2464,12 @@ namespace LoopSorting
             SetBoxOutlineVisible(!val);
             if (val) HideFrontOutline();
             UpdateMouthIndicatorVisibility();
+
+            if (_box3D != null)
+            {
+                Update3DLidState(val, forceShow: val && !wasCompleted);
+                return;
+            }
 
             EnsureCompletedOverlayBuilt();
             if (_completedOverlay == null) return;

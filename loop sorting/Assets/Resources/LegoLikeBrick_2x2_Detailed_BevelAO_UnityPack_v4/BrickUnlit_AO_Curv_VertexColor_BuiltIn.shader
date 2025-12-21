@@ -9,6 +9,11 @@ Shader "Custom/BrickUnlit_AO_Curv_VertexColor_BuiltIn"
         _ViewLightStrength("View Light Strength", Range(0,1)) = 0.6
         _ViewPower("View Facing Power", Range(0.5,6)) = 1.6
         _ViewSideMin("View Side Min", Range(0.25,1)) = 0.7
+        _OutlineColor ("Outline Color", Color) = (0,0,0,1)
+        _OutlineStrength ("Outline Strength", Range(0,1)) = 0
+        _OutlinePower ("Outline Power", Range(0.5,8)) = 1.4
+        _OutlineThreshold ("Outline Threshold", Range(0,1)) = 0.35
+        _OutlineSoftness ("Outline Softness", Range(0.0,0.5)) = 0.18
     }
 
     SubShader
@@ -44,6 +49,11 @@ Shader "Custom/BrickUnlit_AO_Curv_VertexColor_BuiltIn"
             float  _ViewLightStrength;
             float  _ViewPower;
             float  _ViewSideMin;
+            fixed4 _OutlineColor;
+            float  _OutlineStrength;
+            float  _OutlinePower;
+            float  _OutlineThreshold;
+            float  _OutlineSoftness;
 
             v2f vert (appdata v)
             {
@@ -73,10 +83,14 @@ Shader "Custom/BrickUnlit_AO_Curv_VertexColor_BuiltIn"
                 float viewLit = lerp(_ViewSideMin, 1.0, face);
                 c *= lerp(1.0, viewLit, _ViewLightStrength);
 
+                float rim = 1.0 - ndotv;
+                float rimPow = pow(max(0.0001, rim), _OutlinePower);
+                float outline = smoothstep(_OutlineThreshold, _OutlineThreshold + _OutlineSoftness, rimPow);
+                c = lerp(c, _OutlineColor.rgb, outline * _OutlineStrength);
+
                 return fixed4(saturate(c), 1.0);
             }
             ENDCG
         }
     }
 }
-

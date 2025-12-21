@@ -100,6 +100,9 @@ namespace LoopSorting
         // so keep it small to align visually with the box face.
         private const float OutlineZ = 0.08f;
         private const int FrontOutlineQueue = 2990;
+        private const bool DisableFrontOutline = true;
+        private const string BlockOutlineLayerName = "Block";
+        private const int BlockOutlineLayerFallback = 10;
         // Box rim/cavity should stay behind the black outline, but still in front of the background.
         private const float BoxOutlineZ = 0.10f;
         private const float BoxVisualScale = 1.00f;
@@ -602,23 +605,34 @@ namespace LoopSorting
                 show = false;
             }
 
-            if (!show)
+            List<int> indices = null;
+            if (show)
+            {
+                // gather first runCount occupied slots in order (skip empty gaps)
+                indices = new List<int>();
+                for (int i = 0; i < _slotColors.Count && indices.Count < runCount; i++)
+                {
+                    if (_slotColors[i].HasValue)
+                    {
+                        indices.Add(i);
+                    }
+                }
+
+                if (indices.Count == 0)
+                {
+                    show = false;
+                }
+            }
+
+            UpdateBlockOutlineMask(indices, show);
+
+            if (DisableFrontOutline)
             {
                 if (_frontOutline != null) _frontOutline.gameObject.SetActive(false);
                 return;
             }
 
-            // gather first runCount occupied slots in order (skip empty gaps)
-            var indices = new List<int>();
-            for (int i = 0; i < _slotColors.Count && indices.Count < runCount; i++)
-            {
-                if (_slotColors[i].HasValue)
-                {
-                    indices.Add(i);
-                }
-            }
-
-            if (indices.Count == 0)
+            if (!show)
             {
                 if (_frontOutline != null) _frontOutline.gameObject.SetActive(false);
                 return;
@@ -764,6 +778,48 @@ namespace LoopSorting
             if (_frontOutline != null)
             {
                 _frontOutline.gameObject.SetActive(false);
+            }
+            UpdateBlockOutlineMask(null, false);
+        }
+
+        private void UpdateBlockOutlineMask(List<int> indices, bool show)
+        {
+            int outlineLayer = ResolveBlockOutlineLayer();
+            if (outlineLayer < 0) return;
+
+            int baseLayer = gameObject.layer;
+            for (int i = 0; i < _blockVisuals.Count; i++)
+            {
+                var go = _blockVisuals[i];
+                if (go == null) continue;
+                SetLayerRecursively(go.transform, baseLayer);
+            }
+
+            if (!show || indices == null || indices.Count == 0) return;
+
+            for (int i = 0; i < indices.Count; i++)
+            {
+                int slot = indices[i];
+                if (slot < 0 || slot >= _blockVisuals.Count) continue;
+                var go = _blockVisuals[slot];
+                if (go == null) continue;
+                SetLayerRecursively(go.transform, outlineLayer);
+            }
+        }
+
+        private static int ResolveBlockOutlineLayer()
+        {
+            int layer = LayerMask.NameToLayer(BlockOutlineLayerName);
+            return layer >= 0 ? layer : BlockOutlineLayerFallback;
+        }
+
+        private static void SetLayerRecursively(Transform root, int layer)
+        {
+            if (root == null) return;
+            root.gameObject.layer = layer;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                SetLayerRecursively(root.GetChild(i), layer);
             }
         }
 

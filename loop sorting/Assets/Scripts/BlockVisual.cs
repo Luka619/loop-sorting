@@ -113,6 +113,7 @@ namespace LoopSorting
             return _legoModelPrefab != null;
         }
 
+
         private static void EnsureLegoMaterials(GameObject modelRoot)
         {
             if (modelRoot == null) return;
@@ -159,6 +160,11 @@ namespace LoopSorting
                     if (_legoBaseMaterial.HasProperty("_ViewLightStrength")) _legoBaseMaterial.SetFloat("_ViewLightStrength", 0.95f);
                     if (_legoBaseMaterial.HasProperty("_ViewPower")) _legoBaseMaterial.SetFloat("_ViewPower", 1.6f);
                     if (_legoBaseMaterial.HasProperty("_ViewSideMin")) _legoBaseMaterial.SetFloat("_ViewSideMin", 0.62f);
+                    if (_legoBaseMaterial.HasProperty("_OutlineColor")) _legoBaseMaterial.SetColor("_OutlineColor", Color.black);
+                    if (_legoBaseMaterial.HasProperty("_OutlineStrength")) _legoBaseMaterial.SetFloat("_OutlineStrength", 0f);
+                    if (_legoBaseMaterial.HasProperty("_OutlinePower")) _legoBaseMaterial.SetFloat("_OutlinePower", 1.4f);
+                    if (_legoBaseMaterial.HasProperty("_OutlineThreshold")) _legoBaseMaterial.SetFloat("_OutlineThreshold", 0.35f);
+                    if (_legoBaseMaterial.HasProperty("_OutlineSoftness")) _legoBaseMaterial.SetFloat("_OutlineSoftness", 0.18f);
 
                     if (_legoBaseMaterial.HasProperty("_RimColor")) _legoBaseMaterial.SetColor("_RimColor", new Color(1f, 1f, 1f, 1f));
                     if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 2.6f);

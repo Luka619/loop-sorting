@@ -8,6 +8,11 @@ Shader "Custom/URP/BrickUnlit_AO_Curv_VertexColor"
         _ViewLightStrength("View Light Strength", Range(0,1)) = 0.6
         _ViewPower("View Facing Power", Range(0.5,6)) = 1.6
         _ViewSideMin("View Side Min", Range(0.25,1)) = 0.7
+        _OutlineColor ("Outline Color", Color) = (0,0,0,1)
+        _OutlineStrength ("Outline Strength", Range(0,1)) = 0
+        _OutlinePower ("Outline Power", Range(0.5,8)) = 1.4
+        _OutlineThreshold ("Outline Threshold", Range(0,1)) = 0.35
+        _OutlineSoftness ("Outline Softness", Range(0.0,0.5)) = 0.18
     }
 
     SubShader
@@ -73,6 +78,11 @@ Shader "Custom/URP/BrickUnlit_AO_Curv_VertexColor"
             float  _ViewLightStrength;
             float  _ViewPower;
             float  _ViewSideMin;
+            float4 _OutlineColor;
+            float  _OutlineStrength;
+            float  _OutlinePower;
+            float  _OutlineThreshold;
+            float  _OutlineSoftness;
 
             Varyings vert (Attributes i)
             {
@@ -103,6 +113,11 @@ Shader "Custom/URP/BrickUnlit_AO_Curv_VertexColor"
                 half face = pow(max(0.0001h, ndotv), (half)_ViewPower);
                 half viewLit = lerp((half)_ViewSideMin, 1.0h, face);
                 c *= lerp(1.0h, viewLit, (half)_ViewLightStrength);
+
+                half rim = 1.0h - ndotv;
+                half rimPow = pow(max(0.0001h, rim), (half)_OutlinePower);
+                half outline = smoothstep((half)_OutlineThreshold, (half)(_OutlineThreshold + _OutlineSoftness), rimPow);
+                c = lerp(c, (half3)_OutlineColor.rgb, outline * (half)_OutlineStrength);
 
                 return half4(saturate(c), 1.0h);
             }

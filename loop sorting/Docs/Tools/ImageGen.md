@@ -7,11 +7,11 @@ This folder contains a small script to generate PNGs using an OpenAI-compatible 
 ## Setup
 
 - Set env vars (PowerShell):
-  - `APIYI_BASE_URL` (example: `https://<your-host>/v1` or `https://<your-host>`)
+  - `APIYI_BASE_URL` (proxy base URL, e.g. `https://api.apiyi.com/v1`; never use `https://api.openai.com/v1`)
   - `APIYI_API_KEY` (your key)
 
 Or pass them per-command:
-- `--api-base https://api.apiyi.com/v1` (alias: `--base-url`)
+- `--api-base https://api.apiyi.com/v1` (proxy only; never use `https://api.openai.com/v1`)
 - `--api-key-file <path>` (or `--api-key <key>`)
 
 If your gateway is OpenAI-compatible, the script will call `POST {baseUrl}/images/generations` (or `{baseUrl}/v1/images/generations` if `baseUrl` doesn't end with `/v1`).

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: lock_marker_color_disc.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: 6f407f2e00a0098000000000000000005d500974edd48d0220fa6a32fe070000040991d50201a05fdeec4ef0033f0000040991d50201a05fdeec4ef0033f00007189e7b1f5b0de480082888606080000fcfdffffffffffff000000000000000061f1750d04c259ffbb174d981a8661046f00c3d0b2bfed993db327ee010069fd6f00c3d0c25f4849292925f73600682d2e022bd1327612ff7ffff75fbbc0dc11f17002e7ffe4d20430f6abdadaea9c60fcfdffffffffffff000000000000000002898335ba0540ea1befa97f042880021303ddff97d9439931e75c0f8c31e6056fc0fecd87fdc5cff45f5c130b4a01496fc0fecd85f7d5fdea5d7dab2ff525be02f1682bcf3a4e0000b276ff19f21ccffcfdffffffffffff0000000000000000028983b51402c0e81ceb697f063c400331039f82cb07bbcaea529159ed65b57b6fc0fed38ffb6dc9f69b5851094a01496f20f3b75e7f4dc9fa5dbd092f71252c02f168abcf3a4e0000b276ff19f02ccffcfdffffffffffff0000000000000000517129e75fc663dd0600d000002040065d8890753501945ffdfa1f0040bc05cb045143e39d571f02a0379d09fcc00ffc5d5043a3a3f30002229f30012a90857214e9330504d2de5b2000000001f83f75fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000634183d50110482928092419120000005dc809d4900040f8dbe2fd73bf0d7006148955f47b53880200505086030a2000026982950c0180e03f738afb071ff3316f20f3b75efffcc9e24d78112b2a4148026982518fcfffdf2507018082c0031c5e284a0d06c459019c00000000e04e7e04c90973a7d7bbfe0101080400800ffc02191aa96f0105752f5f0000620002207da886512204e07b559fbfbfbfbfc5f80451271d000c24022aff0b0ac3300c8004e9a5b14e0880dc987ede09000000580481df057a03fe002c01000000000080618904747d5c4bfd6824db0d001886617280c9e17f7b19f90c0fa552a9406c45fcfdffffffffffffb7b7a2a285858686
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

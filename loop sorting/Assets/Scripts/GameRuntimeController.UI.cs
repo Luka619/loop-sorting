@@ -283,7 +283,6 @@ namespace LoopSorting
             // Load persistent settings / economy / progress before building any UI.
             LoadSaveIfNeeded();
             EnsureEconomyDefaults();
-
             // Optional: allow swapping the entire UIKit Resources pack by changing one string (PlayerPrefs).
             // Example: PlayerPrefs.SetString("LoopSortingUIKit.ResourcesRoot", "loop_sorting_ui_components_v05_pack_b");
             LoopSortingUIKit.ApplyResourcesRootFromPlayerPrefs();

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: icon_booster_shuffle.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: f19009cba743ac6f1d0da93938260a005ec898c1a155fd47849a78c30a0c0000224381ac62020037ddfbae22168c00c86284c15d18c8ff8b7f8aab0888008800519120cb7f44ac3f3d8f525138c320002183c1a2ac92700000008a0060010040c244d92a02c184085084087f84f867887d88e791569b5c501b173fffbf7374705e08ffd1ff443c5b15b99fd333bf318061098e41fc6d3e1b3c7ffb01fafff75ee2a8ecc3b15d25ec17209890a34f3dfc6f40614a3e000010800a880125a00494f1a8925158b300f0f92485ee39070f396284e9d74ec8373323000b08bf087f891801e15fdef4457f06ed1f9907fa0cdac284e9d74fc820730f00b3887ba7fbff5e0891915f04fc3f84b8d1be8c1e4e3d3d421df86566000024c22df6c94d28707129c941521d7934179eebb2b1970404613106ab78fd3e9db9e09bb51cffff07628469df4fc800fb88f389fbb7ffbff76284e9de4fcaff0bff1b7777b3ff3277e2488ed5da5174df7502f5f7f7ef2fb6d2c870d4d63468761b2100000005cc80ef4595c60a7c5704e286281cfaa495a2c284e9de2fc87577f5ff37ff3bf0bf80f18469df2fc824882799cf5bc65a805af184e9de2fcb6c8d77bf7f7f7f3b7f38e2688dd57a83749f0f03dad8dade7efc3143415f6f5c000000000200580100a92e42717b8b01000000000000002db08a0289b6117bd91a00b019be85862c501fe28039d4fca9ba1700000000002058da6142b1dfd1178028124942120931041d3d424dda669a00000000000000c032a56f4051ad490000000000000000000228728145531a5df0f905fc05ef460e0000f1488655140d3a10fbb61ffe7c380700f1b0e82124e1b9c4c309a889d9594800e288b8c3b3552ffe1ae2b7ffe600c001528441f1afe1991db83afb0feb2bf9ba5dd02cd4a704f92d14d7435034fc3800146905945f83702d05000090715fd95e7dc8ba15d7c23c5b1503000000b9fe7814692314d762bc3200000000030313526f80e1a889e15959bfe515f496c00b047268a643c16121ac130041140d084881e2e8b243fb7921be1b2c00000020ccf504098295bf38002bdfbf6801000000c018415dcfe306000000c027d80e9003851f82c560b5dede0e0b00000000703787fcfdffffffffffff5555aaaa97977e7e
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

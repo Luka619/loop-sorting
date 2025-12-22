@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: digit_6.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: fcfdffffffffffff000000000000000014a908b5726a44c2601797b0c80000005e8810d59bf368249e7cbebdc0af27005e287cf57be948029eb8981d4d111800518967741d52402f22003000030c0000fcfdffffffffffff000000000000000053413fac02000237008c00600000000071a956d3523a9743ee877f7f777b7a3b14b124e136ef0e420b88203b0b737f7f14291fd30dffecd661f8bf7f767fbf7f526902f59de96a029e201fc807580384fcfdffffffffffff000000000000000002b97f1108dcb90100ecc81b992fa0016fc0eed7afededcb7df93fff67f5a63c6e081dd39088883ef8fffd69032e117052812143f4402e1b017c3e9fcffff36f52698231565bd004840011e002f2817cfcfdffffffffffff000000000000000051f119c748c6ff220700d0080890400622031f9117e40a77f70b7b773f7777f75d84cbc7a5f1f75a48c2f09bde7f777f6284b15848c8f7b7b32310b971fff7ff710982912400ce68029c400604000060fcfdffffffffffff00000000000000006f80000c0014a4a494949252524a1249626905f35e8088e698001df00f7ff34f4f005def35d90bb3a92125a5a49c14987d480ed352629c63ae875277737f7fbff1705bc30d842630e6b5980080205890fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000006f80001a002c00000000000000001000f1c887f15c67961540048400000039f9021959635eba0000c861403016944063fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000048992c3a576c91e881080793c43210072d01ae32f65608a6c152f464693c91162291fb5723d13400850000dc000000052690833f100fabd9972c167f09ebd677d4882d19ba91fad429a4573737f797814a956747a6c8c621c400000040c304061294ef4e31504b37856fe0a0000101c5ec85e53f100fcbd9948a1a279a97c275d283634ba55ed37440060000000048071a986f18a00d29be79e9d72e67ab839318363a8c20b080000000200000200007129a3916800c69bcf9e00000080433f0481db0a96046202d0040000000000805d482134be7646e31a63fb0100049306e280bfd64ff735bdfc1f0000000030a0fcfdffffffffffff9b9b919183838585
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

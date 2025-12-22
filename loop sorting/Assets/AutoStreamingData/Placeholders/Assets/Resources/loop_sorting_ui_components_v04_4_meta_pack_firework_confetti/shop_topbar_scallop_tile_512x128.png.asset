@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_topbar_scallop_tile_512x128.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 16
+  m_CompleteImageSize: 464
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 464
+  _typelessdata: 51a9300d30801caa9d8011cb880000007e4007a91b0414f8fda10100000000000251096baf433a000022cf5c982f3d40025109ebbc335800002acf6c981ffd4a62896733eac2060001d0000b00000000fcfdffffffffffff000000000000000071698831f300d05bbb9f207270a678c3f18807359853719236168573ad7f28995d8807352ad678b23614055d6dff4354728807d5efbaf3957f6fd3fbcd9fe5dd526908d35b151f040240368407a28170fcfdffffffffffff00000000000000006f80003e003a000000000000000090606f40db7e0170000000000000000048496f4065816180010000000000000090926f4065816180010000000000000090926f80003c003a00000000000000000098fcfdffffffffffff000000000000000051b1651500d0bc5bc08040727127c5005111242bf6744080ecb6300170f9250014e97c0514d6bc5b20400006380800006f800028001e000000000000000090166f40318c0100010000000000000090926f8000c00094000000000000000000407189040d40c0b9aa8b847f72767bf8a1618918b33ded01c00d2002040120080222432ff9a7011a224cc422fedfcc5ce56f409fef0666a4a494949252524a4a81fcfdffffffffffff9090818163635757
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

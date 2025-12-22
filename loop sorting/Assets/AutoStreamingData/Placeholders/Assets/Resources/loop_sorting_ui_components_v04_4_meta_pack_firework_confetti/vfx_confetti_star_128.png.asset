@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_confetti_star_128.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: 08415f9a0006680b20000000000000005d500934ad174d0060ee7a32fe380000040991d53000a0d9b6505df0033f0000040991d53000a0d9b6505df0033f00007189e7916f50da060082888606080000fcfdffffffffffff000000000000000051e9c8831fb9925f8f000e3370100101f300f39fbdb975dbb5ed6c6725e9d2046f20c3776fd1494929b9b75b0b004a496f20c3f74b5c494929f9b789eb49222c517102746e64d212b0fb6c707afc3360fcfdffffffffffff000000000000000061710227af1cb11355140060098221081303dbff7dc11167f1ffff9faeb5f6066f2083503ffa6cc93fb9ff5b6f2a01406f20d3573f767dc93f99bf8b6f62414902898363ffaadbf43f2e220082cccddcfcfdffffffffffff0000000000000000224303d50e0002f70e00f70100f701005109022b0e4eebf6e93c136da0c310406f2083503e73fcc9fc5f7c130b4801406f2083d05efe78c9be597d090b4a014802898363ffaa1df51f2a2200824ccddcfcfdffffffffffff000000000000000061294e14b12804ec6866cf8d0000101c5e88907176c0265f150024c45ede73ee045143e37bdd1f04c4399d08fcc00ffc045143e37bdd1f04e4399b08fcc00ff804912427f2b978094081a0020010ceebfcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000634183fd011048192819a4191200000004c989152200801fde644ff0ff3ff00372082e540a01c01e4720809c031c000002698231a31c0080fa7fce4d18afa3306f2083501f5afdcdfe5d5851094802006169023438fa1463c6480020a0288aa25db05309100466744f102001009030325dc809b467fa3f3fa600500000a0ad0104098e51a11240e97872fc09000000815db044c72881fe162cf651737fef73005d080214950080f0380af05130c238016131223d00c0597b3f2200820200f03c61a91614840000806bbb615900000040528984f12fd662df874aa5d20e90031e72806d852953d3100923010000004c81fcfdffffffffffffbcbc9e9e79798a8a
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

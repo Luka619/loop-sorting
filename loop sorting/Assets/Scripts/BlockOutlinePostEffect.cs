@@ -10,12 +10,16 @@ namespace LoopSorting
         [SerializeField, Range(0.5f, 6f)] private float outlineThickness = 2.0f;
         [SerializeField] private Shader outlineShader;
         [SerializeField] private Shader maskShader;
+        [SerializeField, Range(0.25f, 1f)] private float maskResolutionScale = 1f;
+        [SerializeField] private bool autoScaleForMobile = true;
+        [SerializeField, Range(0.25f, 1f)] private float mobileMaskScale = 0.5f;
 
         private Camera _camera;
         private Camera _maskCamera;
         private RenderTexture _maskTexture;
         private Material _outlineMaterial;
         private bool _maskReady;
+        private float _effectiveMaskScale = 1f;
 
         private static readonly int MaskTexId = Shader.PropertyToID("_MaskTex");
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
@@ -129,9 +133,15 @@ namespace LoopSorting
                 return;
             }
 
+            _effectiveMaskScale = GetEffectiveMaskScale();
+            if (outlineColor.a <= 0f || outlineThickness <= 0f)
+            {
+                return;
+            }
+
             EnsureMaskCamera();
-            int width = Mathf.Max(1, _camera.pixelWidth);
-            int height = Mathf.Max(1, _camera.pixelHeight);
+            int width = Mathf.Max(1, Mathf.CeilToInt(_camera.pixelWidth * _effectiveMaskScale));
+            int height = Mathf.Max(1, Mathf.CeilToInt(_camera.pixelHeight * _effectiveMaskScale));
             EnsureMaskTexture(width, height);
             if (_maskTexture == null)
             {
@@ -155,7 +165,7 @@ namespace LoopSorting
 
             _outlineMaterial.SetTexture(MaskTexId, _maskTexture);
             _outlineMaterial.SetColor(OutlineColorId, outlineColor);
-            _outlineMaterial.SetFloat(OutlineThicknessId, outlineThickness);
+            _outlineMaterial.SetFloat(OutlineThicknessId, outlineThickness * _effectiveMaskScale);
 
             Graphics.Blit(src, dest, _outlineMaterial);
         }
@@ -204,6 +214,16 @@ namespace LoopSorting
             }
 
             return texture;
+        }
+
+        private float GetEffectiveMaskScale()
+        {
+            float scale = Mathf.Clamp(maskResolutionScale, 0.25f, 1f);
+            if (autoScaleForMobile && (Application.isMobilePlatform || Application.platform == RuntimePlatform.WebGLPlayer))
+            {
+                scale = Mathf.Min(scale, Mathf.Clamp(mobileMaskScale, 0.25f, 1f));
+            }
+            return scale;
         }
     }
 }

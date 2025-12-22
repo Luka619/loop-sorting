@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_card_beige_decor.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 16
+  m_CompleteImageSize: 464
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 464
+  _typelessdata: 726821b4640f8050b9d95965591400005dc809744a7805e85cd7f8737ffd016f04c98911bea605f05d63fcf9ff3f00fc04c989113e9705e85c63fcf9ff3f00fc0489d5b1736de99f12720009e3380400d2805551493d3113010052b3142a91ba1345ff3e8f01cf3f0a4320f0a33004826fc0f2e5c5e76de5afbc9fe7f37c9ecf6fc0ecddbbf9c5cff459f21137e205a46fc0e8d9b7fbf5cdbc5d78090b4a0140026988c37adae58e9f4eb80180279ff06f40dbfe22000028000360000cc0021872c8278dff0b38df1900231091c042165dc809f4fbde3fec5c7310008055af0604c989d17bde3fee5c77100800c0ff035dc809d4f7ed3fee5c731000006c7f067149b9f1bdd9be791780aca3a3c32450d2805963534b47190100a440a1172789716988f1bd17c6bd319ebf73715f07005f408363e98403ffffffffffffdb0600610902b4697f848070d61f0ab02ccb7202e9a531c76b1a08fa1de70f9bc7f0235d80d1e7c1d99fbb0dc401000000007251a91d34e39b01e85c5f9201050c18405d44a3bc0a108e0489601b737c7f8c0404899831637b11cdd86270080020080272482134777ea4501967a4522940e9d56f4087b5636fa4a494949252524a4a81fcfdffffffffffffd5d5cfcfc0c07878
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

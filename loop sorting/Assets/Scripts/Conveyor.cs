@@ -124,58 +124,16 @@ namespace LoopSorting
 
         public void Advance(int? blockedPort, List<ConveyorPortEvent> events)
         {
-            int? blockIndex = blockedPort;
-            bool blockActive = blockIndex.HasValue && _slots[blockIndex.Value].HasValue;
+            _ = blockedPort;
 
-            bool hasEmpty = false;
-            for (int i = 0; i < _slots.Length; i++)
+            // Always advance as a single rotation so gaps move with the belt
+            // and relative order stays stable (prevents "jumping" seams).
+            var last = _slots[_slots.Length - 1];
+            for (int i = _slots.Length - 1; i >= 1; i--)
             {
-                if (!_slots[i].HasValue)
-                {
-                    hasEmpty = true;
-                    break;
-                }
+                _slots[i] = _slots[i - 1];
             }
-
-            if (!hasEmpty)
-            {
-                // Full belt: advance is a pure rotation (simultaneous move).
-                // Note: blockedPort logic relies on empty slots; when full, we keep moving to allow ports to consume blocks.
-                var last = _slots[_slots.Length - 1];
-                for (int i = _slots.Length - 1; i >= 1; i--)
-                {
-                    _slots[i] = _slots[i - 1];
-                }
-                _slots[0] = last;
-            }
-            else
-            {
-                // Move belt contents forward in reverse order to avoid overwriting.
-                for (int i = _slots.Length - 1; i >= 0; i--)
-                {
-                    if (!_slots[i].HasValue)
-                    {
-                        continue;
-                    }
-
-                    int next = (i + 1) % _slots.Length;
-
-                    // If blocking is active and this segment is before the blocked port,
-                    // do not move into the blocked port.
-                    if (blockActive && i < blockIndex.Value && next == blockIndex.Value)
-                    {
-                        continue;
-                    }
-
-                    if (_slots[next].HasValue)
-                    {
-                        continue;
-                    }
-
-                    _slots[next] = _slots[i];
-                    _slots[i] = null;
-                }
-            }
+            _slots[0] = last;
 
             // Try to drop blocks into connected containers after movement.
             foreach (var port in _ports)

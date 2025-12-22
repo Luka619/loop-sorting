@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_completed_badge_check_256.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: fcfdffffffffffff00000000000000005d887a14a610c088abe8e31a050000000489873115104088ab7ce7f8ff0000005d880734151040888bd8e270330000006f401d8d000001640004000000000000fcfdffffffffffff0000000000000000040981b163299d5f67044018040310005ec8e6716ed4265f153e4f7a042a37a51f02b7f75dc9ed7e71ef39bd03e83de32d824f613f54b3606062893367f73b3871e997c3a64639260184584678c31c88fcfdffffffffffff00000000000000006189030d0000c041b2befd02064110046f00c354c25f4809292125a4849490126fc0f6c57dfd6dc92db9bf5b4b3a03416fc0f6c57bf545c9b819b7f135dea6be026908357f76e287304f007083700b17fcfdffffffffffff0000000000000000d288030d0000fcaeeb7ca972af516a956f00c350b2bf6d893db127f6c6ded81b6fc0f8cb83fb6dc9fc5d78130b4a01496fc0f8c981f5f1cdbc8d7da92ff5a5be027102233694930300809ea79f68c3bffcfdffffffffffff00000000000000000449dab16b7b673fa60050080040000c4d423fbf007c008023202d36966822c9040991817fcc257e8e01e008fc3ff0ff5d5009e70d1727dd15009000b2f950776e080b0504d83c4008000000810d3efcfcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000007de8c3d1398dfed50092f8f8390400005d889061a4ded61c410012732c5d38005de8fc550200605c18121e60100c0000617173bb33951600801701562ecbb22c6fc0fac981f5fdc9ea5d792b2f612145026902f34e5e9eb57f80000040800cc44f284a0504c98a080100000002d080065dc88929dfaedc0d310004010060387461293674be56eee3c7a90060000000c0634183d10010486928392425f606030061e97c94c50900c83abd00288120080202596109000c06dfd5b8a909a528023004415529e70000fe00000000000000805d482174427600fbdb3ee401004d7a066fa0d991838301000000000000c00400fcfdffffffffffffaeae99997c7c7b7b
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

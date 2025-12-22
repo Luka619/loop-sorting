@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_firework_confetti_burst_sheet_16f_2048x2048.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 5d78d6569c44815b6d16000cab87b000c244535905c19788f987b89b880900004344bf7de09d2047dd66a44295020008c244430c06c1207b0b717f203303000052849f5a5c3e78f68336bf46bb130000f1440d630bd6006800700058008000005284bd585a1ef8fa833a24428820ee04c244476d06c97f88bb89900000b008805284b954781e3861680ae20e001002b45244ebe5282018daf860ec0c0000608c5d3006ebbd53ea65c38a50358c0720cc61f17bd4440730594d2d0e00801e08806284cb8a95c0310200001000bb0af709c244576d0ad19300020000ab00fa87b843447d99e02d017000009042926188f0c244d31c06c1203303000000bb89797f6244f34806c1320300003000b909fb07c2441d350bd4000808000088888688f46269cc911b61d7f38902b1d02f7da222c244f34806c10200b009207f00bb0b304344bf9fe00d001014f04c438c0c83316244f3488ac100022013b07fb07f30bb6244f3088ac120003202fb0bfb07b30b7228425489155825f60000d2a1496ecd6244775b06c1bb03ff0bff0bb3032200c244635906c19720f387b2bb0023000043449f9de02d8171dd666402940200086244f34a86c1a0bbb07f307f103300206244d31c8ac1b209fb07fb0731032000023125b4a816888616a2a8fc0e00044002b12dc78235482376801503680af1270231225dfb4c155bf00d6d00a13fbce051a99deba6c606a4a8de1601000070f551894c74a1148158497d9a000000eb4b51e925549d34415849ed40010060389b6f40094d4c80000000000000000001c8
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

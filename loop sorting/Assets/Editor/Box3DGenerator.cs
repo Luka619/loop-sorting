@@ -226,15 +226,16 @@ namespace LoopSorting.Editor
 
             EditorUtility.CopySerialized(mesh, existing);
             existing.name = mesh.name;
+            EditorUtility.SetDirty(existing);
             return existing;
         }
 
         private static Material LoadOrCreateMaterial(string path, Color color)
         {
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            var shader = Shader.Find("LoopSorting/UnlitRim") ?? Shader.Find("Standard");
             if (mat == null)
             {
-                var shader = Shader.Find("LoopSorting/UnlitRim") ?? Shader.Find("Standard");
                 mat = new Material(shader)
                 {
                     color = color,
@@ -242,9 +243,14 @@ namespace LoopSorting.Editor
                 };
                 AssetDatabase.CreateAsset(mat, path);
             }
+            else if (shader != null && mat.shader != shader)
+            {
+                mat.shader = shader;
+            }
 
             if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
             if (mat.HasProperty("_Ambient")) mat.SetFloat("_Ambient", 1.0f);
+            EditorUtility.SetDirty(mat);
             return mat;
         }
 

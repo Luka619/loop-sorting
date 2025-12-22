@@ -21,7 +21,7 @@ namespace LoopSorting
         public float cameraPadding = -1f;
         public float cameraZOffset = -10f;
         [Tooltip("Camera tilt (degrees) around X. Small tilt reveals block sides for a more 3D look.")]
-        public float cameraTiltX = -25f;
+        public float cameraTiltX = -30f;
         [Tooltip("Camera yaw (degrees) around Y. Keep 0 for symmetrical layout.")]
         public float cameraYawY = 0f;
         [Tooltip("Reserve a fraction of vertical viewport for top UI when framing the level (0..0.45).")]
@@ -34,6 +34,8 @@ namespace LoopSorting
         public int beltBlockLimit = 50;
         [Tooltip("Scale factor for belt block size relative to slot spacing.")]
         public float beltBlockSizeFactor = 0.65f;
+        [Tooltip("Depth scale for belt blocks (Z), relative to belt block size.")]
+        public float beltBlockDepthFactor = 1f;
         [Header("Animation")]
         [Tooltip("Seconds between consecutive block releases from the same container.")]
         public float releaseInterval = 0.12f;
@@ -61,6 +63,10 @@ namespace LoopSorting
         public bool showSlotMarkersRuntime = true;
         public float slotMarkerScale = 0.15f;
         public Color slotMarkerColor = new Color(0.6f, 0.6f, 0.6f, 0.3f);
+        [Tooltip("Update slot marker visuals every N frames (1 = every frame).")]
+        [Min(1)] public int slotMarkerVisualUpdateInterval = 1;
+        [Tooltip("Override slot marker visual update interval on mobile/web platforms.")]
+        [Min(1)] public int slotMarkerVisualUpdateIntervalMobile = 2;
         [Header("Speed")]
         public float[] speedSteps = new float[] { 1f, 1.5f, 2f };
 
@@ -73,8 +79,6 @@ namespace LoopSorting
         private readonly List<ConveyorPortEvent> _portEvents = new List<ConveyorPortEvent>(32);
         private readonly Dictionary<int, Vector3> _beltBlockOffsets = new Dictionary<int, Vector3>();
         private readonly Dictionary<int, Coroutine> _beltBlockOffsetCoroutines = new Dictionary<int, Coroutine>();
-        private readonly HashSet<int> _beltInsertAnimating = new HashSet<int>();
-        private readonly Dictionary<int, Coroutine> _beltInsertCoroutines = new Dictionary<int, Coroutine>();
         private Coroutine _emptyDeferredHintRoutine;
         private LineRenderer _emptyDeferredLine;
         private RejectFeedbackGate _rejectGate;
@@ -84,6 +88,7 @@ namespace LoopSorting
         private List<GameObject> _slotMarkers = new List<GameObject>();
         private List<Vector3> _slotBasePositions = new List<Vector3>();
         private List<Vector3> _slotCurrentPositions = new List<Vector3>();
+        private Material _slotMarkerMaterial;
         private bool _beltLoop;
         private float _tickTimer;
         private Bounds _levelBounds;
@@ -106,6 +111,8 @@ namespace LoopSorting
         private GameObject _fastTag;
 	        private System.Random _rng = new System.Random();
 	        private bool _inputLocked = false;
+        private Camera _cachedMainCamera;
+        private int _slotMarkerVisualFrameCounter;
         private GameObject _backgroundQuad;
         private bool _backgroundDebugLogged;
         private GameObject _conveyorBelt;
@@ -113,6 +120,7 @@ namespace LoopSorting
         private static bool _beltMaterialFailedLogged;
         private static bool _backgroundMaterialFailedLogged;
         private float _beltWidthUsed;
+        private LayoutUtils.BeltPathCache _beltPathCache;
         private LevelFlow _pendingFlow;
         private int _pendingFlowIndex;
         private LevelLayout _pendingLevel;
@@ -603,10 +611,9 @@ namespace LoopSorting
 
             int portIdx = _activeReleasePort.Value;
             var slot = _game.Conveyor.GetSlot(portIdx);
-            if (slot.HasValue)
-            {
-                return portIdx;
-            }
+            // Reserve the port only when it's empty so releases stay continuous
+            // without forcing a moving gap through the belt.
+            if (!slot.HasValue) return portIdx;
 
             return null;
         }
@@ -986,7 +993,7 @@ namespace LoopSorting
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             float baseSize = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
             float s0 = baseSize * 0.32f;
-            go.transform.localScale = new Vector3(s0, s0, s0 * 0.6f);
+            go.transform.localScale = new Vector3(s0, s0, s0 * beltBlockDepthFactor);
 
             Vector3 mid = (start + end) * 0.5f + Vector3.up * Mathf.Clamp(spacing * 0.65f, 0.25f, 0.75f);
 
@@ -1007,7 +1014,7 @@ namespace LoopSorting
 
                 // Slight scale down at the end so it feels like it merges.
                 float shrink = u > 0.75f ? Mathf.Lerp(1f, 0.7f, (u - 0.75f) / 0.25f) : 1f;
-                go.transform.localScale = new Vector3(s0, s0, s0 * 0.6f) * shrink;
+                go.transform.localScale = new Vector3(s0, s0, s0 * beltBlockDepthFactor) * shrink;
                 yield return null;
             }
 
@@ -1322,6 +1329,8 @@ namespace LoopSorting
                     _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
                 }
                 SyncBeltVisuals();
+                ResetSlotPositionsToBase();
+                UpdateBeltBlockVisuals(0f);
                 SyncContainersVisuals();
                 UpdateLocks();
                 UpdateCompletionStates();
@@ -1476,18 +1485,16 @@ namespace LoopSorting
             }
             if (go == null) return;
 
-            if (_beltInsertCoroutines.TryGetValue(beltIndex, out var existing) && existing != null)
-            {
-                StopCoroutine(existing);
-            }
-            _beltInsertCoroutines.Remove(beltIndex);
-            _beltInsertAnimating.Add(beltIndex);
-            _beltInsertCoroutines[beltIndex] = StartCoroutine(AnimateBeltEnterBox(beltIndex, containerIndex));
+            // Detach from belt tracking so the slot can be reused immediately.
+            StopBeltSpawnAnimation(beltIndex);
+            StopBeltBlockOffsetAnimation(beltIndex);
+            _beltBlockVisuals.Remove(beltIndex);
+            StartCoroutine(AnimateBeltEnterBox(go, containerIndex));
         }
 
-        private IEnumerator AnimateBeltEnterBox(int beltIndex, int containerIndex)
+        private IEnumerator AnimateBeltEnterBox(GameObject go, int containerIndex)
         {
-            if (!_beltBlockVisuals.TryGetValue(beltIndex, out var go) || go == null) yield break;
+            if (go == null) yield break;
             if (containerIndex < 0 || containerIndex >= _boxViews.Count) yield break;
 
             var view = _boxViews[containerIndex];
@@ -1513,13 +1520,10 @@ namespace LoopSorting
             }
 
             // Cleanup: remove this belt visual now that it entered the box.
-            if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null)
+            if (go != null)
             {
-                Destroy(finalGo);
-                _beltBlockVisuals.Remove(beltIndex);
+                Destroy(go);
             }
-            _beltInsertAnimating.Remove(beltIndex);
-            _beltInsertCoroutines.Remove(beltIndex);
         }
 
         private static Vector3 OpeningToWorldNormal(OpeningSide opening)
@@ -1532,6 +1536,16 @@ namespace LoopSorting
                 OpeningSide.Right => Vector3.right,
                 _ => Vector3.up
             };
+        }
+
+        private void StopBeltBlockOffsetAnimation(int beltIndex)
+        {
+            if (_beltBlockOffsetCoroutines.TryGetValue(beltIndex, out var existing) && existing != null)
+            {
+                StopCoroutine(existing);
+            }
+            _beltBlockOffsetCoroutines.Remove(beltIndex);
+            _beltBlockOffsets.Remove(beltIndex);
         }
 
         private void StartBeltBlockOffsetAnimation(int beltIndex, Vector3 peakOffset, float seconds)
@@ -1851,7 +1865,8 @@ namespace LoopSorting
                 out _beltSpacingUsed,
                 smoothCorners: layout.smoothCorners,
                 smoothTension: layout.cornerSmoothTension,
-                smoothSubdivisions: layout.cornerSubdivisions);
+                smoothSubdivisions: layout.cornerSubdivisions,
+                out _beltPathCache);
 
             // Safety: ensure we always have at least one slot to avoid zero-length conveyor crashes.
             if (_beltSlots == null || _beltSlots.Count == 0)
@@ -1863,6 +1878,7 @@ namespace LoopSorting
                     : Vector3.zero;
                 _beltSlots.Add(t);
                 _beltSpacingUsed = spacing;
+                _beltPathCache = null;
                 Debug.LogWarning("BuildConveyor: slot generation failed, created a single fallback slot to keep the game running.");
             }
 
@@ -2289,8 +2305,6 @@ namespace LoopSorting
             _rejectGate.ResetForNewLevel();
             _beltBlockOffsets.Clear();
             _beltBlockOffsetCoroutines.Clear();
-            _beltInsertAnimating.Clear();
-            _beltInsertCoroutines.Clear();
             UpdateBeltCounter();
             UpdateLocks();
             UpdateCompletionStates();
@@ -2328,10 +2342,6 @@ namespace LoopSorting
                 var slot = _game.Conveyor.GetSlot(idx);
                 if (!slot.HasValue)
                 {
-                    if (_beltInsertAnimating.Contains(idx))
-                    {
-                        continue;
-                    }
                     StopBeltSpawnAnimation(idx);
                     Destroy(kv.Value);
                     toRemove.Add(idx);
@@ -2620,48 +2630,110 @@ namespace LoopSorting
 	            return Quaternion.AngleAxis(angle, normal) * faceRotation;
 	        }
 
-        private void UpdateSlotMarkersVisuals(float progress)
+        private void ResetSlotPositionsToBase()
         {
-            if (!showSlotMarkersRuntime || _slotMarkers.Count == 0 || _slotBasePositions.Count == 0)
+            if (_slotBasePositions.Count == 0)
             {
                 return;
             }
 
-            var cam = Camera.main;
-            var markerRotation = cam != null ? cam.transform.rotation : Quaternion.identity;
             int count = _slotBasePositions.Count;
-
-            for (int i = 0; i < _slotMarkers.Count && i < count; i++)
+            for (int i = 0; i < count; i++)
             {
-                var marker = _slotMarkers[i];
-                if (marker == null) continue;
-                marker.transform.rotation = ComputeSlotMarkerRotation(i, _slotBasePositions, _beltLoop, markerRotation);
+                SetSlotCurrent(i, _slotBasePositions[i]);
+            }
+        }
 
+        private void UpdateSlotMarkersVisuals(float progress)
+        {
+            if (_slotBasePositions.Count == 0)
+            {
+                return;
+            }
+
+            int count = _slotBasePositions.Count;
+            bool updateVisuals = ShouldUpdateSlotMarkerVisuals() && showSlotMarkersRuntime && _slotMarkers.Count > 0;
+            Quaternion markerRotation = Quaternion.identity;
+            if (updateVisuals)
+            {
+                if (_cachedMainCamera == null || !_cachedMainCamera.isActiveAndEnabled)
+                {
+                    _cachedMainCamera = Camera.main;
+                }
+                markerRotation = _cachedMainCamera != null ? _cachedMainCamera.transform.rotation : Quaternion.identity;
+            }
+
+            if (_beltLoop && _beltPathCache != null && _beltPathCache.TotalLength > 0f &&
+                _beltPathCache.EvalPoints != null && _beltPathCache.Cumulative != null)
+            {
+                float step = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+                float total = _beltPathCache.TotalLength;
+                float offset = _beltPathCache.Offset;
+
+                for (int i = 0; i < count; i++)
+                {
+                    float dist = (i * step) + offset + (progress * step);
+                    dist = dist % total;
+                    var p = LayoutUtils.PointAtDistance(_beltPathCache.EvalPoints, _beltPathCache.Cumulative, dist);
+                    var pos = new Vector3(p.x, p.y, 0f);
+                    SetSlotCurrent(i, pos);
+
+                    if (!updateVisuals) continue;
+                    if (i >= _slotMarkers.Count) continue;
+                    var marker = _slotMarkers[i];
+                    if (marker == null) continue;
+
+                    marker.transform.rotation = ComputeSlotMarkerRotation(i, _slotBasePositions, _beltLoop, markerRotation);
+                    marker.SetActive(true);
+                    marker.transform.position = pos;
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
                 var from = _slotBasePositions[i];
+                bool isLast = i == count - 1;
+                Vector3 pos;
+
                 // Do not interpolate the last one to avoid a visual jump between exit and entry.
-                if (i == count - 1)
+                if (isLast)
                 {
                     if (!_beltLoop)
                     {
-                        marker.SetActive(false);
+                        pos = from;
                         SetSlotCurrent(i, from);
                     }
                     else
                     {
-                        marker.SetActive(true);
                         var to = _slotBasePositions[0];
-                        var pos = Vector3.Lerp(from, to, progress);
-                        marker.transform.position = pos;
+                        pos = Vector3.Lerp(from, to, progress);
                         SetSlotCurrent(i, pos);
                     }
                 }
                 else
                 {
-                    marker.SetActive(true);
                     var to = _slotBasePositions[i + 1];
-                    var pos = Vector3.Lerp(from, to, progress);
-                    marker.transform.position = pos;
+                    pos = Vector3.Lerp(from, to, progress);
                     SetSlotCurrent(i, pos);
+                }
+
+                if (!updateVisuals) continue;
+                if (i >= _slotMarkers.Count) continue;
+                var marker = _slotMarkers[i];
+                if (marker == null) continue;
+
+                marker.transform.rotation = ComputeSlotMarkerRotation(i, _slotBasePositions, _beltLoop, markerRotation);
+
+                if (isLast && !_beltLoop)
+                {
+                    marker.SetActive(false);
+                }
+                else
+                {
+                    marker.SetActive(true);
+                    marker.transform.position = pos;
                 }
             }
             // last slot current position fallback
@@ -2669,6 +2741,20 @@ namespace LoopSorting
             {
                 _slotCurrentPositions[count - 1] = _slotBasePositions[count - 1];
             }
+        }
+
+        private bool ShouldUpdateSlotMarkerVisuals()
+        {
+            int interval = slotMarkerVisualUpdateInterval;
+            if (Application.isMobilePlatform || Application.platform == RuntimePlatform.WebGLPlayer)
+            {
+                interval = slotMarkerVisualUpdateIntervalMobile;
+            }
+            interval = Mathf.Max(1, interval);
+            if (interval <= 1) return true;
+
+            _slotMarkerVisualFrameCounter = (_slotMarkerVisualFrameCounter + 1) % interval;
+            return _slotMarkerVisualFrameCounter == 0;
         }
 
         private void UpdateBeltBlockVisuals(float progress)
@@ -2685,7 +2771,6 @@ namespace LoopSorting
                 if (go == null) continue;
                 if (idx < 0 || idx >= _slotCurrentPositions.Count) continue;
                 if (_beltSpawnAnimating.Contains(idx)) continue;
-                if (_beltInsertAnimating.Contains(idx)) continue;
 
                 var pos = _slotCurrentPositions[idx] + GetBeltBlockOffset(idx) + new Vector3(0f, 0f, beltBlockZOffset);
                 go.transform.position = pos;
@@ -2705,7 +2790,7 @@ namespace LoopSorting
 
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             float baseSize = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
-            go.transform.localScale = new Vector3(baseSize, baseSize, baseSize * 0.6f);
+            go.transform.localScale = new Vector3(baseSize, baseSize, baseSize * beltBlockDepthFactor);
 
             BlockVisual.ApplyColor(go, BlockVisual.ToUnityColor(block.Color));
 
@@ -2771,9 +2856,12 @@ namespace LoopSorting
             var start = mouth - normal * pad + new Vector3(0f, 0f, beltBlockZOffset);
             go.transform.position = start;
 
+            var end = GetBeltBlockWorldPosition(beltIndex);
+            var startOffset = start - end;
+
             StopBeltSpawnAnimation(beltIndex);
             _beltSpawnAnimating.Add(beltIndex);
-            _beltSpawnCoroutines[beltIndex] = StartCoroutine(AnimateBeltSpawn(beltIndex, start));
+            _beltSpawnCoroutines[beltIndex] = StartCoroutine(AnimateBeltSpawn(beltIndex, startOffset));
         }
 
         private void StopBeltSpawnAnimation(int beltIndex)
@@ -2786,7 +2874,7 @@ namespace LoopSorting
             _beltSpawnAnimating.Remove(beltIndex);
         }
 
-        private IEnumerator AnimateBeltSpawn(int beltIndex, Vector3 start)
+        private IEnumerator AnimateBeltSpawn(int beltIndex, Vector3 startOffset)
         {
             float duration = Mathf.Clamp(conveyorTickSeconds * 0.55f, 0.06f, 0.22f);
             duration = Mathf.Max(0.0001f, duration);
@@ -2799,15 +2887,15 @@ namespace LoopSorting
 
                 t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
                 float u = Mathf.Clamp01(t / duration);
-                var end = _slotCurrentPositions[beltIndex] + new Vector3(0f, 0f, beltBlockZOffset);
-                end += GetBeltBlockOffset(beltIndex);
-                go.transform.position = Vector3.Lerp(start, end, u);
+                float e = MotionUtil.EaseOutCubic(u);
+                var end = GetBeltBlockWorldPosition(beltIndex);
+                go.transform.position = end + Vector3.LerpUnclamped(startOffset, Vector3.zero, e);
                 yield return null;
             }
 
             if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null && beltIndex >= 0 && beltIndex < _slotCurrentPositions.Count)
             {
-                finalGo.transform.position = _slotCurrentPositions[beltIndex] + GetBeltBlockOffset(beltIndex) + new Vector3(0f, 0f, beltBlockZOffset);
+                finalGo.transform.position = GetBeltBlockWorldPosition(beltIndex);
                 StartCoroutine(MotionUtil.ScalePunch(finalGo.transform, finalGo.transform.localScale, BeltSpawnPunchScale, BeltSpawnPunchSeconds));
             }
 

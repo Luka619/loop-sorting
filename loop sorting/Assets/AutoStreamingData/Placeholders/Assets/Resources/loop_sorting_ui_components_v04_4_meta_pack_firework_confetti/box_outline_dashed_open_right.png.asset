@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_outline_dashed_open_right.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: 6f4041080100080000000000000000005d50090b2d4741809e8f30337907000004099115110020d7b2595ff0033f0000025109471a1f59460000e27aabf40f00518905b43a03408aecfc5a0103000000fcfdffffffffffff00000000000000004143ffa6007c44014014000e0030000051a99d61a55b7e62dd2a01b372757fbf6f20c37b6ed9fddff69b5842929444492d02d3f787bd1751d16efffc527b2e307169be318f00f039b59f68a6b8c21a88fcfdffffffffffff000000000000000002690673473b0100b73ffcda870fe0001303a7f347b9dd56f1dff660deb33c186fc0f4b953f7edcffd9fff5b6f6201256f20f3df2efd60493c8937f126dea6db616908342a5b11031d590040d1344dd3fcfdffffffffffff0000000000000000516906f4350540fbdcfafe09305040066301c77457d63550a91125dfa48d94eb1f02b3f35bb9f35601c03eefbffffefb71024be1567136024813c95ab52ab9aa516908d4eb99f95fc900802078c3375afcfdffffffffffff0000000000000000084113db0700160000000000000230002d4a16336a8088ce0900000b9056b3d05d8890d15006c056fc301300407fbd015df87c018220e8ae6f16400180fefd0b14692333f2ff06300000000000021a50fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000084143470f01027ff007bf500200000004c9fdb1be1440f67acafbf9ff3f0f0051e97c14470500f3599af10103c4000051698871d707d056d6711564b09643c53d029b864251fb54445cc94aae72f799613175a9f4060000f73ce76202300cc314895e35eab959f0200000000050010b6191311900e0ea5f39bee5810200e00704a99651a50380e999fede09000000426f40937910104809292125a4c4b6000061e97cb4f31400d83a7d00388020080204e9a551c206c0d2367e9d0900000064044115f3bc0000a60000000000000080618904b47b9927d9b8f48b0b001886616f40bb6b73e3fcdffffb7fffafec07a0fcfdffffffffffffaaaa92926e6e7a7a
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

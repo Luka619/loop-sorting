@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_buy_coins_80.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 16
+  m_CompleteImageSize: 464
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 464
+  _typelessdata: f12891c332972ce09afa9e7776705c755d503b14c75bf03ec0ae53b3a50c076df1c889e3a87502c478d69f7fad00007f5d502154a911b02cc4ae6a727ffc0d005df01e14cf01ec3c24ef0474b532ecea6fa0911d9b0000024000080015c001d0028903f8f5d86c359a5a896c14de8ff46301cdba22f6cd4f00628050004800081f02e336a3d983d870aed294230a31801f02e142a1df83e4d086968c128c210202f17d4b9e24069fd43d446ea8e73dcd21a30386d6d84d000000ec00a0050006f188938b54db07601d1d94ad735d68a65dc8ba751d1df6929dee19000000708104c989436f25f31a57b5000900c0ff0304c989437f25f11a57b5000900c0ff037d48b931ddf849f91a80adad7f779d08728031697189db20010000000619241051915a34eb1432bea5ab18327dc23074029131ed856e531644645954a95505005db05954cf00b0ac27eb24d81af793d802e925b8f65d7611bc1ed96f483d0fde04811557b5bbbbf4ca1100000000f00304a99d0bafbd4400dfb42e080000c0435d1069b4ab33b05ce7c7090080c57246048998d50f660ab997cd0002003008025d6898a3527b6c37dbb60a01000060860481f9147b97a5be0a0b010000000080fcfdffffffffffff8383c4c458588585
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

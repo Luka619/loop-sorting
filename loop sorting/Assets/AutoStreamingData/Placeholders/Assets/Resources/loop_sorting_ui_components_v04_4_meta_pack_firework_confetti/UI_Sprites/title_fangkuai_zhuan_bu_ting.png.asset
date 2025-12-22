@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: title_fangkuai_zhuan_bu_ting.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 16
+  m_CompleteImageSize: 464
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 464
+  _typelessdata: 7380192a875169000c2449d276dbf7ff02510914ad14c0ac18a0ef0c0a6052555d88878b834f09004d0e16cd00a8b57f02a99203b1a59a01e03cda81829750557288072d16005052920017145c6e7ff86f8080b20200a4a25492681376824c905df075948d42fe2c656a6a00415630085d5009f48f71e7b4e7cf12514777ab8651d1f8811a6352e3cbdc40057357782f72a8e343caa6523cce04eebf480305013e44fbb2e08d10834a12be842fb183197280b186967690860000809c051204086142393dfa0a004024d966892425e174df8579a7ca0ea0242112a2008224a23fdf85f9e4c61cc900080020008220f223df857927cb0e6000490004019262f7dddf8527754e0c002049320803510c20ff1fa21750ce5a380000000077856039025249d9f18f04eb3685fcdb67870028957248d9f5afc4d8386402e25d2b020000f1d066bd01aed37a080fa25050a000246281e7dac5d03510000000000000d0090489cce3cb393500f72c010a0000005cd28043a3d29eae9c0000a452614c023061d155d44c81bd6b7bad4e00004ff60161d90f05495fdffa9371206401300cc05d48211436768989b0d5b300000060066fa05956d60eb496d6d25a5a4b6b09edfcfdffffffffffff7373686856563a3a
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

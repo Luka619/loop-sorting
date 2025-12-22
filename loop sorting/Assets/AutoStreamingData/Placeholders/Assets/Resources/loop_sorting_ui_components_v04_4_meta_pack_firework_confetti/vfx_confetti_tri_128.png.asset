@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_confetti_tri_128.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 832
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 832
+  _typelessdata: 6f404d476080390000000000000000000251094b303e204040c74ddb9aff0100048987f1141180804df93909fe0000000251094b3046224040c74ded9a7f09007d8885d14800e48afe8e58a000000000fcfdffffffffffff00000000000000004143bdb6017c260b60b2006400f001006f40f3b1b714ec9dbdb377f6ae94fe1f6fc0eebd87d5fddff7db7a5baf9404006fc0ecbb85d5fddffedb7bdeab9404004143bdb6017c3a92283689889308c8fafcfdffffffffffff000000000000000002f16883ebdbf7c7357e400029ecc00c6f20dbf25bde4909292125a48494d81b6fc0e2b585f9c9cff919ff8b776205296fc0e0b381f995f9e259bc0b2f624529616986a3c5db5e4e48810900f27cdff7fcfdffffffffffff0000000000000000617102a3e6b4cbd2130101a2088ee338f300599fcc3dbaadb16ddeb66c5bb62d6fc0e4b989dd01a43db925b7e496dc926fc0deb183d7a1a43d3925a7e4949c9202b173e7ba31d0bf5fe34b4fabfc6adffcfdffffffffffff00000000000000007d28220d081011178280000000030f385dd064051dba5b403a9a4001407a077f5d8890d13a03e05afcb00b00407fbd015d8890d13a03e05afeb00b00407fbd016f40e3310110000000004000269824d2fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000006f40a3d50010480d692115420300000004891075afdd3fa39c00a8e803ff0f006e8855b372c20031003cf4800302000051690273ed1f00dca12607e37653f53b6fc0e6b989e58194fdb93ff777ffeebf5169027528d3fc1d15c0084106f8cab06ee8253367808f7e0800000000f0012c02913119000070951edfeaada5d49fd602191aa9720101767f560000620001187da886f1ac00c879f59e7f7f7f7f0d000451271d006011322af70e0ac3300c80023122b500f1b09dbe6e00006000f08f61a9160d400080f3751f663302000040025141e7ba3fd4d2333eae996ce00b3cd280a5a36757230927ff00000000cf80fcfdffffffffffffadad9c9c89898787
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

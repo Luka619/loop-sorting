@@ -4,6 +4,7 @@ namespace LoopSorting
 {
     public static class BlockVisual
     {
+        private const string CustomBrickResourcePath = "Art3D/Brick2x2Rounded";
         private const string LegoModelResourcePathV4 =
             "LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v4/LegoLikeBrick_2x2_Detailed_BevelAO_PivotCenter_v4";
         private const string LegoModelResourcePathV3 =
@@ -16,13 +17,30 @@ namespace LoopSorting
         private const string LegoShaderV3ResourcePath =
             "LegoLikeBrick_2x2_Detailed_BevelAO_UnityPack_v3/BrickUnlit_AO_Curv_VertexColor_BuiltIn";
         private const string LegoShaderFallback = "LoopSorting/UnlitRim";
+        private const bool PreferBoxStyleShader = true;
+        private const bool UseCustomBrickOnly = true;
         private static GameObject _legoModelPrefab;
         private static Material _legoBaseMaterial;
         private static string _legoShaderKey;
         private static bool _warnedMissingLegoShader;
         private static int _legoVariant; // 4,3,2
+        private static bool _useCustomBrick;
+        private static bool _warnedMissingCustomBrick;
         private static readonly MaterialPropertyBlock SharedPropertyBlock = new MaterialPropertyBlock();
         private static readonly Quaternion LegoFacingRotation = Quaternion.Euler(-90f, 0f, 0f);
+        private static readonly Quaternion CustomBrickFacingRotation = Quaternion.Euler(0f, 180f, 0f);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticCache()
+        {
+            _legoModelPrefab = null;
+            _legoBaseMaterial = null;
+            _legoShaderKey = null;
+            _warnedMissingLegoShader = false;
+            _legoVariant = 0;
+            _useCustomBrick = false;
+            _warnedMissingCustomBrick = false;
+        }
 
         public static GameObject CreateBlock(BlockColor color)
         {
@@ -33,9 +51,8 @@ namespace LoopSorting
                 var model = Object.Instantiate(_legoModelPrefab, root.transform);
                 model.name = "Model";
                 model.transform.localPosition = Vector3.zero;
-                // This pack's "up" is +Y (studs face +Y). Our game camera looks along +Z,
-                // so rotate so the studs face the camera (towards -Z).
-                model.transform.localRotation = LegoFacingRotation;
+                // Custom brick is built in XY with studs along +Z; rotate to face the camera.
+                model.transform.localRotation = _useCustomBrick ? CustomBrickFacingRotation : LegoFacingRotation;
                 model.transform.localScale = Vector3.one;
 
                 StripColliders(root);
@@ -93,11 +110,30 @@ namespace LoopSorting
         {
             if (_legoModelPrefab != null) return true;
 
+            _legoModelPrefab = Resources.Load<GameObject>(CustomBrickResourcePath);
+            if (_legoModelPrefab != null)
+            {
+                _legoVariant = 0;
+                _useCustomBrick = true;
+                return true;
+            }
+
+            if (UseCustomBrickOnly)
+            {
+                if (!_warnedMissingCustomBrick)
+                {
+                    _warnedMissingCustomBrick = true;
+                    Debug.LogError($"BlockVisual: Missing Resources prefab at '{CustomBrickResourcePath}'. Using fallback cube.");
+                }
+                return false;
+            }
+
             // Prefer the newer pack if present.
             _legoModelPrefab = Resources.Load<GameObject>(LegoModelResourcePathV4);
             if (_legoModelPrefab != null)
             {
                 _legoVariant = 4;
+                _useCustomBrick = false;
                 return true;
             }
 
@@ -105,11 +141,13 @@ namespace LoopSorting
             if (_legoModelPrefab != null)
             {
                 _legoVariant = 3;
+                _useCustomBrick = false;
                 return true;
             }
 
             _legoModelPrefab = Resources.Load<GameObject>(LegoModelResourcePathV2);
             _legoVariant = 2;
+            _useCustomBrick = false;
             return _legoModelPrefab != null;
         }
 
@@ -156,7 +194,7 @@ namespace LoopSorting
                     if (_legoBaseMaterial.HasProperty("_AOPower")) _legoBaseMaterial.SetFloat("_AOPower", 2.8f);
                     if (_legoBaseMaterial.HasProperty("_Curv")) _legoBaseMaterial.SetFloat("_Curv", 0.34f);
 
-                    // View-facing fake light (N·V): towards camera brighter, sides darker.
+                    // Up-facing light: brightest when normal points to the brick's local +Z (stud direction).
                     if (_legoBaseMaterial.HasProperty("_ViewLightStrength")) _legoBaseMaterial.SetFloat("_ViewLightStrength", 0.95f);
                     if (_legoBaseMaterial.HasProperty("_ViewPower")) _legoBaseMaterial.SetFloat("_ViewPower", 1.6f);
                     if (_legoBaseMaterial.HasProperty("_ViewSideMin")) _legoBaseMaterial.SetFloat("_ViewSideMin", 0.62f);
@@ -165,12 +203,15 @@ namespace LoopSorting
                     if (_legoBaseMaterial.HasProperty("_OutlinePower")) _legoBaseMaterial.SetFloat("_OutlinePower", 1.4f);
                     if (_legoBaseMaterial.HasProperty("_OutlineThreshold")) _legoBaseMaterial.SetFloat("_OutlineThreshold", 0.35f);
                     if (_legoBaseMaterial.HasProperty("_OutlineSoftness")) _legoBaseMaterial.SetFloat("_OutlineSoftness", 0.18f);
+                    if (_legoBaseMaterial.HasProperty("_FakeLightDir")) _legoBaseMaterial.SetVector("_FakeLightDir", new Vector4(0f, 0f, 1f, 0f));
+                    if (_legoBaseMaterial.HasProperty("_FakeLightStrength")) _legoBaseMaterial.SetFloat("_FakeLightStrength", 0.25f);
 
                     if (_legoBaseMaterial.HasProperty("_RimColor")) _legoBaseMaterial.SetColor("_RimColor", new Color(1f, 1f, 1f, 1f));
-                    if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 2.6f);
-                    if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.35f);
-                    if (_legoBaseMaterial.HasProperty("_EdgeDarken")) _legoBaseMaterial.SetFloat("_EdgeDarken", 0.12f);
+                    if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 8f);
+                    if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.1f);
+                    if (_legoBaseMaterial.HasProperty("_EdgeDarken")) _legoBaseMaterial.SetFloat("_EdgeDarken", 1f);
                     if (_legoBaseMaterial.HasProperty("_Ambient")) _legoBaseMaterial.SetFloat("_Ambient", 1.0f);
+                    if (_legoBaseMaterial.HasProperty("_Cull")) _legoBaseMaterial.SetFloat("_Cull", 2f);
                     _legoBaseMaterial.color = Color.white;
                 }
                 else if (_legoBaseMaterial == null && !_warnedMissingLegoShader)
@@ -181,6 +222,11 @@ namespace LoopSorting
             }
 
             if (_legoBaseMaterial == null) return;
+
+            if (_legoBaseMaterial.HasProperty("_UseVertexColor"))
+            {
+                _legoBaseMaterial.SetFloat("_UseVertexColor", HasVertexColors(modelRoot) ? 1f : 0f);
+            }
 
             var renderers = modelRoot.GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < renderers.Length; i++)
@@ -193,6 +239,11 @@ namespace LoopSorting
 
         private static string ResolveDesiredLegoShader()
         {
+            if (PreferBoxStyleShader)
+            {
+                return LegoShaderFallback;
+            }
+
             // When v3/v4 pack is present, prefer its baked AO/curvature unlit shader for clearer edges without lights.
             if (_legoVariant >= 3)
             {
@@ -241,6 +292,37 @@ namespace LoopSorting
             }
             var offset = root.transform.InverseTransformPoint(bounds.center);
             model.transform.localPosition -= offset;
+        }
+
+        private static bool HasVertexColors(GameObject modelRoot)
+        {
+            if (modelRoot == null) return false;
+
+            var meshFilters = modelRoot.GetComponentsInChildren<MeshFilter>(true);
+            for (int i = 0; i < meshFilters.Length; i++)
+            {
+                var mesh = meshFilters[i]?.sharedMesh;
+                if (mesh == null) continue;
+                if (!mesh.isReadable) continue;
+                var colors = mesh.colors;
+                if (colors != null && colors.Length == mesh.vertexCount) return true;
+                var colors32 = mesh.colors32;
+                if (colors32 != null && colors32.Length == mesh.vertexCount) return true;
+            }
+
+            var skinned = modelRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (int i = 0; i < skinned.Length; i++)
+            {
+                var mesh = skinned[i]?.sharedMesh;
+                if (mesh == null) continue;
+                if (!mesh.isReadable) continue;
+                var colors = mesh.colors;
+                if (colors != null && colors.Length == mesh.vertexCount) return true;
+                var colors32 = mesh.colors32;
+                if (colors32 != null && colors32.Length == mesh.vertexCount) return true;
+            }
+
+            return false;
         }
     }
 }

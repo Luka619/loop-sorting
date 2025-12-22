@@ -323,6 +323,7 @@ namespace LoopSorting
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
             var slotTex = hasKit ? LoopSortingUIKit.LoadTextureByKey("world.conveyor_slot") : null;
+            var sharedMat = GetOrCreateSlotMarkerMaterial(slotTex);
 
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             float aspect = slotTex != null && slotTex.width > 0 ? (float)slotTex.height / slotTex.width : 1f;
@@ -344,46 +345,67 @@ namespace LoopSorting
                 var renderer = marker.GetComponent<Renderer>();
                 if (renderer != null)
                 {
-                    Material mat = null;
-                    if (slotTex != null)
+                    if (sharedMat != null)
                     {
-                        mat = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, slotMarkerColor, 2900);
-                    }
-
-                    if (mat == null)
-                    {
-                        var shader =
-                            Shader.Find("LoopSorting/UnlitTexture") ??
-                            Shader.Find("Unlit/Transparent Colored") ??
-                            Shader.Find("Unlit/Texture") ??
-                            Shader.Find("Sprites/Default") ??
-                            Shader.Find("UI/Default") ??
-                            Shader.Find("Standard");
-                        if (shader != null)
-                        {
-                            mat = new Material(shader);
-                            if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", slotTex != null ? slotTex : Texture2D.whiteTexture);
-                            else mat.mainTexture = slotTex != null ? slotTex : Texture2D.whiteTexture;
-                            if (mat.HasProperty("_Color")) mat.SetColor("_Color", slotMarkerColor);
-                            else if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", slotMarkerColor);
-                            else if (mat.HasProperty("_TintColor")) mat.SetColor("_TintColor", slotMarkerColor);
-                            else mat.color = slotMarkerColor;
-                            mat.renderQueue = 2900;
-                            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
-                            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-                            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0);
-                            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
-                        }
-                    }
-
-                    if (mat != null)
-                    {
-                        renderer.sharedMaterial = mat;
+                        renderer.sharedMaterial = sharedMat;
                     }
                 }
 
                 _slotMarkers.Add(marker);
             }
+        }
+
+        private Material GetOrCreateSlotMarkerMaterial(Texture2D slotTex)
+        {
+            if (_slotMarkerMaterial == null || _slotMarkerMaterial.mainTexture != slotTex)
+            {
+                if (_slotMarkerMaterial != null)
+                {
+                    Destroy(_slotMarkerMaterial);
+                    _slotMarkerMaterial = null;
+                }
+
+                if (slotTex != null)
+                {
+                    _slotMarkerMaterial = LoopSortingUIKit.CreateUnlitTextureMaterial(slotTex, slotMarkerColor, 2900);
+                }
+
+                if (_slotMarkerMaterial == null)
+                {
+                    var shader =
+                        Shader.Find("LoopSorting/UnlitTexture") ??
+                        Shader.Find("Unlit/Transparent Colored") ??
+                        Shader.Find("Unlit/Texture") ??
+                        Shader.Find("Sprites/Default") ??
+                        Shader.Find("UI/Default") ??
+                        Shader.Find("Standard");
+                    if (shader != null)
+                    {
+                        _slotMarkerMaterial = new Material(shader);
+                        if (_slotMarkerMaterial.HasProperty("_MainTex"))
+                            _slotMarkerMaterial.SetTexture("_MainTex", slotTex != null ? slotTex : Texture2D.whiteTexture);
+                        else
+                            _slotMarkerMaterial.mainTexture = slotTex != null ? slotTex : Texture2D.whiteTexture;
+                        _slotMarkerMaterial.renderQueue = 2900;
+                        if (_slotMarkerMaterial.HasProperty("_ZWrite")) _slotMarkerMaterial.SetInt("_ZWrite", 0);
+                        if (_slotMarkerMaterial.HasProperty("_ZTest")) _slotMarkerMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+                        if (_slotMarkerMaterial.HasProperty("_Cull")) _slotMarkerMaterial.SetInt("_Cull", 0);
+                        if (_slotMarkerMaterial.HasProperty("_CullMode")) _slotMarkerMaterial.SetInt("_CullMode", 0);
+                    }
+                }
+            }
+
+            if (_slotMarkerMaterial != null)
+            {
+                if (_slotMarkerMaterial.HasProperty("_ZWrite")) _slotMarkerMaterial.SetInt("_ZWrite", 0);
+                if (_slotMarkerMaterial.HasProperty("_ZTest")) _slotMarkerMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+                if (_slotMarkerMaterial.HasProperty("_Color")) _slotMarkerMaterial.SetColor("_Color", slotMarkerColor);
+                else if (_slotMarkerMaterial.HasProperty("_BaseColor")) _slotMarkerMaterial.SetColor("_BaseColor", slotMarkerColor);
+                else if (_slotMarkerMaterial.HasProperty("_TintColor")) _slotMarkerMaterial.SetColor("_TintColor", slotMarkerColor);
+                else _slotMarkerMaterial.color = slotMarkerColor;
+            }
+
+            return _slotMarkerMaterial;
         }
 
     }

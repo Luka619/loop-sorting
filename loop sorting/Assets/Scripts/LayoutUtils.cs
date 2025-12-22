@@ -9,6 +9,15 @@ namespace LoopSorting
     /// </summary>
     public static class LayoutUtils
     {
+        public sealed class BeltPathCache
+        {
+            public bool Loop { get; set; }
+            public float TotalLength { get; set; }
+            public float Offset { get; set; }
+            public List<Vector2> EvalPoints { get; set; }
+            public List<float> Cumulative { get; set; }
+        }
+
         public static Bounds ComputeLayoutBounds(LevelLayout layout)
         {
             var min = new Vector2(float.MaxValue, float.MaxValue);
@@ -62,21 +71,88 @@ namespace LoopSorting
             float smoothTension = 0.2f,
             int smoothSubdivisions = 4)
         {
+            return BuildSlotsFromPathInternal(
+                path,
+                desiredSpacing,
+                explicitSlotCount,
+                out usedSpacing,
+                smoothCorners,
+                smoothTension,
+                smoothSubdivisions,
+                out _);
+        }
+
+        public static List<Transform> BuildSlotsFromPath(
+            ConveyorPath path,
+            float desiredSpacing,
+            int explicitSlotCount,
+            out float usedSpacing,
+            bool smoothCorners,
+            float smoothTension,
+            int smoothSubdivisions,
+            out BeltPathCache cache)
+        {
+            return BuildSlotsFromPathInternal(
+                path,
+                desiredSpacing,
+                explicitSlotCount,
+                out usedSpacing,
+                smoothCorners,
+                smoothTension,
+                smoothSubdivisions,
+                out cache);
+        }
+
+        private static List<Transform> BuildSlotsFromPathInternal(
+            ConveyorPath path,
+            float desiredSpacing,
+            int explicitSlotCount,
+            out float usedSpacing,
+            bool smoothCorners,
+            float smoothTension,
+            int smoothSubdivisions,
+            out BeltPathCache cache)
+        {
             usedSpacing = desiredSpacing;
+            cache = null;
             var slots = new List<Transform>();
             if (path == null || path.points == null || path.points.Count < 2)
             {
                 return slots;
             }
 
+            bool loop = path.loop;
+            var basePoints = new List<Vector2>(path.points);
+            if (loop && basePoints.Count > 1 && (basePoints[0] - basePoints[basePoints.Count - 1]).sqrMagnitude < 0.0001f)
+            {
+                basePoints.RemoveAt(basePoints.Count - 1);
+            }
+
             var samplePoints = smoothCorners
-                ? BuildRoundedPath(path.points, desiredSpacing, smoothTension, smoothSubdivisions)
-                : new List<Vector2>(path.points);
+                ? (loop
+                    ? BuildRoundedPathLoop(basePoints, desiredSpacing, smoothTension, smoothSubdivisions)
+                    : BuildRoundedPath(basePoints, desiredSpacing, smoothTension, smoothSubdivisions))
+                : new List<Vector2>(basePoints);
+
+            if (samplePoints.Count < 2)
+            {
+                return slots;
+            }
+
+            if (loop && samplePoints.Count > 1 &&
+                (samplePoints[0] - samplePoints[samplePoints.Count - 1]).sqrMagnitude < 0.0001f)
+            {
+                samplePoints.RemoveAt(samplePoints.Count - 1);
+            }
+
+            var evalPoints = loop
+                ? new List<Vector2>(samplePoints) { samplePoints[0] }
+                : samplePoints;
 
             float total = 0f;
-            for (int i = 0; i < samplePoints.Count - 1; i++)
+            for (int i = 0; i < evalPoints.Count - 1; i++)
             {
-                total += Vector2.Distance(samplePoints[i], samplePoints[i + 1]);
+                total += Vector2.Distance(evalPoints[i], evalPoints[i + 1]);
             }
 
             if (total <= 0.0001f)
@@ -89,15 +165,30 @@ namespace LoopSorting
             float step = total / slotCount;
             usedSpacing = step;
 
-            var cumulative = BuildCumulativeLengths(samplePoints);
+            var cumulative = BuildCumulativeLengths(evalPoints);
+            float offset = 0f;
+
             for (int i = 0; i < slotCount; i++)
             {
-                float dist = i * step;
-                var pos = PointAtDistance(samplePoints, cumulative, dist);
+                float dist = i * step + offset;
+                if (loop)
+                {
+                    dist = dist % total;
+                }
+                var pos = PointAtDistance(evalPoints, cumulative, dist);
                 var t = new GameObject($"Slot_{i}").transform;
                 t.position = pos;
                 slots.Add(t);
             }
+
+            cache = new BeltPathCache
+            {
+                Loop = loop,
+                TotalLength = total,
+                Offset = offset,
+                EvalPoints = evalPoints,
+                Cumulative = cumulative
+            };
 
             return slots;
         }
@@ -185,6 +276,52 @@ namespace LoopSorting
             return samples;
         }
 
+        private static List<Vector2> BuildRoundedPathLoop(IList<Vector2> pts, float desiredSpacing, float tension, int subdivisions)
+        {
+            var samples = new List<Vector2>();
+            if (pts == null || pts.Count < 3) return samples;
+
+            tension = Mathf.Clamp01(tension);
+            subdivisions = Mathf.Max(2, subdivisions);
+
+            int n = pts.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var prev = pts[(i - 1 + n) % n];
+                var curr = pts[i];
+                var next = pts[(i + 1) % n];
+
+                var dirIn = curr - prev;
+                var dirOut = next - curr;
+                float lenIn = dirIn.magnitude;
+                float lenOut = dirOut.magnitude;
+                if (lenIn < 0.0001f || lenOut < 0.0001f)
+                {
+                    samples.Add(curr);
+                    continue;
+                }
+
+                dirIn /= lenIn;
+                dirOut /= lenOut;
+
+                float maxRadius = desiredSpacing > 0f ? desiredSpacing * 0.75f : Mathf.Min(lenIn, lenOut);
+                float radius = Mathf.Min(lenIn, lenOut, maxRadius) * tension;
+
+                var pIn = curr - dirIn * radius;
+                var pOut = curr + dirOut * radius;
+
+                samples.Add(pIn);
+                for (int s = 1; s < subdivisions - 1; s++)
+                {
+                    float t = s / (float)(subdivisions - 1);
+                    samples.Add(Vector2.Lerp(pIn, pOut, t));
+                }
+                samples.Add(pOut);
+            }
+
+            return samples;
+        }
+
         private static List<float> BuildCumulativeLengths(List<Vector2> pts)
         {
             var cum = new List<float>(pts.Count);
@@ -199,7 +336,7 @@ namespace LoopSorting
             return cum;
         }
 
-        private static Vector3 PointAtDistance(List<Vector2> pts, List<float> cumulative, float dist)
+        public static Vector3 PointAtDistance(IReadOnlyList<Vector2> pts, IReadOnlyList<float> cumulative, float dist)
         {
             if (pts == null || pts.Count == 0 || cumulative == null || cumulative.Count != pts.Count)
             {

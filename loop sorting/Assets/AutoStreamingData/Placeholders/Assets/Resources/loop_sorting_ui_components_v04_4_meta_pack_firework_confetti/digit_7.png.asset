@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: digit_7.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 16
+  m_Height: 32
+  m_CompleteImageSize: 464
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 464
+  _typelessdata: f170048b048001d058f798c70201000004f1774b080005025f798d48233000006f800002020000000806000000000000528983d128c063b78f43401de003d800d27002e56f250588ec5e0d9f2bafccd96f8000040200000000801250020d832e51e946341501c0d472b13b0108004006b284798008cd06fbf84e2cdfe7a0f26d7241756c01089c003000300008000000c284295038c8ff9df0ff0133030000005185e7a141e9777f7f7f7f7f6b52bf0f02b168b4b306ff5dc7ff28021cc00d4014294af44cc062df0e00002c40514a3c04112427d7f68b4e22018006e0c0ff0314297414294063bf0e000000050312d86f8000020200000000000000c0b705006f800002020000000000000080fe05006f800004020000000000000000b40100e26870f43b211e2900580f7ed00100006f8000040200a4a454926a52524a4a4951f15434766b4800b87be0723f5401397d281f35addbcf0480856020408000007dc887f15b653a8f0092000000003f3f7da8b9d139019a91a69a0000000080407341bb0704d92f242f00d801c027000002312267ba05d53e7b6d00006800003c5ec885f17bf4fe72984aa5922d516c455d80fd4d9505f9983895000000000001fcfdffffffffffff8b8b777759595e5e
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

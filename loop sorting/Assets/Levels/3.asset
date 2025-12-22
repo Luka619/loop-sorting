@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 3
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   beltCapacity: 50
   beltSlotSpacing: 0
   smoothCorners: 1
@@ -32,32 +32,35 @@ MonoBehaviour:
   boxes:
   - name: Box A
     position: {x: 4.5, y: 3.5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 3
     autoAlignSlot: 1
     colorCounts:
     - color: 1
-      count: 15
+      count: 12
       hidden: 0
     - color: 0
-      count: 9
-      hidden: 0
-    - color: 1
       count: 6
       hidden: 0
-    initialBlocks: 
+    - color: 1
+      count: 3
+      hidden: 0
+    - color: 0
+      count: 3
+      hidden: 0
+    initialBlocks:
     beltSlotIndex: 7
     locked: 0
     unlockColor: 0
   - name: Box B
     position: {x: 2.700549, y: -5.719989}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 3
     autoAlignSlot: 1
     colorCounts:
@@ -65,31 +68,31 @@ MonoBehaviour:
       count: 9
       hidden: 0
     - color: 0
-      count: 12
-      hidden: 0
-    - color: 2
       count: 9
       hidden: 0
-    initialBlocks: 
+    - color: 2
+      count: 6
+      hidden: 0
+    initialBlocks:
     beltSlotIndex: 35
     locked: 0
     unlockColor: 0
   - name: Box C
     position: {x: 6.350321, y: -5.676597}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 3
     autoAlignSlot: 1
     colorCounts:
     - color: 0
-      count: 9
+      count: 6
       hidden: 0
     - color: 2
-      count: 21
+      count: 18
       hidden: 0
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 29
     locked: 0
     unlockColor: 0

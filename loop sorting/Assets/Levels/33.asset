@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 33
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   beltCapacity: 42
   beltSlotSpacing: 0
   smoothCorners: 1
@@ -33,159 +33,159 @@ MonoBehaviour:
   boxes:
   - name: Box 1
     position: {x: 0.5, y: 5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 2
     autoAlignSlot: 1
     colorCounts:
     - color: 0
-      count: 12
+      count: 9
       hidden: 0
     - color: 1
       count: 9
       hidden: 1
     - color: 2
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 5
     locked: 0
     unlockColor: 0
   - name: Box 2
     position: {x: 3, y: 5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 2
     autoAlignSlot: 1
     colorCounts:
     - color: 1
-      count: 12
+      count: 9
       hidden: 0
     - color: 2
       count: 9
       hidden: 1
     - color: 3
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 8
     locked: 1
     unlockColor: 0
   - name: Box 3
     position: {x: -2, y: 5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 3
     autoAlignSlot: 1
     colorCounts:
     - color: 2
-      count: 12
+      count: 9
       hidden: 0
     - color: 3
       count: 9
       hidden: 1
     - color: 4
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 24
     locked: 1
     unlockColor: 0
   - name: Box 4
     position: {x: 3.5, y: -0}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 2
     autoAlignSlot: 1
     colorCounts:
     - color: 3
-      count: 12
+      count: 9
       hidden: 0
     - color: 4
       count: 9
       hidden: 1
     - color: 5
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 18
     locked: 1
     unlockColor: 1
   - name: Box 5
     position: {x: -2.5, y: -4.5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 2
     autoAlignSlot: 1
     colorCounts:
     - color: 4
-      count: 12
+      count: 9
       hidden: 0
     - color: 5
       count: 9
       hidden: 1
     - color: 0
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 31
     locked: 0
     unlockColor: 0
   - name: Box 6
     position: {x: -0.5, y: -4.5}
-    size: {x: 0.90000004, y: 3}
+    size: {x: 0.9, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
-    rows: 10
+    rows: 8
     opening: 2
     autoAlignSlot: 1
     colorCounts:
     - color: 5
-      count: 12
+      count: 9
       hidden: 0
     - color: 0
       count: 9
       hidden: 1
     - color: 1
-      count: 9
+      count: 6
       hidden: 1
-    initialBlocks: 
+    initialBlocks:
     beltSlotIndex: 33
     locked: 0
     unlockColor: 0
   - name: Box 7
     position: {x: 2.5, y: -3.5}
-    size: {x: 3, y: 0.90000004}
+    size: {x: 2.4, y: 0.9}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
+    columns: 8
     rows: 3
     opening: 1
     autoAlignSlot: 1
-    colorCounts: []
-    initialBlocks: 
+    colorCounts:
+    initialBlocks:
     beltSlotIndex: 41
     locked: 0
     unlockColor: 0
   - name: Box 8
     position: {x: -0.5, y: 0}
-    size: {x: 3, y: 0.90000004}
+    size: {x: 2.4, y: 0.9}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 10
+    columns: 8
     rows: 3
     opening: 0
     autoAlignSlot: 1
-    colorCounts: []
-    initialBlocks: 
+    colorCounts:
+    initialBlocks:
     beltSlotIndex: 28
     locked: 0
     unlockColor: 0

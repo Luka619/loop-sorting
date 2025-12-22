@@ -261,8 +261,8 @@ MonoBehaviour:
     m_Bits: 1024
   outlineColor: {r: 0, g: 0, b: 0, a: 1}
   outlineThickness: 2
-  outlineShader: {fileID: 0}
-  maskShader: {fileID: 0}
+  outlineShader: {fileID: 4800000, guid: 3ea7cf5aa1d9da64f891832a81ad4c97, type: 3}
+  maskShader: {fileID: 4800000, guid: d98cf6763120fb64c8a94612585c1491, type: 3}
 --- !u!20 &963194227
 Camera:
   m_ObjectHideFlags: 0

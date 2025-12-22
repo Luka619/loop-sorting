@@ -5580,6 +5580,34 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_Body.asset:Box3x8_Body
+    localFileId: 4300000
+    rtMem: 7200
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_Cavity.asset:Box3x8_Cavity
+    localFileId: 4300000
+    rtMem: 29792
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_LidFrame.asset:Box3x8_LidFrame
+    localFileId: 4300000
+    rtMem: 8320
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_LidGlass.asset:Box3x8_LidGlass
+    localFileId: 4300000
+    rtMem: 4224
+    warningFlag: 1
+    refs:
+    - res
   mAnimations: []
   mSharedSceneAssets: []
   mScenes:

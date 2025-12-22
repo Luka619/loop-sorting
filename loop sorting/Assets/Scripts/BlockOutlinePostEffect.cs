@@ -15,6 +15,7 @@ namespace LoopSorting
         private Camera _maskCamera;
         private RenderTexture _maskTexture;
         private Material _outlineMaterial;
+        private bool _maskReady;
 
         private static readonly int MaskTexId = Shader.PropertyToID("_MaskTex");
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
@@ -33,6 +34,7 @@ namespace LoopSorting
                 _outlineMaterial = new Material(outlineShader);
             }
             EnsureMaskCamera();
+            _maskReady = false;
         }
 
         private void OnDisable()
@@ -57,6 +59,7 @@ namespace LoopSorting
                 SafeDestroy(_outlineMaterial);
                 _outlineMaterial = null;
             }
+            _maskReady = false;
         }
 
         private void EnsureMaskCamera()
@@ -100,30 +103,55 @@ namespace LoopSorting
 
             if (_maskTexture == null)
             {
-                _maskTexture = new RenderTexture(width, height, 16, RenderTextureFormat.ARGB32)
-                {
-                    name = "BlockMaskRT",
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp
-                };
+                _maskTexture = CreateMaskTexture(width, height, 16);
+            }
+            else if (!_maskTexture.IsCreated())
+            {
+                _maskTexture.Create();
             }
         }
 
-        private void OnRenderImage(RenderTexture src, RenderTexture dest)
+        private void LateUpdate()
         {
+            _maskReady = false;
             if (_outlineMaterial == null || outlineShader == null || maskShader == null)
             {
-                Graphics.Blit(src, dest);
+                return;
+            }
+
+            if (_camera == null)
+            {
+                _camera = GetComponent<Camera>();
+            }
+
+            if (_camera == null || !_camera.enabled || !SystemInfo.supportsRenderTextures)
+            {
                 return;
             }
 
             EnsureMaskCamera();
-            EnsureMaskTexture(src.width, src.height);
+            int width = Mathf.Max(1, _camera.pixelWidth);
+            int height = Mathf.Max(1, _camera.pixelHeight);
+            EnsureMaskTexture(width, height);
+            if (_maskTexture == null)
+            {
+                return;
+            }
 
             blockLayer = 1 << ResolveBlockLayer();
             _maskCamera.cullingMask = blockLayer;
             _maskCamera.targetTexture = _maskTexture;
             _maskCamera.Render();
+            _maskReady = true;
+        }
+
+        private void OnRenderImage(RenderTexture src, RenderTexture dest)
+        {
+            if (_outlineMaterial == null || outlineShader == null || maskShader == null || !_maskReady || _maskTexture == null)
+            {
+                Graphics.Blit(src, dest);
+                return;
+            }
 
             _outlineMaterial.SetTexture(MaskTexId, _maskTexture);
             _outlineMaterial.SetColor(OutlineColorId, outlineColor);
@@ -149,6 +177,33 @@ namespace LoopSorting
             {
                 DestroyImmediate(obj);
             }
+        }
+
+        private static RenderTexture CreateMaskTexture(int width, int height, int depth)
+        {
+            var format = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGB32)
+                ? RenderTextureFormat.ARGB32
+                : RenderTextureFormat.Default;
+            var texture = new RenderTexture(width, height, depth, format)
+            {
+                name = "BlockMaskRT",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            if (!texture.Create() && depth > 0)
+            {
+                texture.Release();
+                SafeDestroy(texture);
+                texture = new RenderTexture(width, height, 0, format)
+                {
+                    name = "BlockMaskRT",
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                texture.Create();
+            }
+
+            return texture;
         }
     }
 }

@@ -40,6 +40,7 @@ namespace LoopSorting
         private GameObject _completedBadge;
         private GameObject _completedBurst;
         private GameObject _completedConfetti;
+        private GameObject _completedFxAnchor;
         private Coroutine _completedFxRoutine;
 
         private const float CompletedNineSliceBorderFrac = 0.32f;
@@ -130,6 +131,8 @@ namespace LoopSorting
         private const float Box3DBlockInsetMax = 0.12f;
         private const float BoxBouncePunchScale = 0.05f;
         private const float BoxBounceSeconds = 0.12f;
+        private const float BlockInsertPunchScale = 0.12f;
+        private const float BlockInsertPunchSeconds = 0.12f;
         private const float IncomingMinSeconds = 0.06f;
         private const float IncomingMaxSeconds = 0.22f;
 
@@ -591,7 +594,9 @@ namespace LoopSorting
 
             if (slotIndex >= 0 && slotIndex < _blockVisuals.Count && _blockVisuals[slotIndex] != null)
             {
-                _blockVisuals[slotIndex].transform.localPosition = end;
+                var go = _blockVisuals[slotIndex];
+                go.transform.localPosition = end;
+                StartCoroutine(MotionUtil.ScalePunch(go.transform, go.transform.localScale, BlockInsertPunchScale, BlockInsertPunchSeconds));
             }
 
             _incomingAnimatingSlots.Remove(slotIndex);
@@ -2524,6 +2529,18 @@ namespace LoopSorting
             if (_box3D != null)
             {
                 Update3DLidState(val, forceShow: val && !wasCompleted);
+                if (!val)
+                {
+                    ClearCompletedFx();
+                    if (_completedOverlay != null) _completedOverlay.SetActive(false);
+                    return;
+                }
+
+                if (!wasCompleted)
+                {
+                    if (_completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
+                    _completedFxRoutine = StartCoroutine(PlayCompletedFx());
+                }
                 return;
             }
 
@@ -2532,18 +2549,7 @@ namespace LoopSorting
 
             if (!val)
             {
-                if (wasCompleted && _completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
-                _completedFxRoutine = null;
-                if (_completedBurst != null)
-                {
-                    Destroy(_completedBurst);
-                    _completedBurst = null;
-                }
-                if (_completedConfetti != null)
-                {
-                    Destroy(_completedConfetti);
-                    _completedConfetti = null;
-                }
+                ClearCompletedFx();
                 _completedOverlay.SetActive(false);
                 return;
             }
@@ -3051,24 +3057,25 @@ namespace LoopSorting
 
         private void CreateCompletedConfettiFx()
         {
-            if (_completedOverlay == null) return;
-
             if (_completedBurst != null) Destroy(_completedBurst);
             if (_completedConfetti != null) Destroy(_completedConfetti);
             _completedBurst = null;
             _completedConfetti = null;
+
+            var parent = GetCompletedFxParent();
+            if (parent == null) return;
 
             if (!LoopSortingUIKit.IsAvailable())
             {
                 return;
             }
 
-            CreateConfettiBurst();
+            CreateConfettiBurst(parent);
         }
 
-        private void CreateConfettiBurst()
+        private void CreateConfettiBurst(Transform parent)
         {
-            if (_completedOverlay == null) return;
+            if (parent == null) return;
 
             var texRect = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_rect_256.png");
             var texTri = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_tri_256.png");
@@ -3083,7 +3090,7 @@ namespace LoopSorting
             if (textures.Count == 0) return;
 
             _completedConfetti = new GameObject("Confetti");
-            _completedConfetti.transform.SetParent(_completedOverlay.transform, false);
+            _completedConfetti.transform.SetParent(parent, false);
             _completedConfetti.transform.localPosition = new Vector3(0f, 0f, -0.04f);
             _completedConfetti.transform.localRotation = Quaternion.identity;
             _completedConfetti.transform.localScale = Vector3.one;
@@ -3102,6 +3109,51 @@ namespace LoopSorting
                 var c0 = palette[i % palette.Length];
                 var c1 = palette[(i + 1) % palette.Length];
                 CreateOneConfettiSystem(_completedConfetti.transform, $"Confetti_{i}", textures[i], c0, c1, perSystem, startSize, startSpeed);
+            }
+        }
+
+        private Transform GetCompletedFxParent()
+        {
+            if (_completedOverlay != null && _completedOverlay.activeSelf)
+            {
+                return _completedOverlay.transform;
+            }
+
+            return EnsureCompletedFxAnchor();
+        }
+
+        private Transform EnsureCompletedFxAnchor()
+        {
+            if (_completedFxAnchor == null)
+            {
+                _completedFxAnchor = new GameObject("CompletedFxAnchor");
+                _completedFxAnchor.transform.SetParent(transform, false);
+                _completedFxAnchor.transform.localPosition = new Vector3(0f, 0f, CompletedOverlayZ);
+                _completedFxAnchor.transform.localRotation = Quaternion.identity;
+                _completedFxAnchor.transform.localScale = Vector3.one;
+            }
+            _completedFxAnchor.SetActive(true);
+            return _completedFxAnchor.transform;
+        }
+
+        private void ClearCompletedFx()
+        {
+            if (_completedFxRoutine != null) StopCoroutine(_completedFxRoutine);
+            _completedFxRoutine = null;
+            if (_completedBurst != null)
+            {
+                Destroy(_completedBurst);
+                _completedBurst = null;
+            }
+            if (_completedConfetti != null)
+            {
+                Destroy(_completedConfetti);
+                _completedConfetti = null;
+            }
+            if (_completedFxAnchor != null)
+            {
+                Destroy(_completedFxAnchor);
+                _completedFxAnchor = null;
             }
         }
 

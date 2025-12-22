@@ -45,6 +45,8 @@ namespace LoopSorting
         private const float SaveDelayStrongSeconds = 0.20f;
         private const float SaveDelayWeakSeconds = 2.00f;
         private const string RuntimeUnlitTextureMaterialResourcePath = "LoopSortingUnlitTexture";
+        private const float BeltSpawnPunchScale = 0.12f;
+        private const float BeltSpawnPunchSeconds = 0.12f;
 
         private bool _hasLoadedSave;
         private bool _saveDirty;
@@ -2806,6 +2808,7 @@ namespace LoopSorting
             if (_beltBlockVisuals.TryGetValue(beltIndex, out var finalGo) && finalGo != null && beltIndex >= 0 && beltIndex < _slotCurrentPositions.Count)
             {
                 finalGo.transform.position = _slotCurrentPositions[beltIndex] + GetBeltBlockOffset(beltIndex) + new Vector3(0f, 0f, beltBlockZOffset);
+                StartCoroutine(MotionUtil.ScalePunch(finalGo.transform, finalGo.transform.localScale, BeltSpawnPunchScale, BeltSpawnPunchSeconds));
             }
 
             PlaySfx(SfxId.BlockLand);

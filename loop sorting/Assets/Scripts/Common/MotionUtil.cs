@@ -53,6 +53,7 @@ namespace LoopSorting
             float t = 0f;
             while (t < seconds)
             {
+                if (target == null) yield break;
                 t += Time.unscaledDeltaTime;
                 float u = Mathf.Clamp01(t / seconds);
                 float a = u < 0.5f ? EaseOutCubic(u / 0.5f) : 1f - EaseInOutCubic((u - 0.5f) / 0.5f);
@@ -60,7 +61,10 @@ namespace LoopSorting
                 target.localScale = baseScale * s;
                 yield return null;
             }
-            target.localScale = baseScale;
+            if (target != null)
+            {
+                target.localScale = baseScale;
+            }
         }
 
         public static IEnumerator ShakeLocalPosition(Transform target, Vector3 baseLocalPos, float amplitude, float seconds, int shakes = 10)
@@ -108,4 +112,3 @@ namespace LoopSorting
         }
     }
 }
-

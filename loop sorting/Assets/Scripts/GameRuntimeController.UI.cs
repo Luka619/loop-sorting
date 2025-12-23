@@ -334,6 +334,7 @@ namespace LoopSorting
             bool effectiveAutoResolve = overrideLayout ? layout.autoResolveLayoutOverlap : autoResolveLayoutOverlap;
             float effectiveMinGap = overrideLayout ? layout.minBoxToBeltGap : minBoxToBeltGap;
             float effectivePreferredGap = overrideLayout ? layout.preferredBoxToBeltGap : preferredBoxToBeltGap;
+            float effectiveMinBoxToBoxGap = overrideLayout ? layout.minBoxToBoxGap : minBoxToBoxGap;
             int effectiveIterations = overrideLayout ? layout.overlapResolveIterations : overlapResolveIterations;
             if (layoutWasRuntimeClone)
             {
@@ -341,15 +342,31 @@ namespace LoopSorting
             }
 
             var runtimeLayout = layout;
-            if (effectiveAutoResolve && (effectiveMinGap > 0f || effectivePreferredGap > 0f))
+            if (effectiveAutoResolve && (effectiveMinGap > 0f || effectivePreferredGap > 0f || effectiveMinBoxToBoxGap > 0f))
             {
                 runtimeLayout = LayoutUtils.CloneLayout(layout);
-                LayoutUtils.ResolveBoxBeltOverlap(
-                    runtimeLayout,
-                    effectiveMinGap,
-                    effectivePreferredGap,
-                    beltSlotSpacing,
-                    effectiveIterations);
+                int fixIterations = Mathf.Clamp(effectiveIterations, 1, 8);
+                for (int i = 0; i < fixIterations; i++)
+                {
+                    bool moved = false;
+                    if (effectiveMinGap > 0f || effectivePreferredGap > 0f)
+                    {
+                        moved |= LayoutUtils.ResolveBoxBeltOverlap(
+                            runtimeLayout,
+                            effectiveMinGap,
+                            effectivePreferredGap,
+                            beltSlotSpacing,
+                            1) > 0;
+                    }
+                    if (effectiveMinBoxToBoxGap > 0f)
+                    {
+                        moved |= LayoutUtils.ResolveBoxBoxOverlap(runtimeLayout, effectiveMinBoxToBoxGap, 1) > 0;
+                    }
+                    if (!moved)
+                    {
+                        break;
+                    }
+                }
             }
             _runtimeLayoutInstance = runtimeLayout != layout ? runtimeLayout : null;
 
@@ -1524,6 +1541,7 @@ namespace LoopSorting
         }
     }
 }
+
 
 
 

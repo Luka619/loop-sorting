@@ -35,6 +35,8 @@ namespace LoopSorting
         public float minBoxToBeltGap = 0.08f;
         [Tooltip("Preferred gap between box bounds and the belt ribbon (world units). 0 = disabled.")]
         public float preferredBoxToBeltGap = 0.18f;
+        [Tooltip("Minimum gap between box bounds (world units).")]
+        public float minBoxToBoxGap = 0.05f;
         [Range(1, 8)]
         public int overlapResolveIterations = 3;
         [Header("Camera Clamp")]

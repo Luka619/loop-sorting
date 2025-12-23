@@ -253,6 +253,7 @@ public class LevelEditorWindow : EditorWindow
             var propAuto = _serializedLevel.FindProperty("autoResolveLayoutOverlap");
             var propMinGap = _serializedLevel.FindProperty("minBoxToBeltGap");
             var propPreferredGap = _serializedLevel.FindProperty("preferredBoxToBeltGap");
+            var propMinBoxGap = _serializedLevel.FindProperty("minBoxToBoxGap");
             var propIterations = _serializedLevel.FindProperty("overlapResolveIterations");
 
             if (propOverride != null)
@@ -267,6 +268,7 @@ public class LevelEditorWindow : EditorWindow
                 {
                     if (propMinGap != null) EditorGUILayout.PropertyField(propMinGap, new GUIContent("Min Gap"));
                     if (propPreferredGap != null) EditorGUILayout.PropertyField(propPreferredGap, new GUIContent("Preferred Gap"));
+                    if (propMinBoxGap != null) EditorGUILayout.PropertyField(propMinBoxGap, new GUIContent("Min Box Gap"));
                     if (propIterations != null) EditorGUILayout.PropertyField(propIterations, new GUIContent("Resolve Iterations"));
                 }
             }
@@ -544,21 +546,38 @@ public class LevelEditorWindow : EditorWindow
             out bool autoResolve,
             out float minGap,
             out float preferredGap,
+            out float minBoxToBoxGap,
             out int iterations,
             out float cameraMaxOrtho,
             out float minBlockPixel,
             out float fallbackBeltSpacing);
 
         var previewLayout = _level;
-        if (autoResolve && (minGap > 0f || preferredGap > 0f))
+        if (autoResolve && (minGap > 0f || preferredGap > 0f || minBoxToBoxGap > 0f))
         {
             previewLayout = LayoutUtils.CloneLayout(_level);
-            LayoutUtils.ResolveBoxBeltOverlap(
-                previewLayout,
-                minGap,
-                preferredGap,
-                fallbackBeltSpacing,
-                iterations);
+            int fixIterations = Mathf.Clamp(iterations, 1, 8);
+            for (int i = 0; i < fixIterations; i++)
+            {
+                bool moved = false;
+                if (minGap > 0f || preferredGap > 0f)
+                {
+                    moved |= LayoutUtils.ResolveBoxBeltOverlap(
+                        previewLayout,
+                        minGap,
+                        preferredGap,
+                        fallbackBeltSpacing,
+                        1) > 0;
+                }
+                if (minBoxToBoxGap > 0f)
+                {
+                    moved |= LayoutUtils.ResolveBoxBoxOverlap(previewLayout, minBoxToBoxGap, 1) > 0;
+                }
+                if (!moved)
+                {
+                    break;
+                }
+            }
             _previewLayoutInstance = previewLayout;
         }
 
@@ -731,6 +750,7 @@ public class LevelEditorWindow : EditorWindow
         out bool autoResolve,
         out float minGap,
         out float preferredGap,
+        out float minBoxToBoxGap,
         out int iterations,
         out float cameraMaxOrtho,
         out float minBlockPixel,
@@ -739,6 +759,7 @@ public class LevelEditorWindow : EditorWindow
         autoResolve = true;
         minGap = 0.08f;
         preferredGap = 0.18f;
+        minBoxToBoxGap = 0.05f;
         iterations = 3;
         cameraMaxOrtho = 0f;
         minBlockPixel = 0f;
@@ -760,6 +781,7 @@ public class LevelEditorWindow : EditorWindow
             autoResolve = layout.autoResolveLayoutOverlap;
             minGap = layout.minBoxToBeltGap;
             preferredGap = layout.preferredBoxToBeltGap;
+            minBoxToBoxGap = layout.minBoxToBoxGap;
             iterations = layout.overlapResolveIterations;
             cameraMaxOrtho = layout.cameraMaxOrthoSize;
             minBlockPixel = layout.minBlockPixelSize;
@@ -769,6 +791,7 @@ public class LevelEditorWindow : EditorWindow
             autoResolve = runtime.autoResolveLayoutOverlap;
             minGap = runtime.minBoxToBeltGap;
             preferredGap = runtime.preferredBoxToBeltGap;
+            minBoxToBoxGap = runtime.minBoxToBoxGap;
             iterations = runtime.overlapResolveIterations;
             cameraMaxOrtho = runtime.cameraMaxOrthoSize;
             minBlockPixel = runtime.minBlockPixelSize;

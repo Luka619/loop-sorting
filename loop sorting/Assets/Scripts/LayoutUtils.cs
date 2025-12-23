@@ -24,6 +24,7 @@ namespace LoopSorting
             clone.autoResolveLayoutOverlap = source.autoResolveLayoutOverlap;
             clone.minBoxToBeltGap = source.minBoxToBeltGap;
             clone.preferredBoxToBeltGap = source.preferredBoxToBeltGap;
+            clone.minBoxToBoxGap = source.minBoxToBoxGap;
             clone.overlapResolveIterations = source.overlapResolveIterations;
             clone.cameraMaxOrthoSize = source.cameraMaxOrthoSize;
             clone.minBlockPixelSize = source.minBlockPixelSize;
@@ -275,6 +276,79 @@ namespace LoopSorting
                         spec.position -= dir * pull;
                         movedThisIter = true;
                         moved++;
+                    }
+                }
+
+                if (!movedThisIter)
+                {
+                    break;
+                }
+            }
+
+            return moved;
+        }
+
+        public static int ResolveBoxBoxOverlap(LevelLayout layout, float minGap, int iterations = 3)
+        {
+            if (layout == null || layout.boxes == null || layout.boxes.Count < 2)
+            {
+                return 0;
+            }
+
+            minGap = Mathf.Max(0f, minGap);
+            if (minGap <= 0f)
+            {
+                return 0;
+            }
+
+            float unit = layout.blockSize > 0 ? layout.blockSize : 0.6f;
+            iterations = Mathf.Clamp(iterations, 1, 8);
+            int moved = 0;
+
+            for (int iter = 0; iter < iterations; iter++)
+            {
+                bool movedThisIter = false;
+                for (int i = 0; i < layout.boxes.Count; i++)
+                {
+                    var a = layout.boxes[i];
+                    if (a == null) continue;
+                    var sizeA = ComputeBoxSize(a, unit);
+                    var halfA = sizeA * 0.5f;
+
+                    for (int j = i + 1; j < layout.boxes.Count; j++)
+                    {
+                        var b = layout.boxes[j];
+                        if (b == null) continue;
+                        var sizeB = ComputeBoxSize(b, unit);
+                        var halfB = sizeB * 0.5f;
+
+                        var delta = b.position - a.position;
+                        float overlapX = (halfA.x + halfB.x + minGap) - Mathf.Abs(delta.x);
+                        float overlapY = (halfA.y + halfB.y + minGap) - Mathf.Abs(delta.y);
+                        if (overlapX <= 0f || overlapY <= 0f)
+                        {
+                            continue;
+                        }
+
+                        if (overlapX <= overlapY)
+                        {
+                            float dir = delta.x >= 0f ? 1f : -1f;
+                            float move = overlapX * 0.5f;
+                            var shift = new Vector2(dir * move, 0f);
+                            a.position -= shift;
+                            b.position += shift;
+                        }
+                        else
+                        {
+                            float dir = delta.y >= 0f ? 1f : -1f;
+                            float move = overlapY * 0.5f;
+                            var shift = new Vector2(0f, dir * move);
+                            a.position -= shift;
+                            b.position += shift;
+                        }
+
+                        moved++;
+                        movedThisIter = true;
                     }
                 }
 

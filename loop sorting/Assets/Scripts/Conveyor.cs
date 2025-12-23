@@ -151,27 +151,53 @@ namespace LoopSorting
                 }
                 else
                 {
-                    // Move belt contents forward, but keep the blocked port empty (reserve for release).
-                    for (int i = _slots.Length - 1; i >= 0; i--)
+                    // Identify the waiting chain behind the blocked port so those blocks stay in place.
+                    var waiting = new bool[_slots.Length];
+                    int idx = (blockIndex - 1 + _slots.Length) % _slots.Length;
+                    while (idx != blockIndex)
                     {
-                        if (!_slots[i].HasValue)
+                        if (!_slots[idx].HasValue)
                         {
-                            continue;
+                            break;
+                        }
+                        waiting[idx] = true;
+                        idx = (idx - 1 + _slots.Length) % _slots.Length;
+                    }
+
+                    // Rotate only the movable slots so gaps keep moving with the belt.
+                    var movable = new List<int>(_slots.Length);
+                    for (int i = 0; i < _slots.Length; i++)
+                    {
+                        if (!waiting[i])
+                        {
+                            movable.Add(i);
+                        }
+                    }
+
+                    if (movable.Count > 0)
+                    {
+                        var oldSlots = (Block?[])_slots.Clone();
+                        for (int i = 0; i < movable.Count; i++)
+                        {
+                            _slots[movable[i]] = null;
                         }
 
-                        int next = (i + 1) % _slots.Length;
-                        if (next == blockIndex)
+                        for (int i = 0; i < movable.Count; i++)
                         {
-                            continue;
-                        }
+                            int src = movable[i];
+                            var block = oldSlots[src];
+                            if (!block.HasValue) continue;
 
-                        if (_slots[next].HasValue)
-                        {
-                            continue;
+                            int dst = movable[(i + 1) % movable.Count];
+                            if (dst == blockIndex)
+                            {
+                                _slots[src] = block;
+                            }
+                            else
+                            {
+                                _slots[dst] = block;
+                            }
                         }
-
-                        _slots[next] = _slots[i];
-                        _slots[i] = null;
                     }
                 }
             }

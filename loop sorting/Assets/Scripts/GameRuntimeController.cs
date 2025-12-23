@@ -33,6 +33,8 @@ namespace LoopSorting
         public bool autoResolveLayoutOverlap = true;
         [Tooltip("Minimum gap between box bounds and the belt ribbon (world units).")]
         public float minBoxToBeltGap = 0.08f;
+        [Tooltip("Preferred gap between box bounds and the belt ribbon (world units). 0 = disabled.")]
+        public float preferredBoxToBeltGap = 0.18f;
         [Range(1, 8)]
         public int overlapResolveIterations = 3;
         [Header("Camera Clamp")]
@@ -139,6 +141,7 @@ namespace LoopSorting
         private LevelFlow _flow;
         private int _flowIndex;
         private LevelLayout _currentLayout;
+        private LevelLayout _currentLayoutSource;
         private LevelLayout _runtimeLayoutInstance;
         private bool _gameOver;
         private Coroutine _endSequenceRoutine;
@@ -1133,7 +1136,7 @@ namespace LoopSorting
             int required = _game.Containers[targetIdx].Capacity;
             if (sourceBlocks.Count < required)
             {
-                Build(_currentLayout);
+                Build(_currentLayoutSource != null ? _currentLayoutSource : _currentLayout);
                 return false;
             }
 
@@ -2554,7 +2557,7 @@ namespace LoopSorting
             }
             else
             {
-                Build(_currentLayout);
+                Build(_currentLayoutSource != null ? _currentLayoutSource : _currentLayout);
             }
         }
 

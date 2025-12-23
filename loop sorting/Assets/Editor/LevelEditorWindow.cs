@@ -53,6 +53,9 @@ public class LevelEditorWindow : EditorWindow
     private int _lastSelBox = -2;
     private int _lastSelConv = -2;
     private int _lastSelPoint = -2;
+    private bool _showLayoutAutoFix = true;
+    private bool _showCameraClamp = true;
+    private LevelLayout _previewLayoutInstance;
 
     // Preview-only camera framing (to match GameRuntimeController.FitCameraToLevel).
     private static bool _previewCameraActive;
@@ -74,6 +77,11 @@ public class LevelEditorWindow : EditorWindow
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
+        if (_previewLayoutInstance != null)
+        {
+            DestroyImmediate(_previewLayoutInstance);
+            _previewLayoutInstance = null;
+        }
     }
 
     private void OnGUI()
@@ -232,6 +240,56 @@ public class LevelEditorWindow : EditorWindow
             {
                 if (propTension != null) EditorGUILayout.PropertyField(propTension, new GUIContent("Corner Smooth Tension"));
                 if (propSubdiv != null) EditorGUILayout.PropertyField(propSubdiv, new GUIContent("Corner Subdivisions"));
+            }
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4f);
+        }
+
+        _showLayoutAutoFix = EditorGUILayout.Foldout(_showLayoutAutoFix, "Layout Auto Fix", true);
+        if (_showLayoutAutoFix)
+        {
+            EditorGUI.indentLevel++;
+            var propOverride = _serializedLevel.FindProperty("overrideLayoutAutoSettings");
+            var propAuto = _serializedLevel.FindProperty("autoResolveLayoutOverlap");
+            var propMinGap = _serializedLevel.FindProperty("minBoxToBeltGap");
+            var propPreferredGap = _serializedLevel.FindProperty("preferredBoxToBeltGap");
+            var propIterations = _serializedLevel.FindProperty("overlapResolveIterations");
+
+            if (propOverride != null)
+            {
+                EditorGUILayout.PropertyField(propOverride, new GUIContent("Override Runtime Defaults"));
+            }
+            bool overrideLayout = propOverride != null && propOverride.boolValue;
+            using (new EditorGUI.DisabledScope(!overrideLayout))
+            {
+                if (propAuto != null) EditorGUILayout.PropertyField(propAuto, new GUIContent("Auto Resolve Overlap"));
+                if (propAuto != null && propAuto.boolValue)
+                {
+                    if (propMinGap != null) EditorGUILayout.PropertyField(propMinGap, new GUIContent("Min Gap"));
+                    if (propPreferredGap != null) EditorGUILayout.PropertyField(propPreferredGap, new GUIContent("Preferred Gap"));
+                    if (propIterations != null) EditorGUILayout.PropertyField(propIterations, new GUIContent("Resolve Iterations"));
+                }
+            }
+            if (!overrideLayout)
+            {
+                EditorGUILayout.HelpBox("Using runtime defaults. Enable override to customize per-level and preview.", MessageType.Info);
+            }
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4f);
+        }
+
+        _showCameraClamp = EditorGUILayout.Foldout(_showCameraClamp, "Camera Clamp", true);
+        if (_showCameraClamp)
+        {
+            EditorGUI.indentLevel++;
+            var propOverride = _serializedLevel.FindProperty("overrideLayoutAutoSettings");
+            var propMaxOrtho = _serializedLevel.FindProperty("cameraMaxOrthoSize");
+            var propMinBlockPx = _serializedLevel.FindProperty("minBlockPixelSize");
+            bool overrideLayout = propOverride != null && propOverride.boolValue;
+            using (new EditorGUI.DisabledScope(!overrideLayout))
+            {
+                if (propMaxOrtho != null) EditorGUILayout.PropertyField(propMaxOrtho, new GUIContent("Max Ortho Size"));
+                if (propMinBlockPx != null) EditorGUILayout.PropertyField(propMinBlockPx, new GUIContent("Min Block Pixel Size"));
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4f);
@@ -475,7 +533,36 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
-        var bounds = ComputeBounds(_level);
+        if (_previewLayoutInstance != null)
+        {
+            DestroyImmediate(_previewLayoutInstance);
+            _previewLayoutInstance = null;
+        }
+
+        GetEffectiveLayoutSettings(
+            _level,
+            out bool autoResolve,
+            out float minGap,
+            out float preferredGap,
+            out int iterations,
+            out float cameraMaxOrtho,
+            out float minBlockPixel,
+            out float fallbackBeltSpacing);
+
+        var previewLayout = _level;
+        if (autoResolve && (minGap > 0f || preferredGap > 0f))
+        {
+            previewLayout = LayoutUtils.CloneLayout(_level);
+            LayoutUtils.ResolveBoxBeltOverlap(
+                previewLayout,
+                minGap,
+                preferredGap,
+                fallbackBeltSpacing,
+                iterations);
+            _previewLayoutInstance = previewLayout;
+        }
+
+        var bounds = ComputeBounds(previewLayout);
         var localRect = new Rect(0, 0, rect.width, rect.height);
         var frameRect = _previewPortrait916 ? FitAspect(localRect, 9f / 16f) : localRect;
 
@@ -499,6 +586,24 @@ public class LevelEditorWindow : EditorWindow
             float baseOrtho = Mathf.Max(h * 0.5f, w * 0.5f / aspect);
             float orthoSize = baseOrtho / available;
 
+            if (minBlockPixel > 0f)
+            {
+                float unit = previewLayout != null && previewLayout.blockSize > 0f ? previewLayout.blockSize : 0.6f;
+                float maxOrtho = unit * frameRect.height / (2f * minBlockPixel);
+                if (maxOrtho > 0.0001f)
+                {
+                    orthoSize = Mathf.Min(orthoSize, maxOrtho);
+                }
+            }
+            if (cameraMaxOrtho > 0f)
+            {
+                orthoSize = Mathf.Min(orthoSize, cameraMaxOrtho);
+            }
+
+            float baseScale = Mathf.Min(frameRect.width / w, frameRect.height / h);
+            float targetScale = frameRect.height / (2f * Mathf.Max(0.0001f, orthoSize));
+            _previewScaleMultiplier = baseScale > 0.0001f ? (targetScale / baseScale) : 1f;
+
             float desiredCenterY01 = bottom + available * 0.5f;
             float delta01 = desiredCenterY01 - 0.5f;
             float worldOffsetY = delta01 * (2f * orthoSize);
@@ -507,7 +612,7 @@ public class LevelEditorWindow : EditorWindow
 
         GUI.BeginClip(rect);
         Handles.BeginGUI();
-        var slotPositions = BuildSlotPositionsForPreview(_level);
+        var slotPositions = BuildSlotPositionsForPreview(previewLayout, fallbackBeltSpacing);
 
         // Frame background/border.
         if (Event.current.type == EventType.Repaint)
@@ -521,9 +626,9 @@ public class LevelEditorWindow : EditorWindow
             DrawRuntimeUIOverlay(frameRect);
         }
 
-        DrawPreviewConveyors(frameRect, bounds, slotPositions);
-        DrawPreviewBoxes(frameRect, bounds, slotPositions);
-        HandlePreviewClick(frameRect, bounds, slotPositions);
+        DrawPreviewConveyors(frameRect, bounds, slotPositions, previewLayout);
+        DrawPreviewBoxes(frameRect, bounds, slotPositions, previewLayout);
+        HandlePreviewClick(frameRect, bounds, slotPositions, previewLayout);
         HandlePreviewDrag(frameRect, bounds);
         Handles.EndGUI();
         GUI.EndClip();
@@ -621,6 +726,55 @@ public class LevelEditorWindow : EditorWindow
         DrawRectOutline(playable, new Color(0.2f, 1f, 0.2f, 0.18f), 2f);
     }
 
+    private void GetEffectiveLayoutSettings(
+        LevelLayout layout,
+        out bool autoResolve,
+        out float minGap,
+        out float preferredGap,
+        out int iterations,
+        out float cameraMaxOrtho,
+        out float minBlockPixel,
+        out float fallbackBeltSpacing)
+    {
+        autoResolve = true;
+        minGap = 0.08f;
+        preferredGap = 0.18f;
+        iterations = 3;
+        cameraMaxOrtho = 0f;
+        minBlockPixel = 0f;
+        fallbackBeltSpacing = 0.6f;
+
+        if (layout == null)
+        {
+            return;
+        }
+
+        var runtime = Object.FindObjectOfType<GameRuntimeController>();
+        if (runtime != null)
+        {
+            fallbackBeltSpacing = runtime.beltSlotSpacing;
+        }
+
+        if (layout.overrideLayoutAutoSettings || runtime == null)
+        {
+            autoResolve = layout.autoResolveLayoutOverlap;
+            minGap = layout.minBoxToBeltGap;
+            preferredGap = layout.preferredBoxToBeltGap;
+            iterations = layout.overlapResolveIterations;
+            cameraMaxOrtho = layout.cameraMaxOrthoSize;
+            minBlockPixel = layout.minBlockPixelSize;
+        }
+        else
+        {
+            autoResolve = runtime.autoResolveLayoutOverlap;
+            minGap = runtime.minBoxToBeltGap;
+            preferredGap = runtime.preferredBoxToBeltGap;
+            iterations = runtime.overlapResolveIterations;
+            cameraMaxOrtho = runtime.cameraMaxOrthoSize;
+            minBlockPixel = runtime.minBlockPixelSize;
+        }
+    }
+
     private static Rect AnchorRect(float w, float h, float ax, float ay, float px, float py, float ox, float oy, float rw, float rh)
     {
         // Returns a rect in TOP-LEFT origin pixels (same space as the preview overlay).
@@ -667,18 +821,19 @@ public class LevelEditorWindow : EditorWindow
         return EditorGUI.GetPropertyHeight(property, true) + 6f;
     }
 
-    private void DrawPreviewConveyors(Rect rect, Rect bounds, List<Vector2> slotPositions)
+    private void DrawPreviewConveyors(Rect rect, Rect bounds, List<Vector2> slotPositions, LevelLayout layout)
     {
+        if (layout == null || layout.conveyors == null) return;
         Handles.color = new Color(0.12f, 0.56f, 0.91f, 0.9f);
-        for (int ci = 0; ci < _level.conveyors.Count; ci++)
+        for (int ci = 0; ci < layout.conveyors.Count; ci++)
         {
-        if (_onlyShowSelectedConveyor && _selectedConveyor != ci) continue;
+            if (_onlyShowSelectedConveyor && _selectedConveyor != ci) continue;
 
-        var conveyor = _level.conveyors[ci];
-        if (conveyor.points == null || conveyor.points.Count < 2)
-        {
-            continue;
-        }
+            var conveyor = layout.conveyors[ci];
+            if (conveyor.points == null || conveyor.points.Count < 2)
+            {
+                continue;
+            }
 
         var line = ToScreen(rect, bounds, conveyor.points);
             // Hit band visualization (click range), matches conveyor width in world scaled to screen
@@ -712,14 +867,15 @@ public class LevelEditorWindow : EditorWindow
         }
     }
 
-    private void DrawPreviewBoxes(Rect rect, Rect bounds, List<Vector2> slotPositions)
+    private void DrawPreviewBoxes(Rect rect, Rect bounds, List<Vector2> slotPositions, LevelLayout layout)
     {
-        if (_level.boxes == null) return;
-        foreach (var box in _level.boxes)
+        if (layout == null || layout.boxes == null) return;
+        for (int i = 0; i < layout.boxes.Count; i++)
         {
+            var box = layout.boxes[i];
             bool isLocked = box.locked;
             Handles.color = Color.white;
-            if (_onlyShowSelectedBox && (_selectedBox < 0 || _level.boxes[_selectedBox] != box))
+            if (_onlyShowSelectedBox && _selectedBox != i)
             {
                 continue;
             }
@@ -736,13 +892,13 @@ public class LevelEditorWindow : EditorWindow
             };
 
             var poly = new Vector3[4];
-            for (int i = 0; i < 4; i++)
+            for (int p = 0; p < 4; p++)
             {
-                poly[i] = ToScreen(rect, bounds, rectWorld[i]);
+                poly[p] = ToScreen(rect, bounds, rectWorld[p]);
             }
 
             var face = Color.clear; // remove base tint
-            var outline = (_selectedBox >= 0 && _level.boxes[_selectedBox] == box) ? Color.green : Color.white;
+            var outline = (_selectedBox == i) ? Color.green : Color.white;
             Handles.DrawSolidRectangleWithOutline(poly, face, outline);
             Handles.Label(ToScreen(rect, bounds, box.position), $"{box.name} ({box.opening})");
 
@@ -778,7 +934,7 @@ public class LevelEditorWindow : EditorWindow
             }
 
             // Color fill overlay based on actual cell order/counts
-            DrawColorCells(rect, bounds, box);
+            DrawColorCells(rect, bounds, box, i);
 
             // Grid overlay
             int cols = Mathf.Max(1, box.columns);
@@ -815,8 +971,9 @@ public class LevelEditorWindow : EditorWindow
         }
     }
 
-    private void HandlePreviewClick(Rect rect, Rect bounds, List<Vector2> slotPositions)
+    private void HandlePreviewClick(Rect rect, Rect bounds, List<Vector2> slotPositions, LevelLayout layout)
     {
+        if (layout == null) return;
         var e = Event.current;
         if (e.type != EventType.MouseDown || e.button != 0) return;
         if (!rect.Contains(e.mousePosition)) return;
@@ -825,7 +982,7 @@ public class LevelEditorWindow : EditorWindow
         var world = ToWorld(rect, bounds, local);
 
         // point hit first (screen-based threshold)
-        var pointHit = FindConveyorPointAt(local, rect, bounds, out int convIndex, out int pointIndex);
+        var pointHit = FindConveyorPointAt(layout, local, rect, bounds, out int convIndex, out int pointIndex);
         if (pointHit)
         {
             _selectedConveyor = convIndex;
@@ -838,7 +995,7 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
-        int hit = FindBoxAt(world);
+        int hit = FindBoxAt(layout, world);
         if (hit != -1)
         {
             // Eyedropper: Alt+click copies colors from clicked box into current selection (if different),
@@ -862,20 +1019,21 @@ public class LevelEditorWindow : EditorWindow
             if (_level.boxes[hit].colorCounts != null && _level.boxes[hit].colorCounts.Count > 0)
             {
                 // Select color based on clicked cell
-                var box = _level.boxes[hit];
-                var half = box.size * 0.5f;
-                var min = box.position - half;
-                var max = box.position + half;
-                int cols = Mathf.Max(1, box.columns);
-                int rows = Mathf.Max(1, box.rows);
-                var order = BuildCellOrder(cols, rows, box.opening);
+                var boxVisual = layout.boxes[hit];
+                var boxData = _level.boxes[hit];
+                var half = boxVisual.size * 0.5f;
+                var min = boxVisual.position - half;
+                var max = boxVisual.position + half;
+                int cols = Mathf.Max(1, boxData.columns);
+                int rows = Mathf.Max(1, boxData.rows);
+                var order = BuildCellOrder(cols, rows, boxData.opening);
                 int capacity = cols * rows;
                 var colorIdx = new int[capacity];
                 for (int i = 0; i < capacity; i++) colorIdx[i] = -1;
                 int fill = 0;
-                for (int ci = 0; ci < box.colorCounts.Count && fill < capacity; ci++)
+                for (int ci = 0; ci < boxData.colorCounts.Count && fill < capacity; ci++)
                 {
-                    int cnt = Mathf.Max(0, box.colorCounts[ci].count);
+                    int cnt = Mathf.Max(0, boxData.colorCounts[ci].count);
                     for (int k = 0; k < cnt && fill < capacity; k++)
                     {
                         colorIdx[fill++] = ci;
@@ -883,8 +1041,8 @@ public class LevelEditorWindow : EditorWindow
                 }
                 int hitCell = -1;
                 // compute cell indices
-                float cellW = box.size.x / cols;
-                float cellH = box.size.y / rows;
+                float cellW = boxVisual.size.x / cols;
+                float cellH = boxVisual.size.y / rows;
                 for (int i = 0; i < capacity; i++)
                 {
                     var cell = order[i];
@@ -907,7 +1065,7 @@ public class LevelEditorWindow : EditorWindow
                 {
                     _selectedColorIndex = 0;
                 }
-                _lastPaletteColor = (int)box.colorCounts[Mathf.Clamp(_selectedColorIndex, 0, box.colorCounts.Count - 1)].color;
+                _lastPaletteColor = (int)boxData.colorCounts[Mathf.Clamp(_selectedColorIndex, 0, boxData.colorCounts.Count - 1)].color;
                 EnsureColorList(_level.boxes[hit], force: true);
             }
             Repaint();
@@ -915,7 +1073,7 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
-        int conv = FindConveyorAt(rect, bounds, local);
+        int conv = FindConveyorAt(layout, rect, bounds, local);
         if (conv != -1)
         {
             _selectedConveyor = conv;
@@ -933,7 +1091,7 @@ public class LevelEditorWindow : EditorWindow
         Repaint();
     }
 
-    private void DrawColorCells(Rect rect, Rect bounds, BoxSpec box)
+    private void DrawColorCells(Rect rect, Rect bounds, BoxSpec box, int boxIndex)
     {
         if (box.colorCounts == null || box.colorCounts.Count == 0) return;
         int cols = Mathf.Max(1, box.columns);
@@ -979,7 +1137,7 @@ public class LevelEditorWindow : EditorWindow
             Handles.DrawSolidRectangleWithOutline(poly, col, Color.clear);
 
             // highlight selected color
-            if (_selectedBox >= 0 && _selectedBox < _level.boxes.Count && _level.boxes[_selectedBox] == box && _selectedColorIndex == ci)
+            if (_selectedBox == boxIndex && _selectedColorIndex == ci)
             {
                 Handles.color = Color.white;
                 Handles.DrawAAPolyLine(3f, poly);
@@ -1186,12 +1344,12 @@ public class LevelEditorWindow : EditorWindow
         }
     }
 
-    private int FindBoxAt(Vector2 world)
+    private int FindBoxAt(LevelLayout layout, Vector2 world)
     {
-        if (_level == null || _level.boxes == null) return -1;
-        for (int i = 0; i < _level.boxes.Count; i++)
+        if (layout == null || layout.boxes == null) return -1;
+        for (int i = 0; i < layout.boxes.Count; i++)
         {
-            var b = _level.boxes[i];
+            var b = layout.boxes[i];
             var half = b.size * 0.5f;
             var min = b.position - half;
             var max = b.position + half;
@@ -1203,14 +1361,14 @@ public class LevelEditorWindow : EditorWindow
         return -1;
     }
 
-    private int FindConveyorAt(Rect rect, Rect bounds, Vector2 localMouse)
+    private int FindConveyorAt(LevelLayout layout, Rect rect, Rect bounds, Vector2 localMouse)
     {
-        if (_level == null || _level.conveyors == null) return -1;
+        if (layout == null || layout.conveyors == null) return -1;
         int best = -1;
         float bestDist = float.MaxValue;
-        for (int ci = 0; ci < _level.conveyors.Count; ci++)
+        for (int ci = 0; ci < layout.conveyors.Count; ci++)
         {
-            var c = _level.conveyors[ci];
+            var c = layout.conveyors[ci];
             if (c.points == null || c.points.Count < 2) continue;
             float scale = GetScale(rect, bounds);
             float hitWidth = Mathf.Clamp(c.width * scale * 0.35f, 6f, 48f);
@@ -1297,12 +1455,12 @@ public class LevelEditorWindow : EditorWindow
         );
     }
 
-    private List<Vector2> BuildSlotPositionsForPreview(LevelLayout level)
+    private List<Vector2> BuildSlotPositionsForPreview(LevelLayout level, float fallbackSpacing)
     {
         var list = new List<Vector2>();
         if (level.conveyors == null || level.conveyors.Count == 0) return list;
         float used;
-        float spacing = level.beltSlotSpacing > 0 ? level.beltSlotSpacing : 0.6f;
+        float spacing = level.beltSlotSpacing > 0 ? level.beltSlotSpacing : fallbackSpacing;
         var slots = LayoutUtils.BuildSlotsFromPath(
             level.conveyors[0],
             spacing,
@@ -1513,15 +1671,15 @@ public class LevelEditorWindow : EditorWindow
         }
     }
 
-    private bool FindConveyorPointAt(Vector2 localMouse, Rect rect, Rect bounds, out int conveyorIndex, out int pointIndex)
+    private bool FindConveyorPointAt(LevelLayout layout, Vector2 localMouse, Rect rect, Rect bounds, out int conveyorIndex, out int pointIndex)
     {
         conveyorIndex = -1;
         pointIndex = -1;
-        if (_level == null || _level.conveyors == null) return false;
+        if (layout == null || layout.conveyors == null) return false;
         const float screenThreshold = 10f;
-        for (int ci = 0; ci < _level.conveyors.Count; ci++)
+        for (int ci = 0; ci < layout.conveyors.Count; ci++)
         {
-            var c = _level.conveyors[ci];
+            var c = layout.conveyors[ci];
             if (c.points == null) continue;
             for (int pi = 0; pi < c.points.Count; pi++)
             {

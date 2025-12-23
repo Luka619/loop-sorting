@@ -20,6 +20,13 @@ namespace LoopSorting
             clone.cornerSmoothTension = source.cornerSmoothTension;
             clone.cornerSubdivisions = source.cornerSubdivisions;
             clone.blockSize = source.blockSize;
+            clone.overrideLayoutAutoSettings = source.overrideLayoutAutoSettings;
+            clone.autoResolveLayoutOverlap = source.autoResolveLayoutOverlap;
+            clone.minBoxToBeltGap = source.minBoxToBeltGap;
+            clone.preferredBoxToBeltGap = source.preferredBoxToBeltGap;
+            clone.overlapResolveIterations = source.overlapResolveIterations;
+            clone.cameraMaxOrthoSize = source.cameraMaxOrthoSize;
+            clone.minBlockPixelSize = source.minBlockPixelSize;
 
             if (source.conveyors != null)
             {
@@ -155,6 +162,7 @@ namespace LoopSorting
         public static int ResolveBoxBeltOverlap(
             LevelLayout layout,
             float minGap,
+            float preferredGap,
             float fallbackSpacing,
             int iterations = 3,
             float sampleSpacingFactor = 0.5f)
@@ -164,7 +172,14 @@ namespace LoopSorting
                 return 0;
             }
 
-            if (minGap <= 0f)
+            minGap = Mathf.Max(0f, minGap);
+            preferredGap = Mathf.Max(0f, preferredGap);
+            if (preferredGap > 0f && preferredGap < minGap)
+            {
+                preferredGap = minGap;
+            }
+
+            if (minGap <= 0f && preferredGap <= 0f)
             {
                 return 0;
             }
@@ -235,12 +250,7 @@ namespace LoopSorting
                     }
 
                     float bestDist = Mathf.Sqrt(bestDistSq);
-                    float target = beltHalf + minGap;
-                    if (bestDist >= target)
-                    {
-                        continue;
-                    }
-
+                    float clearance = bestDist - beltHalf;
                     var dir = bestOnRect - bestPoint;
                     if (dir.sqrMagnitude < 0.000001f)
                     {
@@ -252,10 +262,20 @@ namespace LoopSorting
                     }
 
                     dir.Normalize();
-                    float push = target - bestDist;
-                    spec.position += dir * push;
-                    movedThisIter = true;
-                    moved++;
+                    if (clearance < minGap)
+                    {
+                        float push = minGap - clearance;
+                        spec.position += dir * push;
+                        movedThisIter = true;
+                        moved++;
+                    }
+                    else if (preferredGap > 0f && clearance > preferredGap)
+                    {
+                        float pull = clearance - preferredGap;
+                        spec.position -= dir * pull;
+                        movedThisIter = true;
+                        moved++;
+                    }
                 }
 
                 if (!movedThisIter)

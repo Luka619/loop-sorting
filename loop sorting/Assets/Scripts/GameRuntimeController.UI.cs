@@ -309,17 +309,19 @@ namespace LoopSorting
                 Debug.LogError("GameRuntimeController.Build: layout is null");
                 return;
             }
-            var runtimeLayout = layout;
-            if (autoResolveLayoutOverlap && minBoxToBeltGap > 0f)
+
+            bool layoutWasRuntimeClone = layout == _runtimeLayoutInstance;
+            if (layoutWasRuntimeClone && _currentLayoutSource != null)
             {
-                runtimeLayout = LayoutUtils.CloneLayout(layout);
-                LayoutUtils.ResolveBoxBeltOverlap(
-                    runtimeLayout,
-                    minBoxToBeltGap,
-                    beltSlotSpacing,
-                    overlapResolveIterations);
+                layout = _currentLayoutSource;
+                layoutWasRuntimeClone = false;
             }
-            _runtimeLayoutInstance = runtimeLayout != layout ? runtimeLayout : null;
+            else if (layoutWasRuntimeClone && _currentLayoutSource == null)
+            {
+                _runtimeLayoutInstance = null;
+            }
+            _currentLayoutSource = layout;
+
             // Reset root transform to avoid inherited offsets/scale from scene.
             transform.position = Vector3.zero;
             transform.rotation = Quaternion.identity;
@@ -327,6 +329,29 @@ namespace LoopSorting
 
             // Full cleanup before building next level.
             ClearRuntime();
+
+            bool overrideLayout = layout.overrideLayoutAutoSettings;
+            bool effectiveAutoResolve = overrideLayout ? layout.autoResolveLayoutOverlap : autoResolveLayoutOverlap;
+            float effectiveMinGap = overrideLayout ? layout.minBoxToBeltGap : minBoxToBeltGap;
+            float effectivePreferredGap = overrideLayout ? layout.preferredBoxToBeltGap : preferredBoxToBeltGap;
+            int effectiveIterations = overrideLayout ? layout.overlapResolveIterations : overlapResolveIterations;
+            if (layoutWasRuntimeClone)
+            {
+                effectiveAutoResolve = false;
+            }
+
+            var runtimeLayout = layout;
+            if (effectiveAutoResolve && (effectiveMinGap > 0f || effectivePreferredGap > 0f))
+            {
+                runtimeLayout = LayoutUtils.CloneLayout(layout);
+                LayoutUtils.ResolveBoxBeltOverlap(
+                    runtimeLayout,
+                    effectiveMinGap,
+                    effectivePreferredGap,
+                    beltSlotSpacing,
+                    effectiveIterations);
+            }
+            _runtimeLayoutInstance = runtimeLayout != layout ? runtimeLayout : null;
 
             _beltCapacity = layout.beltCapacity > 0 ? layout.beltCapacity : beltBlockLimit;
             EnsureEventSystem();
@@ -1365,6 +1390,10 @@ namespace LoopSorting
             }
             bounds.Expand(paddingToUse * 2f);
 
+            bool overrideLayout = layout != null && layout.overrideLayoutAutoSettings;
+            float effectiveMinBlockPixel = overrideLayout ? layout.minBlockPixelSize : minBlockPixelSize;
+            float effectiveCameraMaxOrtho = overrideLayout ? layout.cameraMaxOrthoSize : cameraMaxOrthoSize;
+
             cam.orthographic = true;
             float width = bounds.size.x;
             float height = bounds.size.y;
@@ -1385,18 +1414,18 @@ namespace LoopSorting
 
             // Expand ortho size so the level fits into the remaining viewport area.
             orthoSize = orthoSize / available;
-            if (minBlockPixelSize > 0f)
+            if (effectiveMinBlockPixel > 0f)
             {
                 float unit = layout != null && layout.blockSize > 0f ? layout.blockSize : blockVisualSize.x;
-                float maxOrtho = unit * Screen.height / (2f * minBlockPixelSize);
+                float maxOrtho = unit * Screen.height / (2f * effectiveMinBlockPixel);
                 if (maxOrtho > 0.0001f)
                 {
                     orthoSize = Mathf.Min(orthoSize, maxOrtho);
                 }
             }
-            if (cameraMaxOrthoSize > 0f)
+            if (effectiveCameraMaxOrtho > 0f)
             {
-                orthoSize = Mathf.Min(orthoSize, cameraMaxOrthoSize);
+                orthoSize = Mathf.Min(orthoSize, effectiveCameraMaxOrtho);
             }
             cam.orthographicSize = orthoSize;
 
@@ -1495,6 +1524,12 @@ namespace LoopSorting
         }
     }
 }
+
+
+
+
+
+
 
 
 

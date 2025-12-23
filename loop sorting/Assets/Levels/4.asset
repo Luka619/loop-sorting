@@ -11,13 +11,20 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 4
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   beltCapacity: 50
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1
   cornerSubdivisions: 10
   blockSize: 0.3
+  overrideLayoutAutoSettings: 0
+  autoResolveLayoutOverlap: 1
+  minBoxToBeltGap: 0.08
+  preferredBoxToBeltGap: 0.18
+  overlapResolveIterations: 3
+  cameraMaxOrthoSize: 0
+  minBlockPixelSize: 0
   conveyors:
   - name: Conveyor
     points:
@@ -31,8 +38,8 @@ MonoBehaviour:
     width: 20
   boxes:
   - name: Box 1
-    position: {x: 1.5, y: 0.5}
-    size: {x: 0.9, y: 2.4}
+    position: {x: 1.5, y: -0.5}
+    size: {x: 0.90000004, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 8
@@ -48,13 +55,13 @@ MonoBehaviour:
     - color: 0
       count: 9
       hidden: 0
-    initialBlocks:
+    initialBlocks: 
     beltSlotIndex: 17
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 3, y: 1.5}
-    size: {x: 0.9, y: 2.4}
+    position: {x: 3, y: 3}
+    size: {x: 0.90000004, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
     rows: 8
@@ -70,20 +77,20 @@ MonoBehaviour:
     - color: 2
       count: 12
       hidden: 0
-    initialBlocks:
+    initialBlocks: 
     beltSlotIndex: 41
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: 2, y: 7.5}
-    size: {x: 0.9, y: 2.4}
+    position: {x: 2, y: 6}
+    size: {x: 0.90000004, y: 2.4}
     color: {r: 1, g: 1, b: 1, a: 1}
     columns: 3
     rows: 8
     opening: 3
     autoAlignSlot: 1
-    colorCounts:
-    initialBlocks:
+    colorCounts: []
+    initialBlocks: 
     beltSlotIndex: 44
     locked: 0
     unlockColor: 0

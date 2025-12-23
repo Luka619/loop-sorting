@@ -18,6 +18,13 @@ MonoBehaviour:
   cornerSmoothTension: 1
   cornerSubdivisions: 10
   blockSize: 0.3
+  overrideLayoutAutoSettings: 1
+  autoResolveLayoutOverlap: 1
+  minBoxToBeltGap: 0.08
+  preferredBoxToBeltGap: 0.18
+  overlapResolveIterations: 3
+  cameraMaxOrthoSize: 6.77
+  minBlockPixelSize: 0
   conveyors:
   - name: Conveyor
     points:

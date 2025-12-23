@@ -2048,8 +2048,61 @@ public class LevelEditorWindow : EditorWindow
             return;
         }
 
+        if (TryFindFlowForLevel(_level, out var flow, out var index))
+        {
+            ctrl.Build(flow, index);
+            Debug.Log($"Jumped to level {_level.name} in flow {flow.name} (index {index}).");
+            return;
+        }
+
         ctrl.Build(_level);
-        Debug.Log($"Jumped to current level at runtime: {_level.name}");
+        Debug.Log($"Jumped to current level at runtime: {_level.name} (no flow found).");
+    }
+
+    private bool TryFindFlowForLevel(LevelLayout level, out LevelFlow flow, out int index)
+    {
+        flow = null;
+        index = -1;
+        if (level == null) return false;
+
+        if (_flowAsset != null && _flowAsset.levels != null)
+        {
+            index = _flowAsset.levels.IndexOf(level);
+            if (index >= 0)
+            {
+                flow = _flowAsset;
+                return true;
+            }
+        }
+
+        var configPath = $"{RuntimeConfigResourcesFolder}/LevelRuntimeConfig.asset";
+        var config = AssetDatabase.LoadAssetAtPath<LevelRuntimeConfig>(configPath);
+        if (config != null && config.activeFlow != null && config.activeFlow.levels != null)
+        {
+            index = config.activeFlow.levels.IndexOf(level);
+            if (index >= 0)
+            {
+                flow = config.activeFlow;
+                return true;
+            }
+        }
+
+        var guids = AssetDatabase.FindAssets("t:LevelFlow", new[] { FlowsFolder });
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var candidate = AssetDatabase.LoadAssetAtPath<LevelFlow>(path);
+            if (candidate == null || candidate.levels == null) continue;
+            index = candidate.levels.IndexOf(level);
+            if (index >= 0)
+            {
+                flow = candidate;
+                return true;
+            }
+        }
+
+        index = -1;
+        return false;
     }
 
     private void OnSceneGUI(SceneView view)

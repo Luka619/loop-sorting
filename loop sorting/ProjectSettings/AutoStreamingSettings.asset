@@ -329,7 +329,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 0
+    maxPlaceholderSize: 196640
     width: 256
     height: 256
     abSize: 0
@@ -365,7 +365,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-    maxPlaceholderSize: 0
+    maxPlaceholderSize: 196640
     width: 256
     height: 256
     abSize: 0
@@ -5609,16 +5609,16 @@ AutoStreamingSettings:
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Studs.asset:Brick2x2Rounded_Studs
+    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Base.asset:Brick2x2Rounded_Base
     localFileId: 4300000
-    rtMem: 34048
+    rtMem: 27040
     warningFlag: 1
     refs:
     - res
   - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Base.asset:Brick2x2Rounded_Base
+    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Studs.asset:Brick2x2Rounded_Studs
     localFileId: 4300000
-    rtMem: 27040
+    rtMem: 34048
     warningFlag: 1
     refs:
     - res

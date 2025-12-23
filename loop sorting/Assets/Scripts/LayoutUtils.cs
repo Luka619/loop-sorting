@@ -9,6 +9,96 @@ namespace LoopSorting
     /// </summary>
     public static class LayoutUtils
     {
+        public static LevelLayout CloneLayout(LevelLayout source)
+        {
+            if (source == null) return null;
+
+            var clone = ScriptableObject.CreateInstance<LevelLayout>();
+            clone.beltCapacity = source.beltCapacity;
+            clone.beltSlotSpacing = source.beltSlotSpacing;
+            clone.smoothCorners = source.smoothCorners;
+            clone.cornerSmoothTension = source.cornerSmoothTension;
+            clone.cornerSubdivisions = source.cornerSubdivisions;
+            clone.blockSize = source.blockSize;
+
+            if (source.conveyors != null)
+            {
+                clone.conveyors = new List<ConveyorPath>(source.conveyors.Count);
+                for (int i = 0; i < source.conveyors.Count; i++)
+                {
+                    var c = source.conveyors[i];
+                    if (c == null)
+                    {
+                        clone.conveyors.Add(null);
+                        continue;
+                    }
+
+                    clone.conveyors.Add(new ConveyorPath
+                    {
+                        name = c.name,
+                        loop = c.loop,
+                        width = c.width,
+                        points = c.points != null ? new List<Vector2>(c.points) : new List<Vector2>()
+                    });
+                }
+            }
+
+            if (source.boxes != null)
+            {
+                clone.boxes = new List<BoxSpec>(source.boxes.Count);
+                for (int i = 0; i < source.boxes.Count; i++)
+                {
+                    var b = source.boxes[i];
+                    if (b == null)
+                    {
+                        clone.boxes.Add(null);
+                        continue;
+                    }
+
+                    var spec = new BoxSpec
+                    {
+                        name = b.name,
+                        position = b.position,
+                        size = b.size,
+                        color = b.color,
+                        columns = b.columns,
+                        rows = b.rows,
+                        opening = b.opening,
+                        autoAlignSlot = b.autoAlignSlot,
+                        beltSlotIndex = b.beltSlotIndex,
+                        locked = b.locked,
+                        unlockColor = b.unlockColor,
+                        colorCounts = new List<ColorCount>(),
+                        initialBlocks = new List<BlockColor>()
+                    };
+
+                    if (b.colorCounts != null)
+                    {
+                        for (int cc = 0; cc < b.colorCounts.Count; cc++)
+                        {
+                            var entry = b.colorCounts[cc];
+                            if (entry == null) continue;
+                            spec.colorCounts.Add(new ColorCount
+                            {
+                                color = entry.color,
+                                count = entry.count,
+                                hidden = entry.hidden
+                            });
+                        }
+                    }
+
+                    if (b.initialBlocks != null)
+                    {
+                        spec.initialBlocks.AddRange(b.initialBlocks);
+                    }
+
+                    clone.boxes.Add(spec);
+                }
+            }
+
+            return clone;
+        }
+
         public sealed class BeltPathCache
         {
             public bool Loop { get; set; }
@@ -60,6 +150,121 @@ namespace LoopSorting
             var center = (min + max) * 0.5f;
             var boundsSize = max - min;
             return new Bounds(new Vector3(center.x, center.y, 0f), new Vector3(boundsSize.x, boundsSize.y, 0f));
+        }
+
+        public static int ResolveBoxBeltOverlap(
+            LevelLayout layout,
+            float minGap,
+            float fallbackSpacing,
+            int iterations = 3,
+            float sampleSpacingFactor = 0.5f)
+        {
+            if (layout == null || layout.boxes == null || layout.boxes.Count == 0)
+            {
+                return 0;
+            }
+
+            if (minGap <= 0f)
+            {
+                return 0;
+            }
+
+            ConveyorPath path = null;
+            if (layout.conveyors != null)
+            {
+                for (int i = 0; i < layout.conveyors.Count; i++)
+                {
+                    var candidate = layout.conveyors[i];
+                    if (candidate != null && candidate.points != null && candidate.points.Count >= 2)
+                    {
+                        path = candidate;
+                        break;
+                    }
+                }
+            }
+            if (path == null)
+            {
+                return 0;
+            }
+
+            float spacing = layout.beltSlotSpacing > 0f ? layout.beltSlotSpacing : fallbackSpacing;
+            float beltWidth = Mathf.Clamp(path.width, spacing * 0.8f, spacing * 1.6f);
+            float beltHalf = beltWidth * 0.5f;
+            float unit = layout.blockSize > 0 ? layout.blockSize : 0.6f;
+
+            var samplePoints = BuildSamplePoints(path, spacing, layout.smoothCorners, layout.cornerSmoothTension, layout.cornerSubdivisions, sampleSpacingFactor);
+            if (samplePoints.Count == 0)
+            {
+                return 0;
+            }
+
+            iterations = Mathf.Clamp(iterations, 1, 8);
+            int moved = 0;
+
+            for (int iter = 0; iter < iterations; iter++)
+            {
+                bool movedThisIter = false;
+                for (int i = 0; i < layout.boxes.Count; i++)
+                {
+                    var spec = layout.boxes[i];
+                    if (spec == null) continue;
+
+                    var size = ComputeBoxSize(spec, unit);
+                    var half = size * 0.5f;
+                    var rectMin = spec.position - half;
+                    var rectMax = spec.position + half;
+
+                    float bestDistSq = float.MaxValue;
+                    Vector2 bestPoint = Vector2.zero;
+                    Vector2 bestOnRect = Vector2.zero;
+
+                    for (int p = 0; p < samplePoints.Count; p++)
+                    {
+                        var pt = samplePoints[p];
+                        var onRect = new Vector2(
+                            Mathf.Clamp(pt.x, rectMin.x, rectMax.x),
+                            Mathf.Clamp(pt.y, rectMin.y, rectMax.y));
+                        var delta = pt - onRect;
+                        float dSq = delta.sqrMagnitude;
+                        if (dSq < bestDistSq)
+                        {
+                            bestDistSq = dSq;
+                            bestPoint = pt;
+                            bestOnRect = onRect;
+                        }
+                    }
+
+                    float bestDist = Mathf.Sqrt(bestDistSq);
+                    float target = beltHalf + minGap;
+                    if (bestDist >= target)
+                    {
+                        continue;
+                    }
+
+                    var dir = bestOnRect - bestPoint;
+                    if (dir.sqrMagnitude < 0.000001f)
+                    {
+                        dir = spec.position - bestPoint;
+                    }
+                    if (dir.sqrMagnitude < 0.000001f)
+                    {
+                        dir = Vector2.up;
+                    }
+
+                    dir.Normalize();
+                    float push = target - bestDist;
+                    spec.position += dir * push;
+                    movedThisIter = true;
+                    moved++;
+                }
+
+                if (!movedThisIter)
+                {
+                    break;
+                }
+            }
+
+            return moved;
         }
 
         public static List<Transform> BuildSlotsFromPath(
@@ -317,6 +522,69 @@ namespace LoopSorting
                     samples.Add(Vector2.Lerp(pIn, pOut, t));
                 }
                 samples.Add(pOut);
+            }
+
+            return samples;
+        }
+
+        private static List<Vector2> BuildSamplePoints(
+            ConveyorPath path,
+            float desiredSpacing,
+            bool smoothCorners,
+            float smoothTension,
+            int smoothSubdivisions,
+            float spacingFactor)
+        {
+            var samples = new List<Vector2>();
+            if (path == null || path.points == null || path.points.Count < 2)
+            {
+                return samples;
+            }
+
+            bool loop = path.loop;
+            var basePoints = new List<Vector2>(path.points);
+            if (loop && basePoints.Count > 1 && (basePoints[0] - basePoints[basePoints.Count - 1]).sqrMagnitude < 0.0001f)
+            {
+                basePoints.RemoveAt(basePoints.Count - 1);
+            }
+
+            var smoothPoints = smoothCorners
+                ? (loop
+                    ? BuildRoundedPathLoop(basePoints, desiredSpacing, smoothTension, smoothSubdivisions)
+                    : BuildRoundedPath(basePoints, desiredSpacing, smoothTension, smoothSubdivisions))
+                : new List<Vector2>(basePoints);
+
+            if (smoothPoints.Count < 2)
+            {
+                return samples;
+            }
+
+            if (loop && smoothPoints.Count > 1 &&
+                (smoothPoints[0] - smoothPoints[smoothPoints.Count - 1]).sqrMagnitude < 0.0001f)
+            {
+                smoothPoints.RemoveAt(smoothPoints.Count - 1);
+            }
+
+            var evalPoints = loop
+                ? new List<Vector2>(smoothPoints) { smoothPoints[0] }
+                : smoothPoints;
+
+            float step = Mathf.Max(0.05f, desiredSpacing * Mathf.Clamp(spacingFactor, 0.1f, 1f));
+            for (int i = 0; i < evalPoints.Count - 1; i++)
+            {
+                var a = evalPoints[i];
+                var b = evalPoints[i + 1];
+                float seg = Vector2.Distance(a, b);
+                int steps = Mathf.Max(1, Mathf.CeilToInt(seg / step));
+                if (samples.Count == 0)
+                {
+                    samples.Add(a);
+                }
+                for (int s = 1; s <= steps; s++)
+                {
+                    float t = s / (float)steps;
+                    samples.Add(Vector2.Lerp(a, b, t));
+                }
             }
 
             return samples;

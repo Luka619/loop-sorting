@@ -220,6 +220,12 @@ namespace LoopSorting
             // Stop coroutines
             StopAllCoroutines();
 
+            if (_runtimeLayoutInstance != null)
+            {
+                DestroyImmediate(_runtimeLayoutInstance);
+                _runtimeLayoutInstance = null;
+            }
+
             // Clear HUD runtime overlays that are level-specific but live under a persistent HUD canvas.
             if (_uiCanvas != null)
             {
@@ -298,13 +304,22 @@ namespace LoopSorting
                 _flow = null;
                 _flowIndex = 0;
             }
-            _currentLayout = layout;
             if (layout == null)
             {
                 Debug.LogError("GameRuntimeController.Build: layout is null");
                 return;
             }
-
+            var runtimeLayout = layout;
+            if (autoResolveLayoutOverlap && minBoxToBeltGap > 0f)
+            {
+                runtimeLayout = LayoutUtils.CloneLayout(layout);
+                LayoutUtils.ResolveBoxBeltOverlap(
+                    runtimeLayout,
+                    minBoxToBeltGap,
+                    beltSlotSpacing,
+                    overlapResolveIterations);
+            }
+            _runtimeLayoutInstance = runtimeLayout != layout ? runtimeLayout : null;
             // Reset root transform to avoid inherited offsets/scale from scene.
             transform.position = Vector3.zero;
             transform.rotation = Quaternion.identity;
@@ -320,11 +335,11 @@ namespace LoopSorting
             PlaySfx(SfxId.LevelStart);
             _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
 
-            BuildConveyor(layout);
-            BuildContainers(layout);
-            _currentLayout = layout;
-            _levelBounds = LayoutUtils.ComputeLayoutBounds(layout);
-            FitCameraToLevel(layout);
+            BuildConveyor(runtimeLayout);
+            BuildContainers(runtimeLayout);
+            _currentLayout = runtimeLayout;
+            _levelBounds = LayoutUtils.ComputeLayoutBounds(runtimeLayout);
+            FitCameraToLevel(runtimeLayout);
             EnsureBackground();
             EnsureCounterUI();
             RefreshLevelHudLabel();
@@ -1370,6 +1385,19 @@ namespace LoopSorting
 
             // Expand ortho size so the level fits into the remaining viewport area.
             orthoSize = orthoSize / available;
+            if (minBlockPixelSize > 0f)
+            {
+                float unit = layout != null && layout.blockSize > 0f ? layout.blockSize : blockVisualSize.x;
+                float maxOrtho = unit * Screen.height / (2f * minBlockPixelSize);
+                if (maxOrtho > 0.0001f)
+                {
+                    orthoSize = Mathf.Min(orthoSize, maxOrtho);
+                }
+            }
+            if (cameraMaxOrthoSize > 0f)
+            {
+                orthoSize = Mathf.Min(orthoSize, cameraMaxOrthoSize);
+            }
             cam.orthographicSize = orthoSize;
 
             // Shift camera so bounds center sits in the middle of the available region.
@@ -1467,6 +1495,11 @@ namespace LoopSorting
         }
     }
 }
+
+
+
+
+
 
 
 

@@ -28,6 +28,18 @@ namespace LoopSorting
         public float cameraReservedTop = 0.08f;
         [Tooltip("Reserve a fraction of vertical viewport for bottom UI when framing the level (0..0.55).")]
         public float cameraReservedBottom = 0.12f;
+        [Header("Layout Auto Fix")]
+        [Tooltip("Auto push boxes away from the belt when they overlap or get too close.")]
+        public bool autoResolveLayoutOverlap = true;
+        [Tooltip("Minimum gap between box bounds and the belt ribbon (world units).")]
+        public float minBoxToBeltGap = 0.08f;
+        [Range(1, 8)]
+        public int overlapResolveIterations = 3;
+        [Header("Camera Clamp")]
+        [Tooltip("Clamp the max orthographic size so oversized layouts don't look too small (0 = disabled).")]
+        public float cameraMaxOrthoSize = 0f;
+        [Tooltip("Minimum on-screen pixel size for a single block (0 = disabled). May crop very large layouts.")]
+        public float minBlockPixelSize = 0f;
         [Tooltip("Visual size of each block in box grid.")]
         public Vector2 blockVisualSize = new Vector2(0.45f, 0.45f);
         [Tooltip("Max blocks / slots on the conveyor (default 50). If layout sets beltCapacity > 0, it overrides this.")]
@@ -127,6 +139,7 @@ namespace LoopSorting
         private LevelFlow _flow;
         private int _flowIndex;
         private LevelLayout _currentLayout;
+        private LevelLayout _runtimeLayoutInstance;
         private bool _gameOver;
         private Coroutine _endSequenceRoutine;
         private const float WinEndSequenceDelaySeconds = 0.75f;

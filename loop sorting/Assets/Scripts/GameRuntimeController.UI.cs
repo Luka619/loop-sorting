@@ -219,6 +219,7 @@ namespace LoopSorting
         {
             // Stop coroutines
             StopAllCoroutines();
+            ResetTutorial();
 
             if (_runtimeLayoutInstance != null)
             {
@@ -384,6 +385,7 @@ namespace LoopSorting
             FitCameraToLevel(runtimeLayout);
             EnsureBackground();
             EnsureCounterUI();
+            SetupTutorial(layout);
             RefreshLevelHudLabel();
             if (_uiCanvas != null) _uiCanvas.gameObject.SetActive(true);
             SettingsUi.EnsureBuilt();
@@ -1549,6 +1551,8 @@ namespace LoopSorting
         }
     }
 }
+
+
 
 
 

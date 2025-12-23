@@ -1322,6 +1322,7 @@ namespace LoopSorting
                 return;
             }
 
+            UpdateTutorial();
             UpdateConveyorLoopSfx();
             if (_gameOver)
             {
@@ -1816,6 +1817,13 @@ namespace LoopSorting
                 return;
             }
 
+            if (!IsTutorialClickAllowed(containerIndex))
+            {
+                PlaySfx(SfxId.UiDenied);
+                if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayDeniedFeedback();
+                return;
+            }
+
             var container = _game.Containers[containerIndex];
             if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex])
             {
@@ -1850,6 +1858,7 @@ namespace LoopSorting
                 _boxViews[containerIndex].ShowFrontOutline(pending, true);
             }
 
+            NotifyTutorialContainerClicked(containerIndex);
             StartCoroutine(ReleaseRoutine(containerIndex, first.Color));
         }
 

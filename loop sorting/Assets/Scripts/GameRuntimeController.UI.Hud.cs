@@ -34,6 +34,10 @@ namespace LoopSorting
                 _hudRootRect = null;
                 _lockChipLayer = null;
                 _lockChipByBox.Clear();
+                _tutorialLayer = null;
+                _tutorialBubble = null;
+                _tutorialText = null;
+                _tutorialBubbleBg = null;
             }
 
             beltCounterUI = null;
@@ -706,5 +710,6 @@ namespace LoopSorting
 
     }
 }
+
 
 

@@ -32,6 +32,11 @@ namespace LoopSorting
                 yield return new WaitForSeconds(delaySeconds);
             }
 
+            if (win)
+            {
+                yield return StartCoroutine(PlayWinCelebration());
+            }
+
             ShowResult(win);
             _endSequenceRoutine = null;
         }

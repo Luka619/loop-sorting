@@ -267,6 +267,9 @@ namespace LoopSorting
 	            _fullBeltStepsRemaining = 0;
             _beltSpawnAnimating.Clear();
             _beltSpawnCoroutines.Clear();
+            _beltFrozenPositions.Clear();
+            _beltWaitingIndices.Clear();
+            _beltFrozenRemove.Clear();
             _conveyorBelt = null;
             _conveyorTickSfxCountdown = 0;
 
@@ -1450,10 +1453,10 @@ namespace LoopSorting
                 yield return new WaitForSeconds(releaseInterval / Mathf.Max(0.0001f, _speedMultiplier));
                 safety++;
             }
-
             PlaySfx(SfxId.RunShipEnd);
             _isReleasing = false;
             _activeReleasePort = null;
+            ClearBeltWaitingState();
             container.SetBusy(false);
             if (containerIndex < _boxViews.Count)
             {
@@ -1464,6 +1467,8 @@ namespace LoopSorting
         }
     }
 }
+
+
 
 
 

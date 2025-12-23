@@ -124,16 +124,67 @@ namespace LoopSorting
 
         public void Advance(int? blockedPort, List<ConveyorPortEvent> events)
         {
-            _ = blockedPort;
-
-            // Always advance as a single rotation so gaps move with the belt
-            // and relative order stays stable (prevents "jumping" seams).
-            var last = _slots[_slots.Length - 1];
-            for (int i = _slots.Length - 1; i >= 1; i--)
+            if (blockedPort.HasValue)
             {
-                _slots[i] = _slots[i - 1];
+                int blockIndex = blockedPort.Value;
+                ValidateIndex(blockIndex);
+
+                bool hasEmpty = false;
+                for (int i = 0; i < _slots.Length; i++)
+                {
+                    if (!_slots[i].HasValue)
+                    {
+                        hasEmpty = true;
+                        break;
+                    }
+                }
+
+                if (!hasEmpty)
+                {
+                    // Full belt: still rotate to honor the "always moving" rule.
+                    var last = _slots[_slots.Length - 1];
+                    for (int i = _slots.Length - 1; i >= 1; i--)
+                    {
+                        _slots[i] = _slots[i - 1];
+                    }
+                    _slots[0] = last;
+                }
+                else
+                {
+                    // Move belt contents forward, but keep the blocked port empty (reserve for release).
+                    for (int i = _slots.Length - 1; i >= 0; i--)
+                    {
+                        if (!_slots[i].HasValue)
+                        {
+                            continue;
+                        }
+
+                        int next = (i + 1) % _slots.Length;
+                        if (next == blockIndex)
+                        {
+                            continue;
+                        }
+
+                        if (_slots[next].HasValue)
+                        {
+                            continue;
+                        }
+
+                        _slots[next] = _slots[i];
+                        _slots[i] = null;
+                    }
+                }
             }
-            _slots[0] = last;
+            else
+            {
+                // Normal advance: single rotation keeps relative order stable.
+                var last = _slots[_slots.Length - 1];
+                for (int i = _slots.Length - 1; i >= 1; i--)
+                {
+                    _slots[i] = _slots[i - 1];
+                }
+                _slots[0] = last;
+            }
 
             // Try to drop blocks into connected containers after movement.
             foreach (var port in _ports)

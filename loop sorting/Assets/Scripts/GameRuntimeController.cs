@@ -198,6 +198,9 @@ namespace LoopSorting
 
         private readonly HashSet<int> _beltSpawnAnimating = new HashSet<int>();
         private readonly Dictionary<int, Coroutine> _beltSpawnCoroutines = new Dictionary<int, Coroutine>();
+        private readonly Dictionary<int, Vector3> _beltFrozenPositions = new Dictionary<int, Vector3>();
+        private readonly HashSet<int> _beltWaitingIndices = new HashSet<int>();
+        private readonly List<int> _beltFrozenRemove = new List<int>();
 
         private void EnsureStateMachine()
         {
@@ -610,12 +613,13 @@ namespace LoopSorting
             }
 
             int portIdx = _activeReleasePort.Value;
-            var slot = _game.Conveyor.GetSlot(portIdx);
-            // Reserve the port only when it's empty so releases stay continuous
-            // without forcing a moving gap through the belt.
-            if (!slot.HasValue) return portIdx;
+            if (portIdx < 0 || portIdx >= _game.Conveyor.Length)
+            {
+                return null;
+            }
 
-            return null;
+            // Reserve the port for release so the queued blocks behind it wait.
+            return portIdx;
         }
 
 	        public void OnHiddenReveal(int containerIndex, BlockColor revealColor)
@@ -2761,8 +2765,11 @@ namespace LoopSorting
         {
             if (_beltBlockVisuals.Count == 0 || _slotCurrentPositions.Count == 0)
             {
+                ClearBeltWaitingState();
                 return;
             }
+
+            RefreshBeltWaitingState();
 
             foreach (var kv in _beltBlockVisuals)
             {
@@ -2772,9 +2779,94 @@ namespace LoopSorting
                 if (idx < 0 || idx >= _slotCurrentPositions.Count) continue;
                 if (_beltSpawnAnimating.Contains(idx)) continue;
 
+                if (_beltFrozenPositions.TryGetValue(idx, out var frozen))
+                {
+                    go.transform.position = frozen;
+                    continue;
+                }
+
                 var pos = _slotCurrentPositions[idx] + GetBeltBlockOffset(idx) + new Vector3(0f, 0f, beltBlockZOffset);
                 go.transform.position = pos;
             }
+        }
+
+        private void RefreshBeltWaitingState()
+        {
+            if (!_isReleasing || !_activeReleasePort.HasValue || _game == null)
+            {
+                ClearBeltWaitingState();
+                return;
+            }
+
+            int portIdx = _activeReleasePort.Value;
+            if (portIdx < 0 || portIdx >= _game.Conveyor.Length)
+            {
+                ClearBeltWaitingState();
+                return;
+            }
+
+            bool hasEmpty = false;
+            for (int i = 0; i < _game.Conveyor.Length; i++)
+            {
+                if (!_game.Conveyor.GetSlot(i).HasValue)
+                {
+                    hasEmpty = true;
+                    break;
+                }
+            }
+            if (!hasEmpty)
+            {
+                // Full belt keeps moving; don't freeze visuals.
+                ClearBeltWaitingState();
+                return;
+            }
+
+            _beltWaitingIndices.Clear();
+            int count = _game.Conveyor.Length;
+            int idx = (portIdx - 1 + count) % count;
+            while (idx != portIdx)
+            {
+                if (!_game.Conveyor.GetSlot(idx).HasValue)
+                {
+                    break;
+                }
+
+                if (!_beltSpawnAnimating.Contains(idx))
+                {
+                    _beltWaitingIndices.Add(idx);
+                }
+
+                idx = (idx - 1 + count) % count;
+            }
+
+            _beltFrozenRemove.Clear();
+            foreach (var kv in _beltFrozenPositions)
+            {
+                if (!_beltWaitingIndices.Contains(kv.Key))
+                {
+                    _beltFrozenRemove.Add(kv.Key);
+                }
+            }
+            for (int i = 0; i < _beltFrozenRemove.Count; i++)
+            {
+                _beltFrozenPositions.Remove(_beltFrozenRemove[i]);
+            }
+
+            foreach (var waitIdx in _beltWaitingIndices)
+            {
+                if (_beltFrozenPositions.ContainsKey(waitIdx)) continue;
+                if (_beltBlockVisuals.TryGetValue(waitIdx, out var go) && go != null)
+                {
+                    _beltFrozenPositions[waitIdx] = go.transform.position;
+                }
+            }
+        }
+
+        private void ClearBeltWaitingState()
+        {
+            if (_beltFrozenPositions.Count > 0) _beltFrozenPositions.Clear();
+            if (_beltWaitingIndices.Count > 0) _beltWaitingIndices.Clear();
+            if (_beltFrozenRemove.Count > 0) _beltFrozenRemove.Clear();
         }
 
         private void EnsureBlockVisual(int index, Block block)

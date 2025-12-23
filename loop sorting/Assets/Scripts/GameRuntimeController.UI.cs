@@ -1426,6 +1426,14 @@ namespace LoopSorting
             bool hasLayout = LoopSortingUIKit.TryGetRuntimeLayout(out var uiLayout);
             float top = Mathf.Clamp01(hasLayout ? uiLayout.reservedTop : cameraReservedTop);
             float bottom = Mathf.Clamp01(hasLayout ? uiLayout.reservedBottom : cameraReservedBottom);
+            if (Screen.height > 0)
+            {
+                Rect safeArea = Screen.safeArea;
+                float safeTop = (Screen.height - safeArea.yMax) / Screen.height;
+                float safeBottom = safeArea.yMin / Screen.height;
+                top = Mathf.Clamp01(top + Mathf.Max(0f, safeTop));
+                bottom = Mathf.Clamp01(bottom + Mathf.Max(0f, safeBottom));
+            }
             float available = Mathf.Clamp01(1f - top - bottom);
             if (available < 0.35f) available = 0.35f;
 
@@ -1541,6 +1549,8 @@ namespace LoopSorting
         }
     }
 }
+
+
 
 
 

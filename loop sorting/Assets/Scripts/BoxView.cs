@@ -513,12 +513,61 @@ namespace LoopSorting
             // Decouple visuals from layout:
             // - Blocks always align to a computed "content rect"
             // - Box rim/cavity visuals use the same metrics, without relying on 9-slice borders.
+            if (_box3D != null && _box3DCavityRenderer != null && TryGetCavityLocalRect(out var cavityRect))
+            {
+                return cavityRect;
+            }
+
             if (!_hasBoxFrame)
             {
                 return new Rect(-_boxSize.x * 0.5f, -_boxSize.y * 0.5f, _boxSize.x, _boxSize.y);
             }
 
             return ComputeBoxMetrics().contentRect;
+        }
+
+        private bool TryGetCavityLocalRect(out Rect rect)
+        {
+            rect = default;
+            if (_box3DCavityRenderer == null) return false;
+
+            var bounds = _box3DCavityRenderer.bounds;
+            var min = bounds.min;
+            var max = bounds.max;
+
+            var corners = new Vector3[8]
+            {
+                new Vector3(min.x, min.y, min.z),
+                new Vector3(min.x, min.y, max.z),
+                new Vector3(min.x, max.y, min.z),
+                new Vector3(min.x, max.y, max.z),
+                new Vector3(max.x, min.y, min.z),
+                new Vector3(max.x, min.y, max.z),
+                new Vector3(max.x, max.y, min.z),
+                new Vector3(max.x, max.y, max.z),
+            };
+
+            float xMin = float.PositiveInfinity;
+            float xMax = float.NegativeInfinity;
+            float yMin = float.PositiveInfinity;
+            float yMax = float.NegativeInfinity;
+
+            for (int i = 0; i < corners.Length; i++)
+            {
+                var local = transform.InverseTransformPoint(corners[i]);
+                xMin = Mathf.Min(xMin, local.x);
+                xMax = Mathf.Max(xMax, local.x);
+                yMin = Mathf.Min(yMin, local.y);
+                yMax = Mathf.Max(yMax, local.y);
+            }
+
+            if (!float.IsFinite(xMin) || !float.IsFinite(xMax) || !float.IsFinite(yMin) || !float.IsFinite(yMax))
+            {
+                return false;
+            }
+
+            rect = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+            return rect.width > 0.0001f && rect.height > 0.0001f;
         }
 
         private void CacheMouth()
@@ -1997,7 +2046,7 @@ namespace LoopSorting
             // Placement/scale: a subtle "portal" at the box opening so players know where the entry check happens.
             if (_mouthIndicator != null)
             {
-            _mouthIndicator.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
+                _mouthIndicator.transform.localPosition = GetMouthLocalPosition() + _mouthLocalNormal * 0.06f + new Vector3(0f, 0f, -0.06f);
                 _mouthIndicator.transform.localRotation = Quaternion.identity;
 
                 float edge = (_opening == OpeningSide.Left || _opening == OpeningSide.Right) ? _boxSize.y : _boxSize.x;

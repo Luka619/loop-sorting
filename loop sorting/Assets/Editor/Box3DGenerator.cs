@@ -27,6 +27,8 @@ namespace LoopSorting.Editor
         private const float DefaultGlassAlpha = 0.25f;
         private const float DefaultLidGlassWidthRatio = 0.5f;
         private const float DefaultLidGlassHeightRatio = 0.75f;
+        private const float DefaultMouthInsetFrac = 0.18f;
+        private const float DefaultMouthBandExtraFrac = 0.35f;
 
         private const string RootFolder = "Assets/Art3D";
         private const string MeshFolder = "Assets/Art3D/Meshes";
@@ -127,7 +129,9 @@ namespace LoopSorting.Editor
                 gridThickness,
                 cornerRadius,
                 cornerSegments,
-                edgeRadius);
+                edgeRadius,
+                openingSide,
+                openingWidth);
             var lidFrameMesh = BuildLidFrameMesh(
                 columns,
                 rows,
@@ -404,7 +408,9 @@ namespace LoopSorting.Editor
             float gridThickness,
             float cornerRadius,
             int cornerSegments,
-            float edgeRadius)
+            float edgeRadius,
+            OpeningSide openingSide,
+            float openingWidth)
         {
             columns = Mathf.Max(1, columns);
             rows = Mathf.Max(1, rows);
@@ -421,6 +427,9 @@ namespace LoopSorting.Editor
             float cavityDepth = Mathf.Clamp(wallDepth - floorThickness, wallDepth * 0.35f, wallDepth);
             float grooveBottom = Mathf.Clamp(cavityDepth + grooveDepth, cavityDepth + 0.005f, wallDepth - 0.01f);
             float innerRadius = Mathf.Clamp(cornerRadius - wallThickness, 0f, Mathf.Min(innerHalfX, innerHalfY));
+            float mouthInset = Mathf.Clamp(cellSize * DefaultMouthInsetFrac, 0.05f, cellSize * 0.45f);
+            float openingHalf = openingWidth * 0.5f;
+            float bandExtra = cellSize * DefaultMouthBandExtraFrac;
 
             edgeRadius = Mathf.Max(0f, edgeRadius);
             float floorEdgeRadius = Mathf.Clamp(edgeRadius, 0.05f, Mathf.Min(innerHalfX, innerHalfY) * 0.4f);
@@ -448,6 +457,38 @@ namespace LoopSorting.Editor
                     py = clamped.y;
 
                     float dimple = ComputeCellDimple(px, py, innerHalfX, innerHalfY, cellSize, columns, rows);
+                    if (openingWidth > 0.0001f && mouthInset > 0.0001f)
+                    {
+                        bool inBand = true;
+                        switch (openingSide)
+                        {
+                            case OpeningSide.Top:
+                            case OpeningSide.Bottom:
+                                float bandX = Mathf.Clamp(openingHalf + bandExtra, 0f, innerHalfX);
+                                inBand = Mathf.Abs(px) <= bandX;
+                                break;
+                            case OpeningSide.Left:
+                            case OpeningSide.Right:
+                                float bandY = Mathf.Clamp(openingHalf + bandExtra, 0f, innerHalfY);
+                                inBand = Mathf.Abs(py) <= bandY;
+                                break;
+                        }
+
+                        if (inBand)
+                        {
+                            float mouthDist = 0f;
+                            switch (openingSide)
+                            {
+                                case OpeningSide.Top: mouthDist = innerHalfY - py; break;
+                                case OpeningSide.Bottom: mouthDist = innerHalfY + py; break;
+                                case OpeningSide.Left: mouthDist = innerHalfX + px; break;
+                                case OpeningSide.Right: mouthDist = innerHalfX - px; break;
+                            }
+                            mouthDist = Mathf.Max(0f, mouthDist);
+                            float mouthFade = SmoothStep01(Mathf.Clamp01(mouthDist / mouthInset));
+                            dimple *= mouthFade;
+                        }
+                    }
                     float zDimple = Mathf.Lerp(cavityDepth, grooveBottom, dimple);
 
                     float edgeBlend = Mathf.Clamp01((-SignedDistanceRoundedRect(new Vector2(px, py), innerHalfX, innerHalfY, innerRadius)) / floorEdgeRadius);

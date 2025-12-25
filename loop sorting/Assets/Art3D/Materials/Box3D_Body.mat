@@ -21,11 +21,19 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _AO: 0.35
+    - _AOPower: 2
     - _Ambient: 1
+    - _Cull: 2
+    - _Curv: 0.18
     - _EdgeDarken: 0.15
     - _FakeLightStrength: 0.25
     - _RimPower: 2.5
     - _RimStrength: 0.35
+    - _UseVertexColor: 0
+    - _ViewLightStrength: 0
+    - _ViewPower: 1.6
+    - _ViewSideMin: 0.7
     m_Colors:
     - _Color: {r: 0.87, g: 0.55, b: 0.35, a: 1}
     - _FakeLightDir: {r: 0.25, g: 0.85, b: -0.45, a: 0}

@@ -398,7 +398,7 @@ namespace LoopSorting
         {
             if (_levelHudText == null) return;
             int levelNumber = _flow != null ? (_flowIndex + 1) : 1;
-            _levelHudText.text = $"LEVEL {levelNumber}";
+            _levelHudText.text = LocalizedText.LevelLabel(levelNumber);
         }
 
         public void Boot(LevelLayout layout)
@@ -511,6 +511,17 @@ namespace LoopSorting
 
                     var refs = instance.GetComponent<MainMenuCanvasPrefabRefs>();
                     if (refs != null) refs.AutoAssign();
+
+                    if (refs != null)
+                    {
+                        if (refs.playText != null) refs.playText.text = LocalizedText.MainMenuPlay;
+                        if (refs.titleText != null) refs.titleText.text = LocalizedText.MainMenuTitle;
+                        if (refs.levelPillText != null)
+                        {
+                            int levelNumber = _pendingFlow != null ? (_pendingFlowIndex + 1) : 1;
+                            refs.levelPillText.text = LocalizedText.LevelLabel(levelNumber);
+                        }
+                    }
 
                     _mainMenuPlayButton = refs != null ? refs.playButton : null;
                     if (_mainMenuPlayButton == null)
@@ -653,7 +664,7 @@ namespace LoopSorting
             playTextGO.transform.SetParent(playGO.transform, false);
             var playText = playTextGO.AddComponent<TextMeshProUGUI>();
             playText.raycastTarget = false;
-            playText.text = "PLAY";
+            playText.text = LocalizedText.MainMenuPlay;
             playText.alignment = TextAlignmentOptions.Center;
             playText.fontSize = 84;
             playText.color = Color.white;
@@ -710,7 +721,7 @@ namespace LoopSorting
             {
                 var title = titleGO.AddComponent<TextMeshProUGUI>();
                 title.raycastTarget = false;
-                title.text = "LOOP\nSORTING";
+                title.text = LocalizedText.MainMenuTitle;
                 title.alignment = TextAlignmentOptions.Center;
                 title.fontSize = 96;
                 title.color = Color.white;
@@ -747,7 +758,7 @@ namespace LoopSorting
                 var pillText = pillTextGO.AddComponent<TextMeshProUGUI>();
                 pillText.raycastTarget = false;
                 int levelNumber = _pendingFlow != null ? (_pendingFlowIndex + 1) : 1;
-                pillText.text = $"LEVEL {levelNumber}";
+                pillText.text = LocalizedText.LevelLabel(levelNumber);
                 pillText.alignment = TextAlignmentOptions.Center;
                 pillText.fontSize = 44;
                 pillText.color = new Color(0.12f, 0.12f, 0.12f, 1f);
@@ -794,9 +805,9 @@ namespace LoopSorting
         {
             // Avoid long decimals in the tiny square button; show tiered labels:
             // 1x, 2x, 3x correspond to 1.0, 1.5, 2.0.
-            if (Mathf.Abs(speed - 1f) < 0.01f) return "1x";
-            if (Mathf.Abs(speed - 1.5f) < 0.01f) return "2x";
-            if (Mathf.Abs(speed - 2f) < 0.01f) return "3x";
+            if (Mathf.Abs(speed - 1f) < 0.01f) return "1" + LocalizedText.SpeedMultiplierSuffix;
+            if (Mathf.Abs(speed - 1.5f) < 0.01f) return "2" + LocalizedText.SpeedMultiplierSuffix;
+            if (Mathf.Abs(speed - 2f) < 0.01f) return "3" + LocalizedText.SpeedMultiplierSuffix;
 
             // Fallback for other steps (e.g., 4x/5x).
             if (speed >= 0f && speed <= 99f)
@@ -804,12 +815,12 @@ namespace LoopSorting
                 float rounded = Mathf.Round(speed * 10f) / 10f;
                 if (Mathf.Abs(rounded - Mathf.Round(rounded)) < 0.001f)
                 {
-                    return $"{Mathf.RoundToInt(rounded)}x";
+                    return $"{Mathf.RoundToInt(rounded)}{LocalizedText.SpeedMultiplierSuffix}";
                 }
-                return $"{rounded:0.#}x";
+                return $"{rounded:0.#}{LocalizedText.SpeedMultiplierSuffix}";
             }
 
-            return $"{speed:0.#}x";
+            return $"{speed:0.#}{LocalizedText.SpeedMultiplierSuffix}";
         }
 
         private void EnsureEventSystem()
@@ -1262,8 +1273,7 @@ namespace LoopSorting
             if (_fastTagText != null)
             {
                 string label = FormatSpeedLabel(mult); // "2x", "3x", "5x"...
-                string valuePart = label.EndsWith("x") ? label.Substring(0, label.Length - 1) : label;
-                _fastTagText.text = $"FAST x{valuePart}";
+                _fastTagText.text = LocalizedText.HudFastMultiplier(label);
             }
             if (_fastTagBg != null && LoopSortingUIKit.IsAvailable())
             {
@@ -1551,6 +1561,11 @@ namespace LoopSorting
         }
     }
 }
+
+
+
+
+
 
 
 

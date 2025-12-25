@@ -30,18 +30,12 @@ namespace LoopSorting
             if (value < 0) return value.ToString();
             if (value <= 9_999) return value.ToString();
 
-            // Compact notation for HUD (K/M/B) to keep text readable in narrow pills.
-            if (value < 1_000_000)
+                        // Compact notation for HUD (Chinese units) to keep text readable in narrow pills.
+            if (value < 100_000_000)
             {
-                if (value >= 999_500) return "1M";
-                return FormatCompact(value, 1_000, "K", decimals: value < 100_000 ? 1 : 0);
+                return FormatCompact(value, 10_000, LocalizedText.CurrencyTenThousandSuffix, decimals: value < 1_000_000 ? 1 : 0);
             }
-            if (value < 1_000_000_000)
-            {
-                if (value >= 999_500_000) return "1B";
-                return FormatCompact(value, 1_000_000, "M", decimals: value < 100_000_000 ? 1 : 0);
-            }
-            return FormatCompact(value, 1_000_000_000, "B", decimals: 1);
+            return FormatCompact(value, 100_000_000, LocalizedText.CurrencyHundredMillionSuffix, decimals: 1);
         }
 
 	        private void OpenShop(ShopTab tab)
@@ -67,6 +61,8 @@ namespace LoopSorting
             if (TryInstantiateUiPrefab(ShopPanelPrefabResourcePath, out ShopPanelPrefabRefs prefab))
             {
                 prefab.AutoAssign();
+
+                if (prefab.title != null) prefab.title.text = LocalizedText.ShopTitle;
 
                 _shopPanel = prefab.gameObject;
                 _shopTitle = prefab.title;
@@ -161,7 +157,7 @@ namespace LoopSorting
             titleGO.transform.SetParent(layoutParent, false);
             _shopTitle = titleGO.AddComponent<TextMeshProUGUI>();
             _shopTitle.raycastTarget = false;
-            _shopTitle.text = "SHOP";
+            _shopTitle.text = LocalizedText.ShopTitle;
             _shopTitle.alignment = TextAlignmentOptions.Center;
             _shopTitle.fontSize = 70;
             _shopTitle.color = Color.white;
@@ -380,20 +376,20 @@ namespace LoopSorting
                 Destroy(_shopContentRoot.GetChild(i).gameObject);
             }
 
-            if (_shopTitle != null) _shopTitle.text = tab == ShopTab.Coins ? "SHOP" : "MORE LIVES";
+            if (_shopTitle != null) _shopTitle.text = tab == ShopTab.Coins ? LocalizedText.ShopTitle : LocalizedText.ShopMoreLives;
 
             if (tab == ShopTab.Coins)
             {
-                AddShopSectionHeader(_shopContentRoot, "COINS");
-                AddShopCoinPackRow(_shopContentRoot, "Coins_1000", "1000 COINS", "+1000", () => { _progress.Coins += 1000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
-                AddShopCoinPackRow(_shopContentRoot, "Coins_5000", "5000 COINS", "+5000", () => { _progress.Coins += 5000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
-                AddShopCoinPackRow(_shopContentRoot, "Coins_10000", "10000 COINS", "+10000", () => { _progress.Coins += 10000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopSectionHeader(_shopContentRoot, LocalizedText.ShopSectionCoins);
+                AddShopCoinPackRow(_shopContentRoot, "Coins_1000", LocalizedText.ShopCoinPackTitle(1000), "+1000", () => { _progress.Coins += 1000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_5000", LocalizedText.ShopCoinPackTitle(5000), "+5000", () => { _progress.Coins += 5000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopCoinPackRow(_shopContentRoot, "Coins_10000", LocalizedText.ShopCoinPackTitle(10000), "+10000", () => { _progress.Coins += 10000; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
             }
             else
             {
-                AddShopSectionHeader(_shopContentRoot, "LIVES");
-                AddShopItem(_shopContentRoot, "Lives_1", "GET +1 LIFE", "+1", () => { _progress.Lives += 1; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
-                AddShopItem(_shopContentRoot, "Lives_5", "REFill 5 LIVES", "+5", () => { _progress.Lives = Mathf.Max(_progress.Lives, 5); RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopSectionHeader(_shopContentRoot, LocalizedText.ShopSectionLives);
+                AddShopItem(_shopContentRoot, "Lives_1", LocalizedText.ShopLifePackTitle(1), "+1", () => { _progress.Lives += 1; RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
+                AddShopItem(_shopContentRoot, "Lives_5", LocalizedText.ShopLifeRefillTitle, "+5", () => { _progress.Lives = Mathf.Max(_progress.Lives, 5); RefreshEconomyHUD(); RequestSave(SaveDelayStrongSeconds); PlaySfx(SfxId.UiConfirm); });
             }
 
             if (_shopScroll != null)
@@ -962,5 +958,7 @@ namespace LoopSorting
 
     }
 }
+
+
 
 

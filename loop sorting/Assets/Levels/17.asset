@@ -22,6 +22,7 @@ MonoBehaviour:
   autoResolveLayoutOverlap: 1
   minBoxToBeltGap: 0.08
   preferredBoxToBeltGap: 0.18
+  minBoxToBoxGap: 0.05
   overlapResolveIterations: 3
   cameraMaxOrthoSize: 8.92
   minBlockPixelSize: 0
@@ -84,7 +85,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: 2, y: -3.5}
+    position: {x: 4, y: -4.5}
     size: {x: 0.90000004, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -106,12 +107,12 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 4
-    position: {x: -0.56837606, y: -3.6940172}
-    size: {x: 0.90000004, y: 2.4}
+    position: {x: -0.5, y: -3.5}
+    size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
-    columns: 3
-    rows: 8
-    opening: 3
+    columns: 8
+    rows: 3
+    opening: 0
     autoAlignSlot: 1
     colorCounts:
     - color: 3

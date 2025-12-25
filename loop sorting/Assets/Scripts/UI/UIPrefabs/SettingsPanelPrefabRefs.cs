@@ -8,15 +8,19 @@ namespace LoopSorting
     public sealed class SettingsPanelPrefabRefs : MonoBehaviour
     {
         public RectTransform popupRect;
+        public TMP_Text titleText;
         public Button closeButton;
         public Image closeImage;
 
         public Button musicToggleButton;
         public Image musicToggleImage;
+        public TMP_Text musicLabel;
         public Button sfxToggleButton;
         public Image sfxToggleImage;
+        public TMP_Text sfxLabel;
         public Button vibrationToggleButton;
         public Image vibrationToggleImage;
+        public TMP_Text vibrationLabel;
 
         public Button retryButton;
         public Image retryImage;
@@ -25,6 +29,7 @@ namespace LoopSorting
         public void AutoAssign()
         {
             popupRect = popupRect != null ? popupRect : FindRect("Popup");
+            titleText = titleText != null ? titleText : Find<TMP_Text>("Title");
 
             closeButton = closeButton != null ? closeButton : Find<Button>("CloseButton");
             closeImage = closeImage != null ? closeImage : (closeButton != null ? closeButton.GetComponent<Image>() : Find<Image>("CloseButton"));
@@ -35,7 +40,11 @@ namespace LoopSorting
 
             retryButton = retryButton != null ? retryButton : Find<Button>("RetryButton");
             retryImage = retryImage != null ? retryImage : (retryButton != null ? retryButton.GetComponent<Image>() : Find<Image>("RetryButton"));
-            retryLabel = retryLabel != null ? retryLabel : Find<TMP_Text>("Text");
+            retryLabel = retryLabel != null ? retryLabel : FindLabelUnder("RetryButton");
+
+            musicLabel = musicLabel != null ? musicLabel : FindLabelUnder("MUSICRow");
+            sfxLabel = sfxLabel != null ? sfxLabel : FindLabelUnder("SFXRow");
+            vibrationLabel = vibrationLabel != null ? vibrationLabel : FindLabelUnder("VIBRATIONRow");
         }
 
         private void FindToggleRow(string rowName, ref Button button, ref Image image)
@@ -47,6 +56,21 @@ namespace LoopSorting
             if (toggle == null) return;
             button = button != null ? button : toggle.GetComponent<Button>();
             image = image != null ? image : toggle.GetComponent<Image>();
+        }
+
+        private TMP_Text FindLabelUnder(string rootName)
+        {
+            var root = FindTransform(rootName);
+            if (root == null) return null;
+
+            TMP_Text fallback = null;
+            foreach (var t in root.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (t == null) continue;
+                if (t.name == "Label" || t.name == "Text") return t;
+                if (fallback == null) fallback = t;
+            }
+            return fallback;
         }
 
         private RectTransform FindRect(string name)

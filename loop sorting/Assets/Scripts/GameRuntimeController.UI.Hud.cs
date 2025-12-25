@@ -453,7 +453,7 @@ namespace LoopSorting
             levelTextGO.transform.SetParent(levelGO.transform, false);
             _levelHudText = levelTextGO.AddComponent<TextMeshProUGUI>();
             _levelHudText.raycastTarget = false;
-            _levelHudText.text = $"LEVEL {(_flow != null ? (_flowIndex + 1) : 1)}";
+            _levelHudText.text = LocalizedText.LevelLabel(_flow != null ? (_flowIndex + 1) : 1);
             _levelHudText.alignment = TextAlignmentOptions.Center;
             _levelHudText.fontSize = 52;
             _levelHudText.enableWordWrapping = false;
@@ -645,7 +645,7 @@ namespace LoopSorting
             fastTextGO.transform.SetParent(_fastTag.transform, false);
             _fastTagText = fastTextGO.AddComponent<TextMeshProUGUI>();
             _fastTagText.raycastTarget = false;
-            _fastTagText.text = "FAST";
+            _fastTagText.text = LocalizedText.HudFast;
             _fastTagText.alignment = TextAlignmentOptions.Center;
             _fastTagText.fontSize = 44;
             _fastTagText.color = Color.white;
@@ -710,6 +710,7 @@ namespace LoopSorting
 
     }
 }
+
 
 
 

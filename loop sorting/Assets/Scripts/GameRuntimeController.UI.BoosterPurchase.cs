@@ -25,6 +25,10 @@ namespace LoopSorting
             {
                 prefab.AutoAssign();
 
+                if (prefab.titleText != null) prefab.titleText.text = LocalizedText.BoosterTitle;
+                if (prefab.subtitleText != null) prefab.subtitleText.text = LocalizedText.BoosterPurchaseTitle;
+                if (prefab.adLabel != null) prefab.adLabel.text = LocalizedText.BoosterFree;
+
                 _boosterPurchasePanel = prefab.gameObject;
                 _boosterPurchasePopupRect = prefab.popupRect;
                 _boosterPurchaseHeaderRect = prefab.headerRect;
@@ -151,7 +155,7 @@ namespace LoopSorting
             titleGO.transform.SetParent(headerGO.transform, false);
             _boosterPurchaseTitleText = titleGO.AddComponent<TextMeshProUGUI>();
             _boosterPurchaseTitleText.raycastTarget = false;
-            _boosterPurchaseTitleText.text = "BOOSTER";
+            _boosterPurchaseTitleText.text = LocalizedText.BoosterTitle;
             _boosterPurchaseTitleText.alignment = TextAlignmentOptions.Center;
             _boosterPurchaseTitleText.fontSize = 92;
             _boosterPurchaseTitleText.color = new Color(1f, 1f, 1f, 0.98f);
@@ -252,7 +256,7 @@ namespace LoopSorting
             subtitleTextRect.offsetMax = new Vector2(-20f, 0f);
             _boosterPurchaseSubtitleText = subtitleTextGO.AddComponent<TextMeshProUGUI>();
             _boosterPurchaseSubtitleText.raycastTarget = false;
-            _boosterPurchaseSubtitleText.text = "Purchase Booster";
+            _boosterPurchaseSubtitleText.text = LocalizedText.BoosterPurchaseTitle;
             _boosterPurchaseSubtitleText.alignment = TextAlignmentOptions.Center;
             _boosterPurchaseSubtitleText.fontSize = 60;
             _boosterPurchaseSubtitleText.color = new Color(0.18f, 0.14f, 0.10f, 1f);
@@ -436,9 +440,9 @@ namespace LoopSorting
             bool hasKit = LoopSortingUIKit.IsAvailable();
             bool isShuffle = type == BoosterType.Shuffle;
 
-            string title = isShuffle ? "SHUFFLE" : "SORT";
+            string title = isShuffle ? LocalizedText.BoosterShuffle : LocalizedText.BoosterSort;
             if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.text = title;
-            if (_boosterPurchaseSubtitleText != null) _boosterPurchaseSubtitleText.text = $"Purchase {title}";
+            if (_boosterPurchaseSubtitleText != null) _boosterPurchaseSubtitleText.text = LocalizedText.BoosterPurchaseSpecific(title);
 
             // Use the split UI (header/icon/buttons) for a higher-quality animated popup.
             // Keep full-popup sprites only as an optional fallback for missing assets.
@@ -1056,5 +1060,6 @@ namespace LoopSorting
 
     }
 }
+
 
 

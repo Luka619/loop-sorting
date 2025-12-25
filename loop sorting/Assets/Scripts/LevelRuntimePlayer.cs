@@ -118,7 +118,7 @@ namespace LoopSorting
                 label.transform.SetParent(go.transform, false);
                 label.transform.localPosition = Vector3.zero;
                 var text = label.AddComponent<TextMesh>();
-                text.text = $"{box.name}\nCap:{capacity}\n{columns}x{rows}\nOpen:{box.opening}";
+                text.text = $"{box.name}\n{LocalizedText.DebugCapacityLine(capacity)}\n{columns}x{rows}\n{LocalizedText.DebugBoxOpenLine((int)box.opening)}";
                 text.characterSize = 0.2f;
                 text.anchor = TextAnchor.MiddleCenter;
                 text.alignment = TextAlignment.Center;

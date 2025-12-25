@@ -22,6 +22,12 @@ namespace LoopSorting
             {
                 prefab.AutoAssign();
 
+                if (prefab.titleText != null) prefab.titleText.text = LocalizedText.SettingsTitle;
+                if (prefab.musicLabel != null) prefab.musicLabel.text = LocalizedText.SettingsMusic;
+                if (prefab.sfxLabel != null) prefab.sfxLabel.text = LocalizedText.SettingsSfx;
+                if (prefab.vibrationLabel != null) prefab.vibrationLabel.text = LocalizedText.SettingsVibration;
+                if (prefab.retryLabel != null) prefab.retryLabel.text = LocalizedText.SettingsRetry;
+
                 _settingsPanel = prefab.gameObject;
                 _settingsMusicToggleButton = prefab.musicToggleButton;
                 _settingsMusicToggleImage = prefab.musicToggleImage;
@@ -166,7 +172,7 @@ namespace LoopSorting
                 titleGO.transform.SetParent(layoutParent, false);
                 var title = titleGO.AddComponent<TextMeshProUGUI>();
                 title.raycastTarget = false;
-                title.text = "SETTINGS";
+                title.text = LocalizedText.SettingsTitle;
                 title.alignment = TextAlignmentOptions.Center;
                 title.fontSize = 68;
                 title.color = new Color(0.24f, 0.14f, 0.08f, 0.96f);
@@ -243,9 +249,9 @@ namespace LoopSorting
                     ApplyButtonPressScale(button, pressedScale: 0.96f);
                 }
 
-                CreateToggleRow("MUSIC", topY: -320f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
-                CreateToggleRow("SFX", topY: -490f, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
-                CreateToggleRow("VIBRATION", topY: -660f, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
+                CreateToggleRow(LocalizedText.SettingsMusic, topY: -320f, out _settingsMusicToggleButton, out _settingsMusicToggleImage);
+                CreateToggleRow(LocalizedText.SettingsSfx, topY: -490f, out _settingsSfxToggleButton, out _settingsSfxToggleImage);
+                CreateToggleRow(LocalizedText.SettingsVibration, topY: -660f, out _settingsVibrationToggleButton, out _settingsVibrationToggleImage);
 
                 _settingsMusicToggleButton.onClick.AddListener(() =>
                 {
@@ -281,7 +287,7 @@ namespace LoopSorting
                     normal: "ui.button.orange_long.normal",
                     pressed: "ui.button.orange_long.pressed",
                     disabled: "ui.button.orange_long.disabled",
-                    label: "RETRY",
+                    label: LocalizedText.SettingsRetry,
                     out retryLabelText,
                     reserveIconSpace: false);
                 _settingsRetryImage = _settingsRetryButton != null ? _settingsRetryButton.GetComponent<Image>() : null;
@@ -512,7 +518,7 @@ namespace LoopSorting
                 textGO.transform.SetParent(_settingsRetryImage.transform, false);
                 var tmp = textGO.AddComponent<TextMeshProUGUI>();
                 tmp.raycastTarget = false;
-                tmp.text = "RETRY";
+                tmp.text = LocalizedText.SettingsRetry;
                 tmp.alignment = TextAlignmentOptions.Center;
                 tmp.fontSize = 64;
                 tmp.color = new Color(0.35f, 0.22f, 0.12f, 1f);
@@ -579,6 +585,7 @@ namespace LoopSorting
 
     }
 }
+
 
 
 

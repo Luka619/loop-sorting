@@ -17,7 +17,7 @@ namespace LoopSorting
             bool showToast = IsTutorialLevel(_currentLayoutSource ?? _currentLayout);
             if (showToast)
             {
-                ShowTutorialMessage("所有箱子都被摆放整齐了！");
+                ShowTutorialMessage(LocalizedText.TutorialWinToast);
                 yield return new WaitForSeconds(WinToastSeconds);
             }
             SetTutorialVisible(false);

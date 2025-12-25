@@ -57,7 +57,7 @@ namespace LoopSorting
             CaptureResultButtonsBaseLayoutIfNeeded();
 
             AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
-            _resultText.text = win ? "VICTORY" : "FAILED";
+            _resultText.text = win ? LocalizedText.ResultVictory : LocalizedText.ResultFailed;
             _resultPanelMode = win ? ResultPanelMode.Win : ResultPanelMode.Lose;
 
             if (win)
@@ -492,12 +492,12 @@ namespace LoopSorting
 
             if (_primaryLabel != null)
             {
-                _primaryLabel.text = $"REVIVE {LoseReviveCoinsCost}";
+                _primaryLabel.text = LocalizedText.ResultReviveCost(LoseReviveCoinsCost);
                 _primaryLabel.gameObject.SetActive(true);
             }
             if (_secondaryLabel != null)
             {
-                _secondaryLabel.text = "REVIVE";
+                _secondaryLabel.text = LocalizedText.ResultRevive;
                 _secondaryLabel.gameObject.SetActive(true);
             }
 
@@ -858,7 +858,7 @@ namespace LoopSorting
                 normal: hasKit ? "ui.button.mint_long.normal" : null,
                 pressed: hasKit ? "ui.button.mint_long.pressed" : null,
                 disabled: hasKit ? "ui.button.mint_long.disabled" : null,
-                label: "NEXT",
+                label: LocalizedText.ResultNext,
                 out _primaryLabel,
                 reserveIconSpace: true);
             _primaryButton.onClick.AddListener(OnPrimaryClicked);
@@ -873,7 +873,7 @@ namespace LoopSorting
                 normal: hasKit ? "ui.button.orange_long.normal" : null,
                 pressed: hasKit ? "ui.button.orange_long.pressed" : null,
                 disabled: hasKit ? "ui.button.orange_long.disabled" : null,
-                label: "RETRY",
+                label: LocalizedText.SettingsRetry,
                 out _secondaryLabel,
                 reserveIconSpace: true);
             _secondaryButton.onClick.AddListener(OnSecondaryClicked);
@@ -885,4 +885,6 @@ namespace LoopSorting
 
     }
 }
+
+
 

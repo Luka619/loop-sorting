@@ -46,7 +46,7 @@ namespace LoopSorting
             }
 
             _tutorialPhase = TutorialPhase.ClickBox;
-            ShowTutorialMessage("点击箱子来把混乱的积木放在传送带上");
+            ShowTutorialMessage(LocalizedText.TutorialClickBox);
             StartTutorialPulse();
         }
 

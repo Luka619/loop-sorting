@@ -13,7 +13,7 @@ namespace LoopSorting
     {
         private void EnsureCounterUI()
         {
-            if (_uiCanvas != null && beltCounterUI != null && _speedButton != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
+            if (_uiCanvas != null && beltCounterUI != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
             {
                 if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.GetComponent<CurrencyFlyFx>();
                 if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.gameObject.AddComponent<CurrencyFlyFx>();
@@ -180,8 +180,11 @@ namespace LoopSorting
                 _coinPlusButton = hudPrefab.coinPlusButton;
                 _lifeText = hudPrefab.lifeText;
                 _lifePlusButton = hudPrefab.lifePlusButton;
-                _speedButton = hudPrefab.speedButton;
-                _speedButtonLabel = hudPrefab.speedLabel;
+
+                var speedButtonT = _hudRootRect != null ? _hudRootRect.Find("SpeedButton") : null;
+                if (speedButtonT != null) speedButtonT.gameObject.SetActive(false);
+                _speedButton = null;
+                _speedButtonLabel = null;
                 _settingsButton = hudPrefab.settingsButton;
                 _boosterPanel = hudPrefab.boosterPanel;
                 _boosterSortButton = hudPrefab.boosterSortButton;
@@ -580,6 +583,9 @@ namespace LoopSorting
             _speedButton.onClick.AddListener(CycleSpeed);
             UpdateSpeedButtonLabel();
             ApplyButtonPressScale(_speedButton, pressedScale: 0.96f);
+            _speedButton.gameObject.SetActive(false);
+            _speedButton = null;
+            _speedButtonLabel = null;
 
             // Settings button (top-right)
             var settingsGO = new GameObject("SettingsButton");
@@ -710,6 +716,10 @@ namespace LoopSorting
 
     }
 }
+
+
+
+
 
 
 

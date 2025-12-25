@@ -112,7 +112,7 @@ namespace LoopSorting
         private float _beltSpacingUsed;
         private bool _isReleasing;
         private int? _activeReleasePort;
-        private float _speedMultiplier = 1f;
+        private float _speedMultiplier = 2.5f;
         private int _speedIndex = 0;
         private bool _didLogOrangeLongNineSlice;
         private readonly GameProgressState _progress = new GameProgressState

@@ -56,6 +56,10 @@ namespace LoopSorting
 
             titleText = titleText != null ? titleText : Find<TMP_Text>("TitleText");
             subtitleText = subtitleText != null ? subtitleText : Find<TMP_Text>("SubtitleText");
+            if (subtitleText == null)
+            {
+                subtitleText = FindLabelUnder("Subtitle");
+            }
 
             background = background != null ? background : Find<Image>("Popup");
             header = header != null ? header : Find<Image>("Header");
@@ -75,7 +79,7 @@ namespace LoopSorting
             if (root == null) return null;
             foreach (var t in root.GetComponentsInChildren<TMP_Text>(true))
             {
-                if (t != null && t.name == "Label") return t;
+                if (t != null && (t.name == "Label" || t.name == "Text")) return t;
             }
             return null;
         }

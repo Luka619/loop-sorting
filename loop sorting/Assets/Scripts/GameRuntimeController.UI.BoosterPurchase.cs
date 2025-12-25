@@ -26,7 +26,7 @@ namespace LoopSorting
                 prefab.AutoAssign();
 
                 if (prefab.titleText != null) prefab.titleText.text = LocalizedText.BoosterTitle;
-                if (prefab.subtitleText != null) prefab.subtitleText.text = LocalizedText.BoosterPurchaseTitle;
+                if (prefab.subtitleText != null) prefab.subtitleText.text = string.Empty;
                 if (prefab.adLabel != null) prefab.adLabel.text = LocalizedText.BoosterFree;
 
                 _boosterPurchasePanel = prefab.gameObject;
@@ -54,6 +54,8 @@ namespace LoopSorting
                 _boosterPurchaseHeader = prefab.header;
                 _boosterPurchaseIcon = prefab.icon;
                 _boosterPurchaseSubtitleBg = prefab.subtitleBg;
+
+                if (_boosterPurchaseSubtitleBg != null) _boosterPurchaseSubtitleBg.gameObject.SetActive(false);
 
                 if (_boosterPurchaseCloseButton != null)
                 {
@@ -246,6 +248,7 @@ namespace LoopSorting
             {
                 _boosterPurchaseSubtitleBg.color = new Color(1f, 1f, 1f, 0.55f);
             }
+            _boosterPurchaseSubtitleBg.gameObject.SetActive(false);
 
             var subtitleTextGO = new GameObject("Text");
             subtitleTextGO.transform.SetParent(subtitleGO.transform, false);
@@ -442,7 +445,11 @@ namespace LoopSorting
 
             string title = isShuffle ? LocalizedText.BoosterShuffle : LocalizedText.BoosterSort;
             if (_boosterPurchaseTitleText != null) _boosterPurchaseTitleText.text = title;
-            if (_boosterPurchaseSubtitleText != null) _boosterPurchaseSubtitleText.text = LocalizedText.BoosterPurchaseSpecific(title);
+            if (_boosterPurchaseSubtitleText != null)
+            {
+                string desc = isShuffle ? LocalizedText.BoosterShuffleDesc : LocalizedText.BoosterSortDesc;
+                _boosterPurchaseSubtitleText.text = desc;
+            }
 
             // Use the split UI (header/icon/buttons) for a higher-quality animated popup.
             // Keep full-popup sprites only as an optional fallback for missing assets.

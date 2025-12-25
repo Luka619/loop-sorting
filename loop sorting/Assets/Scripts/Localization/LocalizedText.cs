@@ -61,6 +61,8 @@ namespace LoopSorting
         public const string BoosterShuffle = "洗牌";
         public const string BoosterSort = "排序";
         public const string BoosterFree = "免费";
+        public const string BoosterShuffleDesc = "打乱未完成箱子里的积木顺序";
+        public const string BoosterSortDesc = "随机选一种颜色，自动集中填满一箱";
 
         public static string BoosterPurchaseSpecific(string title)
         {

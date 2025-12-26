@@ -36,7 +36,9 @@ namespace LoopSorting.Editor
         private const float DefaultMouthInsetFrac = 0.18f;
         private const float DefaultMouthBandExtraFrac = 0.35f;
         private const bool DebugDisableCavityMouthFade = false;
-        private const bool DebugDisableCavityEdgeClip = true;
+        private const bool DebugDisableCavityEdgeClip = false;
+        private const bool DebugForceFlatCavity = false;
+        private const bool DebugLogCavityGen = false;
 
         private const string RootFolder = "Assets/Art3D";
         private const string MeshFolder = "Assets/Art3D/Meshes";
@@ -166,6 +168,10 @@ namespace LoopSorting.Editor
             var cavityMeshAsset = SaveOrUpdateMesh(cavityMesh, cavityMeshPath);
             var lidFrameMeshAsset = SaveOrUpdateMesh(lidFrameMesh, lidFrameMeshPath);
             var lidGlassMeshAsset = SaveOrUpdateMesh(lidGlassMesh, lidGlassMeshPath);
+            if (DebugLogCavityGen && cavityMeshAsset != null)
+            {
+                Debug.Log($"Box3DGenerator: Cavity verts={cavityMeshAsset.vertexCount} bounds={cavityMeshAsset.bounds}");
+            }
 
             var bodyColor = new Color(0.87f, 0.55f, 0.35f, 1f);
             var cavityColor = new Color(bodyColor.r * 0.9f, bodyColor.g * 0.9f, bodyColor.b * 0.9f, 1f);
@@ -253,7 +259,36 @@ namespace LoopSorting.Editor
                 return mesh;
             }
 
-            EditorUtility.CopySerialized(mesh, existing);
+            existing.Clear();
+            existing.indexFormat = mesh.indexFormat;
+            existing.vertices = mesh.vertices;
+            existing.normals = mesh.normals;
+            existing.uv = mesh.uv;
+            if (mesh.colors != null && mesh.colors.Length == mesh.vertexCount)
+            {
+                existing.colors = mesh.colors;
+            }
+            if (mesh.colors32 != null && mesh.colors32.Length == mesh.vertexCount)
+            {
+                existing.colors32 = mesh.colors32;
+            }
+            if (mesh.tangents != null && mesh.tangents.Length == mesh.vertexCount)
+            {
+                existing.tangents = mesh.tangents;
+            }
+
+            existing.subMeshCount = mesh.subMeshCount;
+            for (int i = 0; i < mesh.subMeshCount; i++)
+            {
+                existing.SetTriangles(mesh.GetTriangles(i), i);
+            }
+
+            existing.RecalculateBounds();
+            if (existing.normals == null || existing.normals.Length != existing.vertexCount)
+            {
+                existing.RecalculateNormals();
+            }
+
             existing.name = mesh.name;
             EditorUtility.SetDirty(existing);
             return existing;
@@ -535,6 +570,10 @@ namespace LoopSorting.Editor
                         }
                     }
 
+                    if (DebugForceFlatCavity)
+                    {
+                        dimple = 0f;
+                    }
                     float z = Mathf.Lerp(cavityDepth, grooveBottom, dimple);
 
                     indices[x, y] = builder.AddVertex(new Vector3(px, py, z), Vector3.back, new Vector2(u, v));

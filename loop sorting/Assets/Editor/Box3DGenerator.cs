@@ -18,6 +18,7 @@ namespace LoopSorting.Editor
         private const int DefaultCornerSegments = 16;
         private const float DefaultEdgeRadius = 0.26f;
         private const int DefaultEdgeSegments = 6;
+        private const float DefaultCellCornerRadius = 0.0675f;
         private const OpeningSide DefaultOpeningSide = OpeningSide.Top;
         private const float DefaultOpeningWidthCells = 2.8f;
         private const float DefaultLidThickness = 0.16f;
@@ -130,6 +131,7 @@ namespace LoopSorting.Editor
                 cornerRadius,
                 cornerSegments,
                 edgeRadius,
+                DefaultCellCornerRadius,
                 openingSide,
                 openingWidth);
             var lidFrameMesh = BuildLidFrameMesh(
@@ -409,6 +411,7 @@ namespace LoopSorting.Editor
             float cornerRadius,
             int cornerSegments,
             float edgeRadius,
+            float cellCornerRadius,
             OpeningSide openingSide,
             float openingWidth)
         {
@@ -456,7 +459,7 @@ namespace LoopSorting.Editor
                     px = clamped.x;
                     py = clamped.y;
 
-                    float dimple = ComputeCellDimple(px, py, innerHalfX, innerHalfY, cellSize, columns, rows);
+            float dimple = ComputeCellDimple(px, py, innerHalfX, innerHalfY, cellSize, columns, rows, cellCornerRadius);
                     if (openingWidth > 0.0001f && mouthInset > 0.0001f)
                     {
                         bool inBand = true;
@@ -808,7 +811,7 @@ namespace LoopSorting.Editor
             return outside + inside - radius;
         }
 
-        private static float ComputeCellDimple(float x, float y, float halfX, float halfY, float cellSize, int columns, int rows)
+        private static float ComputeCellDimple(float x, float y, float halfX, float halfY, float cellSize, int columns, int rows, float cellCornerRadius)
         {
             int col = Mathf.Clamp(Mathf.FloorToInt((x + halfX) / cellSize), 0, columns - 1);
             int row = Mathf.Clamp(Mathf.FloorToInt((y + halfY) / cellSize), 0, rows - 1);
@@ -818,12 +821,10 @@ namespace LoopSorting.Editor
             float localY = y - (cellOriginY + cellSize * 0.5f);
 
             float halfCell = cellSize * 0.5f;
-            float dx = Mathf.Abs(localX) / halfCell;
-            float dy = Mathf.Abs(localY) / halfCell;
-            float max = Mathf.Max(dx, dy);
-            float len = Mathf.Sqrt(dx * dx + dy * dy);
-            float d = Mathf.Lerp(max, len, 0.35f);
-            return 1f - SmoothStep01(Mathf.Clamp01(d));
+            float corner = Mathf.Clamp(cellCornerRadius, 0f, halfCell - 0.0001f);
+            float maxDist = Mathf.Max(0.0001f, halfCell - corner);
+            float dist = Mathf.Max(0f, -SignedDistanceRoundedRect(new Vector2(localX, localY), halfCell, halfCell, corner));
+            return SmoothStep01(Mathf.Clamp01(dist / maxDist));
         }
 
         private static float SmoothStep01(float t)

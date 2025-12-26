@@ -104,6 +104,8 @@ namespace LoopSorting
         private const bool DisableFrontOutline = true;
         private const string BlockOutlineLayerName = "Block";
         private const int BlockOutlineLayerFallback = 10;
+        private const string BoxMaskLayerName = "Box";
+        private const int BoxMaskLayerFallback = 11;
         // Box rim/cavity should stay behind the black outline, but still in front of the background.
         private const float BoxOutlineZ = 0.10f;
         private const float BoxVisualScale = 1.00f;
@@ -177,11 +179,13 @@ namespace LoopSorting
             {
                 _hasBoxFrame = true;
                 Hide2DBoxVisuals();
+                UpdateBoxMaskLayers();
             }
             else
             {
                 BuildBoxOutline();
                 TryBuildBoxCavity();
+                UpdateBoxMaskLayers();
             }
         }
 
@@ -867,6 +871,22 @@ namespace LoopSorting
             return layer >= 0 ? layer : BlockOutlineLayerFallback;
         }
 
+        private static int ResolveBoxMaskLayer()
+        {
+            int layer = LayerMask.NameToLayer(BoxMaskLayerName);
+            return layer >= 0 ? layer : BoxMaskLayerFallback;
+        }
+
+        private void UpdateBoxMaskLayers()
+        {
+            int layer = ResolveBoxMaskLayer();
+            if (layer < 0) return;
+
+            if (_box3D != null) SetLayerRecursively(_box3D.transform, layer);
+            if (_boxRim != null) SetLayerRecursively(_boxRim.transform, layer);
+            if (_boxCavity != null) SetLayerRecursively(_boxCavity.transform, layer);
+        }
+
         private static void SetLayerRecursively(Transform root, int layer)
         {
             if (root == null) return;
@@ -931,6 +951,7 @@ namespace LoopSorting
                 UpdateBox3DTransform();
                 Update3DLidState(_completed, forceShow: false);
                 UpdateMouthIndicatorVisibility();
+                UpdateBoxMaskLayers();
                 return true;
             }
 
@@ -948,6 +969,7 @@ namespace LoopSorting
             UpdateBox3DTransform();
             Update3DLidState(_completed, forceShow: false);
             UpdateMouthIndicatorVisibility();
+            UpdateBoxMaskLayers();
             return true;
         }
 
@@ -1358,6 +1380,7 @@ namespace LoopSorting
             _boxCavity.transform.localScale = new Vector3(metrics.contentRect.width, metrics.contentRect.height, 1f);
             UpdateBoxCavityTiling();
             _boxCavity.SetActive(true);
+            UpdateBoxMaskLayers();
             return true;
         }
 
@@ -1442,6 +1465,7 @@ namespace LoopSorting
                 if (_boxRimCornerRenderers[i] != null) _boxRimCornerRenderers[i].sharedMaterial = _boxRimCornerMaterial;
                 if (_boxRimCorners[i] != null) SetWorldOverlaySorting(_boxRimCorners[i], BoxRimSortingOrder + 1);
             }
+            UpdateBoxMaskLayers();
 
             var metrics = ComputeBoxMetrics();
             float halfW = metrics.outerSize.x * 0.5f;

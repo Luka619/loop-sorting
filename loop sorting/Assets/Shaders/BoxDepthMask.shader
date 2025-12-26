@@ -1,11 +1,11 @@
-Shader "Hidden/BlockMask"
+Shader "Hidden/BoxDepthMask"
 {
     SubShader
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" }
         Pass
         {
-            ColorMask GBA
+            ColorMask R
             ZWrite On
             ZTest LEqual
             Cull Back
@@ -37,7 +37,7 @@ Shader "Hidden/BlockMask"
             fixed4 frag (v2f i) : SV_Target
             {
                 float depth01 = saturate((i.eyeDepth - _ProjectionParams.y) / (_ProjectionParams.z - _ProjectionParams.y));
-                return fixed4(0, 1, 0, depth01);
+                return fixed4(depth01, 0, 0, 1);
             }
             ENDCG
         }

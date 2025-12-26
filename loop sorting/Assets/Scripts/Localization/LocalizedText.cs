@@ -4,6 +4,9 @@ namespace LoopSorting
     {
         public const string TutorialClickBox = "点击箱子来把混乱的积木放在传送带上";
         public const string TutorialWinToast = "所有箱子都被摆放整齐了！";
+        public const string TutorialClickTopBox = "所有颜色都要完成：先点击最上面的箱子";
+        public const string TutorialWaitSecondBox = "等第二个箱子装满，完成一种颜色";
+        public const string TutorialClickTopBoxAgain = "再点击最上面的箱子，完成剩下颜色";
 
         public const string MainMenuPlay = "开始游戏";
         public const string MainMenuTitle = "循环\n排序";

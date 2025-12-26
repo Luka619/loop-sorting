@@ -56,7 +56,7 @@ namespace LoopSorting.Editor
                 atlasWidth: 1024,
                 atlasHeight: 1024,
                 atlasPopulationMode: AtlasPopulationMode.Dynamic,
-                enableMultiAtlasSupport: true);
+                enableMultiAtlasSupport: false);
 
             if (fontAsset == null)
             {
@@ -76,6 +76,7 @@ namespace LoopSorting.Editor
                 Debug.LogWarning($"Missing characters: {missing}");
             }
 
+            FixAtlasTextures(fontAsset);
             fontAsset.atlasPopulationMode = AtlasPopulationMode.Static;
 
             AssetDatabase.CreateAsset(fontAsset, OutputPath);
@@ -117,6 +118,28 @@ namespace LoopSorting.Editor
             {
                 importer.includeFontData = true;
                 importer.SaveAndReimport();
+            }
+        }
+
+        private static void FixAtlasTextures(TMP_FontAsset fontAsset)
+        {
+            if (fontAsset == null) return;
+            var atlas = fontAsset.atlasTexture;
+            if (atlas == null) return;
+
+            fontAsset.atlasTextures = new[] { atlas };
+            fontAsset.isMultiAtlasTexturesEnabled = false;
+            var so = new SerializedObject(fontAsset);
+            var atlasIndex = so.FindProperty("m_AtlasTextureIndex");
+            if (atlasIndex != null)
+            {
+                atlasIndex.intValue = 0;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            if (fontAsset.material != null)
+            {
+                fontAsset.material.SetTexture(ShaderUtilities.ID_MainTex, atlas);
             }
         }
 

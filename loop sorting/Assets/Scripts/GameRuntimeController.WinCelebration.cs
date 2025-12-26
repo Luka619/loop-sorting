@@ -14,7 +14,7 @@ namespace LoopSorting
         private IEnumerator PlayWinCelebration()
         {
             yield return StartCoroutine(PlayWinBoxBounce());
-            bool showToast = IsTutorialLevel(_currentLayoutSource ?? _currentLayout);
+            bool showToast = IsTutorialWinToastLevel(_currentLayoutSource ?? _currentLayout);
             if (showToast)
             {
                 ShowTutorialMessage(LocalizedText.TutorialWinToast);

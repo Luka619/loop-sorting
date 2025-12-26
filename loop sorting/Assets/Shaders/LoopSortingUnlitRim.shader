@@ -13,6 +13,7 @@ Shader "LoopSorting/UnlitRim"
         _EdgeDarken("Edge Darken", Range(0.0, 1.0)) = 0.15
         _FakeLightDir("Fake Light Dir (XYZ)", Vector) = (0, 0, 1, 0)
         _FakeLightStrength("Fake Light Strength", Range(0.0, 1.0)) = 0.25
+        _TopLightDir("Top Light Dir (Local XYZ)", Vector) = (0, 0, 1, 0)
         _ViewLightStrength("View Light Strength", Range(0,1)) = 0
         _ViewPower("View Facing Power", Range(0.5,6)) = 1.6
         _ViewSideMin("View Side Min", Range(0.25,1)) = 0.7
@@ -46,6 +47,7 @@ Shader "LoopSorting/UnlitRim"
             float _EdgeDarken;
             float4 _FakeLightDir;
             float _FakeLightStrength;
+            float4 _TopLightDir;
             float _ViewLightStrength;
             float _ViewPower;
             float _ViewSideMin;
@@ -96,7 +98,7 @@ Shader "LoopSorting/UnlitRim"
                 float rim = pow(1.0 - ndv, _RimPower);
 
                 // Up-facing light: brightest when normal points to the brick's local +Z (stud direction).
-                float3 topDir = normalize(mul((float3x3)unity_ObjectToWorld, float3(0.0, 0.0, 1.0)));
+                float3 topDir = normalize(mul((float3x3)unity_ObjectToWorld, _TopLightDir.xyz));
                 float ndu = saturate(dot(Nraw, topDir));
                 float face = pow(max(0.0001, ndu), _ViewPower);
                 float upLit = lerp(_ViewSideMin, 1.0, face);

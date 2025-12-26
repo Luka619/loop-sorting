@@ -256,6 +256,16 @@ namespace LoopSorting.Editor
 
             if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
             if (mat.HasProperty("_Ambient")) mat.SetFloat("_Ambient", 1.0f);
+            if (mat.HasProperty("_RimStrength")) mat.SetFloat("_RimStrength", 0.2f);
+            if (mat.HasProperty("_RimPower")) mat.SetFloat("_RimPower", 2.5f);
+            if (mat.HasProperty("_FakeLightDir")) mat.SetVector("_FakeLightDir", new Vector4(0f, 0f, 1f, 0f));
+            if (mat.HasProperty("_FakeLightStrength")) mat.SetFloat("_FakeLightStrength", 0.25f);
+            if (mat.HasProperty("_TopLightDir")) mat.SetVector("_TopLightDir", new Vector4(0f, 0f, -1f, 0f));
+            if (mat.HasProperty("_ViewLightStrength")) mat.SetFloat("_ViewLightStrength", 0.95f);
+            if (mat.HasProperty("_ViewPower")) mat.SetFloat("_ViewPower", 1.6f);
+            if (mat.HasProperty("_ViewSideMin")) mat.SetFloat("_ViewSideMin", 0.62f);
+            if (mat.HasProperty("_Curv")) mat.SetFloat("_Curv", 0.12f);
+            if (mat.HasProperty("_EdgeDarken")) mat.SetFloat("_EdgeDarken", 0.1f);
             EditorUtility.SetDirty(mat);
             return mat;
         }

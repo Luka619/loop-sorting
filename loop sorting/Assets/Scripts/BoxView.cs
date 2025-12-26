@@ -449,12 +449,7 @@ namespace LoopSorting
             }
 
             var rect = GetBlocksLocalRect();
-            var cellSize = new Vector2(
-                rect.width / _columns,
-                rect.height / _rows
-            );
-
-            var origin = new Vector2(rect.xMin + cellSize.x * 0.5f, rect.yMax - cellSize.y * 0.5f);
+            GetUniformGridRect(rect, out var cellSize, out var origin);
             var pos = origin + new Vector2(col * cellSize.x, -row * cellSize.y);
 
             var finalPos = new Vector3(pos.x, pos.y, 0f);
@@ -467,11 +462,8 @@ namespace LoopSorting
             {
                 _blockVisuals[slotIndex].transform.localPosition = finalPos;
             }
-            var fitScale = new Vector3(
-                Mathf.Min(_blockSize.x, cellSize.x * 0.9f),
-                Mathf.Min(_blockSize.y, cellSize.y * 0.9f),
-                Mathf.Min(_blockSize.y, cellSize.y * 0.9f)
-            );
+            float uniform = Mathf.Min(Mathf.Min(_blockSize.x, _blockSize.y), cellSize.x * 0.9f);
+            var fitScale = new Vector3(uniform, uniform, uniform);
             _blockVisuals[slotIndex].transform.localScale = fitScale;
             bool hidden = _slotHidden[slotIndex] && slotIndex > 0;
             var matColor = hidden ? new Color(0.3f, 0.3f, 0.3f, 1f) : BlockVisual.ToUnityColor(color);
@@ -572,6 +564,20 @@ namespace LoopSorting
 
             rect = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
             return rect.width > 0.0001f && rect.height > 0.0001f;
+        }
+
+        private Rect GetUniformGridRect(Rect rect, out Vector2 cellSize, out Vector2 origin)
+        {
+            float cell = Mathf.Min(rect.width / _columns, rect.height / _rows);
+            cell = Mathf.Max(0.0001f, cell);
+            float gridW = cell * _columns;
+            float gridH = cell * _rows;
+            float padX = (rect.width - gridW) * 0.5f;
+            float padY = (rect.height - gridH) * 0.5f;
+            var gridRect = new Rect(rect.xMin + padX, rect.yMin + padY, gridW, gridH);
+            cellSize = new Vector2(cell, cell);
+            origin = new Vector2(gridRect.xMin + cell * 0.5f, gridRect.yMax - cell * 0.5f);
+            return gridRect;
         }
 
         private void CacheMouth()
@@ -697,7 +703,7 @@ namespace LoopSorting
             }
 
             var rect = GetBlocksLocalRect();
-            var cellSize = new Vector2(rect.width / _columns, rect.height / _rows);
+            var gridRect = GetUniformGridRect(rect, out var cellSize, out _);
 
             // Build exact outline around the occupied cells (instead of a bounding rectangle),
             // so the outline matches the block count even when the last row is partial.
@@ -783,8 +789,8 @@ namespace LoopSorting
             {
                 int vx = KeyX(cur);
                 int vy = KeyY(cur);
-                float px = rect.xMin + vx * cellSize.x;
-                float py = rect.yMax - vy * cellSize.y;
+                float px = gridRect.xMin + vx * cellSize.x;
+                float py = gridRect.yMax - vy * cellSize.y;
                 path.Add(new Vector3(px, py, OutlineZ));
 
                 if (!next.TryGetValue(cur, out var nxt))
@@ -973,6 +979,7 @@ namespace LoopSorting
             return true;
         }
 
+
         private void UpdateBox3DTransform()
         {
             if (_box3D == null) return;
@@ -990,6 +997,31 @@ namespace LoopSorting
             float scaleY = targetY / Mathf.Max(0.0001f, localBounds.size.y);
             float scaleZ = Mathf.Min(scaleX, scaleY);
             _box3D.transform.localScale = new Vector3(scaleX, scaleY, scaleZ);
+
+            // Keep cell proportions uniform inside the box: shrink the long axis if needed.
+            if (_box3DCavityRenderer != null && _columns > 0 && _rows > 0 && TryGetCavityLocalRect(out var cavityRect))
+            {
+                float cellX = cavityRect.width / _columns;
+                float cellY = cavityRect.height / _rows;
+                float minCell = Mathf.Min(cellX, cellY);
+                if (minCell > 0.0001f)
+                {
+                    float corrX = (minCell * _columns) / Mathf.Max(0.0001f, cavityRect.width);
+                    float corrY = (minCell * _rows) / Mathf.Max(0.0001f, cavityRect.height);
+                    if (Mathf.Abs(corrX - 1f) > 0.0001f || Mathf.Abs(corrY - 1f) > 0.0001f)
+                    {
+                        float applyCorrX = corrX;
+                        float applyCorrY = corrY;
+                        if (swapAxes)
+                        {
+                            float tmp = applyCorrX;
+                            applyCorrX = applyCorrY;
+                            applyCorrY = tmp;
+                        }
+                        _box3D.transform.localScale = new Vector3(scaleX * applyCorrX, scaleY * applyCorrY, scaleZ);
+                    }
+                }
+            }
 
             var bounds = CalculateRendererBounds(_box3D, _box3DLid);
             var localCenter = _box3D.transform.InverseTransformPoint(bounds.center);

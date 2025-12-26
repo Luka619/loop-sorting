@@ -24,7 +24,7 @@ Material:
     - _AO: 0.35
     - _AOPower: 2
     - _Ambient: 1
-    - _Cull: 2
+    - _Cull: 0
     - _Curv: 0.12
     - _EdgeDarken: 0.1
     - _FakeLightStrength: 0.25
@@ -37,6 +37,6 @@ Material:
     m_Colors:
     - _Color: {r: 0.9, g: 0.58, b: 0.38, a: 1}
     - _FakeLightDir: {r: 0, g: 0, b: 1, a: 0}
-    - _TopLightDir: {r: 0, g: 0, b: -1, a: 0}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _TopLightDir: {r: 0, g: 0, b: -1, a: 0}
   m_BuildTextureStacks: []

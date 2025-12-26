@@ -38,4 +38,5 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _FakeLightDir: {r: 0.25, g: 0.85, b: -0.45, a: 0}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _TopLightDir: {r: 0, g: 0, b: 1, a: 0}
   m_BuildTextureStacks: []

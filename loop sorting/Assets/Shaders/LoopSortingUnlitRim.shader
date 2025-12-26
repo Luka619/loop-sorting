@@ -52,6 +52,7 @@ Shader "LoopSorting/UnlitRim"
             float _ViewPower;
             float _ViewSideMin;
             float _Ambient;
+            float _Cull;
 
             struct appdata
             {
@@ -94,19 +95,24 @@ Shader "LoopSorting/UnlitRim"
 
                 // Rim (silhouette) term to make edges readable without real lights.
                 float3 Nraw = normalize(i.worldNormal);
+                float3 Nlit = Nraw;
+                if (_Cull < 0.5 && dot(Nlit, V) < 0.0)
+                {
+                    Nlit = -Nlit;
+                }
                 float ndv = saturate(dot(N, V));
                 float rim = pow(1.0 - ndv, _RimPower);
 
                 // Up-facing light: brightest when normal points to the brick's local +Z (stud direction).
                 float3 topDir = normalize(mul((float3x3)unity_ObjectToWorld, _TopLightDir.xyz));
-                float ndu = saturate(dot(Nraw, topDir));
+                float ndu = saturate(dot(Nlit, topDir));
                 float face = pow(max(0.0001, ndu), _ViewPower);
                 float upLit = lerp(_ViewSideMin, 1.0, face);
                 float upScale = lerp(1.0, upLit, _ViewLightStrength);
 
                 // A tiny fake directional term (still unlit: constant light dir, no shadows).
                 float3 L = normalize(mul((float3x3)unity_ObjectToWorld, _FakeLightDir.xyz));
-                float ndl = saturate(dot(Nraw, L));
+                float ndl = saturate(dot(Nlit, L));
                 float fakeLit = lerp(1.0, (0.6 + 0.4 * ndl), _FakeLightStrength);
 
                 // Optional edge darken to increase contrast.

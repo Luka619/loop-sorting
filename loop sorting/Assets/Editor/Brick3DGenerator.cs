@@ -10,7 +10,7 @@ namespace LoopSorting.Editor
         private const int DefaultRows = 2;
         private const float DefaultCellSize = 1f;
         private const float DefaultBaseHeight = 0.8f;
-        private const float DefaultBaseRoundness = 0.15f;
+        private const float DefaultBaseRoundness = 0.4f;
         private const int DefaultBaseSegments = 12;
         private const int DefaultHeightSegments = 4;
         private const float DefaultStudRadius = 0.3f;
@@ -22,7 +22,6 @@ namespace LoopSorting.Editor
         private const string RootFolder = "Assets/Art3D";
         private const string MeshFolder = "Assets/Art3D/Meshes";
         private const string MaterialFolder = "Assets/Art3D/Materials";
-        private const string PrefabFolder = "Assets/Art3D/Bricks";
         private const string ResourcePrefabFolder = "Assets/Resources/Art3D";
 
         [MenuItem("LoopSorting/Art/Generate 3D Brick 2x2 Rounded")]
@@ -62,7 +61,6 @@ namespace LoopSorting.Editor
             EnsureFolder("Assets", "Art3D");
             EnsureFolder(RootFolder, "Meshes");
             EnsureFolder(RootFolder, "Materials");
-            EnsureFolder(RootFolder, "Bricks");
             EnsureFolder("Assets", "Resources");
             EnsureFolder("Assets/Resources", "Art3D");
 
@@ -70,7 +68,6 @@ namespace LoopSorting.Editor
             string baseMeshPath = $"{MeshFolder}/{name}_Base.asset";
             string studsMeshPath = $"{MeshFolder}/{name}_Studs.asset";
             string matPath = $"{MaterialFolder}/{name}.mat";
-            string prefabPath = $"{PrefabFolder}/{name}.prefab";
             string resourcePrefabPath = $"{ResourcePrefabFolder}/{name}.prefab";
 
             BuildBrickMeshes(
@@ -111,7 +108,6 @@ namespace LoopSorting.Editor
             var studsRenderer = studsPart.AddComponent<MeshRenderer>();
             studsRenderer.sharedMaterial = mat;
 
-            var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
             var resourcePrefab = PrefabUtility.SaveAsPrefabAsset(root, resourcePrefabPath);
             Object.DestroyImmediate(root);
 
@@ -122,11 +118,6 @@ namespace LoopSorting.Editor
             {
                 Selection.activeObject = resourcePrefab;
                 EditorGUIUtility.PingObject(resourcePrefab);
-            }
-            else if (prefab != null)
-            {
-                Selection.activeObject = prefab;
-                EditorGUIUtility.PingObject(prefab);
             }
         }
 

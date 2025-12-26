@@ -9,32 +9,39 @@ namespace LoopSorting.Editor
         private const int DefaultColumns = 3;
         private const int DefaultRows = 8;
         private const float DefaultCellSize = 1f;
-        private const float DefaultWallThickness = 0.18f;
+        private const float DefaultWallThickness = 1.0f;
         private const float DefaultWallDepth = 1f;
         private const float DefaultFloorThickness = 0.18f;
         private const float DefaultGrooveDepth = 0.4f;
         private const float DefaultGridThickness = 0.04f;
-        private const float DefaultCornerRadius = 1.2f;
+        // Match Brick3DGenerator base roundness after normalization: 0.40 / 2 = 0.20 (per cell size 1).
+        private const float BrickCornerRadiusRatio = 0.2f;
+        // Make the box inner corners a bit squarer than the brick to avoid corner clashes.
+        private const float BoxCornerRadiusScale = 0.85f;
+        private const float BoxInnerCornerRadiusRatio = BrickCornerRadiusRatio * BoxCornerRadiusScale;
+        private const float DefaultCornerRadius = DefaultWallThickness + (BoxInnerCornerRadiusRatio * DefaultCellSize);
         private const int DefaultCornerSegments = 16;
-        private const float DefaultEdgeRadius = 0.26f;
+        private const float DefaultEdgeRadius = BoxInnerCornerRadiusRatio;
         private const int DefaultEdgeSegments = 6;
-        private const float DefaultCellCornerRadius = 0.0675f;
+        private const float DefaultCellCornerRadius = BoxInnerCornerRadiusRatio;
         private const OpeningSide DefaultOpeningSide = OpeningSide.Top;
         private const float DefaultOpeningWidthCells = 2.8f;
         private const float DefaultLidThickness = 0.16f;
         private const float DefaultLidFrameWidth = 0.18f;
         private const float DefaultLidFrontOffset = -0.02f;
         private const float DefaultGlassInset = 0.1f;
-        private const float DefaultGlassAlpha = 0.25f;
+        private const float DefaultGlassAlpha = 0.35f;
         private const float DefaultLidGlassWidthRatio = 0.5f;
         private const float DefaultLidGlassHeightRatio = 0.75f;
         private const float DefaultMouthInsetFrac = 0.18f;
         private const float DefaultMouthBandExtraFrac = 0.35f;
+        private const bool DebugDisableCavityMouthFade = false;
+        private const bool DebugDisableCavityEdgeClip = true;
 
         private const string RootFolder = "Assets/Art3D";
         private const string MeshFolder = "Assets/Art3D/Meshes";
         private const string MaterialFolder = "Assets/Art3D/Materials";
-        private const string PrefabFolder = "Assets/Art3D/Boxes";
+        private const string ResourcePrefabFolder = "Assets/Resources/Art3D";
 
         private enum OpeningSide
         {
@@ -93,7 +100,8 @@ namespace LoopSorting.Editor
             EnsureFolder("Assets", "Art3D");
             EnsureFolder(RootFolder, "Meshes");
             EnsureFolder(RootFolder, "Materials");
-            EnsureFolder(RootFolder, "Boxes");
+            EnsureFolder("Assets", "Resources");
+            EnsureFolder("Assets/Resources", "Art3D");
 
             string bodyMeshPath = $"{MeshFolder}/Box3x8_Body.asset";
             string cavityMeshPath = $"{MeshFolder}/Box3x8_Cavity.asset";
@@ -103,7 +111,7 @@ namespace LoopSorting.Editor
             string cavityMatPath = $"{MaterialFolder}/Box3D_Cavity.mat";
             string lidMatPath = $"{MaterialFolder}/Box3D_Lid.mat";
             string glassMatPath = $"{MaterialFolder}/Box3D_Glass.mat";
-            string prefabPath = $"{PrefabFolder}/Box3x8.prefab";
+            string resourcePrefabPath = $"{ResourcePrefabFolder}/Box3x8.prefab";
 
             float openingWidth = Mathf.Clamp(openingWidthCells * cellSize, 0f, columns * cellSize);
             var bodyMesh = BuildTrayMesh(
@@ -165,6 +173,21 @@ namespace LoopSorting.Editor
             var cavityMat = LoadOrCreateMaterial(cavityMatPath, cavityColor);
             var lidMat = LoadOrCreateMaterial(lidMatPath, new Color(0.9f, 0.58f, 0.38f, 1f));
             var glassMat = LoadOrCreateGlassMaterial(glassMatPath, new Color(0.9f, 0.95f, 0.98f, 1f), glassAlpha);
+            if (bodyMat != null && bodyMat.HasProperty("_Cull"))
+            {
+                bodyMat.SetFloat("_Cull", 0f);
+                EditorUtility.SetDirty(bodyMat);
+            }
+            if (cavityMat != null && cavityMat.HasProperty("_Cull"))
+            {
+                cavityMat.SetFloat("_Cull", 0f);
+                EditorUtility.SetDirty(cavityMat);
+            }
+            if (lidMat != null && lidMat.HasProperty("_Cull"))
+            {
+                lidMat.SetFloat("_Cull", 0f);
+                EditorUtility.SetDirty(lidMat);
+            }
 
             var root = new GameObject("Box3D_3x8");
             var body = new GameObject("Body");
@@ -199,16 +222,16 @@ namespace LoopSorting.Editor
             var lidGlassRenderer = lidGlass.AddComponent<MeshRenderer>();
             lidGlassRenderer.sharedMaterial = glassMat;
 
-            var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            var resourcePrefab = PrefabUtility.SaveAsPrefabAsset(root, resourcePrefabPath);
             Object.DestroyImmediate(root);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            if (prefab != null)
+            if (resourcePrefab != null)
             {
-                Selection.activeObject = prefab;
-                EditorGUIUtility.PingObject(prefab);
+                Selection.activeObject = resourcePrefab;
+                EditorGUIUtility.PingObject(resourcePrefab);
             }
         }
 
@@ -366,6 +389,8 @@ namespace LoopSorting.Editor
                 : Mathf.Max(0f, innerHalfY - openingInset);
             float maxOpening = openingAxisLimit * 2f;
             openingWidth = Mathf.Clamp(openingWidth, 0f, maxOpening);
+            float targetInnerRadius = Mathf.Clamp(cellSize * BoxInnerCornerRadiusRatio, 0f, Mathf.Min(innerHalfX, innerHalfY));
+            innerRadius = Mathf.Min(innerRadius, targetInnerRadius);
 
             var builder = new MeshBuilder();
             var outerPts = BuildRoundedRectPoints(outerWidth, outerHeight, outerRadius, cornerSegments);
@@ -440,12 +465,12 @@ namespace LoopSorting.Editor
             float cavityDepth = Mathf.Clamp(wallDepth - floorThickness, wallDepth * 0.35f, wallDepth);
             float grooveBottom = Mathf.Clamp(cavityDepth + grooveDepth, cavityDepth + 0.005f, wallDepth - 0.01f);
             float innerRadius = Mathf.Clamp(cornerRadius - wallThickness, 0f, Mathf.Min(innerHalfX, innerHalfY));
+            float targetInnerRadius = Mathf.Clamp(cellSize * BoxInnerCornerRadiusRatio, 0f, Mathf.Min(innerHalfX, innerHalfY));
+            innerRadius = Mathf.Min(innerRadius, targetInnerRadius);
+            cellCornerRadius = targetInnerRadius;
             float mouthInset = Mathf.Clamp(cellSize * DefaultMouthInsetFrac, 0.05f, cellSize * 0.45f);
             float openingHalf = openingWidth * 0.5f;
             float bandExtra = cellSize * DefaultMouthBandExtraFrac;
-
-            edgeRadius = Mathf.Max(0f, edgeRadius);
-            float floorEdgeRadius = Mathf.Clamp(edgeRadius, 0.05f, Mathf.Min(innerHalfX, innerHalfY) * 0.4f);
 
             int subDiv = Mathf.Clamp(Mathf.RoundToInt(cellSize * 6f), 5, 10);
             int xCount = columns * subDiv + 1;
@@ -462,15 +487,14 @@ namespace LoopSorting.Editor
                 {
                     float u = x * invX;
                     float v = y * invY;
-                    float px = Mathf.Lerp(-innerHalfX, innerHalfX, u);
-                    float py = Mathf.Lerp(-innerHalfY, innerHalfY, v);
+                    float pxRaw = Mathf.Lerp(-innerHalfX, innerHalfX, u);
+                    float pyRaw = Mathf.Lerp(-innerHalfY, innerHalfY, v);
 
-                    var clamped = ClampToRoundedRect(new Vector2(px, py), innerHalfX, innerHalfY, innerRadius);
-                    px = clamped.x;
-                    py = clamped.y;
+                    float px = pxRaw;
+                    float py = pyRaw;
 
-            float dimple = ComputeCellDimple(px, py, innerHalfX, innerHalfY, cellSize, columns, rows, cellCornerRadius);
-                    if (openingWidth > 0.0001f && mouthInset > 0.0001f)
+                    float dimple = ComputeCellDimple(pxRaw, pyRaw, innerHalfX, innerHalfY, cellSize, columns, rows, cellCornerRadius);
+                    if (!DebugDisableCavityMouthFade && openingWidth > 0.0001f && mouthInset > 0.0001f)
                     {
                         bool inBand = true;
                         switch (openingSide)
@@ -502,12 +526,16 @@ namespace LoopSorting.Editor
                             dimple *= mouthFade;
                         }
                     }
-                    float zDimple = Mathf.Lerp(cavityDepth, grooveBottom, dimple);
+                    if (!DebugDisableCavityEdgeClip)
+                    {
+                        float edgeDist = -SignedDistanceRoundedRect(new Vector2(pxRaw, pyRaw), innerHalfX, innerHalfY, innerRadius);
+                        if (edgeDist <= 0f)
+                        {
+                            dimple = 0f;
+                        }
+                    }
 
-                    float edgeBlend = Mathf.Clamp01((-SignedDistanceRoundedRect(new Vector2(px, py), innerHalfX, innerHalfY, innerRadius)) / floorEdgeRadius);
-                    edgeBlend = SmoothStep01(edgeBlend);
-
-                    float z = Mathf.Lerp(cavityDepth, zDimple, edgeBlend);
+                    float z = Mathf.Lerp(cavityDepth, grooveBottom, dimple);
 
                     indices[x, y] = builder.AddVertex(new Vector3(px, py, z), Vector3.back, new Vector2(u, v));
                 }
@@ -823,14 +851,9 @@ namespace LoopSorting.Editor
 
         private static float ComputeCellDimple(float x, float y, float halfX, float halfY, float cellSize, int columns, int rows, float cellCornerRadius)
         {
-            int col = Mathf.Clamp(Mathf.FloorToInt((x + halfX) / cellSize), 0, columns - 1);
-            int row = Mathf.Clamp(Mathf.FloorToInt((y + halfY) / cellSize), 0, rows - 1);
-            float cellOriginX = -halfX + col * cellSize;
-            float cellOriginY = -halfY + row * cellSize;
-            float localX = x - (cellOriginX + cellSize * 0.5f);
-            float localY = y - (cellOriginY + cellSize * 0.5f);
-
             float halfCell = cellSize * 0.5f;
+            float localX = Mathf.Repeat(x + halfX, cellSize) - halfCell;
+            float localY = Mathf.Repeat(y + halfY, cellSize) - halfCell;
             float corner = Mathf.Clamp(cellCornerRadius, 0f, halfCell - 0.0001f);
             float maxDist = Mathf.Max(0.0001f, halfCell - corner);
             float dist = Mathf.Max(0f, -SignedDistanceRoundedRect(new Vector2(localX, localY), halfCell, halfCell, corner));
@@ -956,9 +979,8 @@ namespace LoopSorting.Editor
             float frameInnerHeight = Mathf.Min(targetInnerHeight, minInnerHeight);
             float frameInnerHalfX = frameInnerWidth * 0.5f;
             float frameInnerHalfY = frameInnerHeight * 0.5f;
-            float frameWidthX = Mathf.Max(0.02f, (outerWidth - frameInnerWidth) * 0.5f);
-            float frameWidthY = Mathf.Max(0.02f, (outerHeight - frameInnerHeight) * 0.5f);
-            float frameInnerRadius = Mathf.Clamp(outerRadius - Mathf.Min(frameWidthX, frameWidthY), 0f, Mathf.Min(frameInnerHalfX, frameInnerHalfY));
+            float frameRadiusScale = Mathf.Min(frameInnerWidth / outerWidth, frameInnerHeight / outerHeight);
+            float frameInnerRadius = Mathf.Clamp(outerRadius * frameRadiusScale, 0f, Mathf.Min(frameInnerHalfX, frameInnerHalfY));
 
             var builder = new MeshBuilder();
             var outerPts = BuildRoundedRectPoints(outerWidth, outerHeight, outerRadius, cornerSegments);
@@ -1014,9 +1036,6 @@ namespace LoopSorting.Editor
             float frameInnerHeight = Mathf.Min(targetInnerHeight, minInnerHeight);
             float frameInnerHalfX = frameInnerWidth * 0.5f;
             float frameInnerHalfY = frameInnerHeight * 0.5f;
-            float frameWidthX = Mathf.Max(0.02f, (outerWidth - frameInnerWidth) * 0.5f);
-            float frameWidthY = Mathf.Max(0.02f, (outerHeight - frameInnerHeight) * 0.5f);
-
             float maxInset = Mathf.Max(0f, Mathf.Min(frameInnerHalfX, frameInnerHalfY) - 0.01f);
             glassInset = Mathf.Clamp(glassInset, 0f, maxInset);
 
@@ -1024,7 +1043,9 @@ namespace LoopSorting.Editor
             float glassHeight = Mathf.Max(0.02f, frameInnerHeight - glassInset * 2f);
             float glassHalfX = glassWidth * 0.5f;
             float glassHalfY = glassHeight * 0.5f;
-            float glassRadius = Mathf.Clamp(outerRadius - Mathf.Min(frameWidthX, frameWidthY) - glassInset, 0f, Mathf.Min(glassHalfX, glassHalfY));
+            float frameRadiusScale = Mathf.Min(frameInnerWidth / outerWidth, frameInnerHeight / outerHeight);
+            float frameInnerRadius = Mathf.Clamp(outerRadius * frameRadiusScale, 0f, Mathf.Min(frameInnerHalfX, frameInnerHalfY));
+            float glassRadius = Mathf.Clamp(frameInnerRadius - glassInset, 0f, Mathf.Min(glassHalfX, glassHalfY));
 
             float depthInset = Mathf.Clamp(lidThickness * 0.2f, 0.01f, lidThickness * 0.45f);
             float zFront = -lidThickness + depthInset;

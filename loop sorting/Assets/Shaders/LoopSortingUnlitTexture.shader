@@ -3,7 +3,7 @@ Shader "LoopSorting/UnlitTexture"
     Properties
     {
         _MainTex("Texture", 2D) = "white" {}
-        _Color("Color", Color) = (1,1,1,1)
+        _Color("Color", Color) = (0.7372549,0.7372549,0.7372549,1)
         [Enum(Off,0,On,1)] _ZWrite("ZWrite", Float) = 1
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest("ZTest", Float) = 4
         [Enum(Off,0,Front,1,Back,2)] _Cull("Cull", Float) = 0

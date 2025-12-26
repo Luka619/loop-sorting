@@ -65,6 +65,17 @@ namespace LoopSorting
         private const string RuntimeUnlitTextureMaterialResourcePath = "LoopSortingUnlitTexture";
         private const float BeltSpawnPunchScale = 0.12f;
         private const float BeltSpawnPunchSeconds = 0.12f;
+        private static readonly Color BeltRailColor = Color.white;
+        private const float BeltRailCornerRadiusRatio = 0.12f;
+        private const int BeltRailCornerSegments = 2;
+        private static readonly Color BeltEndcapColor = new Color(0.93f, 0.58f, 0.34f, 1f);
+        private const float BeltEndcapLengthRatio = 0.75f;
+        private const float BeltEndcapHeightRatio = 1.2f;
+        private const float BeltEndcapCornerRadiusRatio = 0.45f;
+        private const int BeltEndcapCornerSegments = 4;
+        private const float BeltEndcapRingLengthRatio = 0.26f;
+        private const float BeltEndcapRingWidthRatio = 1.08f;
+        private const float BeltEndcapRingHeightRatio = 1.05f;
 
         private bool _hasLoadedSave;
         private bool _saveDirty;
@@ -78,7 +89,7 @@ namespace LoopSorting
         [Tooltip("Slot markers visible in-game (visual only).")]
         public bool showSlotMarkersRuntime = true;
         public float slotMarkerScale = 0.15f;
-        public Color slotMarkerColor = new Color(0.6f, 0.6f, 0.6f, 0.3f);
+        public Color slotMarkerColor = new Color(0.8f, 0.8f, 0.8f, 0.25f);
         [Tooltip("Update slot marker visuals every N frames (1 = every frame).")]
         [Min(1)] public int slotMarkerVisualUpdateInterval = 1;
         [Tooltip("Override slot marker visual update interval on mobile/web platforms.")]
@@ -1953,22 +1964,73 @@ namespace LoopSorting
             _beltWidthUsed = beltWidth;
 
             bool loop = path != null && path.loop;
-            var pts = BuildBeltPolylinePoints(path, spacing, smoothCorners, smoothTension, smoothSubdivisions, loop, z: 0.2f);
+            float beltSurfaceZ = 0.2f;
+            var pts = BuildBeltPolylinePoints(path, spacing, smoothCorners, smoothTension, smoothSubdivisions, loop, z: beltSurfaceZ);
             if (pts == null || pts.Count < 2) return;
 
             var go = new GameObject("ConveyorBelt");
             go.transform.SetParent(transform, false);
             _conveyorBelt = go;
 
-            var mf = go.AddComponent<MeshFilter>();
-            var mr = go.AddComponent<MeshRenderer>();
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            mr.receiveShadows = false;
-            mr.allowOcclusionWhenDynamic = false;
-            mf.sharedMesh = BuildRibbonMesh(pts, beltWidth, out float totalLen);
+            float railHeight = Mathf.Clamp(spacing * 0.18f, 0.05f, 0.12f);
+            float railWidth = Mathf.Clamp(spacing * 0.22f, beltWidth * 0.12f, beltWidth * 0.28f);
+            float surfaceWidth = beltWidth;
+            float railCornerMax = Mathf.Min(railWidth, railHeight) * 0.5f;
+            float railCornerRadius = Mathf.Clamp(Mathf.Min(railWidth, railHeight) * BeltRailCornerRadiusRatio, 0.001f, railCornerMax);
 
-            var mat = CreateConveyorBeltMaterial(totalLen, spacing, loop);
-            mr.sharedMaterial = mat;
+            float railOffset = beltWidth * 0.5f - railWidth * 0.5f;
+            var leftPts = OffsetPolyline(pts, railOffset);
+            var rightPts = OffsetPolyline(pts, -railOffset);
+
+            var surfaceGO = new GameObject("BeltSurface");
+            surfaceGO.transform.SetParent(go.transform, false);
+            var surfaceMf = surfaceGO.AddComponent<MeshFilter>();
+            var surfaceMr = surfaceGO.AddComponent<MeshRenderer>();
+            surfaceMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            surfaceMr.receiveShadows = false;
+            surfaceMr.allowOcclusionWhenDynamic = false;
+            surfaceMf.sharedMesh = BuildRibbonMesh(pts, surfaceWidth, out float totalLen);
+            surfaceMr.sharedMaterial = CreateConveyorBeltMaterial(totalLen, spacing, loop);
+
+            var railMat = CreateConveyorRailMaterial(BeltRailColor);
+            var leftGO = new GameObject("BeltRailLeft");
+            leftGO.transform.SetParent(go.transform, false);
+            var leftMf = leftGO.AddComponent<MeshFilter>();
+            var leftMr = leftGO.AddComponent<MeshRenderer>();
+            leftMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            leftMr.receiveShadows = false;
+            leftMr.allowOcclusionWhenDynamic = false;
+            leftMf.sharedMesh = BuildRoundedRibbonMesh(leftPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            leftMr.sharedMaterial = railMat;
+
+            var rightGO = new GameObject("BeltRailRight");
+            rightGO.transform.SetParent(go.transform, false);
+            var rightMf = rightGO.AddComponent<MeshFilter>();
+            var rightMr = rightGO.AddComponent<MeshRenderer>();
+            rightMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            rightMr.receiveShadows = false;
+            rightMr.allowOcclusionWhenDynamic = false;
+            rightMf.sharedMesh = BuildRoundedRibbonMesh(rightPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            rightMr.sharedMaterial = railMat;
+
+            if (!loop && pts.Count >= 2)
+            {
+                float capLength = Mathf.Clamp(spacing * BeltEndcapLengthRatio, beltWidth * 0.5f, beltWidth * 1.25f);
+                float capHeight = Mathf.Clamp(railHeight * BeltEndcapHeightRatio, railHeight * 0.8f, railHeight * 1.6f);
+                float capWidth = beltWidth;
+                float capRadius = Mathf.Clamp(Mathf.Min(capWidth, capHeight) * BeltEndcapCornerRadiusRatio, 0.001f, Mathf.Min(capWidth, capHeight) * 0.5f);
+
+                float ringLength = Mathf.Clamp(capLength * BeltEndcapRingLengthRatio, capLength * 0.12f, capLength * 0.6f);
+                float ringWidth = capWidth * BeltEndcapRingWidthRatio;
+                float ringHeight = capHeight * BeltEndcapRingHeightRatio;
+                float ringRadius = Mathf.Clamp(Mathf.Min(ringWidth, ringHeight) * BeltEndcapCornerRadiusRatio, 0.001f, Mathf.Min(ringWidth, ringHeight) * 0.5f);
+
+                var capMat = CreateConveyorEndcapMaterial(BeltEndcapColor);
+                AddConveyorEndcap(go.transform, pts[0], pts[1], capLength, capWidth, capHeight, capRadius, BeltEndcapCornerSegments,
+                    ringLength, ringWidth, ringHeight, ringRadius, BeltEndcapCornerSegments, capMat, railMat, "BeltEndcapStart");
+                AddConveyorEndcap(go.transform, pts[pts.Count - 1], pts[pts.Count - 2], capLength, capWidth, capHeight, capRadius, BeltEndcapCornerSegments,
+                    ringLength, ringWidth, ringHeight, ringRadius, BeltEndcapCornerSegments, capMat, railMat, "BeltEndcapEnd");
+            }
         }
 
         private static Mesh BuildRibbonMesh(List<Vector3> points, float width, out float totalLen)
@@ -2051,6 +2113,415 @@ namespace LoopSorting
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
             return mesh;
+        }
+
+        private static List<Vector3> OffsetPolyline(List<Vector3> points, float offset)
+        {
+            if (points == null || points.Count < 2) return points;
+            if (Mathf.Abs(offset) < 0.0001f) return new List<Vector3>(points);
+
+            int n = points.Count;
+            var result = new List<Vector3>(n);
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 dir;
+                if (i == 0)
+                {
+                    dir = (points[1] - points[0]);
+                }
+                else if (i == n - 1)
+                {
+                    dir = (points[n - 1] - points[n - 2]);
+                }
+                else
+                {
+                    dir = (points[i + 1] - points[i - 1]);
+                }
+
+                float len = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y);
+                if (len < 0.0001f) len = 1f;
+                dir /= len;
+
+                var perp = new Vector2(-dir.y, dir.x);
+                var p = points[i];
+                result.Add(new Vector3(p.x + perp.x * offset, p.y + perp.y * offset, p.z));
+            }
+
+            return result;
+        }
+
+        private static Mesh BuildBoxedRibbonMesh(List<Vector3> points, float width, float height, bool loop)
+        {
+            var mesh = new Mesh();
+            mesh.name = "ConveyorBeltRail";
+            if (points == null || points.Count < 2)
+            {
+                return mesh;
+            }
+
+            int n = points.Count;
+            var vertices = new Vector3[n * 4];
+            var uvs = new Vector2[n * 4];
+
+            float half = width * 0.5f;
+            var cumulative = new float[n];
+            cumulative[0] = 0f;
+            for (int i = 1; i < n; i++)
+            {
+                cumulative[i] = cumulative[i - 1] + Vector3.Distance(points[i - 1], points[i]);
+            }
+            float totalLen = Mathf.Max(0.0001f, cumulative[n - 1]);
+            float invTotal = 1f / totalLen;
+
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 dir;
+                if (i == 0)
+                {
+                    dir = (points[1] - points[0]);
+                }
+                else if (i == n - 1)
+                {
+                    dir = (points[n - 1] - points[n - 2]);
+                }
+                else
+                {
+                    dir = (points[i + 1] - points[i - 1]);
+                }
+
+                float len = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y);
+                if (len < 0.0001f) len = 1f;
+                dir /= len;
+
+                var perp = new Vector2(-dir.y, dir.x);
+                var p = points[i];
+                var off = new Vector3(perp.x * half, perp.y * half, 0f);
+
+                int v = i * 4;
+                vertices[v + 0] = new Vector3(p.x + off.x, p.y + off.y, p.z);
+                vertices[v + 1] = new Vector3(p.x - off.x, p.y - off.y, p.z);
+                vertices[v + 2] = vertices[v + 0] + new Vector3(0f, 0f, height);
+                vertices[v + 3] = vertices[v + 1] + new Vector3(0f, 0f, height);
+
+                float u01 = cumulative[i] * invTotal;
+                uvs[v + 0] = new Vector2(u01, 1f);
+                uvs[v + 1] = new Vector2(u01, 0f);
+                uvs[v + 2] = new Vector2(u01, 1f);
+                uvs[v + 3] = new Vector2(u01, 0f);
+            }
+
+            int segmentCount = n - 1;
+            int capCount = loop ? 0 : 2;
+            int quadCount = segmentCount * 4 + capCount;
+            var tris = new int[quadCount * 6];
+            int ti = 0;
+
+            for (int i = 0; i < segmentCount; i++)
+            {
+                int a = i * 4;
+                int b = (i + 1) * 4;
+
+                // Top
+                tris[ti++] = a + 0;
+                tris[ti++] = b + 0;
+                tris[ti++] = a + 1;
+                tris[ti++] = a + 1;
+                tris[ti++] = b + 0;
+                tris[ti++] = b + 1;
+
+                // Bottom
+                tris[ti++] = a + 2;
+                tris[ti++] = a + 3;
+                tris[ti++] = b + 2;
+                tris[ti++] = a + 3;
+                tris[ti++] = b + 3;
+                tris[ti++] = b + 2;
+
+                // Left side
+                tris[ti++] = a + 0;
+                tris[ti++] = b + 0;
+                tris[ti++] = a + 2;
+                tris[ti++] = a + 2;
+                tris[ti++] = b + 0;
+                tris[ti++] = b + 2;
+
+                // Right side
+                tris[ti++] = a + 1;
+                tris[ti++] = a + 3;
+                tris[ti++] = b + 1;
+                tris[ti++] = a + 3;
+                tris[ti++] = b + 3;
+                tris[ti++] = b + 1;
+            }
+
+            if (!loop)
+            {
+                // Start cap
+                tris[ti++] = 0;
+                tris[ti++] = 2;
+                tris[ti++] = 1;
+                tris[ti++] = 1;
+                tris[ti++] = 2;
+                tris[ti++] = 3;
+
+                // End cap
+                int last = (n - 1) * 4;
+                tris[ti++] = last + 0;
+                tris[ti++] = last + 1;
+                tris[ti++] = last + 2;
+                tris[ti++] = last + 1;
+                tris[ti++] = last + 3;
+                tris[ti++] = last + 2;
+            }
+
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
+        private static Mesh BuildRoundedRibbonMesh(List<Vector3> points, float width, float height, float cornerRadius, int cornerSegments, bool loop)
+        {
+            var mesh = new Mesh();
+            mesh.name = "ConveyorBeltRailRounded";
+            if (points == null || points.Count < 2)
+            {
+                return mesh;
+            }
+
+            var profile = BuildRoundedRectProfile(width, height, cornerRadius, cornerSegments);
+            int ring = profile.Count;
+            int n = points.Count;
+            if (ring < 3 || n < 2)
+            {
+                return mesh;
+            }
+
+            var vertices = new List<Vector3>(n * ring + (loop ? 0 : 2));
+            var uvs = new List<Vector2>(vertices.Capacity);
+            var cumulative = new float[n];
+            cumulative[0] = 0f;
+            for (int i = 1; i < n; i++)
+            {
+                cumulative[i] = cumulative[i - 1] + Vector3.Distance(points[i - 1], points[i]);
+            }
+            float totalLen = Mathf.Max(0.0001f, cumulative[n - 1]);
+            float invTotal = 1f / totalLen;
+
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 dir;
+                if (i == 0)
+                {
+                    dir = (points[1] - points[0]);
+                }
+                else if (i == n - 1)
+                {
+                    dir = (points[n - 1] - points[n - 2]);
+                }
+                else
+                {
+                    dir = (points[i + 1] - points[i - 1]);
+                }
+
+                float len = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y);
+                if (len < 0.0001f) len = 1f;
+                dir /= len;
+
+                var perp = new Vector2(-dir.y, dir.x);
+                var p = points[i];
+                float u01 = cumulative[i] * invTotal;
+                for (int j = 0; j < ring; j++)
+                {
+                    var c = profile[j];
+                    var pos = new Vector3(p.x + perp.x * c.x, p.y + perp.y * c.x, p.z + c.y);
+                    vertices.Add(pos);
+                    uvs.Add(new Vector2(u01, (float)j / ring));
+                }
+            }
+
+            int segments = loop ? n : (n - 1);
+            int quadCount = segments * ring;
+            int capTriCount = loop ? 0 : ring * 2;
+            int triCount = quadCount * 2 + capTriCount;
+            var tris = new int[triCount * 3];
+            int ti = 0;
+
+            for (int i = 0; i < segments; i++)
+            {
+                int iNext = (i + 1) % n;
+                int baseA = i * ring;
+                int baseB = iNext * ring;
+                for (int j = 0; j < ring; j++)
+                {
+                    int jNext = (j + 1) % ring;
+                    int a = baseA + j;
+                    int b = baseB + j;
+                    int aNext = baseA + jNext;
+                    int bNext = baseB + jNext;
+
+                    tris[ti++] = a;
+                    tris[ti++] = b;
+                    tris[ti++] = aNext;
+                    tris[ti++] = aNext;
+                    tris[ti++] = b;
+                    tris[ti++] = bNext;
+                }
+            }
+
+            if (!loop)
+            {
+                int startCenter = vertices.Count;
+                vertices.Add(points[0]);
+                uvs.Add(new Vector2(0f, 0.5f));
+
+                int endCenter = vertices.Count;
+                vertices.Add(points[n - 1]);
+                uvs.Add(new Vector2(1f, 0.5f));
+
+                for (int j = 0; j < ring; j++)
+                {
+                    int jNext = (j + 1) % ring;
+                    // Start cap (normal faces -dir due to clockwise ring order).
+                    tris[ti++] = startCenter;
+                    tris[ti++] = jNext;
+                    tris[ti++] = j;
+
+                    // End cap (reverse winding to face +dir).
+                    int baseEnd = (n - 1) * ring;
+                    tris[ti++] = endCenter;
+                    tris[ti++] = baseEnd + j;
+                    tris[ti++] = baseEnd + jNext;
+                }
+            }
+
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
+        private static void AddConveyorEndcap(
+            Transform parent,
+            Vector3 anchor,
+            Vector3 neighbor,
+            float capLength,
+            float capWidth,
+            float capHeight,
+            float capRadius,
+            int capSegments,
+            float ringLength,
+            float ringWidth,
+            float ringHeight,
+            float ringRadius,
+            int ringSegments,
+            Material capMat,
+            Material ringMat,
+            string name)
+        {
+            if (parent == null) return;
+            if (capMat == null && ringMat == null) return;
+
+            Vector2 dir2 = new Vector2(anchor.x - neighbor.x, anchor.y - neighbor.y);
+            if (dir2.sqrMagnitude < 0.0001f)
+            {
+                dir2 = Vector2.up;
+            }
+            dir2.Normalize();
+            var dir3 = new Vector3(dir2.x, dir2.y, 0f);
+
+            float safeCapLength = Mathf.Max(0.01f, capLength);
+            float safeRingLength = Mathf.Max(0.01f, ringLength);
+
+            var capCenter = anchor + dir3 * (safeCapLength * 0.5f);
+            var ringCenter = anchor + dir3 * (safeRingLength * 0.5f);
+            ringCenter.z += 0.002f;
+
+            if (capMat != null)
+            {
+                var capGO = new GameObject(name);
+                capGO.transform.SetParent(parent, false);
+                var capMf = capGO.AddComponent<MeshFilter>();
+                var capMr = capGO.AddComponent<MeshRenderer>();
+                capMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                capMr.receiveShadows = false;
+                capMr.allowOcclusionWhenDynamic = false;
+                capMf.sharedMesh = BuildRoundedRibbonMesh(BuildStraightPoints(capCenter, dir3, safeCapLength), capWidth, capHeight, capRadius, capSegments, false);
+                capMr.sharedMaterial = capMat;
+            }
+
+            if (ringMat != null)
+            {
+                var ringGO = new GameObject(name + "_Ring");
+                ringGO.transform.SetParent(parent, false);
+                var ringMf = ringGO.AddComponent<MeshFilter>();
+                var ringMr = ringGO.AddComponent<MeshRenderer>();
+                ringMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ringMr.receiveShadows = false;
+                ringMr.allowOcclusionWhenDynamic = false;
+                ringMf.sharedMesh = BuildRoundedRibbonMesh(BuildStraightPoints(ringCenter, dir3, safeRingLength), ringWidth, ringHeight, ringRadius, ringSegments, false);
+                ringMr.sharedMaterial = ringMat;
+            }
+        }
+
+        private static List<Vector3> BuildStraightPoints(Vector3 center, Vector3 dir, float length)
+        {
+            float half = length * 0.5f;
+            return new List<Vector3>
+            {
+                center - dir * half,
+                center + dir * half
+            };
+        }
+
+        private static List<Vector2> BuildRoundedRectProfile(float width, float height, float radius, int cornerSegments)
+        {
+            float halfW = width * 0.5f;
+            float halfH = height * 0.5f;
+            float maxRadius = Mathf.Min(halfW, halfH);
+            float r = Mathf.Clamp(radius, 0f, maxRadius);
+            int seg = Mathf.Max(1, cornerSegments);
+
+            if (r <= 0.0001f)
+            {
+                return new List<Vector2>
+                {
+                    new Vector2(-halfW, halfH),
+                    new Vector2(halfW, halfH),
+                    new Vector2(halfW, -halfH),
+                    new Vector2(-halfW, -halfH)
+                };
+            }
+
+            var pts = new List<Vector2>((seg + 1) * 4);
+            var tl = new Vector2(-halfW + r, halfH - r);
+            var tr = new Vector2(halfW - r, halfH - r);
+            var br = new Vector2(halfW - r, -halfH + r);
+            var bl = new Vector2(-halfW + r, -halfH + r);
+
+            AddArcPoints(pts, tl, 180f, 90f, r, seg, true);
+            AddArcPoints(pts, tr, 90f, 0f, r, seg, false);
+            AddArcPoints(pts, br, 0f, -90f, r, seg, false);
+            AddArcPoints(pts, bl, -90f, -180f, r, seg, false);
+
+            return pts;
+        }
+
+        private static void AddArcPoints(List<Vector2> pts, Vector2 center, float startDeg, float endDeg, float radius, int segments, bool includeStart)
+        {
+            float startRad = startDeg * Mathf.Deg2Rad;
+            float endRad = endDeg * Mathf.Deg2Rad;
+            for (int i = 0; i <= segments; i++)
+            {
+                if (!includeStart && i == 0) continue;
+                float t = segments <= 0 ? 0f : (float)i / segments;
+                float ang = Mathf.Lerp(startRad, endRad, t);
+                pts.Add(center + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * radius);
+            }
         }
 
         private static List<Vector3> BuildBeltPolylinePoints(

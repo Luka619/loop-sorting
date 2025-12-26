@@ -954,8 +954,8 @@ namespace LoopSorting
                 if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 1);
                 if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
                 // WebGL/WeChat can be sensitive to backface culling on MeshRenderer backgrounds.
-                if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 0); // 0=Off
-                if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
+                if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 2); // 0=Off
+                if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 2);
                 var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = mat;
                 renderer.sortingLayerID = 0;
@@ -1347,8 +1347,12 @@ namespace LoopSorting
 
             if (tex != null)
             {
+                var beltTint = new Color(0.7372549f, 0.7372549f, 0.7372549f, 1f);
                 mat.mainTexture = tex;
                 if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
+
+                Rect trimRect;
+                bool hasTrim = TryGetTextureTrimRect(tex, 0.02f, 2, out trimRect);
 
                 // Tile U by world length (normalized UVs): 1 tile per belt slot spacing by default.
                 float worldPerTile = Mathf.Max(0.1f, tileWorld);
@@ -1356,20 +1360,29 @@ namespace LoopSorting
                 // For loops, force an integer repeat count so the seam meets perfectly (u=0 and u=1 sample same texel).
                 float tilingU = loop ? Mathf.Max(1f, Mathf.Round(rawTilingU)) : rawTilingU;
 
+                Vector2 texScale = new Vector2(tilingU, 1f);
+                Vector2 texOffset = Vector2.zero;
+                if (hasTrim)
+                {
+                    texScale = new Vector2(tilingU * trimRect.width, trimRect.height);
+                    texOffset = new Vector2(trimRect.xMin, trimRect.yMin);
+                }
+
                 // WebGL can be strict about NPOT repeat; fall back to clamp to avoid an invisible belt.
                 if (Mathf.IsPowerOfTwo(tex.width) && Mathf.IsPowerOfTwo(tex.height))
                 {
                     tex.wrapMode = TextureWrapMode.Repeat;
-                    mat.mainTextureScale = new Vector2(tilingU, 1f);
                 }
                 else
                 {
                     tex.wrapMode = TextureWrapMode.Clamp;
-                    mat.mainTextureScale = Vector2.one;
                 }
 
-                if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
-                mat.color = Color.white;
+                mat.mainTextureScale = texScale;
+                mat.mainTextureOffset = texOffset;
+
+                if (mat.HasProperty("_Color")) mat.SetColor("_Color", beltTint);
+                mat.color = beltTint;
             }
             else
             {
@@ -1378,6 +1391,186 @@ namespace LoopSorting
                 var c = new Color(0.12f, 0.16f, 0.22f, 0.45f);
                 if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
                 mat.color = c;
+            }
+
+            return mat;
+        }
+
+
+        private static bool TryGetTextureTrimRect(Texture2D tex, float alphaThreshold, int sampleStep, out Rect rect)
+        {
+            rect = new Rect(0f, 0f, 1f, 1f);
+            if (tex == null || !tex.isReadable)
+            {
+                return false;
+            }
+
+            Color32[] pixels;
+            try
+            {
+                pixels = tex.GetPixels32();
+            }
+            catch
+            {
+                return false;
+            }
+
+            int w = tex.width;
+            int h = tex.height;
+            int minX = w;
+            int minY = h;
+            int maxX = -1;
+            int maxY = -1;
+            int step = Mathf.Max(1, sampleStep);
+            byte threshold = (byte)Mathf.Clamp(Mathf.RoundToInt(alphaThreshold * 255f), 0, 255);
+
+            for (int y = 0; y < h; y += step)
+            {
+                int row = y * w;
+                for (int x = 0; x < w; x += step)
+                {
+                    if (pixels[row + x].a > threshold)
+                    {
+                        if (x < minX) minX = x;
+                        if (y < minY) minY = y;
+                        if (x > maxX) maxX = x;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            if (maxX < minX || maxY < minY)
+            {
+                return false;
+            }
+
+            rect = new Rect(
+                minX / (float)w,
+                minY / (float)h,
+                (maxX - minX + 1) / (float)w,
+                (maxY - minY + 1) / (float)h);
+
+            return rect.width < 0.999f || rect.height < 0.999f || rect.xMin > 0.001f || rect.yMin > 0.001f;
+        }
+
+        private static Material CreateConveyorEndcapMaterial(Color color)
+        {
+            Material mat = null;
+            Shader shader = Shader.Find("LoopSorting/UnlitRim");
+            if (shader != null)
+            {
+                mat = new Material(shader);
+            }
+            else
+            {
+                Material runtimeMat = GetRuntimeUnlitTextureMaterialTemplate();
+                if (runtimeMat != null && runtimeMat.shader != null && runtimeMat.shader.isSupported)
+                {
+                    mat = new Material(runtimeMat);
+                }
+                else
+                {
+                    shader =
+                        Shader.Find("LoopSorting/UnlitTexture") ??
+                        Shader.Find("Unlit/Color") ??
+                        Shader.Find("Sprites/Default") ??
+                        Shader.Find("UI/Default") ??
+                        Shader.Find("Standard");
+                    if (shader != null)
+                    {
+                        mat = new Material(shader);
+                    }
+                }
+            }
+
+            if (mat == null)
+            {
+                return null;
+            }
+
+            mat.renderQueue = 1794;
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 1);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 2);
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 2);
+
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+            mat.color = color;
+
+            if (mat.HasProperty("_Ambient")) mat.SetFloat("_Ambient", 1.0f);
+            if (mat.HasProperty("_FakeLightStrength")) mat.SetFloat("_FakeLightStrength", 0.4f);
+            if (mat.HasProperty("_ViewLightStrength")) mat.SetFloat("_ViewLightStrength", 1.0f);
+            if (mat.HasProperty("_RimStrength")) mat.SetFloat("_RimStrength", 0.18f);
+            if (mat.HasProperty("_EdgeDarken")) mat.SetFloat("_EdgeDarken", 0.12f);
+            if (mat.HasProperty("_TopLightDir")) mat.SetVector("_TopLightDir", new Vector4(0f, 0f, -1f, 0f));
+            if (mat.HasProperty("_FakeLightDir")) mat.SetVector("_FakeLightDir", new Vector4(0f, 0f, -1f, 0f));
+
+            if (mat.HasProperty("_MainTex"))
+            {
+                mat.SetTexture("_MainTex", Texture2D.whiteTexture);
+                mat.mainTexture = Texture2D.whiteTexture;
+            }
+
+            return mat;
+        }
+
+
+        private static Material CreateConveyorRailMaterial(Color color)
+        {
+            Material mat = null;
+            Shader shader = Shader.Find("LoopSorting/UnlitRim");
+            if (shader != null)
+            {
+                mat = new Material(shader);
+            }
+            else
+            {
+                Material runtimeMat = GetRuntimeUnlitTextureMaterialTemplate();
+                if (runtimeMat != null && runtimeMat.shader != null && runtimeMat.shader.isSupported)
+                {
+                    mat = new Material(runtimeMat);
+                }
+                else
+                {
+                    shader =
+                        Shader.Find("LoopSorting/UnlitTexture") ??
+                        Shader.Find("Unlit/Color") ??
+                        Shader.Find("Sprites/Default") ??
+                        Shader.Find("UI/Default") ??
+                        Shader.Find("Standard");
+                    if (shader != null)
+                    {
+                        mat = new Material(shader);
+                    }
+                }
+            }
+
+            if (mat == null)
+            {
+                return null;
+            }
+
+            mat.renderQueue = 1795;
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 1);
+            if (mat.HasProperty("_ZTest")) mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", 2);
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 2);
+
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+            mat.color = color;
+
+            if (mat.HasProperty("_Ambient")) mat.SetFloat("_Ambient", 1.0f);
+            if (mat.HasProperty("_FakeLightStrength")) mat.SetFloat("_FakeLightStrength", 0.35f);
+            if (mat.HasProperty("_ViewLightStrength")) mat.SetFloat("_ViewLightStrength", 1.0f);
+            if (mat.HasProperty("_RimStrength")) mat.SetFloat("_RimStrength", 0.2f);
+            if (mat.HasProperty("_EdgeDarken")) mat.SetFloat("_EdgeDarken", 0.12f);
+            if (mat.HasProperty("_TopLightDir")) mat.SetVector("_TopLightDir", new Vector4(0f, 0f, -1f, 0f));
+            if (mat.HasProperty("_FakeLightDir")) mat.SetVector("_FakeLightDir", new Vector4(0f, 0f, -1f, 0f));
+
+            if (mat.HasProperty("_MainTex"))
+            {
+                mat.SetTexture("_MainTex", Texture2D.whiteTexture);
+                mat.mainTexture = Texture2D.whiteTexture;
             }
 
             return mat;
@@ -1561,34 +1754,3 @@ namespace LoopSorting
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

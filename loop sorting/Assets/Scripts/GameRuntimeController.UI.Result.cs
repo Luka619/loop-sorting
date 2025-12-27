@@ -574,6 +574,62 @@ namespace LoopSorting
             }
         }
 
+        private void EnsureResultDimLayer()
+        {
+            if (_resultPanel == null) return;
+            var dim = _resultPanel.GetComponent<Image>();
+            if (dim == null) return;
+            dim.sprite = null;
+            dim.color = new Color(0f, 0f, 0f, 0.65f);
+        }
+
+        private void EnsureResultGlassOverlay()
+        {
+            if (_resultPanel == null) return;
+
+            if (_resultGlassOverlayRect == null)
+            {
+                var existing = _resultPanel.transform.Find("GlassOverlay") as RectTransform;
+                if (existing != null)
+                {
+                    _resultGlassOverlayRect = existing;
+                    _resultGlassOverlayImage = existing.GetComponent<Image>();
+                }
+            }
+
+            if (_resultGlassOverlayRect == null)
+            {
+                var go = new GameObject("GlassOverlay");
+                go.transform.SetParent(_resultPanel.transform, false);
+                _resultGlassOverlayRect = go.AddComponent<RectTransform>();
+                _resultGlassOverlayRect.anchorMin = Vector2.zero;
+                _resultGlassOverlayRect.anchorMax = Vector2.one;
+                _resultGlassOverlayRect.offsetMin = Vector2.zero;
+                _resultGlassOverlayRect.offsetMax = Vector2.zero;
+
+                _resultGlassOverlayImage = go.AddComponent<Image>();
+                _resultGlassOverlayImage.raycastTarget = false;
+                _resultGlassOverlayImage.preserveAspect = false;
+                go.transform.SetSiblingIndex(0);
+            }
+
+            if (_resultGlassOverlayImage == null) return;
+
+            Sprite glass = null;
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                glass =
+                    LoopSortingUIKit.LoadSprite("World_Sprites/box_completed_glass_overlay_1024.png", pixelsPerUnit: 100f, applyNineSlice: true) ??
+                    LoopSortingUIKit.LoadSprite("World_Sprites/box_completed_glass_overlay_512.png", pixelsPerUnit: 100f, applyNineSlice: true);
+            }
+
+            _resultGlassOverlayImage.sprite = glass;
+            _resultGlassOverlayImage.type = glass != null && glass.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+            _resultGlassOverlayImage.color = glass != null
+                ? new Color(0.86f, 0.90f, 0.95f, 0.24f)
+                : new Color(0.90f, 0.94f, 0.98f, 0.12f);
+        }
+
         private void CaptureResultPanelBaseLayoutIfNeeded()
         {
             if (_resultPanelBaseLayoutCaptured) return;
@@ -1099,9 +1155,9 @@ namespace LoopSorting
             if (_resultWinPercentText != null)
             {
                 float percent = Mathf.Lerp(1.9f, 99f, (float)_rng.NextDouble());
-                percent = Mathf.Clamp(Mathf.Round(percent * 10f) / 10f, 1.9f, 99f);
-                string percentText = percent.ToString("0.0", CultureInfo.InvariantCulture);
-                _resultWinPercentText.text = $"You're better than <color=#FFD24F>{percentText}%</color> of players!";
+                percent = Mathf.Clamp(Mathf.Round(percent * 100f) / 100f, 1.9f, 99f);
+                string percentText = percent.ToString("0.00", CultureInfo.InvariantCulture);
+                _resultWinPercentText.text = $"击败了<color=#FFD24F>{percentText}%</color>的玩家";
             }
         }
 
@@ -1116,7 +1172,7 @@ namespace LoopSorting
             }
 
             _resultWinFeatureRoot.gameObject.SetActive(true);
-            if (_resultWinFeatureLabel != null) _resultWinFeatureLabel.text = "NEW FEATURE";
+            if (_resultWinFeatureLabel != null) _resultWinFeatureLabel.text = "新机制";
             if (_resultWinFeatureProgress != null) _resultWinFeatureProgress.text = $"{current}/{total}";
             if (_resultWinFeatureFill != null)
             {
@@ -1412,6 +1468,8 @@ namespace LoopSorting
                 }
 
                 RebindResultPanelPrefabSprites(hasKit);
+                EnsureResultDimLayer();
+                EnsureResultGlassOverlay();
                 EnsureResultPanelLayoutRefs();
                 EnsureResultWinLayout();
                 EnsureResultLoseLayout();
@@ -1428,12 +1486,13 @@ namespace LoopSorting
             dim.raycastTarget = true;
             // Use a solid full-screen dim (no sprite) for consistent readability across themes.
             dim.sprite = null;
-            dim.color = new Color(0f, 0f, 0f, 0.55f);
+            dim.color = new Color(0f, 0f, 0f, 0.65f);
             var rect = panelGO.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+            EnsureResultGlassOverlay();
 
             var boxGO = new GameObject("Panel");
             boxGO.transform.SetParent(panelGO.transform, false);

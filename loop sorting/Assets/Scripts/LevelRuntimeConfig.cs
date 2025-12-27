@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LoopSorting
@@ -13,5 +14,7 @@ namespace LoopSorting
         [Tooltip("Optional flow to drive sequential levels. If set, overrides activeLevel.")]
         public LevelFlow activeFlow;
         public int flowStartIndex = 0;
+        [Tooltip("0-based flow indices that unlock a new mechanic (used for win-screen progress).")]
+        public List<int> resultNewMechanicLevelIndices = new List<int>();
     }
 }

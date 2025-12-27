@@ -187,6 +187,8 @@ namespace LoopSorting
         private Image _resultPrimaryIcon;
         private Image _resultSecondaryIcon;
         private RectTransform _resultPanelBoxRect;
+        private RectTransform _resultGlassOverlayRect;
+        private Image _resultGlassOverlayImage;
         private Image _resultPanelBoxImage;
         private RectTransform _resultPanelLayoutRoot;
         private bool _resultPanelBaseLayoutCaptured;
@@ -1726,10 +1728,8 @@ namespace LoopSorting
                 }
             }
 
-            int safety = 0;
-            int maxOps = Mathf.Max(128, pending * 4); // generous safety to avoid early stop when belt temporarily blocked
 
-            while (pending > 0 && safety < maxOps)
+            while (pending > 0)
             {
                 // Check front color still matches.
                 if (!container.TryPeek(out var peek) || peek.Color != targetColor)
@@ -1743,7 +1743,6 @@ namespace LoopSorting
                     PlaySfx(SfxId.BlockReject);
                     // Slot is occupied, wait and retry next frame/interval. Belt moves independently.
                     yield return new WaitForSeconds(releaseBlockedRetry / Mathf.Max(0.0001f, _speedMultiplier));
-                    safety++;
                     continue;
                 }
                 if (result != ReleaseResult.Success)
@@ -1770,7 +1769,6 @@ namespace LoopSorting
                 }
 
                 yield return new WaitForSeconds(releaseInterval / Mathf.Max(0.0001f, _speedMultiplier));
-                safety++;
             }
             PlaySfx(SfxId.RunShipEnd);
             _isReleasing = false;

@@ -381,7 +381,7 @@ namespace LoopSorting.Editor
                     BeltLength = _beltLength,
                     ReleaseAttemptsPerTick = Mathf.Max(1, Mathf.CeilToInt(DefaultConveyorTickSeconds / DefaultReleaseInterval)),
                     Rng = rng,
-                    InboundBusyTicks = new int[containers.Count],
+                    InboundStreamCounts = new int[containers.Count],
                     ContainerIndexByRef = containerIndexByRef
                 };
             }
@@ -493,10 +493,11 @@ namespace LoopSorting.Editor
             public int PendingRelease;
             public bool CanClick = true;
             public int NoInsertWhileFull;
+            public int NoProgressTicks;
             public int BeltLength;
             public System.Random Rng;
             public int ReleaseAttemptsPerTick;
-            public int[] InboundBusyTicks;
+            public int[] InboundStreamCounts;
             public Dictionary<Container, int> ContainerIndexByRef;
             public readonly List<ConveyorPortEvent> Events = new List<ConveyorPortEvent>(8);
         }
@@ -506,25 +507,31 @@ namespace LoopSorting.Editor
             if (state == null || state.Game == null) return SimulationOutcome.Fail;
             state.TickCount++;
 
-            if (state.InboundBusyTicks != null)
-            {
-                for (int i = 0; i < state.InboundBusyTicks.Length && i < state.Game.Containers.Count; i++)
-                {
-                    if (state.InboundBusyTicks[i] > 0)
-                    {
-                        state.InboundBusyTicks[i]--;
-                    }
-                }
-            }
-            RefreshContainerBusy(state.Game, state.InboundBusyTicks, state.IsReleasing, state.ActiveReleaseIndex);
+            RefreshInboundStreamCounts(state.Game, state.ContainerToBelt, state.InboundStreamCounts);
+            RefreshContainerBusy(state.Game, state.IsReleasing, state.ActiveReleaseIndex);
 
             float fillRatio = state.Game.Conveyor.BlockCount / Mathf.Max(1f, state.BeltLength);
             if (state.CanClick && fillRatio >= StopFillRatioHigh) state.CanClick = false;
             if (!state.CanClick && fillRatio <= StopFillRatioLow) state.CanClick = true;
+            if (!state.IsReleasing && !state.CanClick && state.NoProgressTicks >= state.BeltLength)
+            {
+                state.CanClick = true;
+            }
+            if (CountActiveColors(state.Game) <= 2)
+            {
+                state.CanClick = true;
+            }
 
             if (!state.IsReleasing && state.CanClick)
             {
-                int next = ChooseNextContainer(state.Game, state.ContainerToBelt, state.BoxLocked, state.BoxCompleted, state.BeltLength, state.Rng);
+                int next = ChooseNextContainer(
+                    state.Game,
+                    state.ContainerToBelt,
+                    state.BoxLocked,
+                    state.BoxCompleted,
+                    state.InboundStreamCounts,
+                    state.BeltLength,
+                    state.Rng);
                 if (next >= 0)
                 {
                     var container = state.Game.Containers[next];
@@ -538,6 +545,7 @@ namespace LoopSorting.Editor
                 }
             }
 
+            bool released = false;
             for (int s = 0; s < state.ReleaseAttemptsPerTick; s++)
             {
                 if (!state.IsReleasing) break;
@@ -552,6 +560,7 @@ namespace LoopSorting.Editor
                 if (result == ReleaseResult.Success)
                 {
                     state.PendingRelease--;
+                    released = true;
                     if (state.PendingRelease <= 0)
                     {
                         EndRelease(container, ref state.IsReleasing, ref state.ActiveReleaseIndex, ref state.PendingRelease);
@@ -564,7 +573,8 @@ namespace LoopSorting.Editor
                     break;
                 }
             }
-            RefreshContainerBusy(state.Game, state.InboundBusyTicks, state.IsReleasing, state.ActiveReleaseIndex);
+            RefreshInboundStreamCounts(state.Game, state.ContainerToBelt, state.InboundStreamCounts);
+            RefreshContainerBusy(state.Game, state.IsReleasing, state.ActiveReleaseIndex);
 
             state.Events.Clear();
             int? blockedPort = null;
@@ -588,12 +598,11 @@ namespace LoopSorting.Editor
                     state.ContainerIndexByRef.TryGetValue(state.Events[i].Container, out var idx) &&
                     idx >= 0 && idx < state.Game.Containers.Count)
                 {
-                    if (state.InboundBusyTicks != null && idx < state.InboundBusyTicks.Length)
-                    {
-                        state.InboundBusyTicks[idx] = Mathf.Max(state.InboundBusyTicks[idx], 2);
-                    }
+                    UpdateInboundStreamCount(state.Game, state.ContainerToBelt, idx, state.Events[i].Block.Color, state.InboundStreamCounts);
                 }
             }
+            RefreshInboundStreamCounts(state.Game, state.ContainerToBelt, state.InboundStreamCounts);
+            RefreshContainerBusy(state.Game, state.IsReleasing, state.ActiveReleaseIndex);
 
             UpdateLocks(state.Game, state.Layout, state.BoxLocked);
             UpdateCompletion(state.Game, state.BoxCompleted);
@@ -601,6 +610,15 @@ namespace LoopSorting.Editor
             if (IsSolved(state.Game))
             {
                 return SimulationOutcome.Win;
+            }
+
+            if (inserted || released)
+            {
+                state.NoProgressTicks = 0;
+            }
+            else
+            {
+                state.NoProgressTicks++;
             }
 
             if (state.Game.Conveyor.BlockCount >= state.BeltLength && !inserted)
@@ -947,7 +965,7 @@ namespace LoopSorting.Editor
                     containerIndexByRef[containers[i]] = i;
                 }
             }
-            var inboundBusyTicks = new int[containers.Count];
+            var inboundStreamCounts = new int[containers.Count];
             var boxLocked = new bool[containers.Count];
             var boxCompleted = new bool[containers.Count];
             for (int i = 0; i < containers.Count; i++)
@@ -962,6 +980,7 @@ namespace LoopSorting.Editor
             int pendingRelease = 0;
             bool canClick = true;
             int noInsertWhileFull = 0;
+            int noProgressTicks = 0;
             int maxTicks = Mathf.Max(200, SimulationMaxTicks);
             int releaseAttemptsPerTick = Mathf.Max(1, Mathf.CeilToInt(DefaultConveyorTickSeconds / DefaultReleaseInterval));
 
@@ -969,22 +988,31 @@ namespace LoopSorting.Editor
 
             for (int tick = 0; tick < maxTicks; tick++)
             {
-                for (int i = 0; i < inboundBusyTicks.Length && i < game.Containers.Count; i++)
-                {
-                    if (inboundBusyTicks[i] > 0)
-                    {
-                        inboundBusyTicks[i]--;
-                    }
-                }
-                RefreshContainerBusy(game, inboundBusyTicks, isReleasing, activeReleaseIndex);
+                RefreshInboundStreamCounts(game, containerToBelt, inboundStreamCounts);
+                RefreshContainerBusy(game, isReleasing, activeReleaseIndex);
 
                 float fillRatio = game.Conveyor.BlockCount / Mathf.Max(1f, beltLength);
                 if (canClick && fillRatio >= StopFillRatioHigh) canClick = false;
                 if (!canClick && fillRatio <= StopFillRatioLow) canClick = true;
+                if (!isReleasing && !canClick && noProgressTicks >= beltLength)
+                {
+                    canClick = true;
+                }
+                if (CountActiveColors(game) <= 2)
+                {
+                    canClick = true;
+                }
 
                 if (!isReleasing && canClick)
                 {
-                    int next = ChooseNextContainer(game, containerToBelt, boxLocked, boxCompleted, beltLength, rng);
+                    int next = ChooseNextContainer(
+                        game,
+                        containerToBelt,
+                        boxLocked,
+                        boxCompleted,
+                        inboundStreamCounts,
+                        beltLength,
+                        rng);
                     if (next >= 0)
                     {
                         var container = game.Containers[next];
@@ -998,6 +1026,7 @@ namespace LoopSorting.Editor
                     }
                 }
 
+                bool released = false;
                 for (int s = 0; s < releaseAttemptsPerTick; s++)
                 {
                     if (!isReleasing) break;
@@ -1012,6 +1041,7 @@ namespace LoopSorting.Editor
                     if (result == ReleaseResult.Success)
                     {
                         pendingRelease--;
+                        released = true;
                         if (pendingRelease <= 0)
                         {
                             EndRelease(container, ref isReleasing, ref activeReleaseIndex, ref pendingRelease);
@@ -1024,7 +1054,8 @@ namespace LoopSorting.Editor
                         break;
                     }
                 }
-                RefreshContainerBusy(game, inboundBusyTicks, isReleasing, activeReleaseIndex);
+                RefreshInboundStreamCounts(game, containerToBelt, inboundStreamCounts);
+                RefreshContainerBusy(game, isReleasing, activeReleaseIndex);
 
                 events.Clear();
                 int? blockedPort = null;
@@ -1045,12 +1076,11 @@ namespace LoopSorting.Editor
                     if (containerIndexByRef.TryGetValue(events[i].Container, out var idx) &&
                         idx >= 0 && idx < game.Containers.Count)
                     {
-                        if (idx < inboundBusyTicks.Length)
-                        {
-                            inboundBusyTicks[idx] = Mathf.Max(inboundBusyTicks[idx], 2);
-                        }
+                        UpdateInboundStreamCount(game, containerToBelt, idx, events[i].Block.Color, inboundStreamCounts);
                     }
                 }
+                RefreshInboundStreamCounts(game, containerToBelt, inboundStreamCounts);
+                RefreshContainerBusy(game, isReleasing, activeReleaseIndex);
 
                 UpdateLocks(game, layout, boxLocked);
                 UpdateCompletion(game, boxCompleted);
@@ -1058,6 +1088,15 @@ namespace LoopSorting.Editor
                 if (IsSolved(game))
                 {
                     return false;
+                }
+
+                if (inserted || released)
+                {
+                    noProgressTicks = 0;
+                }
+                else
+                {
+                    noProgressTicks++;
                 }
 
                 if (game.Conveyor.BlockCount >= beltLength && !inserted)
@@ -1212,17 +1251,94 @@ namespace LoopSorting.Editor
             }
         }
 
-        private static void RefreshContainerBusy(LoopSortingGame game, int[] inboundBusyTicks, bool isReleasing, int activeReleaseIndex)
+        private static void RefreshContainerBusy(LoopSortingGame game, bool isReleasing, int activeReleaseIndex)
         {
             if (game == null) return;
 
             int count = game.Containers.Count;
             for (int i = 0; i < count; i++)
             {
-                bool inboundBusy = inboundBusyTicks != null && i < inboundBusyTicks.Length && inboundBusyTicks[i] > 0;
                 bool releaseBusy = isReleasing && activeReleaseIndex == i;
-                game.Containers[i].SetBusy(inboundBusy || releaseBusy);
+                game.Containers[i].SetBusy(releaseBusy);
             }
+        }
+
+        private static void UpdateInboundStreamCount(
+            LoopSortingGame game,
+            Dictionary<int, int> containerToBelt,
+            int containerIndex,
+            BlockColor color,
+            int[] inboundStreamCounts)
+        {
+            if (game == null || inboundStreamCounts == null) return;
+            if (containerIndex < 0 || containerIndex >= game.Containers.Count) return;
+            if (containerIndex >= inboundStreamCounts.Length) return;
+            if (containerToBelt == null || !containerToBelt.TryGetValue(containerIndex, out var beltIndex)) return;
+
+            var container = game.Containers[containerIndex];
+            if (container == null)
+            {
+                inboundStreamCounts[containerIndex] = 0;
+                return;
+            }
+
+            int remaining = Mathf.Max(0, container.Capacity - container.Count);
+            if (remaining <= 0)
+            {
+                inboundStreamCounts[containerIndex] = 0;
+                return;
+            }
+
+            int queued = CountQueuedIncomingBlocks(game.Conveyor.Slots, beltIndex, color, remaining);
+            inboundStreamCounts[containerIndex] = queued;
+        }
+
+        private static void RefreshInboundStreamCounts(
+            LoopSortingGame game,
+            Dictionary<int, int> containerToBelt,
+            int[] inboundStreamCounts)
+        {
+            if (game == null || inboundStreamCounts == null) return;
+
+            int max = Mathf.Min(inboundStreamCounts.Length, game.Containers.Count);
+            for (int i = 0; i < max; i++)
+            {
+                if (inboundStreamCounts[i] <= 0) continue;
+                var container = game.Containers[i];
+                if (container == null || container.Count == 0)
+                {
+                    inboundStreamCounts[i] = 0;
+                    continue;
+                }
+
+                UpdateInboundStreamCount(game, containerToBelt, i, container.Blocks[0].Color, inboundStreamCounts);
+            }
+        }
+
+        private static int CountQueuedIncomingBlocks(
+            IReadOnlyList<Block?> slots,
+            int beltIndex,
+            BlockColor color,
+            int maxCount)
+        {
+            if (slots == null || slots.Count <= 1 || maxCount <= 0) return 0;
+
+            int length = slots.Count;
+            int count = 0;
+            int idx = (beltIndex - 1 + length) % length;
+            while (idx != beltIndex && count < maxCount)
+            {
+                var slot = slots[idx];
+                if (!slot.HasValue)
+                {
+                    idx = (idx - 1 + length) % length;
+                    continue;
+                }
+                if (slot.Value.Color != color) break;
+                count++;
+                idx = (idx - 1 + length) % length;
+            }
+            return count;
         }
 
         private static int CountFrontRun(Container container, BlockColor color)
@@ -1292,11 +1408,48 @@ namespace LoopSorting.Editor
             return game.Conveyor.BlockCount == 0;
         }
 
+        private static int CountActiveColors(LoopSortingGame game)
+        {
+            if (game == null) return 0;
+
+            var present = new bool[MaxColors];
+            int count = 0;
+
+            var slots = game.Conveyor.Slots;
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (!slots[i].HasValue) continue;
+                int idx = (int)slots[i].Value.Color;
+                if (idx < 0 || idx >= MaxColors || present[idx]) continue;
+                present[idx] = true;
+                count++;
+                if (count >= MaxColors) return count;
+            }
+
+            for (int i = 0; i < game.Containers.Count; i++)
+            {
+                var c = game.Containers[i];
+                if (c == null || c.Count == 0) continue;
+                var blocks = c.Blocks;
+                for (int b = 0; b < blocks.Count; b++)
+                {
+                    int idx = (int)blocks[b].Color;
+                    if (idx < 0 || idx >= MaxColors || present[idx]) continue;
+                    present[idx] = true;
+                    count++;
+                    if (count >= MaxColors) return count;
+                }
+            }
+
+            return count;
+        }
+
         private static int ChooseNextContainer(
             LoopSortingGame game,
             Dictionary<int, int> containerToBelt,
             bool[] boxLocked,
             bool[] boxCompleted,
+            int[] inboundStreamCounts,
             int beltLength,
             System.Random rng)
         {
@@ -1306,6 +1459,7 @@ namespace LoopSorting.Editor
             {
                 if (i < boxLocked.Length && boxLocked[i]) continue;
                 if (i < boxCompleted.Length && boxCompleted[i]) continue;
+                if (inboundStreamCounts != null && i < inboundStreamCounts.Length && inboundStreamCounts[i] > 0) continue;
                 var container = game.Containers[i];
                 if (container.Busy) continue;
                 if (container.Count == 0) continue;
@@ -1336,6 +1490,8 @@ namespace LoopSorting.Editor
             var source = game.Containers[sourceIndex];
             int run = CountFrontRun(source, color);
             float runRatio = run / Mathf.Max(1f, source.Capacity);
+            bool isUniform = run >= source.Count;
+            bool exposesDifferent = run < source.Count;
 
             bool hasPreferredTarget = false;
             bool hasEmptyTarget = false;
@@ -1381,6 +1537,11 @@ namespace LoopSorting.Editor
                 }
             }
 
+            if (isUniform && !hasPreferredTarget)
+            {
+                return 0f;
+            }
+
             float proximity = bestDistance == int.MaxValue ? 0f : 1f - (bestDistance / Mathf.Max(1f, beltLength));
             float eScore = 0f;
             if (hasPreferredTarget)
@@ -1391,9 +1552,15 @@ namespace LoopSorting.Editor
             {
                 eScore = 0.35f + 0.4f * proximity;
             }
+            else
+            {
+                // No external target: allow recycling into the same box (endgame with few colors).
+                eScore = 0.15f + 0.25f * runRatio;
+            }
 
             float gScore = 0.6f * runRatio + 0.4f * bestTargetFill;
-            return Mathf.Clamp01(StrategyWeightE * eScore + StrategyWeightG * gScore);
+            float exposeBonus = exposesDifferent ? (0.1f + 0.2f * (1f - runRatio)) : 0f;
+            return Mathf.Clamp01(StrategyWeightE * eScore + StrategyWeightG * gScore + exposeBonus);
         }
 
         private static int ComputeForwardDistance(int source, int target, int beltLength)

@@ -15,3 +15,4 @@ MonoBehaviour:
   activeLevel: {fileID: 11400000, guid: 99564cb2d118b5049abca25198611bc2, type: 2}
   activeFlow: {fileID: 11400000, guid: 322a9dff8bd937a45acfcd77f8fdc243, type: 2}
   flowStartIndex: 0
+  resultNewMechanicLevelIndices: 0a00000014000000

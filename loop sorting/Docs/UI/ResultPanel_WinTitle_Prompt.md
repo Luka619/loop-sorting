@@ -1,12 +1,12 @@
-﻿# Result Panel Win Title Prompt
+﻿# 关卡获胜标题美术提示
 
-Title art for the win screen (separate sprite, transparent background).
+用于胜利结算界面的标题图（独立美术资源，透明背景）。
 
-Prompt:
-"LEVEL COMPLETED title banner, bold chunky 3D candy-plastic letters, warm yellow to orange gradient fill, thick white outline, subtle dark brown stroke outside, soft drop shadow, slight top-left highlight, gentle bevel, playful mobile game UI style, centered text, no background, transparent PNG, sRGB, orthographic front view, crisp edges, no extra icons"
+提示词：
+“关卡获胜 标题字样，粗厚可爱立体糖果塑料质感字体，暖黄色到橙色渐变填充，粗白色描边，外侧深棕色细描边，柔和投影，左上高光，轻微倒角，手机游戏界面风格，居中排版，透明背景，不要额外图标”
 
-Specs:
-- Canvas: 1024x256 px
-- Background: fully transparent
-- Text: exact phrase "LEVEL COMPLETED"
-- Keep safe padding ~8% on all sides
+规格：
+- 画布尺寸：1024x256 像素
+- 背景：全透明
+- 文案：必须为“关卡获胜”
+- 安全边距：四周约 8%

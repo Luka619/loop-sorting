@@ -1356,6 +1356,7 @@ namespace LoopSorting
                 _portEvents.Clear();
                 _game.TickConveyor(blocked, _portEvents, allowInsert: true);
                 ProcessConveyorPortEvents(_portEvents);
+                RefreshInboundStreamLocks();
                 _conveyorTickSfxCountdown--;
                 if (_conveyorTickSfxCountdown <= 0)
                 {
@@ -1607,6 +1608,32 @@ namespace LoopSorting
             }
         }
 
+        private void RefreshInboundStreamLocks()
+        {
+            if (_game == null) return;
+            if (_inboundStreamCounts.Count == 0) return;
+
+            var keys = new List<int>(_inboundStreamCounts.Keys);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                int containerIndex = keys[i];
+                if (containerIndex < 0 || containerIndex >= _game.Containers.Count)
+                {
+                    _inboundStreamCounts.Remove(containerIndex);
+                    continue;
+                }
+
+                var container = _game.Containers[containerIndex];
+                if (container == null || container.Count == 0)
+                {
+                    _inboundStreamCounts.Remove(containerIndex);
+                    continue;
+                }
+
+                UpdateInboundStream(containerIndex, container.Blocks[0].Color);
+            }
+        }
+
         private int CountQueuedIncomingBlocks(int containerIndex, BlockColor color, int maxCount)
         {
             if (_game == null || maxCount <= 0) return 0;
@@ -1621,7 +1648,11 @@ namespace LoopSorting
             while (idx != beltIndex && count < maxCount)
             {
                 var slot = slots[idx];
-                if (!slot.HasValue) break;
+                if (!slot.HasValue)
+                {
+                    idx = (idx - 1 + length) % length;
+                    continue;
+                }
                 if (slot.Value.Color != color) break;
                 count++;
                 idx = (idx - 1 + length) % length;

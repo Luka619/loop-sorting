@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LoopSorting
@@ -22,6 +23,10 @@ namespace LoopSorting
             var go = new GameObject("LevelRuntimeController");
             Object.DontDestroyOnLoad(go);
             var controller = go.AddComponent<GameRuntimeController>();
+            if (config != null && config.resultNewMechanicLevelIndices != null)
+            {
+                controller.resultNewMechanicLevelIndices = new List<int>(config.resultNewMechanicLevelIndices);
+            }
             if (hasFlow)
             {
                 int start = Mathf.Clamp(config.flowStartIndex, 0, config.activeFlow.levels.Count - 1);

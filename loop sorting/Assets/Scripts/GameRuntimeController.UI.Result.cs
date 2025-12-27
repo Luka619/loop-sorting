@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -263,6 +264,19 @@ namespace LoopSorting
 
             if (_resultWinRewardAmountPrimary != null) _resultWinRewardAmountPrimary.text = WinCoinsReward.ToString();
             if (_resultWinRewardAmountSecondary != null) _resultWinRewardAmountSecondary.text = (WinCoinsReward * WinAdRewardMultiplier).ToString();
+
+            EnsureResultPanelLayoutRefs();
+            EnsureResultWinLayout();
+            EnsureResultLoseLayout();
+            ApplyResultPanelLayoutForWin();
+            ApplyResultButtonsLayoutForWinOverlay();
+
+            SetResultBannerVisible(false);
+            if (_resultText != null) _resultText.gameObject.SetActive(false);
+            SetResultWinLayoutActive(true);
+            SetResultLoseLayoutActive(false);
+            UpdateResultWinStats();
+            UpdateResultWinFeatureProgress();
         }
 
         private void EnsureWinRewardLayoutPrimary()
@@ -483,7 +497,19 @@ namespace LoopSorting
 
         private void ConfigureResultLoseReviveLayout()
         {
+            EnsureResultPanelLayoutRefs();
+            EnsureResultWinLayout();
+            EnsureResultLoseLayout();
+            RestoreResultPanelLayoutBase();
             RestoreResultButtonsLayoutBase();
+            ApplyResultButtonsLayoutForLoseOverlay();
+            SetResultWinLayoutActive(false);
+            SetResultLoseLayoutActive(true);
+            SetResultBannerVisible(false);
+            if (_resultText != null) _resultText.gameObject.SetActive(true);
+            if (_resultLoseCardDesc != null) _resultLoseCardDesc.text = LocalizedText.ResultRevive;
+            if (_resultLoseCardIcon != null) _resultLoseCardIcon.gameObject.SetActive(_resultLoseCardIcon.sprite != null);
+            if (_resultLoseCardBg != null) _resultLoseCardBg.enabled = true;
 
             if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(true);
 
@@ -532,6 +558,628 @@ namespace LoopSorting
             {
                 _primaryButton.interactable = _progress.Coins >= LoseReviveCoinsCost;
             }
+        }
+
+        private void EnsureResultPanelLayoutRefs()
+        {
+            if (_resultPanel == null) return;
+            if (_resultPanelBoxRect != null) return;
+
+            _resultPanelBoxRect = _resultPanel.transform.Find("Panel") as RectTransform;
+            if (_resultPanelBoxRect != null)
+            {
+                _resultPanelBoxImage = _resultPanelBoxRect.GetComponent<Image>();
+                _resultPanelLayoutRoot = _resultPanelBoxRect.Find("LayoutRoot") as RectTransform;
+                if (_resultPanelLayoutRoot == null) _resultPanelLayoutRoot = _resultPanelBoxRect;
+            }
+        }
+
+        private void CaptureResultPanelBaseLayoutIfNeeded()
+        {
+            if (_resultPanelBaseLayoutCaptured) return;
+            EnsureResultPanelLayoutRefs();
+            if (_resultPanelBoxRect == null) return;
+
+            _resultPanelBaseAnchorMin = _resultPanelBoxRect.anchorMin;
+            _resultPanelBaseAnchorMax = _resultPanelBoxRect.anchorMax;
+            _resultPanelBaseAnchoredPosition = _resultPanelBoxRect.anchoredPosition;
+            _resultPanelBaseSizeDelta = _resultPanelBoxRect.sizeDelta;
+            _resultPanelBasePivot = _resultPanelBoxRect.pivot;
+            _resultPanelBaseColor = _resultPanelBoxImage != null ? _resultPanelBoxImage.color : Color.white;
+
+            var decor = _resultPanelBoxRect.Find("Decor");
+            _resultPanelBaseDecorActive = decor != null && decor.gameObject.activeSelf;
+            _resultPanelBaseLayoutCaptured = true;
+        }
+
+        private void ApplyResultPanelLayoutForWin()
+        {
+            EnsureResultPanelLayoutRefs();
+            CaptureResultPanelBaseLayoutIfNeeded();
+            if (_resultPanelBoxRect == null) return;
+
+            _resultPanelBoxRect.anchorMin = Vector2.zero;
+            _resultPanelBoxRect.anchorMax = Vector2.one;
+            _resultPanelBoxRect.pivot = new Vector2(0.5f, 0.5f);
+            _resultPanelBoxRect.anchoredPosition = Vector2.zero;
+            _resultPanelBoxRect.sizeDelta = Vector2.zero;
+
+            if (_resultPanelBoxImage != null)
+            {
+                var c = _resultPanelBoxImage.color;
+                c.a = 0f;
+                _resultPanelBoxImage.color = c;
+            }
+
+            var decor = _resultPanelBoxRect.Find("Decor");
+            if (decor != null) decor.gameObject.SetActive(false);
+        }
+
+        private void RestoreResultPanelLayoutBase()
+        {
+            EnsureResultPanelLayoutRefs();
+            if (!_resultPanelBaseLayoutCaptured) CaptureResultPanelBaseLayoutIfNeeded();
+            if (!_resultPanelBaseLayoutCaptured || _resultPanelBoxRect == null) return;
+
+            _resultPanelBoxRect.anchorMin = _resultPanelBaseAnchorMin;
+            _resultPanelBoxRect.anchorMax = _resultPanelBaseAnchorMax;
+            _resultPanelBoxRect.pivot = _resultPanelBasePivot;
+            _resultPanelBoxRect.anchoredPosition = _resultPanelBaseAnchoredPosition;
+            _resultPanelBoxRect.sizeDelta = _resultPanelBaseSizeDelta;
+
+            if (_resultPanelBoxImage != null)
+            {
+                _resultPanelBoxImage.color = _resultPanelBaseColor;
+            }
+
+            var decor = _resultPanelBoxRect.Find("Decor");
+            if (decor != null) decor.gameObject.SetActive(_resultPanelBaseDecorActive);
+        }
+
+        private void ApplyResultButtonsLayoutForWinOverlay()
+        {
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
+            float panelHeight = panelRect != null && panelRect.rect.height > 1f ? panelRect.rect.height : 1920f;
+            float baseY = Mathf.Clamp(panelHeight * 0.12f, 140f, 240f);
+            float gap = Mathf.Clamp(panelHeight * 0.12f, 170f, 280f);
+
+            primaryRect.anchorMin = new Vector2(0.5f, 0f);
+            primaryRect.anchorMax = new Vector2(0.5f, 0f);
+            primaryRect.pivot = new Vector2(0.5f, 0.5f);
+
+            secondaryRect.anchorMin = new Vector2(0.5f, 0f);
+            secondaryRect.anchorMax = new Vector2(0.5f, 0f);
+            secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+
+            primaryRect.anchoredPosition = new Vector2(0f, baseY);
+            secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
+        }
+
+        private void ApplyResultButtonsLayoutForLoseOverlay()
+        {
+            if (_primaryButton == null || _secondaryButton == null) return;
+
+            var primaryRect = _primaryButton.GetComponent<RectTransform>();
+            var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
+            if (primaryRect == null || secondaryRect == null) return;
+
+            var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
+            float panelHeight = panelRect != null && panelRect.rect.height > 1f ? panelRect.rect.height : 760f;
+            float baseY = Mathf.Clamp(panelHeight * 0.18f, 110f, 200f);
+            float gap = Mathf.Clamp(panelHeight * 0.22f, 150f, 240f);
+
+            primaryRect.anchorMin = new Vector2(0.5f, 0f);
+            primaryRect.anchorMax = new Vector2(0.5f, 0f);
+            primaryRect.pivot = new Vector2(0.5f, 0.5f);
+
+            secondaryRect.anchorMin = new Vector2(0.5f, 0f);
+            secondaryRect.anchorMax = new Vector2(0.5f, 0f);
+            secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+
+            primaryRect.anchoredPosition = new Vector2(0f, baseY);
+            secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
+        }
+
+        private void SetResultBannerVisible(bool visible)
+        {
+            EnsureResultPanelLayoutRefs();
+            var banner = _resultPanelLayoutRoot != null ? _resultPanelLayoutRoot.Find("Banner") : null;
+            if (banner != null) banner.gameObject.SetActive(visible);
+        }
+
+        private void SetResultWinLayoutActive(bool active)
+        {
+            if (_resultWinRoot != null) _resultWinRoot.gameObject.SetActive(active);
+        }
+
+        private void SetResultLoseLayoutActive(bool active)
+        {
+            if (_resultLoseCardRoot != null) _resultLoseCardRoot.gameObject.SetActive(active);
+        }
+
+        private void EnsureResultWinLayout()
+        {
+            EnsureResultPanelLayoutRefs();
+            if (_resultPanelLayoutRoot == null) return;
+
+            if (_resultWinRoot == null)
+            {
+                _resultWinRoot = _resultPanelLayoutRoot.Find("WinLayout") as RectTransform;
+                if (_resultWinRoot == null)
+                {
+                    var rootGO = new GameObject("WinLayout");
+                    rootGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                    _resultWinRoot = rootGO.AddComponent<RectTransform>();
+                    _resultWinRoot.anchorMin = Vector2.zero;
+                    _resultWinRoot.anchorMax = Vector2.one;
+                    _resultWinRoot.offsetMin = Vector2.zero;
+                    _resultWinRoot.offsetMax = Vector2.zero;
+                }
+            }
+
+            bool hasKit = LoopSortingUIKit.IsAvailable();
+            var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
+
+            if (_resultWinCoinsRoot == null || _resultWinCoinsText == null)
+            {
+                _resultWinCoinsRoot = _resultWinRoot.Find("CoinsPill") as RectTransform;
+                if (_resultWinCoinsRoot != null && _resultWinCoinsText == null)
+                {
+                    _resultWinCoinsText = _resultWinCoinsRoot.Find("Value")?.GetComponent<TMP_Text>();
+                }
+                if (_resultWinCoinsRoot == null)
+                {
+                    CreateCurrencyPill(
+                        parent: _resultWinRoot,
+                        name: "CoinsPill",
+                        anchor: new Vector2(1f, 1f),
+                        anchoredPos: new Vector2(-24f, -(uiLayout.coins.y + _hudTopInsetUnits)),
+                        size: new Vector2(uiLayout.coins.width, uiLayout.coins.height),
+                        iconKey: "ui.icon.coin",
+                        showPlusButton: false,
+                        out _resultWinCoinsText,
+                        out _);
+                    _resultWinCoinsRoot = _resultWinCoinsText != null ? _resultWinCoinsText.transform.parent as RectTransform : null;
+                }
+            }
+
+            if (_resultWinLivesRoot == null || _resultWinLivesText == null)
+            {
+                _resultWinLivesRoot = _resultWinRoot.Find("LivesPill") as RectTransform;
+                if (_resultWinLivesRoot != null && _resultWinLivesText == null)
+                {
+                    _resultWinLivesText = _resultWinLivesRoot.Find("Value")?.GetComponent<TMP_Text>();
+                }
+                if (_resultWinLivesRoot == null)
+                {
+                    CreateCurrencyPill(
+                        parent: _resultWinRoot,
+                        name: "LivesPill",
+                        anchor: new Vector2(0f, 1f),
+                        anchoredPos: new Vector2(uiLayout.counter.x, -(uiLayout.counter.y + _hudTopInsetUnits)),
+                        size: new Vector2(uiLayout.counter.width, uiLayout.counter.height),
+                        iconKey: "ui.icon.heart",
+                        showPlusButton: false,
+                        out _resultWinLivesText,
+                        out _);
+                    _resultWinLivesRoot = _resultWinLivesText != null ? _resultWinLivesText.transform.parent as RectTransform : null;
+                }
+            }
+
+            if (_resultWinPercentText == null)
+            {
+                var t = _resultWinRoot.Find("PercentText");
+                if (t != null) _resultWinPercentText = t.GetComponent<TMP_Text>();
+                if (_resultWinPercentText == null)
+                {
+                    var percentGO = new GameObject("PercentText");
+                    percentGO.transform.SetParent(_resultWinRoot, false);
+                    var tmp = percentGO.AddComponent<TextMeshProUGUI>();
+                    tmp.raycastTarget = false;
+                    tmp.alignment = TextAlignmentOptions.Center;
+                    tmp.enableWordWrapping = false;
+                    tmp.color = Color.white;
+                    tmp.fontSize = 46;
+                    tmp.font = _resultText != null ? _resultText.font : TMP_Settings.defaultFontAsset;
+                    ApplyTmpOutlineUnderlay(
+                        tmp,
+                        outlineWidth: 0.22f,
+                        outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                        underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                        underlayOffset: new Vector2(2f, -2f),
+                        underlaySoftness: 0.28f,
+                        underlayDilate: 0.02f);
+                    var rect = tmp.GetComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0.5f, 1f);
+                    rect.anchorMax = new Vector2(0.5f, 1f);
+                    rect.pivot = new Vector2(0.5f, 1f);
+                    rect.anchoredPosition = new Vector2(0f, -(180f + _hudTopInsetUnits));
+                    rect.sizeDelta = new Vector2(900f, 90f);
+                    _resultWinPercentText = tmp;
+                }
+            }
+
+            if (_resultWinTitleImage == null)
+            {
+                var t = _resultWinRoot.Find("WinTitle");
+                if (t != null) _resultWinTitleImage = t.GetComponent<Image>();
+                if (_resultWinTitleImage == null)
+                {
+                    var titleGO = new GameObject("WinTitle");
+                    titleGO.transform.SetParent(_resultWinRoot, false);
+                    var img = titleGO.AddComponent<Image>();
+                    img.raycastTarget = false;
+                    img.preserveAspect = true;
+                    var sprite = LoadResultWinTitleSprite();
+                    img.sprite = sprite;
+                    img.color = sprite != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                    var rect = img.GetComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0.5f, 0.5f);
+                    rect.anchorMax = new Vector2(0.5f, 0.5f);
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    rect.anchoredPosition = new Vector2(0f, 280f);
+                    rect.sizeDelta = new Vector2(720f, 240f);
+                    _resultWinTitleImage = img;
+                }
+            }
+
+            if (_resultWinFeatureRoot == null)
+            {
+                _resultWinFeatureRoot = _resultWinRoot.Find("FeatureProgress") as RectTransform;
+                if (_resultWinFeatureRoot != null)
+                {
+                    _resultWinFeatureLabel = _resultWinFeatureRoot.Find("Label")?.GetComponent<TMP_Text>();
+                    var bar = _resultWinFeatureRoot.Find("Bar");
+                    _resultWinFeatureFill = bar != null ? bar.Find("Fill")?.GetComponent<Image>() : null;
+                    _resultWinFeatureProgress = bar != null ? bar.Find("ProgressText")?.GetComponent<TMP_Text>() : null;
+                    _resultWinFeatureIcon = _resultWinFeatureRoot.Find("Icon")?.GetComponent<Image>();
+                }
+                if (_resultWinFeatureRoot == null)
+                {
+                    var rootGO = new GameObject("FeatureProgress");
+                    rootGO.transform.SetParent(_resultWinRoot, false);
+                    var rect = rootGO.AddComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0.5f, 0.5f);
+                    rect.anchorMax = new Vector2(0.5f, 0.5f);
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    rect.anchoredPosition = new Vector2(0f, 40f);
+                    rect.sizeDelta = new Vector2(760f, 160f);
+                    _resultWinFeatureRoot = rect;
+
+                    var labelGO = new GameObject("Label");
+                    labelGO.transform.SetParent(rootGO.transform, false);
+                    var label = labelGO.AddComponent<TextMeshProUGUI>();
+                    label.raycastTarget = false;
+                    label.alignment = TextAlignmentOptions.Left;
+                    label.enableWordWrapping = false;
+                    label.color = Color.white;
+                    label.fontSize = 42;
+                    label.font = _resultText != null ? _resultText.font : TMP_Settings.defaultFontAsset;
+                    ApplyTmpOutlineUnderlay(
+                        label,
+                        outlineWidth: 0.20f,
+                        outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                        underlayColor: new Color(0f, 0f, 0f, 0.28f),
+                        underlayOffset: new Vector2(2f, -2f),
+                        underlaySoftness: 0.24f,
+                        underlayDilate: 0.02f);
+                    var labelRect = label.GetComponent<RectTransform>();
+                    labelRect.anchorMin = new Vector2(0f, 1f);
+                    labelRect.anchorMax = new Vector2(0f, 1f);
+                    labelRect.pivot = new Vector2(0f, 1f);
+                    labelRect.anchoredPosition = new Vector2(0f, 0f);
+                    labelRect.sizeDelta = new Vector2(360f, 54f);
+                    _resultWinFeatureLabel = label;
+
+                    var barGO = new GameObject("Bar");
+                    barGO.transform.SetParent(rootGO.transform, false);
+                    var barImg = barGO.AddComponent<Image>();
+                    barImg.raycastTarget = false;
+                    barImg.color = new Color(0f, 0f, 0f, 0.45f);
+                    var barRect = barGO.GetComponent<RectTransform>();
+                    barRect.anchorMin = new Vector2(0f, 0.5f);
+                    barRect.anchorMax = new Vector2(0f, 0.5f);
+                    barRect.pivot = new Vector2(0f, 0.5f);
+                    barRect.anchoredPosition = new Vector2(0f, -40f);
+                    barRect.sizeDelta = new Vector2(520f, 46f);
+
+                    var fillGO = new GameObject("Fill");
+                    fillGO.transform.SetParent(barGO.transform, false);
+                    var fillImg = fillGO.AddComponent<Image>();
+                    fillImg.raycastTarget = false;
+                    fillImg.color = new Color(0.32f, 0.85f, 0.35f, 1f);
+                    fillImg.type = Image.Type.Filled;
+                    fillImg.fillMethod = Image.FillMethod.Horizontal;
+                    fillImg.fillOrigin = 0;
+                    fillImg.fillAmount = 0f;
+                    var fillRect = fillGO.GetComponent<RectTransform>();
+                    fillRect.anchorMin = Vector2.zero;
+                    fillRect.anchorMax = Vector2.one;
+                    fillRect.offsetMin = Vector2.zero;
+                    fillRect.offsetMax = Vector2.zero;
+                    _resultWinFeatureFill = fillImg;
+
+                    var progressGO = new GameObject("ProgressText");
+                    progressGO.transform.SetParent(barGO.transform, false);
+                    var progress = progressGO.AddComponent<TextMeshProUGUI>();
+                    progress.raycastTarget = false;
+                    progress.alignment = TextAlignmentOptions.Center;
+                    progress.enableWordWrapping = false;
+                    progress.color = Color.white;
+                    progress.fontSize = 34;
+                    progress.font = _resultText != null ? _resultText.font : TMP_Settings.defaultFontAsset;
+                    ApplyTmpOutlineUnderlay(
+                        progress,
+                        outlineWidth: 0.20f,
+                        outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                        underlayColor: new Color(0f, 0f, 0f, 0.30f),
+                        underlayOffset: new Vector2(2f, -2f),
+                        underlaySoftness: 0.24f,
+                        underlayDilate: 0.02f);
+                    var progressRect = progress.GetComponent<RectTransform>();
+                    progressRect.anchorMin = Vector2.zero;
+                    progressRect.anchorMax = Vector2.one;
+                    progressRect.offsetMin = Vector2.zero;
+                    progressRect.offsetMax = Vector2.zero;
+                    _resultWinFeatureProgress = progress;
+
+                    var iconGO = new GameObject("Icon");
+                    iconGO.transform.SetParent(rootGO.transform, false);
+                    var iconImg = iconGO.AddComponent<Image>();
+                    iconImg.raycastTarget = false;
+                    iconImg.preserveAspect = true;
+                    iconImg.sprite = hasKit ? LoopSortingUIKit.LoadSpriteByKey("ui.icon.lock") : null;
+                    iconImg.color = iconImg.sprite != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                    var iconRect = iconGO.GetComponent<RectTransform>();
+                    iconRect.anchorMin = new Vector2(1f, 0.5f);
+                    iconRect.anchorMax = new Vector2(1f, 0.5f);
+                    iconRect.pivot = new Vector2(0.5f, 0.5f);
+                    iconRect.anchoredPosition = new Vector2(-24f, -40f);
+                    iconRect.sizeDelta = new Vector2(120f, 120f);
+                    _resultWinFeatureIcon = iconImg;
+                }
+            }
+
+            ApplyResultWinPillLayout(uiLayout);
+        }
+
+        private void ApplyResultWinPillLayout(LoopSortingUIKit.RuntimeLayout layout)
+        {
+            if (_resultWinCoinsRoot != null)
+            {
+                ApplyResultWinPillRect(
+                    _resultWinCoinsRoot,
+                    layout.coins,
+                    layout.referenceWidth,
+                    _hudTopInsetUnits,
+                    _hudRightInsetUnits,
+                    rightSide: true);
+            }
+            if (_resultWinLivesRoot != null)
+            {
+                ApplyResultWinPillRect(
+                    _resultWinLivesRoot,
+                    layout.counter,
+                    layout.referenceWidth,
+                    _hudTopInsetUnits,
+                    _hudRightInsetUnits,
+                    rightSide: false);
+            }
+        }
+
+        private static void ApplyResultWinPillRect(
+            RectTransform target,
+            Rect rect,
+            float referenceWidth,
+            float topInset,
+            float rightInset,
+            bool rightSide)
+        {
+            if (target == null) return;
+            float top = rect.y + topInset;
+            target.sizeDelta = new Vector2(rect.width, rect.height);
+
+            if (rightSide)
+            {
+                float right = referenceWidth - (rect.x + rect.width) + rightInset;
+                target.anchorMin = new Vector2(1f, 1f);
+                target.anchorMax = new Vector2(1f, 1f);
+                target.pivot = new Vector2(1f, 1f);
+                target.anchoredPosition = new Vector2(-right, -top);
+            }
+            else
+            {
+                target.anchorMin = new Vector2(0f, 1f);
+                target.anchorMax = new Vector2(0f, 1f);
+                target.pivot = new Vector2(0f, 1f);
+                target.anchoredPosition = new Vector2(rect.x, -top);
+            }
+        }
+
+        private void EnsureResultLoseLayout()
+        {
+            EnsureResultPanelLayoutRefs();
+            if (_resultPanelLayoutRoot == null) return;
+
+            if (_resultLoseCardRoot == null)
+            {
+                _resultLoseCardRoot = _resultPanelLayoutRoot.Find("LoseCard") as RectTransform;
+                if (_resultLoseCardRoot != null)
+                {
+                    _resultLoseCardBg = _resultLoseCardRoot.GetComponent<Image>();
+                    _resultLoseCardIcon = _resultLoseCardRoot.Find("Icon")?.GetComponent<Image>();
+                    _resultLoseCardDesc = _resultLoseCardRoot.Find("Desc")?.GetComponent<TMP_Text>();
+                }
+                if (_resultLoseCardRoot == null)
+                {
+                    var cardGO = new GameObject("LoseCard");
+                    cardGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                    var rect = cardGO.AddComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0.5f, 0.5f);
+                    rect.anchorMax = new Vector2(0.5f, 0.5f);
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    rect.anchoredPosition = new Vector2(0f, 40f);
+                    rect.sizeDelta = new Vector2(760f, 380f);
+                    _resultLoseCardRoot = rect;
+
+                    var bg = cardGO.AddComponent<Image>();
+                    if (LoopSortingUIKit.IsAvailable())
+                    {
+                        bg.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.panel_modal");
+                        bg.type = bg.sprite != null && bg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
+                        bg.color = Color.white;
+                    }
+                    else
+                    {
+                        bg.color = new Color(0.22f, 0.32f, 0.48f, 0.9f);
+                    }
+                    _resultLoseCardBg = bg;
+
+                    var iconGO = new GameObject("Icon");
+                    iconGO.transform.SetParent(cardGO.transform, false);
+                    var iconImg = iconGO.AddComponent<Image>();
+                    iconImg.raycastTarget = false;
+                    iconImg.preserveAspect = true;
+                    var lockSprite = LoopSortingUIKit.IsAvailable() ? LoopSortingUIKit.LoadSpriteByKey("ui.icon.lock") : null;
+                    iconImg.sprite = lockSprite;
+                    iconImg.color = lockSprite != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                    var iconRect = iconGO.GetComponent<RectTransform>();
+                    iconRect.anchorMin = new Vector2(0.5f, 0.65f);
+                    iconRect.anchorMax = new Vector2(0.5f, 0.65f);
+                    iconRect.pivot = new Vector2(0.5f, 0.5f);
+                    iconRect.anchoredPosition = new Vector2(0f, 0f);
+                    iconRect.sizeDelta = new Vector2(160f, 160f);
+                    _resultLoseCardIcon = iconImg;
+
+                    var descGO = new GameObject("Desc");
+                    descGO.transform.SetParent(cardGO.transform, false);
+                    var desc = descGO.AddComponent<TextMeshProUGUI>();
+                    desc.raycastTarget = false;
+                    desc.alignment = TextAlignmentOptions.Center;
+                    desc.enableWordWrapping = true;
+                    desc.color = Color.white;
+                    desc.fontSize = 32;
+                    desc.font = _resultText != null ? _resultText.font : TMP_Settings.defaultFontAsset;
+                    desc.text = LocalizedText.ResultRevive;
+                    ApplyTmpOutlineUnderlay(
+                        desc,
+                        outlineWidth: 0.18f,
+                        outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                        underlayColor: new Color(0f, 0f, 0f, 0.25f),
+                        underlayOffset: new Vector2(2f, -2f),
+                        underlaySoftness: 0.24f,
+                        underlayDilate: 0.02f);
+                    var descRect = desc.GetComponent<RectTransform>();
+                    descRect.anchorMin = new Vector2(0.5f, 0.2f);
+                    descRect.anchorMax = new Vector2(0.5f, 0.2f);
+                    descRect.pivot = new Vector2(0.5f, 0.5f);
+                    descRect.anchoredPosition = new Vector2(0f, 0f);
+                    descRect.sizeDelta = new Vector2(640f, 100f);
+                    _resultLoseCardDesc = desc;
+                }
+            }
+        }
+
+        private void UpdateResultWinStats()
+        {
+            if (_resultWinCoinsText != null) _resultWinCoinsText.text = FormatCurrencyValue(_progress.Coins);
+            if (_resultWinLivesText != null) _resultWinLivesText.text = _progress.Lives.ToString();
+
+            if (_resultWinLivesRoot != null)
+            {
+                _resultWinLivesRoot.gameObject.SetActive(livesHudEnabled);
+            }
+
+            if (_resultWinPercentText != null)
+            {
+                float percent = Mathf.Lerp(1.9f, 99f, (float)_rng.NextDouble());
+                percent = Mathf.Clamp(Mathf.Round(percent * 10f) / 10f, 1.9f, 99f);
+                string percentText = percent.ToString("0.0", CultureInfo.InvariantCulture);
+                _resultWinPercentText.text = $"You're better than <color=#FFD24F>{percentText}%</color> of players!";
+            }
+        }
+
+        private void UpdateResultWinFeatureProgress()
+        {
+            if (_resultWinFeatureRoot == null) return;
+
+            if (!TryComputeResultWinFeatureProgress(out int current, out int total))
+            {
+                _resultWinFeatureRoot.gameObject.SetActive(false);
+                return;
+            }
+
+            _resultWinFeatureRoot.gameObject.SetActive(true);
+            if (_resultWinFeatureLabel != null) _resultWinFeatureLabel.text = "NEW FEATURE";
+            if (_resultWinFeatureProgress != null) _resultWinFeatureProgress.text = $"{current}/{total}";
+            if (_resultWinFeatureFill != null)
+            {
+                _resultWinFeatureFill.fillAmount = total > 0 ? Mathf.Clamp01((float)current / total) : 0f;
+            }
+            if (_resultWinFeatureIcon != null)
+            {
+                _resultWinFeatureIcon.gameObject.SetActive(_resultWinFeatureIcon.sprite != null);
+            }
+        }
+
+        private bool TryComputeResultWinFeatureProgress(out int current, out int total)
+        {
+            current = 0;
+            total = 0;
+            if (_flow == null || _flow.levels == null || _flow.levels.Count == 0) return false;
+            if (resultNewMechanicLevelIndices == null || resultNewMechanicLevelIndices.Count == 0) return false;
+
+            int currentIndex = _flowIndex;
+            int prevIndex = -1;
+            int nextIndex = -1;
+
+            var sorted = resultNewMechanicLevelIndices
+                .Where(i => i >= 0)
+                .Distinct()
+                .OrderBy(i => i)
+                .ToList();
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                int idx = sorted[i];
+                if (idx <= currentIndex) prevIndex = idx;
+                if (idx > currentIndex)
+                {
+                    nextIndex = idx;
+                    break;
+                }
+            }
+
+            if (nextIndex < 0) return false;
+            total = nextIndex - prevIndex;
+            if (total <= 0) return false;
+            current = Mathf.Clamp(currentIndex - prevIndex, 0, total);
+            return true;
+        }
+
+        private static Sprite _resultWinTitleSprite;
+        private static bool _resultWinTitleSpriteTried;
+
+        private static Sprite LoadResultWinTitleSprite()
+        {
+            if (_resultWinTitleSpriteTried) return _resultWinTitleSprite;
+            _resultWinTitleSpriteTried = true;
+            var tex = Resources.Load<Texture2D>("ResultPanel/title_level_completed_placeholder");
+            if (tex != null)
+            {
+                _resultWinTitleSprite = Sprite.Create(
+                    tex,
+                    new Rect(0f, 0f, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+            }
+            return _resultWinTitleSprite;
         }
 
         private void EnsureResultCloseButton()
@@ -764,6 +1412,10 @@ namespace LoopSorting
                 }
 
                 RebindResultPanelPrefabSprites(hasKit);
+                EnsureResultPanelLayoutRefs();
+                EnsureResultWinLayout();
+                EnsureResultLoseLayout();
+                CaptureResultPanelBaseLayoutIfNeeded();
                 _resultPanel.SetActive(false);
                 return;
             }
@@ -880,6 +1532,10 @@ namespace LoopSorting
 
             _resultSecondaryIcon = CreateButtonIcon(_secondaryButton.transform);
 
+            EnsureResultPanelLayoutRefs();
+            EnsureResultWinLayout();
+            EnsureResultLoseLayout();
+            CaptureResultPanelBaseLayoutIfNeeded();
             _resultPanel.SetActive(false);
         }
 

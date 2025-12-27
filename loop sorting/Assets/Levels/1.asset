@@ -22,6 +22,7 @@ MonoBehaviour:
   autoResolveLayoutOverlap: 1
   minBoxToBeltGap: 0.08
   preferredBoxToBeltGap: 0.18
+  minBoxToBoxGap: 0.05
   overlapResolveIterations: 3
   cameraMaxOrthoSize: 8.51
   minBlockPixelSize: 0

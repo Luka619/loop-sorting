@@ -329,10 +329,17 @@ namespace LoopSorting
             float aspect = slotTex != null && slotTex.width > 0 ? (float)slotTex.height / slotTex.width : 1f;
             float beltWidth = _beltWidthUsed > 0.0001f ? _beltWidthUsed : spacing;
             float baseSide = Mathf.Max(0.02f, spacing * Mathf.Max(0.01f, slotMarkerScale));
-            // Ensure marker height is one-third of the belt width (keeps slots readable without overpowering the belt).
-            float minSideForBelt = Mathf.Max(0.02f, (beltWidth / 3f) / Mathf.Max(0.01f, aspect));
+            // Keep markers readable but avoid overly long slots on tight belts.
+            float minHeightForBelt = Mathf.Max(0.02f, Mathf.Min(beltWidth * 0.55f, spacing * 0.85f));
+            float minSideForBelt = minHeightForBelt / Mathf.Max(0.01f, aspect);
             baseSide = Mathf.Max(baseSide, minSideForBelt);
-            var scale = new Vector3(baseSide, baseSide * aspect, 1f);
+            float height = baseSide * aspect;
+            float maxHeightForBelt = Mathf.Max(minHeightForBelt, Mathf.Min(spacing * 0.95f, beltWidth * 0.9f));
+            if (height > maxHeightForBelt)
+            {
+                height = maxHeightForBelt;
+            }
+            var scale = new Vector3(baseSide, height, 1f);
 
             for (int i = 0; i < _slotBasePositions.Count; i++)
             {

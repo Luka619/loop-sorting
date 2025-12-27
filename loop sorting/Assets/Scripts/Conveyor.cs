@@ -117,12 +117,12 @@ namespace LoopSorting
             _ports[beltIndex] = container;
         }
 
-        public void Advance(int? blockedPort = null)
+        public void Advance(int? blockedPort = null, bool allowInsert = true)
         {
-            Advance(blockedPort, events: null);
+            Advance(blockedPort, events: null, allowInsert: allowInsert);
         }
 
-        public void Advance(int? blockedPort, List<ConveyorPortEvent> events)
+        public void Advance(int? blockedPort, List<ConveyorPortEvent> events, bool allowInsert = true)
         {
             if (blockedPort.HasValue)
             {
@@ -210,6 +210,11 @@ namespace LoopSorting
                     _slots[i] = _slots[i - 1];
                 }
                 _slots[0] = last;
+            }
+
+            if (!allowInsert)
+            {
+                return;
             }
 
             // Try to drop blocks into connected containers after movement.

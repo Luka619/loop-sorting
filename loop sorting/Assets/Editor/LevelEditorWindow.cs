@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -40,6 +41,7 @@ public class LevelEditorWindow : EditorWindow
     private Vector2 _boxDragOffset = Vector2.zero;
     private int _selectedPoint = -1;
     private int _tabIndex = 0;
+    private int _lastTabIndex = 0;
     private readonly string[] _tabs = new[] { "Levels", "Flow" };
     private LevelFlow _flowAsset;
     private SerializedObject _flowSO;
@@ -56,6 +58,13 @@ public class LevelEditorWindow : EditorWindow
     private bool _showLayoutAutoFix = true;
     private bool _showCameraClamp = true;
     private LevelLayout _previewLayoutInstance;
+    private LoopSorting.Editor.LevelDifficultyMetrics.FailureRateSimulation _dsrSim;
+    private int _dsrSimMaxBoxes;
+    private readonly Dictionary<int, float> _dsrLastRByLayoutId = new Dictionary<int, float>();
+    private int _dsrSimTicksPerUpdate = 1000;
+    private float _dsrSimBudgetMs = 10f;
+    private bool _previewSimActive;
+    private LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot _previewSimSnapshot;
 
     // Preview-only camera framing (to match GameRuntimeController.FitCameraToLevel).
     private static bool _previewCameraActive;
@@ -77,6 +86,7 @@ public class LevelEditorWindow : EditorWindow
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
+        CancelDsrSimulation();
         if (_previewLayoutInstance != null)
         {
             DestroyImmediate(_previewLayoutInstance);
@@ -94,6 +104,11 @@ public class LevelEditorWindow : EditorWindow
         DrawLevelSidebar();
 
         _tabIndex = GUILayout.Toolbar(_tabIndex, _tabs);
+        if (_tabIndex != _lastTabIndex)
+        {
+            CancelDsrSimulation();
+            _lastTabIndex = _tabIndex;
+        }
 
         if (_tabIndex == 0)
         {
@@ -206,6 +221,15 @@ public class LevelEditorWindow : EditorWindow
 
         EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.45f));
         _paramScroll = EditorGUILayout.BeginScrollView(_paramScroll);
+
+        DrawDifficultySummary();
+        bool simRunning = IsSimRunning();
+        if (simRunning)
+        {
+            EditorGUILayout.HelpBox("Simulation running: editing is disabled.", MessageType.Info);
+        }
+        using (new EditorGUI.DisabledScope(simRunning))
+        {
 
         EditorGUILayout.LabelField("Global", EditorStyles.boldLabel);
         var propBlockSize = _serializedLevel.FindProperty("blockSize");
@@ -354,8 +378,76 @@ public class LevelEditorWindow : EditorWindow
             _boxesList?.DoLayoutList();
         }
 
+        }
         EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
+    }
+
+    private void DrawDifficultySummary()
+    {
+        if (_level == null) return;
+        int maxBoxes = GetMaxBoxCount();
+        var metrics = LoopSorting.Editor.LevelDifficultyMetrics.ComputeStatic(_level, maxBoxes);
+
+        EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.LabelField("Difficulty (DSR)", EditorStyles.boldLabel);
+        float displayR = metrics.R;
+        int layoutId = _level.GetInstanceID();
+        if (displayR < 0f && _dsrLastRByLayoutId.TryGetValue(layoutId, out var lastR))
+        {
+            displayR = lastR;
+        }
+        else if (metrics.R >= 0f)
+        {
+            _dsrLastRByLayoutId[layoutId] = metrics.R;
+        }
+
+        float displayD = displayR >= 0f ? Mathf.Clamp01(0.6f * metrics.S + 0.4f * displayR) : -1f;
+        string dText = displayD < 0f ? "--" : displayD.ToString("0.00");
+        string rText = displayR < 0f ? "--" : displayR.ToString("0.00");
+        EditorGUILayout.LabelField($"D {dText}   S {metrics.S:0.00}   R {rText}");
+        EditorGUILayout.LabelField($"Boxes {metrics.Boxes}  Colors {metrics.Colors}  Blocks {metrics.Blocks}  BeltCap {metrics.BeltCapacity}");
+        EditorGUILayout.BeginHorizontal();
+        _dsrSimTicksPerUpdate = Mathf.Clamp(EditorGUILayout.IntField("Sim Speed (ticks/update)", _dsrSimTicksPerUpdate), 1, 100000);
+        _dsrSimBudgetMs = Mathf.Clamp(EditorGUILayout.FloatField("Budget (ms)", _dsrSimBudgetMs), 0.1f, 200f);
+        if (_dsrSim == null || _dsrSim.IsDone)
+        {
+            if (GUILayout.Button("Recompute R", GUILayout.Width(120)))
+            {
+                StartDsrSimulation();
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("Cancel R Sim", GUILayout.Width(120)))
+            {
+                CancelDsrSimulation();
+            }
+            EditorGUILayout.LabelField($"Running {_dsrSim.RunsCompleted}/{_dsrSim.RunsTotal}", GUILayout.Width(160));
+        }
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(4f);
+    }
+
+    private int GetMaxBoxCount()
+    {
+        int max = 0;
+        if (_levelOptions != null)
+        {
+            foreach (var lvl in _levelOptions)
+            {
+                if (lvl == null || lvl.boxes == null) continue;
+                if (lvl.boxes.Count > max) max = lvl.boxes.Count;
+            }
+        }
+        return Mathf.Max(1, max);
+    }
+
+    private bool IsSimRunning()
+    {
+        return _dsrSim != null && !_dsrSim.IsDone;
     }
 
     private void DrawSelectedItemPanel()
@@ -632,6 +724,13 @@ public class LevelEditorWindow : EditorWindow
         GUI.BeginClip(rect);
         Handles.BeginGUI();
         var slotPositions = BuildSlotPositionsForPreview(previewLayout, fallbackBeltSpacing);
+        var simSnap = default(LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot);
+        bool simActive = IsSimRunning() && _dsrSim.TryGetDebugSnapshot(out simSnap);
+        _previewSimActive = simActive;
+        if (simActive)
+        {
+            _previewSimSnapshot = simSnap;
+        }
 
         // Frame background/border.
         if (Event.current.type == EventType.Repaint)
@@ -646,7 +745,15 @@ public class LevelEditorWindow : EditorWindow
         }
 
         DrawPreviewConveyors(frameRect, bounds, slotPositions, previewLayout);
+        if (simActive)
+        {
+            DrawPreviewSimBelt(frameRect, bounds, slotPositions, previewLayout, _previewSimSnapshot);
+        }
         DrawPreviewBoxes(frameRect, bounds, slotPositions, previewLayout);
+        if (simActive)
+        {
+            DrawPreviewSimOverlay(frameRect, _previewSimSnapshot);
+        }
         HandlePreviewClick(frameRect, bounds, slotPositions, previewLayout);
         HandlePreviewDrag(frameRect, bounds);
         Handles.EndGUI();
@@ -923,7 +1030,16 @@ public class LevelEditorWindow : EditorWindow
             var face = Color.clear; // remove base tint
             var outline = (_selectedBox == i) ? Color.green : Color.white;
             Handles.DrawSolidRectangleWithOutline(poly, face, outline);
-            Handles.Label(ToScreen(rect, bounds, box.position), $"{box.name} ({box.opening})");
+            string label = $"{box.name} ({box.opening})";
+            if (_previewSimActive && _previewSimSnapshot.Containers != null && i < _previewSimSnapshot.Containers.Length)
+            {
+                var simBox = _previewSimSnapshot.Containers[i];
+                label = $"{box.name} ({box.opening}) {simBox.Count}/{simBox.Capacity}";
+                if (simBox.Completed) label += " C";
+                if (simBox.Locked) label += " L";
+                if (simBox.Busy) label += " B";
+            }
+            Handles.Label(ToScreen(rect, bounds, box.position), label);
 
             if (isLocked)
             {
@@ -957,7 +1073,14 @@ public class LevelEditorWindow : EditorWindow
             }
 
             // Color fill overlay based on actual cell order/counts
-            DrawColorCells(rect, bounds, box, i);
+            if (_previewSimActive && _previewSimSnapshot.Containers != null && i < _previewSimSnapshot.Containers.Length)
+            {
+                DrawSimulationCells(rect, bounds, box, _previewSimSnapshot.Containers[i], i);
+            }
+            else
+            {
+                DrawColorCells(rect, bounds, box, i);
+            }
 
             // Grid overlay
             int cols = Mathf.Max(1, box.columns);
@@ -996,6 +1119,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void HandlePreviewClick(Rect rect, Rect bounds, List<Vector2> slotPositions, LevelLayout layout)
     {
+        if (IsSimRunning()) return;
         if (layout == null) return;
         var e = Event.current;
         if (e.type != EventType.MouseDown || e.button != 0) return;
@@ -1176,6 +1300,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void HandlePreviewDrag(Rect rect, Rect bounds)
     {
+        if (IsSimRunning()) return;
         var e = Event.current;
         if (_draggingConveyor >= 0 && _draggingPoint >= 0)
         {
@@ -1227,6 +1352,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void HandleGlobalHotkeys()
     {
+        if (IsSimRunning()) return;
         var e = Event.current;
         if (e == null) return;
         if (_level == null || _level.boxes == null || _level.boxes.Count == 0) return;
@@ -1743,6 +1869,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void SetLevel(LevelLayout level)
     {
+        CancelDsrSimulation();
         _level = level;
         if (_level != null)
         {
@@ -1764,6 +1891,98 @@ public class LevelEditorWindow : EditorWindow
         Repaint();
         RefreshLevelList();
         _selectedIndex = IndexOfLevel(level, _levelOptions);
+        if (_level != null && _tabIndex == 0)
+        {
+            StartDsrSimulation();
+        }
+    }
+
+    private void DrawSimulationCells(
+        Rect rect,
+        Rect bounds,
+        BoxSpec box,
+        LoopSorting.Editor.LevelDifficultyMetrics.SimulationContainerSnapshot simBox,
+        int boxIndex)
+    {
+        if (simBox.Blocks == null || simBox.Blocks.Length == 0) return;
+        int cols = Mathf.Max(1, box.columns);
+        int rows = Mathf.Max(1, box.rows);
+        int capacity = cols * rows;
+        if (capacity <= 0) return;
+
+        var order = BuildCellOrder(cols, rows, box.opening);
+        var min = box.position - box.size * 0.5f;
+        var max = box.position + box.size * 0.5f;
+        var cellSize = new Vector2(box.size.x / cols, box.size.y / rows);
+        int count = Mathf.Min(simBox.Blocks.Length, capacity);
+        for (int i = 0; i < count; i++)
+        {
+            if (!simBox.Blocks[i].HasValue) continue;
+            var cell = order[i];
+            var cmin = new Vector2(min.x + cell.x * cellSize.x, max.y - (cell.y + 1) * cellSize.y);
+            var cmax = new Vector2(cmin.x + cellSize.x, cmin.y + cellSize.y);
+            var poly = new Vector3[4]
+            {
+                ToScreen(rect, bounds, new Vector2(cmin.x, cmin.y)),
+                ToScreen(rect, bounds, new Vector2(cmax.x, cmin.y)),
+                ToScreen(rect, bounds, new Vector2(cmax.x, cmax.y)),
+                ToScreen(rect, bounds, new Vector2(cmin.x, cmax.y))
+            };
+
+            var col = BlockVisual.ToUnityColor(simBox.Blocks[i].Value);
+            col.a = 0.8f;
+            Handles.DrawSolidRectangleWithOutline(poly, col, Color.clear);
+        }
+    }
+
+    private void DrawPreviewSimBelt(
+        Rect rect,
+        Rect bounds,
+        List<Vector2> slotPositions,
+        LevelLayout layout,
+        LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot snap)
+    {
+        if (slotPositions == null || snap.BeltSlots == null) return;
+        int count = Mathf.Min(slotPositions.Count, snap.BeltSlots.Length);
+        if (count <= 0) return;
+
+        float blockSize = layout != null && layout.blockSize > 0f ? layout.blockSize : 0.6f;
+        float scale = GetScale(rect, bounds);
+        float size = Mathf.Clamp(blockSize * 0.6f * scale, 4f, 18f);
+        for (int i = 0; i < count; i++)
+        {
+            var slotColor = snap.BeltSlots[i];
+            if (!slotColor.HasValue) continue;
+            var pos = ToScreen(rect, bounds, slotPositions[i]);
+            var r = new Rect(pos.x - size * 0.5f, pos.y - size * 0.5f, size, size);
+            EditorGUI.DrawRect(r, BlockVisual.ToUnityColor(slotColor.Value));
+        }
+    }
+
+    private void DrawPreviewSimOverlay(
+        Rect frameRect,
+        LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot snap)
+    {
+        float pad = 6f;
+        float lineH = 16f;
+        float height = lineH * 3f + pad * 2f;
+        float width = Mathf.Min(frameRect.width - pad * 2f, 360f);
+        var panel = new Rect(frameRect.x + pad, frameRect.y + pad, width, height);
+        EditorGUI.DrawRect(panel, new Color(0f, 0f, 0f, 0.45f));
+
+        var line1 = $"Sim {snap.RunIndex + 1}/{(_dsrSim != null ? _dsrSim.RunsTotal : 0)}  Tick {snap.Tick}";
+        var line2 = $"Belt {snap.BeltCount}/{snap.BeltLength}  NoInsert {snap.NoInsertWhileFull}";
+        var line3 = snap.IsReleasing
+            ? $"Release box {snap.ActiveReleaseIndex} {snap.ActiveReleaseColor} pending {snap.PendingRelease}"
+            : "Release none";
+
+        var style = EditorStyles.miniLabel;
+        var r1 = new Rect(panel.x + pad, panel.y + pad, panel.width - pad * 2f, lineH);
+        var r2 = new Rect(r1.x, r1.y + lineH, r1.width, lineH);
+        var r3 = new Rect(r2.x, r2.y + lineH, r2.width, lineH);
+        GUI.Label(r1, line1, style);
+        GUI.Label(r2, line2, style);
+        GUI.Label(r3, line3, style);
     }
 
     private void BindSerializedObject()
@@ -2130,6 +2349,7 @@ public class LevelEditorWindow : EditorWindow
 
     private void OnSceneGUI(SceneView view)
     {
+        if (IsSimRunning()) return;
         if (_level == null) return;
 
         // Drag conveyor points
@@ -2178,6 +2398,116 @@ public class LevelEditorWindow : EditorWindow
                     Repaint();
                 }
             }
+        }
+    }
+
+    private void StartDsrSimulation()
+    {
+        CancelDsrSimulation();
+        if (_level == null) return;
+        _dsrSimMaxBoxes = GetMaxBoxCount();
+        _dsrSim = LoopSorting.Editor.LevelDifficultyMetrics.StartFailureRateSimulation(_level);
+        if (_dsrSim == null || _dsrSim.IsDone)
+        {
+            _dsrSim = null;
+            return;
+        }
+        EditorApplication.update += OnDsrSimulationUpdate;
+    }
+
+    private void CancelDsrSimulation()
+    {
+        if (_dsrSim != null)
+        {
+            _dsrSim.Cancel();
+            _dsrSim = null;
+        }
+        EditorApplication.update -= OnDsrSimulationUpdate;
+    }
+
+    private void OnDsrSimulationUpdate()
+    {
+        if (_dsrSim == null)
+        {
+            EditorApplication.update -= OnDsrSimulationUpdate;
+            return;
+        }
+
+        if (_level == null || LoopSorting.Editor.LevelDifficultyMetrics.GetLayoutHash(_level) != _dsrSim.LayoutHash)
+        {
+            CancelDsrSimulation();
+            return;
+        }
+
+        int ticks = Mathf.Clamp(_dsrSimTicksPerUpdate, 1, 100000);
+        double budget = Mathf.Clamp(_dsrSimBudgetMs, 0.1f, 200f) / 1000.0;
+        bool done = _dsrSim.Step(ticks, budget);
+        if (done)
+        {
+            if (!_dsrSim.Cancelled && _level != null)
+            {
+                var metrics = LoopSorting.Editor.LevelDifficultyMetrics.ComputeStatic(_level, _dsrSimMaxBoxes, _dsrSim.FailureRate);
+                LoopSorting.Editor.LevelDifficultyMetrics.StoreCachedMetrics(_level, metrics);
+                _dsrLastRByLayoutId[_level.GetInstanceID()] = _dsrSim.FailureRate;
+            }
+            CancelDsrSimulation();
+        }
+
+        Repaint();
+    }
+
+    private void DrawDsrSimPreview(LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot snap)
+    {
+        EditorGUILayout.LabelField(
+            $"Run {snap.RunIndex + 1}/{_dsrSim.RunsTotal}  Tick {snap.Tick}  Belt {snap.BeltCount}/{snap.BeltLength}  NoInsert {snap.NoInsertWhileFull}");
+
+        if (snap.IsReleasing)
+        {
+            EditorGUILayout.LabelField($"Releasing box {snap.ActiveReleaseIndex} color {snap.ActiveReleaseColor} pending {snap.PendingRelease}");
+        }
+        else
+        {
+            EditorGUILayout.LabelField("Releasing none");
+        }
+
+        if (snap.BeltSlots != null && snap.BeltSlots.Length > 0)
+        {
+            const float cell = 10f;
+            const float pad = 2f;
+            float available = EditorGUIUtility.currentViewWidth - 60f;
+            int perRow = Mathf.Clamp(Mathf.FloorToInt(available / (cell + pad)), 4, snap.BeltSlots.Length);
+            int rows = Mathf.CeilToInt(snap.BeltSlots.Length / (float)perRow);
+            float height = rows * (cell + pad) + pad;
+            var rect = GUILayoutUtility.GetRect(1f, height);
+
+            for (int i = 0; i < snap.BeltSlots.Length; i++)
+            {
+                int row = i / perRow;
+                int col = i % perRow;
+                float x = rect.x + pad + col * (cell + pad);
+                float y = rect.y + pad + row * (cell + pad);
+                var r = new Rect(x, y, cell, cell);
+                var color = snap.BeltSlots[i].HasValue
+                    ? BlockVisual.ToUnityColor(snap.BeltSlots[i].Value)
+                    : new Color(0.2f, 0.2f, 0.2f, 0.2f);
+                EditorGUI.DrawRect(r, color);
+            }
+        }
+
+        if (snap.Containers != null && snap.Containers.Length > 0)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < snap.Containers.Length; i++)
+            {
+                var c = snap.Containers[i];
+                char front = c.FrontColor.HasValue ? c.FrontColor.Value.ToString()[0] : '-';
+                sb.Append($"{c.Index}:{c.Count}/{c.Capacity}{front}");
+                if (c.Locked) sb.Append("L");
+                if (c.Busy) sb.Append("B");
+                if (c.Completed) sb.Append("C");
+                if (i < snap.Containers.Length - 1) sb.Append("  ");
+            }
+            EditorGUILayout.LabelField(sb.ToString(), EditorStyles.wordWrappedMiniLabel);
         }
     }
 }

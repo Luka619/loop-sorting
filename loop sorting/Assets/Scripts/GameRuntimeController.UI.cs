@@ -38,6 +38,9 @@ namespace LoopSorting
         public bool shopEnabled = false;
         [Tooltip("Show stamina (lives) pill in the HUD.")]
         public bool livesHudEnabled = false;
+        [Header("Result UI")]
+        [Tooltip("0-based flow indices that unlock a new mechanic (used for win-screen progress).")]
+        public List<int> resultNewMechanicLevelIndices = new List<int>();
         [Tooltip("Use separate state sprites for buttons (pressed/disabled via SpriteSwap). Disable if state sprites have mismatched size/border and cause visual jitter/misalignment.")]
         public bool usePressedButtonSprites = false;
         [Header("UI Theme")]
@@ -183,6 +186,33 @@ namespace LoopSorting
         private Image _resultWinRewardCoinSecondary;
         private Image _resultPrimaryIcon;
         private Image _resultSecondaryIcon;
+        private RectTransform _resultPanelBoxRect;
+        private Image _resultPanelBoxImage;
+        private RectTransform _resultPanelLayoutRoot;
+        private bool _resultPanelBaseLayoutCaptured;
+        private Vector2 _resultPanelBaseAnchorMin;
+        private Vector2 _resultPanelBaseAnchorMax;
+        private Vector2 _resultPanelBaseAnchoredPosition;
+        private Vector2 _resultPanelBaseSizeDelta;
+        private Vector2 _resultPanelBasePivot;
+        private Color _resultPanelBaseColor;
+        private bool _resultPanelBaseDecorActive;
+        private RectTransform _resultWinRoot;
+        private RectTransform _resultWinCoinsRoot;
+        private RectTransform _resultWinLivesRoot;
+        private TMP_Text _resultWinCoinsText;
+        private TMP_Text _resultWinLivesText;
+        private TMP_Text _resultWinPercentText;
+        private Image _resultWinTitleImage;
+        private RectTransform _resultWinFeatureRoot;
+        private TMP_Text _resultWinFeatureLabel;
+        private TMP_Text _resultWinFeatureProgress;
+        private Image _resultWinFeatureFill;
+        private Image _resultWinFeatureIcon;
+        private RectTransform _resultLoseCardRoot;
+        private Image _resultLoseCardBg;
+        private TMP_Text _resultLoseCardDesc;
+        private Image _resultLoseCardIcon;
         private const int BoosterPurchaseGrantCount = 1;
         private static readonly Dictionary<string, Sprite> BoosterPurchaseSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, Sprite> SettingsPageSpriteCache = new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
@@ -263,6 +293,7 @@ namespace LoopSorting
             _game = null;
             _isReleasing = false;
             _activeReleasePort = null;
+            _activeReleaseContainerIndex = -1;
             _tickTimer = 0f;
 	            _beltSpacingUsed = 0f;
 		            _beltWidthUsed = 0f;
@@ -1675,6 +1706,7 @@ namespace LoopSorting
         {
             _isReleasing = true;
             _activeReleasePort = _containerToBelt.TryGetValue(containerIndex, out var portIdx) ? portIdx : (int?)null;
+            _activeReleaseContainerIndex = containerIndex;
 
             var container = _game.Containers[containerIndex];
             // This container cannot accept incoming blocks while releasing.
@@ -1743,6 +1775,7 @@ namespace LoopSorting
             PlaySfx(SfxId.RunShipEnd);
             _isReleasing = false;
             _activeReleasePort = null;
+            _activeReleaseContainerIndex = -1;
             ClearBeltWaitingState();
             container.SetBusy(false);
             if (containerIndex < _boxViews.Count)

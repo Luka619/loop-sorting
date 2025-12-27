@@ -53,8 +53,8 @@ namespace LoopSorting.Editor
                 samplingPointSize: 90,
                 atlasPadding: 9,
                 renderMode: GlyphRenderMode.SDFAA,
-                atlasWidth: 1024,
-                atlasHeight: 1024,
+                atlasWidth: 2048,
+                atlasHeight: 2048,
                 atlasPopulationMode: AtlasPopulationMode.Dynamic,
                 enableMultiAtlasSupport: false);
 

@@ -106,6 +106,8 @@ namespace LoopSorting
         private readonly List<ConveyorPortEvent> _portEvents = new List<ConveyorPortEvent>(32);
         private readonly Dictionary<int, Vector3> _beltBlockOffsets = new Dictionary<int, Vector3>();
         private readonly Dictionary<int, Coroutine> _beltBlockOffsetCoroutines = new Dictionary<int, Coroutine>();
+        private readonly Dictionary<int, int> _inboundAnimCounts = new Dictionary<int, int>();
+        private readonly Dictionary<int, int> _inboundStreamCounts = new Dictionary<int, int>();
         private Coroutine _emptyDeferredHintRoutine;
         private LineRenderer _emptyDeferredLine;
         private RejectFeedbackGate _rejectGate;
@@ -123,6 +125,7 @@ namespace LoopSorting
         private float _beltSpacingUsed;
         private bool _isReleasing;
         private int? _activeReleasePort;
+        private int _activeReleaseContainerIndex = -1;
         private float _speedMultiplier = 2.5f;
         private int _speedIndex = 0;
         private bool _didLogOrangeLongNineSlice;
@@ -1351,7 +1354,7 @@ namespace LoopSorting
                 _tickTimer = 0f;
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
                 _portEvents.Clear();
-                _game.TickConveyor(blocked, _portEvents);
+                _game.TickConveyor(blocked, _portEvents, allowInsert: true);
                 ProcessConveyorPortEvents(_portEvents);
                 _conveyorTickSfxCountdown--;
                 if (_conveyorTickSfxCountdown <= 0)
@@ -1432,6 +1435,11 @@ namespace LoopSorting
                 else if (e.Outcome == ConveyorPortOutcome.Inserted)
                 {
                     _sfxInsertEventsThisTick++;
+                    if (containerIndex >= 0)
+                    {
+                        IncrementInboundBusy(containerIndex);
+                        UpdateInboundStream(containerIndex, e.Block.Color);
+                    }
                     StartBeltBlockEnterBoxAnimation(e.BeltIndex, containerIndex, e.Block);
                     if (containerIndex >= 0 && containerIndex < _boxViews.Count)
                     {
@@ -1517,7 +1525,14 @@ namespace LoopSorting
                 EnsureBlockVisual(beltIndex, block);
                 _beltBlockVisuals.TryGetValue(beltIndex, out go);
             }
-            if (go == null) return;
+            if (go == null)
+            {
+                if (containerIndex >= 0)
+                {
+                    DecrementInboundBusy(containerIndex);
+                }
+                return;
+            }
 
             // Detach from belt tracking so the slot can be reused immediately.
             StopBeltSpawnAnimation(beltIndex);
@@ -1526,37 +1541,149 @@ namespace LoopSorting
             StartCoroutine(AnimateBeltEnterBox(go, containerIndex));
         }
 
-        private IEnumerator AnimateBeltEnterBox(GameObject go, int containerIndex)
+        private bool IsInboundLocked(int containerIndex)
         {
-            if (go == null) yield break;
-            if (containerIndex < 0 || containerIndex >= _boxViews.Count) yield break;
-
-            var view = _boxViews[containerIndex];
-            if (view == null) yield break;
-
-            Vector3 from = go.transform.position;
-            Vector3 baseScale = go.transform.localScale;
-            Vector3 mouth = view.GetMouthWorldPosition() + view.GetMouthWorldNormal() * 0.02f + new Vector3(0f, 0f, beltBlockZOffset);
-
-            float dur = Mathf.Clamp(conveyorTickSeconds * 0.45f, 0.08f, 0.18f);
-            float t = 0f;
-            while (t < dur)
+            if (_inboundAnimCounts.TryGetValue(containerIndex, out var anim) && anim > 0)
             {
-                if (go == null) break;
-                t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
-                float u = Mathf.Clamp01(t / dur);
-                float e = MotionUtil.EaseOutCubic(u);
-                go.transform.position = Vector3.LerpUnclamped(from, mouth, e);
-                // slight shrink to imply "getting swallowed"
-                float s = Mathf.Lerp(1f, 0.6f, e);
-                go.transform.localScale = baseScale * s;
-                yield return null;
+                return true;
+            }
+            return _inboundStreamCounts.TryGetValue(containerIndex, out var stream) && stream > 0;
+        }
+
+        private void IncrementInboundBusy(int containerIndex)
+        {
+            if (_inboundAnimCounts.TryGetValue(containerIndex, out var count))
+            {
+                _inboundAnimCounts[containerIndex] = count + 1;
+            }
+            else
+            {
+                _inboundAnimCounts[containerIndex] = 1;
+            }
+        }
+
+        private void DecrementInboundBusy(int containerIndex)
+        {
+            if (!_inboundAnimCounts.TryGetValue(containerIndex, out var count))
+            {
+                return;
             }
 
-            // Cleanup: remove this belt visual now that it entered the box.
-            if (go != null)
+            count = Mathf.Max(0, count - 1);
+            if (count <= 0)
             {
-                Destroy(go);
+                _inboundAnimCounts.Remove(containerIndex);
+            }
+            else
+            {
+                _inboundAnimCounts[containerIndex] = count;
+            }
+        }
+
+        private void UpdateInboundStream(int containerIndex, BlockColor color)
+        {
+            if (_game == null) return;
+            if (containerIndex < 0 || containerIndex >= _game.Containers.Count) return;
+            if (!_containerToBelt.TryGetValue(containerIndex, out _)) return;
+
+            var container = _game.Containers[containerIndex];
+            if (container == null) return;
+
+            int remaining = Mathf.Max(0, container.Capacity - container.Count);
+            if (remaining <= 0)
+            {
+                _inboundStreamCounts.Remove(containerIndex);
+                return;
+            }
+
+            int queued = CountQueuedIncomingBlocks(containerIndex, color, remaining);
+            if (queued > 0)
+            {
+                _inboundStreamCounts[containerIndex] = queued;
+            }
+            else
+            {
+                _inboundStreamCounts.Remove(containerIndex);
+            }
+        }
+
+        private int CountQueuedIncomingBlocks(int containerIndex, BlockColor color, int maxCount)
+        {
+            if (_game == null || maxCount <= 0) return 0;
+            if (!_containerToBelt.TryGetValue(containerIndex, out var beltIndex)) return 0;
+
+            var slots = _game.Conveyor.Slots;
+            int length = slots.Count;
+            if (length <= 1) return 0;
+
+            int count = 0;
+            int idx = (beltIndex - 1 + length) % length;
+            while (idx != beltIndex && count < maxCount)
+            {
+                var slot = slots[idx];
+                if (!slot.HasValue) break;
+                if (slot.Value.Color != color) break;
+                count++;
+                idx = (idx - 1 + length) % length;
+            }
+            return count;
+        }
+
+        private IEnumerator AnimateBeltEnterBox(GameObject go, int containerIndex)
+        {
+            bool shouldClear = containerIndex >= 0;
+            if (go == null || containerIndex < 0 || containerIndex >= _boxViews.Count)
+            {
+                if (shouldClear)
+                {
+                    DecrementInboundBusy(containerIndex);
+                }
+                yield break;
+            }
+
+            var view = _boxViews[containerIndex];
+            if (view == null)
+            {
+                if (shouldClear)
+                {
+                    DecrementInboundBusy(containerIndex);
+                }
+                yield break;
+            }
+
+            try
+            {
+                Vector3 from = go.transform.position;
+                Vector3 baseScale = go.transform.localScale;
+                Vector3 mouth = view.GetMouthWorldPosition() + view.GetMouthWorldNormal() * 0.02f + new Vector3(0f, 0f, beltBlockZOffset);
+
+                float dur = Mathf.Clamp(conveyorTickSeconds * 0.45f, 0.08f, 0.18f);
+                float t = 0f;
+                while (t < dur)
+                {
+                    if (go == null) break;
+                    t += Time.deltaTime * Mathf.Max(0.0001f, EffectiveSpeedMultiplier);
+                    float u = Mathf.Clamp01(t / dur);
+                    float e = MotionUtil.EaseOutCubic(u);
+                    go.transform.position = Vector3.LerpUnclamped(from, mouth, e);
+                    // slight shrink to imply "getting swallowed"
+                    float s = Mathf.Lerp(1f, 0.6f, e);
+                    go.transform.localScale = baseScale * s;
+                    yield return null;
+                }
+
+                // Cleanup: remove this belt visual now that it entered the box.
+                if (go != null)
+                {
+                    Destroy(go);
+                }
+            }
+            finally
+            {
+                if (shouldClear)
+                {
+                    DecrementInboundBusy(containerIndex);
+                }
             }
         }
 
@@ -1836,6 +1963,12 @@ namespace LoopSorting
             }
 
             var container = _game.Containers[containerIndex];
+            if (container.Busy || IsInboundLocked(containerIndex))
+            {
+                PlaySfx(SfxId.UiDenied);
+                if (containerIndex < _boxViews.Count) _boxViews[containerIndex].PlayDeniedFeedback();
+                return;
+            }
             if (containerIndex < _boxCompleted.Count && _boxCompleted[containerIndex])
             {
                 PlaySfx(SfxId.UiDenied);
@@ -2715,6 +2848,9 @@ namespace LoopSorting
 
         private void BuildContainers(LevelLayout layout)
         {
+            _inboundAnimCounts.Clear();
+            _inboundStreamCounts.Clear();
+
             _boxSpecs.Clear();
             _boxLocked.Clear();
             _boxCompleted.Clear();

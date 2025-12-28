@@ -20,11 +20,15 @@ namespace LoopSorting
         private Coroutine _resultPercentIntroRoutine;
         private Coroutine _resultPanelIntroRoutine;
         private Coroutine _resultButtonsIntroRoutine;
+        private Coroutine _resultLoseIconIdleRoutine;
         private Vector3 _resultPanelIntroBaseScale = Vector3.one;
         private Vector3 _resultPrimaryIntroBaseScale = Vector3.one;
         private Vector3 _resultSecondaryIntroBaseScale = Vector3.one;
         private bool _resultIntroScalesCaptured;
         private bool _resultWinPercentStyled;
+        private Vector2 _resultLoseIconBasePos;
+        private Quaternion _resultLoseIconBaseRotation = Quaternion.identity;
+        private bool _resultLoseIconBaseCaptured;
         private static Texture2D _resultGlassOverlayNoiseTexture;
         private static Sprite _resultGlassOverlaySprite;
         private static bool _resultGlassOverlaySpriteTried;
@@ -395,6 +399,7 @@ namespace LoopSorting
 
         private void ConfigureResultWinRewardLayout()
         {
+            StopResultLoseCardIconIdle();
             ApplyResultButtonsLayoutForWinRewards();
 
             // Don't override prefab-authored button layout. This lets "Apply Runtime Layout To Prefabs" persist
@@ -733,6 +738,14 @@ namespace LoopSorting
                     }
                 }
             }
+            if (_resultLoseCardIcon != null && _resultLoseCardIcon.gameObject.activeInHierarchy)
+            {
+                StartResultLoseCardIconIdle();
+            }
+            else
+            {
+                StopResultLoseCardIconIdle();
+            }
             if (_resultLoseCardBg != null)
             {
                 _resultLoseCardBg.sprite = null;
@@ -916,6 +929,65 @@ namespace LoopSorting
                 if (_primaryButton != null) _primaryButton.transform.localScale = _resultPrimaryIntroBaseScale;
                 if (_secondaryButton != null) _secondaryButton.transform.localScale = _resultSecondaryIntroBaseScale;
             }
+        }
+
+        private void StartResultLoseCardIconIdle()
+        {
+            if (_resultLoseCardIcon == null) return;
+            var iconRect = _resultLoseCardIcon.rectTransform;
+            if (iconRect == null) return;
+
+            StopResultLoseCardIconIdle();
+            _resultLoseIconBasePos = iconRect.anchoredPosition;
+            _resultLoseIconBaseRotation = iconRect.localRotation;
+            _resultLoseIconBaseCaptured = true;
+            _resultLoseIconIdleRoutine = StartCoroutine(ResultLoseCardIconIdleRoutine(iconRect, _resultLoseIconBasePos, _resultLoseIconBaseRotation));
+        }
+
+        private void StopResultLoseCardIconIdle()
+        {
+            if (_resultLoseIconIdleRoutine != null)
+            {
+                StopCoroutine(_resultLoseIconIdleRoutine);
+                _resultLoseIconIdleRoutine = null;
+            }
+
+            if (_resultLoseCardIcon != null && _resultLoseIconBaseCaptured)
+            {
+                var iconRect = _resultLoseCardIcon.rectTransform;
+                if (iconRect != null)
+                {
+                    iconRect.anchoredPosition = _resultLoseIconBasePos;
+                    iconRect.localRotation = _resultLoseIconBaseRotation;
+                }
+            }
+            _resultLoseIconBaseCaptured = false;
+        }
+
+        private IEnumerator ResultLoseCardIconIdleRoutine(RectTransform iconRect, Vector2 basePos, Quaternion baseRotation)
+        {
+            float t = 0f;
+            while (_resultPanelMode == ResultPanelMode.Lose &&
+                   _resultPanel != null &&
+                   _resultPanel.activeInHierarchy &&
+                   iconRect != null &&
+                   _resultLoseCardIcon != null &&
+                   _resultLoseCardIcon.gameObject.activeInHierarchy)
+            {
+                t += Time.unscaledDeltaTime;
+                float bob = Mathf.Sin(t * 2.0f) * 10f;
+                float tilt = Mathf.Sin(t * 1.7f) * 2.0f;
+                iconRect.anchoredPosition = basePos + new Vector2(0f, bob);
+                iconRect.localRotation = baseRotation * Quaternion.Euler(0f, 0f, tilt);
+                yield return null;
+            }
+
+            if (iconRect != null)
+            {
+                iconRect.anchoredPosition = basePos;
+                iconRect.localRotation = baseRotation;
+            }
+            _resultLoseIconIdleRoutine = null;
         }
 
         private Transform GetActiveResultTitleTransform(bool win)
@@ -2132,6 +2204,7 @@ namespace LoopSorting
         private void ResetResultPanelRefs()
         {
             StopResultIntroRoutinesSafe();
+            StopResultLoseCardIconIdle();
             _resultText = null;
             _primaryButton = null;
             _secondaryButton = null;

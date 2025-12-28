@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 17
   m_EditorClassIdentifier: 
-  beltCapacity: 45
+  beltCapacity: 44
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1
@@ -34,8 +34,8 @@ MonoBehaviour:
     - {x: 5, y: -5}
     - {x: -2, y: -5}
     - {x: -2, y: 2}
-    - {x: 2, y: 2}
-    - {x: 2, y: -2}
+    - {x: 1.5, y: 2}
+    - {x: 1.5, y: -2}
     - {x: -3.5, y: -2}
     loop: 0
     width: 20
@@ -63,7 +63,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: 2.5, y: 4}
+    position: {x: 3, y: 4}
     size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8
@@ -151,7 +151,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 6
-    position: {x: 3.573066, y: 0.6722217}
+    position: {x: 3, y: 1}
     size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8

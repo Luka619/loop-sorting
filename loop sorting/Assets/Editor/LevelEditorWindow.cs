@@ -63,8 +63,12 @@ public class LevelEditorWindow : EditorWindow
     private readonly Dictionary<int, float> _dsrLastRByLayoutId = new Dictionary<int, float>();
     private int _dsrSimTicksPerUpdate = 1000;
     private float _dsrSimBudgetMs = 10f;
+    private bool _dsrSimRandomizeSeed = true;
+    private int _dsrSimSeed;
     private bool _previewSimActive;
     private LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot _previewSimSnapshot;
+    private int _previewSimSnapshotHash;
+    private bool _previewSimHoldLastSnapshot;
     private bool _showPressureGraph = true;
     private int _pressureGraphMinCap = 0;
     private int _pressureGraphMaxCap = 0;
@@ -446,6 +450,11 @@ public class LevelEditorWindow : EditorWindow
             EditorGUILayout.LabelField($"Running {_dsrSim.RunsCompleted}/{_dsrSim.RunsTotal}", GUILayout.Width(160));
         }
         EditorGUILayout.EndHorizontal();
+        _dsrSimRandomizeSeed = EditorGUILayout.ToggleLeft("Randomize Seed", _dsrSimRandomizeSeed);
+        using (new EditorGUI.DisabledScope(_dsrSimRandomizeSeed))
+        {
+            _dsrSimSeed = EditorGUILayout.IntField("Seed", _dsrSimSeed);
+        }
 
         DrawPressureGraphSection(layoutId);
 
@@ -850,12 +859,25 @@ public class LevelEditorWindow : EditorWindow
         Handles.BeginGUI();
         var slotPositions = BuildSlotPositionsForPreview(previewLayout, fallbackBeltSpacing);
         var simSnap = default(LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot);
-        bool simActive = IsSimRunning() && _dsrSim.TryGetDebugSnapshot(out simSnap);
-        _previewSimActive = simActive;
-        if (simActive)
+        bool simRunning = IsSimRunning();
+        bool hasNewSnap = false;
+        if (simRunning && _dsrSim != null && _dsrSim.TryGetDebugSnapshot(out simSnap))
         {
             _previewSimSnapshot = simSnap;
+            _previewSimSnapshotHash = LoopSorting.Editor.LevelDifficultyMetrics.GetLayoutHash(_level);
+            hasNewSnap = true;
         }
+        bool hasSnapshot = hasNewSnap || _previewSimSnapshot.BeltSlots != null;
+        bool showSim = false;
+        if (simRunning)
+        {
+            showSim = hasSnapshot;
+        }
+        else if (_previewSimHoldLastSnapshot && hasSnapshot && _previewSimSnapshotHash != 0)
+        {
+            showSim = _previewSimSnapshotHash == LoopSorting.Editor.LevelDifficultyMetrics.GetLayoutHash(_level);
+        }
+        _previewSimActive = showSim;
 
         // Frame background/border.
         if (Event.current.type == EventType.Repaint)
@@ -870,12 +892,12 @@ public class LevelEditorWindow : EditorWindow
         }
 
         DrawPreviewConveyors(frameRect, bounds, slotPositions, previewLayout);
-        if (simActive)
+        if (showSim)
         {
             DrawPreviewSimBelt(frameRect, bounds, slotPositions, previewLayout, _previewSimSnapshot);
         }
         DrawPreviewBoxes(frameRect, bounds, slotPositions, previewLayout);
-        if (simActive)
+        if (showSim)
         {
             DrawPreviewSimOverlay(frameRect, _previewSimSnapshot);
         }
@@ -2549,22 +2571,36 @@ public class LevelEditorWindow : EditorWindow
     {
         CancelDsrSimulation();
         if (_level == null) return;
+        _previewSimHoldLastSnapshot = false;
+        _previewSimSnapshotHash = 0;
+        int layoutId = _level.GetInstanceID();
+        _pressureByLayoutId.Remove(layoutId);
+        _dsrLastRByLayoutId.Remove(layoutId);
         _dsrSimMaxBoxes = GetMaxBoxCount();
-        _dsrSim = LoopSorting.Editor.LevelDifficultyMetrics.StartFailureRateSimulation(_level);
+        int seedSalt = _dsrSimRandomizeSeed
+            ? unchecked((int)(System.DateTime.UtcNow.Ticks ^ (System.DateTime.UtcNow.Ticks >> 32)))
+            : _dsrSimSeed;
+        _dsrSim = LoopSorting.Editor.LevelDifficultyMetrics.StartFailureRateSimulation(_level, seedSalt: seedSalt);
         if (_dsrSim == null || _dsrSim.IsDone)
         {
             _dsrSim = null;
             return;
         }
         EditorApplication.update += OnDsrSimulationUpdate;
+        Repaint();
     }
 
-    private void CancelDsrSimulation()
+    private void CancelDsrSimulation(bool keepSnapshot = false)
     {
         if (_dsrSim != null)
         {
             _dsrSim.Cancel();
             _dsrSim = null;
+        }
+        if (!keepSnapshot)
+        {
+            _previewSimHoldLastSnapshot = false;
+            _previewSimSnapshotHash = 0;
         }
         EditorApplication.update -= OnDsrSimulationUpdate;
     }
@@ -2586,6 +2622,11 @@ public class LevelEditorWindow : EditorWindow
         int ticks = Mathf.Clamp(_dsrSimTicksPerUpdate, 1, 100000);
         double budget = Mathf.Clamp(_dsrSimBudgetMs, 0.1f, 200f) / 1000.0;
         bool done = _dsrSim.Step(ticks, budget);
+        if (_dsrSim.TryGetDebugSnapshot(out var snap))
+        {
+            _previewSimSnapshot = snap;
+            _previewSimSnapshotHash = _dsrSim.LayoutHash;
+        }
         if (done)
         {
             if (!_dsrSim.Cancelled && _level != null)
@@ -2595,8 +2636,9 @@ public class LevelEditorWindow : EditorWindow
                 int layoutId = _level.GetInstanceID();
                 _dsrLastRByLayoutId[layoutId] = _dsrSim.FailureRate;
                 StorePressureSnapshot(layoutId, _dsrSim);
+                _previewSimHoldLastSnapshot = false;
             }
-            CancelDsrSimulation();
+            CancelDsrSimulation(keepSnapshot: _previewSimHoldLastSnapshot);
         }
 
         Repaint();

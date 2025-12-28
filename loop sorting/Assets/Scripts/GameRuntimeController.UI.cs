@@ -38,11 +38,18 @@ namespace LoopSorting
         public bool shopEnabled = false;
         [Tooltip("Show stamina (lives) pill in the HUD.")]
         public bool livesHudEnabled = false;
+        [Header("UI Layout")]
+        [Tooltip("Allow runtime code to override prefab layout (positions/sizes/anchors).")]
+        public bool useRuntimeUiLayoutOverrides = false;
+        [Tooltip("Allow runtime to auto-create UI if prefabs or nodes are missing.")]
+        public bool allowRuntimeUiAutoCreate = true;
         [Header("Result UI")]
         [Tooltip("0-based flow indices that unlock a new mechanic (used for win-screen progress).")]
         public List<int> resultNewMechanicLevelIndices = new List<int>();
         [Tooltip("Use separate state sprites for buttons (pressed/disabled via SpriteSwap). Disable if state sprites have mismatched size/border and cause visual jitter/misalignment.")]
         public bool usePressedButtonSprites = false;
+        [Tooltip("Show the coins pill on the win result screen.")]
+        public bool showWinCoinsPill = false;
         [Header("UI Theme")]
         public UITheme uiTheme;
         private SettingsUiController SettingsUi => _settingsUi ??= new SettingsUiController(this);
@@ -56,6 +63,24 @@ namespace LoopSorting
         public float HudTopInsetUnits => _hudTopInsetUnits;
         public float HudRightInsetUnits => _hudRightInsetUnits;
         public float HudBottomInsetUnits => _hudBottomInsetUnits;
+        private bool UseRuntimeUiLayoutOverrides => useRuntimeUiLayoutOverrides;
+        private bool AllowRuntimeUiAutoCreate => allowRuntimeUiAutoCreate;
+
+        private bool ShouldApplyRuntimeLayout(RectTransform rect)
+        {
+            if (rect == null) return false;
+            if (UseRuntimeUiLayoutOverrides) return true;
+            return rect.GetComponentInParent<RuntimeUiElement>() != null;
+        }
+
+        private void MarkRuntimeUi(GameObject go)
+        {
+            if (go == null) return;
+            if (go.GetComponent<RuntimeUiElement>() == null)
+            {
+                go.AddComponent<RuntimeUiElement>();
+            }
+        }
         private Button _speedButton;
         private TMP_Text _speedButtonLabel;
         private Button _settingsButton;
@@ -598,11 +623,14 @@ namespace LoopSorting
                 Destroy(instance);
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             var canvasGO = new GameObject("MainMenuCanvas");
             _mainMenuCanvas = canvasGO.AddComponent<Canvas>();
             _mainMenuCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _mainMenuCanvas.overrideSorting = true;
             _mainMenuCanvas.sortingOrder = 10; // above gameplay HUD
+            MarkRuntimeUi(canvasGO);
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

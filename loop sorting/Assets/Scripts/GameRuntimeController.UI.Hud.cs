@@ -167,10 +167,13 @@ namespace LoopSorting
                 _hudRootRect = hudPrefab.rootRect != null ? hudPrefab.rootRect : hudPrefab.GetComponent<RectTransform>();
                 if (_hudRootRect != null)
                 {
-                    _hudRootRect.anchorMin = Vector2.zero;
-                    _hudRootRect.anchorMax = Vector2.one;
-                    _hudRootRect.offsetMin = Vector2.zero;
-                    _hudRootRect.offsetMax = Vector2.zero;
+                    if (UseRuntimeUiLayoutOverrides || ShouldApplyRuntimeLayout(_hudRootRect))
+                    {
+                        _hudRootRect.anchorMin = Vector2.zero;
+                        _hudRootRect.anchorMax = Vector2.one;
+                        _hudRootRect.offsetMin = Vector2.zero;
+                        _hudRootRect.offsetMax = Vector2.zero;
+                    }
                 }
 
                 beltCounterUI = hudPrefab.beltCounterUI;
@@ -203,45 +206,48 @@ namespace LoopSorting
                 var lifePlusT = _hudRootRect != null ? _hudRootRect.Find("LivesPill/Plus") : null;
                 if (lifePlusT != null) lifePlusT.gameObject.SetActive(shopEnabled && livesHudEnabled);
 
-                // Safe-area adjustments: nudge top HUD down, and boosters up from bottom inset.
-                float topDelta = topBarTopUnits - hudPrefab.authoredTopInsetUnits;
-                float rightDelta = topBarExtraRightUnits - hudPrefab.authoredRightInsetUnits;
-                float bottomDelta = safeBottomUnits - hudPrefab.authoredBottomInsetUnits;
-
-                void NudgeTop(string childName, bool applyRightInset)
+                                if (UseRuntimeUiLayoutOverrides)
                 {
-                    if (_hudRootRect == null || string.IsNullOrEmpty(childName)) return;
-                    var t = _hudRootRect.Find(childName);
-                    if (t == null) return;
-                    var rt = t.GetComponent<RectTransform>();
-                    if (rt == null) return;
-                    var p = rt.anchoredPosition;
-                    p.y -= topDelta;
-                    if (applyRightInset) p.x -= rightDelta;
-                    rt.anchoredPosition = p;
+                    // Safe-area adjustments: nudge top HUD down, and boosters up from bottom inset.
+                    float topDelta = topBarTopUnits - hudPrefab.authoredTopInsetUnits;
+                    float rightDelta = topBarExtraRightUnits - hudPrefab.authoredRightInsetUnits;
+                    float bottomDelta = safeBottomUnits - hudPrefab.authoredBottomInsetUnits;
+
+                    void NudgeTop(string childName, bool applyRightInset)
+                    {
+                        if (_hudRootRect == null || string.IsNullOrEmpty(childName)) return;
+                        var t = _hudRootRect.Find(childName);
+                        if (t == null) return;
+                        var rt = t.GetComponent<RectTransform>();
+                        if (rt == null) return;
+                        var p = rt.anchoredPosition;
+                        p.y -= topDelta;
+                        if (applyRightInset) p.x -= rightDelta;
+                        rt.anchoredPosition = p;
+                    }
+
+                    NudgeTop("FreeSlotsCounter", applyRightInset: false);
+                    NudgeTop("LevelLabel", applyRightInset: false);
+                    NudgeTop("ShopButton", applyRightInset: false);
+                    NudgeTop("CoinsPill", applyRightInset: true);
+                    NudgeTop("LivesPill", applyRightInset: true);
+                    NudgeTop("SpeedButton", applyRightInset: true);
+                    NudgeTop("SettingsButton", applyRightInset: true);
+                    NudgeTop("FastTag", applyRightInset: false);
+
+                    void NudgeBooster(Button b)
+                    {
+                        if (b == null) return;
+                        var rt = b.GetComponent<RectTransform>();
+                        if (rt == null) return;
+                        var p = rt.anchoredPosition;
+                        p.y += bottomDelta;
+                        rt.anchoredPosition = p;
+                    }
+
+                    NudgeBooster(_boosterSortButton);
+                    NudgeBooster(_boosterShuffleButton);
                 }
-
-                NudgeTop("FreeSlotsCounter", applyRightInset: false);
-                NudgeTop("LevelLabel", applyRightInset: false);
-                NudgeTop("ShopButton", applyRightInset: false);
-                NudgeTop("CoinsPill", applyRightInset: true);
-                NudgeTop("LivesPill", applyRightInset: true);
-                NudgeTop("SpeedButton", applyRightInset: true);
-                NudgeTop("SettingsButton", applyRightInset: true);
-                NudgeTop("FastTag", applyRightInset: false);
-
-                void NudgeBooster(Button b)
-                {
-                    if (b == null) return;
-                    var rt = b.GetComponent<RectTransform>();
-                    if (rt == null) return;
-                    var p = rt.anchoredPosition;
-                    p.y += bottomDelta;
-                    rt.anchoredPosition = p;
-                }
-
-                NudgeBooster(_boosterSortButton);
-                NudgeBooster(_boosterShuffleButton);
 
                 // Rebind button actions (prefabs are layout-only).
                 if (_speedButton != null)
@@ -310,8 +316,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             // Root helper
             var root = new GameObject("HUDRoot");
+            MarkRuntimeUi(root);
             root.transform.SetParent(canvasGO.transform, false);
             var rootRect = root.AddComponent<RectTransform>();
             rootRect.anchorMin = Vector2.zero;

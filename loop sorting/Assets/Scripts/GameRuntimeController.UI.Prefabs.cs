@@ -353,6 +353,7 @@ namespace LoopSorting
             string icon)
         {
             var go = new GameObject(name);
+            MarkRuntimeUi(go);
             go.transform.SetParent(parent, false);
             var rect = go.AddComponent<RectTransform>();
             rect.anchorMin = anchor;
@@ -446,19 +447,22 @@ namespace LoopSorting
                     if (iconSprite != null)
                     {
                         var iconImg = EnsureOverlayImage(img.transform, "Icon", iconSprite);
-                        if (iconImg != null)
-                        {
-                            iconImg.raycastTarget = false;
-                            iconImg.preserveAspect = true;
-                            var r = iconImg.rectTransform;
-                            float side = Mathf.Min(img.rectTransform.rect.width, img.rectTransform.rect.height) * 0.62f;
-                            if (side <= 1f) side = 80f;
-                            r.anchorMin = new Vector2(0.5f, 0.5f);
-                            r.anchorMax = new Vector2(0.5f, 0.5f);
-                            r.pivot = new Vector2(0.5f, 0.5f);
-                            r.anchoredPosition = Vector2.zero;
-                            r.sizeDelta = new Vector2(side, side);
-                        }
+                            if (iconImg != null)
+                            {
+                                iconImg.raycastTarget = false;
+                                iconImg.preserveAspect = true;
+                                var r = iconImg.rectTransform;
+                                float side = Mathf.Min(img.rectTransform.rect.width, img.rectTransform.rect.height) * 0.62f;
+                                if (side <= 1f) side = 80f;
+                                if (ShouldApplyRuntimeLayout(r))
+                                {
+                                    r.anchorMin = new Vector2(0.5f, 0.5f);
+                                    r.anchorMax = new Vector2(0.5f, 0.5f);
+                                    r.pivot = new Vector2(0.5f, 0.5f);
+                                    r.anchoredPosition = Vector2.zero;
+                                    r.sizeDelta = new Vector2(side, side);
+                                }
+                            }
                     }
                 }
             }
@@ -555,11 +559,14 @@ namespace LoopSorting
                                 iconImg.preserveAspect = true;
                                 var r = iconImg.rectTransform;
                                 float side = Mathf.Min(closeImg.rectTransform.rect.width, closeImg.rectTransform.rect.height) * 0.62f;
-                                r.anchorMin = new Vector2(0.5f, 0.5f);
-                                r.anchorMax = new Vector2(0.5f, 0.5f);
-                                r.pivot = new Vector2(0.5f, 0.5f);
-                                r.anchoredPosition = Vector2.zero;
-                                r.sizeDelta = new Vector2(side, side);
+                                if (ShouldApplyRuntimeLayout(r))
+                                {
+                                    r.anchorMin = new Vector2(0.5f, 0.5f);
+                                    r.anchorMax = new Vector2(0.5f, 0.5f);
+                                    r.pivot = new Vector2(0.5f, 0.5f);
+                                    r.anchoredPosition = Vector2.zero;
+                                    r.sizeDelta = new Vector2(side, side);
+                                }
                             }
                         }
                     }
@@ -616,11 +623,14 @@ namespace LoopSorting
                             iconImg.preserveAspect = true;
                             var r = iconImg.rectTransform;
                             float side = Mathf.Min(closeImg.rectTransform.rect.width, closeImg.rectTransform.rect.height) * 0.68f;
-                            r.anchorMin = new Vector2(0.5f, 0.5f);
-                            r.anchorMax = new Vector2(0.5f, 0.5f);
-                            r.pivot = new Vector2(0.5f, 0.5f);
-                            r.anchoredPosition = new Vector2(0f, side * 0.05f);
-                            r.sizeDelta = new Vector2(side, side);
+                            if (ShouldApplyRuntimeLayout(r))
+                            {
+                                r.anchorMin = new Vector2(0.5f, 0.5f);
+                                r.anchorMax = new Vector2(0.5f, 0.5f);
+                                r.pivot = new Vector2(0.5f, 0.5f);
+                                r.anchoredPosition = new Vector2(0f, side * 0.05f);
+                                r.sizeDelta = new Vector2(side, side);
+                            }
                         }
                     }
                 }
@@ -835,10 +845,13 @@ namespace LoopSorting
             if (prefab.coinsLabel != null)
             {
                 var r = prefab.coinsLabel.rectTransform;
-                r.anchorMin = Vector2.zero;
-                r.anchorMax = Vector2.one;
-                r.offsetMin = new Vector2(160f, 0f);
-                r.offsetMax = new Vector2(-60f, 0f);
+                if (ShouldApplyRuntimeLayout(r))
+                {
+                    r.anchorMin = Vector2.zero;
+                    r.anchorMax = Vector2.one;
+                    r.offsetMin = new Vector2(160f, 0f);
+                    r.offsetMax = new Vector2(-60f, 0f);
+                }
             }
 
             Image EnsureIcon(Transform buttonTransform)
@@ -882,10 +895,13 @@ namespace LoopSorting
             if (prefab.adLabel != null)
             {
                 var r = prefab.adLabel.rectTransform;
-                r.anchorMin = Vector2.zero;
-                r.anchorMax = Vector2.one;
-                r.offsetMin = new Vector2(160f, 0f);
-                r.offsetMax = new Vector2(-60f, 0f);
+                if (ShouldApplyRuntimeLayout(r))
+                {
+                    r.anchorMin = Vector2.zero;
+                    r.anchorMax = Vector2.one;
+                    r.offsetMin = new Vector2(160f, 0f);
+                    r.offsetMax = new Vector2(-60f, 0f);
+                }
             }
 
             if (prefab.adImage != null)
@@ -917,6 +933,7 @@ namespace LoopSorting
             bool reserveIconSpace = true)
         {
             var go = new GameObject(name);
+            MarkRuntimeUi(go);
             go.transform.SetParent(parent, false);
             var rect = go.AddComponent<RectTransform>();
             rect.anchorMin = anchor;

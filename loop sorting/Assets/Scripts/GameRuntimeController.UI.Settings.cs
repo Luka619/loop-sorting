@@ -108,8 +108,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             _settingsPanel = new GameObject("SettingsPanel");
             _settingsPanel.transform.SetParent(_uiCanvas.transform, false);
+            MarkRuntimeUi(_settingsPanel);
             _settingsMusicToggleImage = null;
             _settingsMusicToggleButton = null;
             _settingsSfxToggleImage = null;

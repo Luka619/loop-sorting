@@ -88,8 +88,11 @@ namespace LoopSorting
                 Destroy(_boosterPurchasePanel);
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             _boosterPurchasePanel = new GameObject("BoosterPurchasePanel");
             _boosterPurchasePanel.transform.SetParent(_uiCanvas.transform, false);
+            MarkRuntimeUi(_boosterPurchasePanel);
 
             var dim = _boosterPurchasePanel.AddComponent<Image>();
             dim.raycastTarget = true;
@@ -839,6 +842,8 @@ namespace LoopSorting
 
         private void ApplyBoosterPurchaseLayoutFromManifest(BoosterType type, bool useFullPopup, Sprite fullPopupSprite)
         {
+            if (!UseRuntimeUiLayoutOverrides && !ShouldApplyRuntimeLayout(_boosterPurchasePopupRect)) return;
+
             var manifest = LoadBoosterPurchaseManifest();
             if (manifest?.assets?.popup_shuffle_full?.size == null || manifest.assets.popup_shuffle_full.box == null)
             {

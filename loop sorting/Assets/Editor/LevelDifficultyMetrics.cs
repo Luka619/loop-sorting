@@ -111,6 +111,7 @@ namespace LoopSorting.Editor
         {
             private readonly LevelLayout _sourceLayout;
             private readonly int _sourceHash;
+            private readonly int _seedSalt;
             private readonly int _runsTotal;
             private int _runsCompleted;
             private int _runsStarted;
@@ -126,10 +127,11 @@ namespace LoopSorting.Editor
             private SimulationRunState _currentRun;
             private readonly List<int> _peakCounts = new List<int>();
 
-            internal FailureRateSimulation(LevelLayout layout, int runsTotal)
+            internal FailureRateSimulation(LevelLayout layout, int runsTotal, int seedSalt)
             {
                 _sourceLayout = layout;
                 _sourceHash = layout == null ? 0 : ComputeLayoutHash(layout);
+                _seedSalt = seedSalt;
                 _runsTotal = Mathf.Max(1, runsTotal);
             }
 
@@ -334,7 +336,7 @@ namespace LoopSorting.Editor
                 CleanupSlots(slots);
 
                 _portMapping = BuildContainerPorts(_runtimeLayout, slotPositions);
-                _seedBase = ComputeLayoutHash(_runtimeLayout);
+                _seedBase = ComputeLayoutHash(_runtimeLayout) ^ _seedSalt;
                 return true;
             }
 
@@ -656,10 +658,10 @@ namespace LoopSorting.Editor
             return SimulationOutcome.None;
         }
 
-        public static FailureRateSimulation StartFailureRateSimulation(LevelLayout layout, int runs = SimulationRuns)
+        public static FailureRateSimulation StartFailureRateSimulation(LevelLayout layout, int runs = SimulationRuns, int seedSalt = 0)
         {
             if (layout == null) return null;
-            return new FailureRateSimulation(layout, runs);
+            return new FailureRateSimulation(layout, runs, seedSalt);
         }
 
         private static bool TryGetCached(LevelLayout layout, int layoutHash, out DsrMetrics metrics)

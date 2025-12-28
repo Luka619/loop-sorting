@@ -498,8 +498,10 @@ namespace LoopSorting
 
             if (root == null)
             {
+                if (!AllowRuntimeUiAutoCreate) return;
                 var rootGO = new GameObject("WinRewardLayout");
                 rootGO.transform.SetParent(button.transform, false);
+                MarkRuntimeUi(rootGO);
                 root = rootGO.AddComponent<RectTransform>();
                 root.anchorMin = new Vector2(0.5f, 0.5f);
                 root.anchorMax = new Vector2(0.5f, 0.5f);
@@ -690,8 +692,11 @@ namespace LoopSorting
             }
             if (_resultLoseCardRoot != null)
             {
-                _resultLoseCardRoot.anchoredPosition = new Vector2(0f, 120f);
-                _resultLoseCardRoot.sizeDelta = new Vector2(700f, 320f);
+                if (ShouldApplyRuntimeLayout(_resultLoseCardRoot))
+                {
+                    _resultLoseCardRoot.anchoredPosition = new Vector2(0f, 120f);
+                    _resultLoseCardRoot.sizeDelta = new Vector2(700f, 320f);
+                }
             }
             if (_resultLoseCardDesc != null) _resultLoseCardDesc.text = "\u4f7f\u7528\u6392\u5e8f\u9053\u5177\u81ea\u52a8\u6574\u7406\u4e00\u4e2a\u79ef\u6728\u76d2\u5b50";
             if (_resultLoseCardIcon != null)
@@ -714,7 +719,10 @@ namespace LoopSorting
                 var iconRect = _resultLoseCardIcon.rectTransform;
                 if (iconRect != null)
                 {
-                    iconRect.sizeDelta = new Vector2(200f, 200f);
+                    if (ShouldApplyRuntimeLayout(iconRect))
+                    {
+                        iconRect.sizeDelta = new Vector2(200f, 200f);
+                    }
                 }
             }
             if (_resultLoseCardBg != null)
@@ -755,20 +763,23 @@ namespace LoopSorting
                 var labelRect = _primaryLabel.rectTransform;
                 if (labelRect != null)
                 {
-                    if (useInlineCoin)
+                    if (ShouldApplyRuntimeLayout(labelRect))
                     {
-                        labelRect.offsetMin = Vector2.zero;
-                        labelRect.offsetMax = Vector2.zero;
-                    }
-                    else if (showPrimaryIcon)
-                    {
-                        labelRect.offsetMin = new Vector2(160f, 0f);
-                        labelRect.offsetMax = new Vector2(-60f, 0f);
-                    }
-                    else
-                    {
-                        labelRect.offsetMin = Vector2.zero;
-                        labelRect.offsetMax = Vector2.zero;
+                        if (useInlineCoin)
+                        {
+                            labelRect.offsetMin = Vector2.zero;
+                            labelRect.offsetMax = Vector2.zero;
+                        }
+                        else if (showPrimaryIcon)
+                        {
+                            labelRect.offsetMin = new Vector2(160f, 0f);
+                            labelRect.offsetMax = new Vector2(-60f, 0f);
+                        }
+                        else
+                        {
+                            labelRect.offsetMin = Vector2.zero;
+                            labelRect.offsetMax = Vector2.zero;
+                        }
                     }
                 }
             }
@@ -814,15 +825,18 @@ namespace LoopSorting
                 var labelRect = _secondaryLabel.rectTransform;
                 if (labelRect != null)
                 {
-                    if (_resultSecondaryIcon != null && _resultSecondaryIcon.gameObject.activeSelf)
+                    if (ShouldApplyRuntimeLayout(labelRect))
                     {
-                        labelRect.offsetMin = new Vector2(160f, 0f);
-                        labelRect.offsetMax = new Vector2(-60f, 0f);
-                    }
-                    else
-                    {
-                        labelRect.offsetMin = Vector2.zero;
-                        labelRect.offsetMax = Vector2.zero;
+                        if (_resultSecondaryIcon != null && _resultSecondaryIcon.gameObject.activeSelf)
+                        {
+                            labelRect.offsetMin = new Vector2(160f, 0f);
+                            labelRect.offsetMax = new Vector2(-60f, 0f);
+                        }
+                        else
+                        {
+                            labelRect.offsetMin = Vector2.zero;
+                            labelRect.offsetMax = Vector2.zero;
+                        }
                     }
                 }
             }
@@ -872,8 +886,10 @@ namespace LoopSorting
 
             if (_resultGlassOverlayRect == null)
             {
+                if (!AllowRuntimeUiAutoCreate) return;
                 var go = new GameObject("GlassOverlay");
                 go.transform.SetParent(_resultPanel.transform, false);
+                MarkRuntimeUi(go);
                 _resultGlassOverlayRect = go.AddComponent<RectTransform>();
                 _resultGlassOverlayRect.anchorMin = Vector2.zero;
                 _resultGlassOverlayRect.anchorMax = Vector2.one;
@@ -893,18 +909,21 @@ namespace LoopSorting
             _resultGlassOverlayImage.type = isNoise ? Image.Type.Tiled : Image.Type.Simple;
             _resultGlassOverlayImage.color = new Color(0f, 0f, 0f, 0.30f);
 
-            _resultGlassOverlayRect.anchorMin = Vector2.zero;
-            _resultGlassOverlayRect.anchorMax = Vector2.one;
-            _resultGlassOverlayRect.offsetMin = Vector2.zero;
-            _resultGlassOverlayRect.offsetMax = Vector2.zero;
-            var panel = _resultPanel.transform.Find("Panel");
-            if (panel != null)
+            if (ShouldApplyRuntimeLayout(_resultGlassOverlayRect))
             {
-                _resultGlassOverlayRect.SetSiblingIndex(panel.GetSiblingIndex());
-            }
-            else
-            {
-                _resultGlassOverlayRect.SetSiblingIndex(0);
+                _resultGlassOverlayRect.anchorMin = Vector2.zero;
+                _resultGlassOverlayRect.anchorMax = Vector2.one;
+                _resultGlassOverlayRect.offsetMin = Vector2.zero;
+                _resultGlassOverlayRect.offsetMax = Vector2.zero;
+                var panel = _resultPanel.transform.Find("Panel");
+                if (panel != null)
+                {
+                    _resultGlassOverlayRect.SetSiblingIndex(panel.GetSiblingIndex());
+                }
+                else
+                {
+                    _resultGlassOverlayRect.SetSiblingIndex(0);
+                }
             }
         }
 
@@ -931,6 +950,7 @@ namespace LoopSorting
             EnsureResultPanelLayoutRefs();
             CaptureResultPanelBaseLayoutIfNeeded();
             if (_resultPanelBoxRect == null) return;
+            if (!ShouldApplyRuntimeLayout(_resultPanelBoxRect)) return;
 
             _resultPanelBoxRect.anchorMin = Vector2.zero;
             _resultPanelBoxRect.anchorMax = Vector2.one;
@@ -954,6 +974,7 @@ namespace LoopSorting
             EnsureResultPanelLayoutRefs();
             if (!_resultPanelBaseLayoutCaptured) CaptureResultPanelBaseLayoutIfNeeded();
             if (!_resultPanelBaseLayoutCaptured || _resultPanelBoxRect == null) return;
+            if (!ShouldApplyRuntimeLayout(_resultPanelBoxRect)) return;
 
             var size = _resultPanelBaseSizeDelta;
             size.y -= 180f;
@@ -990,17 +1011,24 @@ namespace LoopSorting
             var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
             if (primaryRect == null || secondaryRect == null) return;
 
-            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
-            if (_resultButtonsBaseLayoutCaptured)
+            bool applyPrimary = ShouldApplyRuntimeLayout(primaryRect);
+            bool applySecondary = ShouldApplyRuntimeLayout(secondaryRect);
+            if (!applyPrimary && !applySecondary) return;
+
+            if (!UseRuntimeUiLayoutOverrides)
             {
-                float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
-                float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
-                float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
-                float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
-                float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
-                if (xDelta >= 60f && yDelta <= yTolerance)
+                if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+                if (_resultButtonsBaseLayoutCaptured)
                 {
-                    return;
+                    float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
+                    float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
+                    float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
+                    float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
+                    float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
+                    if (xDelta >= 60f && yDelta <= yTolerance)
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -1009,16 +1037,22 @@ namespace LoopSorting
             float baseY = Mathf.Clamp(panelHeight * 0.12f, 140f, 240f);
             float gap = Mathf.Clamp(panelHeight * 0.12f, 170f, 280f);
 
-            primaryRect.anchorMin = new Vector2(0.5f, 0f);
-            primaryRect.anchorMax = new Vector2(0.5f, 0f);
-            primaryRect.pivot = new Vector2(0.5f, 0.5f);
+            if (applyPrimary)
+            {
+                primaryRect.anchorMin = new Vector2(0.5f, 0f);
+                primaryRect.anchorMax = new Vector2(0.5f, 0f);
+                primaryRect.pivot = new Vector2(0.5f, 0.5f);
+            }
 
-            secondaryRect.anchorMin = new Vector2(0.5f, 0f);
-            secondaryRect.anchorMax = new Vector2(0.5f, 0f);
-            secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+            if (applySecondary)
+            {
+                secondaryRect.anchorMin = new Vector2(0.5f, 0f);
+                secondaryRect.anchorMax = new Vector2(0.5f, 0f);
+                secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+            }
 
-            primaryRect.anchoredPosition = new Vector2(0f, baseY);
-            secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
+            if (applyPrimary) primaryRect.anchoredPosition = new Vector2(0f, baseY);
+            if (applySecondary) secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
         }
 
         private void ApplyResultButtonsLayoutForLoseOverlay()
@@ -1029,17 +1063,24 @@ namespace LoopSorting
             var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
             if (primaryRect == null || secondaryRect == null) return;
 
-            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
-            if (_resultButtonsBaseLayoutCaptured)
+            bool applyPrimary = ShouldApplyRuntimeLayout(primaryRect);
+            bool applySecondary = ShouldApplyRuntimeLayout(secondaryRect);
+            if (!applyPrimary && !applySecondary) return;
+
+            if (!UseRuntimeUiLayoutOverrides)
             {
-                float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
-                float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
-                float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
-                float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
-                float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
-                if (xDelta >= 60f && yDelta <= yTolerance)
+                if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+                if (_resultButtonsBaseLayoutCaptured)
                 {
-                    return;
+                    float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
+                    float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
+                    float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
+                    float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
+                    float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
+                    if (xDelta >= 60f && yDelta <= yTolerance)
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -1048,16 +1089,22 @@ namespace LoopSorting
             float baseY = Mathf.Clamp(panelHeight * 0.22f, 140f, 230f);
             float gap = Mathf.Clamp(panelHeight * 0.18f, 120f, 200f);
 
-            primaryRect.anchorMin = new Vector2(0.5f, 0f);
-            primaryRect.anchorMax = new Vector2(0.5f, 0f);
-            primaryRect.pivot = new Vector2(0.5f, 0.5f);
+            if (applyPrimary)
+            {
+                primaryRect.anchorMin = new Vector2(0.5f, 0f);
+                primaryRect.anchorMax = new Vector2(0.5f, 0f);
+                primaryRect.pivot = new Vector2(0.5f, 0.5f);
+            }
 
-            secondaryRect.anchorMin = new Vector2(0.5f, 0f);
-            secondaryRect.anchorMax = new Vector2(0.5f, 0f);
-            secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+            if (applySecondary)
+            {
+                secondaryRect.anchorMin = new Vector2(0.5f, 0f);
+                secondaryRect.anchorMax = new Vector2(0.5f, 0f);
+                secondaryRect.pivot = new Vector2(0.5f, 0.5f);
+            }
 
-            primaryRect.anchoredPosition = new Vector2(0f, baseY);
-            secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
+            if (applyPrimary) primaryRect.anchoredPosition = new Vector2(0f, baseY);
+            if (applySecondary) secondaryRect.anchoredPosition = new Vector2(0f, baseY + gap);
         }
 
         private void SetResultBannerVisible(bool visible)
@@ -1087,8 +1134,10 @@ namespace LoopSorting
                 _resultWinRoot = _resultPanelLayoutRoot.Find("WinLayout") as RectTransform;
                 if (_resultWinRoot == null)
                 {
+                    if (!AllowRuntimeUiAutoCreate) return;
                     var rootGO = new GameObject("WinLayout");
                     rootGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                    MarkRuntimeUi(rootGO);
                     _resultWinRoot = rootGO.AddComponent<RectTransform>();
                     _resultWinRoot.anchorMin = Vector2.zero;
                     _resultWinRoot.anchorMax = Vector2.one;
@@ -1100,27 +1149,38 @@ namespace LoopSorting
             bool hasKit = LoopSortingUIKit.IsAvailable();
             var uiLayout = LoopSortingUIKit.GetRuntimeLayout();
 
-            if (_resultWinCoinsRoot == null || _resultWinCoinsText == null)
+            if (showWinCoinsPill)
             {
-                _resultWinCoinsRoot = _resultWinRoot.Find("CoinsPill") as RectTransform;
-                if (_resultWinCoinsRoot != null && _resultWinCoinsText == null)
+                if (_resultWinCoinsRoot == null || _resultWinCoinsText == null)
                 {
-                    _resultWinCoinsText = _resultWinCoinsRoot.Find("Value")?.GetComponent<TMP_Text>();
+                    _resultWinCoinsRoot = _resultWinRoot.Find("CoinsPill") as RectTransform;
+                    if (_resultWinCoinsRoot != null && _resultWinCoinsText == null)
+                    {
+                        _resultWinCoinsText = _resultWinCoinsRoot.Find("Value")?.GetComponent<TMP_Text>();
+                    }
+                    if (_resultWinCoinsRoot == null)
+                    {
+                        if (AllowRuntimeUiAutoCreate)
+                        {
+                            CreateCurrencyPill(
+                                parent: _resultWinRoot,
+                                name: "CoinsPill",
+                                anchor: new Vector2(1f, 1f),
+                                anchoredPos: new Vector2(-24f, -(uiLayout.coins.y + _hudTopInsetUnits)),
+                                size: new Vector2(uiLayout.coins.width, uiLayout.coins.height),
+                                iconKey: "ui.icon.coin",
+                                showPlusButton: false,
+                                out _resultWinCoinsText,
+                                out _);
+                            _resultWinCoinsRoot = _resultWinCoinsText != null ? _resultWinCoinsText.transform.parent as RectTransform : null;
+                            if (_resultWinCoinsRoot != null) MarkRuntimeUi(_resultWinCoinsRoot.gameObject);
+                        }
+                    }
                 }
-                if (_resultWinCoinsRoot == null)
-                {
-                    CreateCurrencyPill(
-                        parent: _resultWinRoot,
-                        name: "CoinsPill",
-                        anchor: new Vector2(1f, 1f),
-                        anchoredPos: new Vector2(-24f, -(uiLayout.coins.y + _hudTopInsetUnits)),
-                        size: new Vector2(uiLayout.coins.width, uiLayout.coins.height),
-                        iconKey: "ui.icon.coin",
-                        showPlusButton: false,
-                        out _resultWinCoinsText,
-                        out _);
-                    _resultWinCoinsRoot = _resultWinCoinsText != null ? _resultWinCoinsText.transform.parent as RectTransform : null;
-                }
+            }
+            else if (_resultWinCoinsRoot != null)
+            {
+                _resultWinCoinsRoot.gameObject.SetActive(false);
             }
 
             if (_resultWinLivesRoot == null || _resultWinLivesText == null)
@@ -1132,17 +1192,21 @@ namespace LoopSorting
                 }
                 if (_resultWinLivesRoot == null)
                 {
-                    CreateCurrencyPill(
-                        parent: _resultWinRoot,
-                        name: "LivesPill",
-                        anchor: new Vector2(0f, 1f),
-                        anchoredPos: new Vector2(uiLayout.counter.x, -(uiLayout.counter.y + _hudTopInsetUnits)),
-                        size: new Vector2(uiLayout.counter.width, uiLayout.counter.height),
-                        iconKey: "ui.icon.heart",
-                        showPlusButton: false,
-                        out _resultWinLivesText,
-                        out _);
-                    _resultWinLivesRoot = _resultWinLivesText != null ? _resultWinLivesText.transform.parent as RectTransform : null;
+                    if (AllowRuntimeUiAutoCreate)
+                    {
+                        CreateCurrencyPill(
+                            parent: _resultWinRoot,
+                            name: "LivesPill",
+                            anchor: new Vector2(0f, 1f),
+                            anchoredPos: new Vector2(uiLayout.counter.x, -(uiLayout.counter.y + _hudTopInsetUnits)),
+                            size: new Vector2(uiLayout.counter.width, uiLayout.counter.height),
+                            iconKey: "ui.icon.heart",
+                            showPlusButton: false,
+                            out _resultWinLivesText,
+                            out _);
+                        _resultWinLivesRoot = _resultWinLivesText != null ? _resultWinLivesText.transform.parent as RectTransform : null;
+                        if (_resultWinLivesRoot != null) MarkRuntimeUi(_resultWinLivesRoot.gameObject);
+                    }
                 }
             }
 
@@ -1150,10 +1214,11 @@ namespace LoopSorting
             {
                 var t = _resultWinRoot.Find("PercentText");
                 if (t != null) _resultWinPercentText = t.GetComponent<TMP_Text>();
-                if (_resultWinPercentText == null)
+                if (_resultWinPercentText == null && AllowRuntimeUiAutoCreate)
                 {
                     var percentGO = new GameObject("PercentText");
                     percentGO.transform.SetParent(_resultWinRoot, false);
+                    MarkRuntimeUi(percentGO);
                     var tmp = percentGO.AddComponent<TextMeshProUGUI>();
                     tmp.raycastTarget = false;
                     tmp.alignment = TextAlignmentOptions.Center;
@@ -1183,10 +1248,11 @@ namespace LoopSorting
             {
                 var t = _resultWinRoot.Find("WinTitle");
                 if (t != null) _resultWinTitleImage = t.GetComponent<Image>();
-                if (_resultWinTitleImage == null)
+                if (_resultWinTitleImage == null && AllowRuntimeUiAutoCreate)
                 {
                     var titleGO = new GameObject("WinTitle");
                     titleGO.transform.SetParent(_resultWinRoot, false);
+                    MarkRuntimeUi(titleGO);
                     var img = titleGO.AddComponent<Image>();
                     img.raycastTarget = false;
                     img.preserveAspect = true;
@@ -1201,7 +1267,6 @@ namespace LoopSorting
                     _resultWinTitleImage = img;
                 }
             }
-
             if (_resultWinFeatureRoot == null)
             {
                 _resultWinFeatureRoot = _resultWinRoot.Find("FeatureProgress") as RectTransform;
@@ -1213,10 +1278,11 @@ namespace LoopSorting
                     _resultWinFeatureProgress = bar != null ? bar.Find("ProgressText")?.GetComponent<TMP_Text>() : null;
                     _resultWinFeatureIcon = _resultWinFeatureRoot.Find("Icon")?.GetComponent<Image>();
                 }
-                if (_resultWinFeatureRoot == null)
+                if (_resultWinFeatureRoot == null && AllowRuntimeUiAutoCreate)
                 {
                     var rootGO = new GameObject("FeatureProgress");
                     rootGO.transform.SetParent(_resultWinRoot, false);
+                    MarkRuntimeUi(rootGO);
                     var rect = rootGO.AddComponent<RectTransform>();
                     rect.anchorMin = new Vector2(0.5f, 0.5f);
                     rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -1324,7 +1390,7 @@ namespace LoopSorting
 
         private void ApplyResultWinPillLayout(LoopSortingUIKit.RuntimeLayout layout)
         {
-            if (_resultWinCoinsRoot != null)
+            if (showWinCoinsPill && _resultWinCoinsRoot != null && ShouldApplyRuntimeLayout(_resultWinCoinsRoot))
             {
                 ApplyResultWinPillRect(
                     _resultWinCoinsRoot,
@@ -1334,7 +1400,7 @@ namespace LoopSorting
                     _hudRightInsetUnits,
                     rightSide: true);
             }
-            if (_resultWinLivesRoot != null)
+            if (_resultWinLivesRoot != null && ShouldApplyRuntimeLayout(_resultWinLivesRoot))
             {
                 ApplyResultWinPillRect(
                     _resultWinLivesRoot,
@@ -1391,8 +1457,10 @@ namespace LoopSorting
                 }
                 if (_resultLoseCardRoot == null)
                 {
+                    if (!AllowRuntimeUiAutoCreate) return;
                     var cardGO = new GameObject("LoseCard");
                     cardGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                    MarkRuntimeUi(cardGO);
                     var rect = cardGO.AddComponent<RectTransform>();
                     rect.anchorMin = new Vector2(0.5f, 0.5f);
                     rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -1470,10 +1538,11 @@ namespace LoopSorting
                 if (existing != null) _resultLoseTitleImage = existing.GetComponent<Image>();
             }
 
-            if (_resultLoseTitleImage == null)
+            if (_resultLoseTitleImage == null && AllowRuntimeUiAutoCreate)
             {
                 var titleGO = new GameObject("LoseTitle");
                 titleGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                MarkRuntimeUi(titleGO);
                 var img = titleGO.AddComponent<Image>();
                 img.raycastTarget = false;
                 img.preserveAspect = true;
@@ -1488,9 +1557,13 @@ namespace LoopSorting
 
         private void UpdateResultWinStats()
         {
-            if (_resultWinCoinsText != null) _resultWinCoinsText.text = FormatCurrencyValue(_progress.Coins);
+            if (showWinCoinsPill && _resultWinCoinsText != null) _resultWinCoinsText.text = FormatCurrencyValue(_progress.Coins);
             if (_resultWinLivesText != null) _resultWinLivesText.text = _progress.Lives.ToString();
 
+            if (_resultWinCoinsRoot != null)
+            {
+                _resultWinCoinsRoot.gameObject.SetActive(showWinCoinsPill);
+            }
             if (_resultWinLivesRoot != null)
             {
                 _resultWinLivesRoot.gameObject.SetActive(livesHudEnabled);
@@ -1620,6 +1693,7 @@ namespace LoopSorting
 
             if (_resultCloseButton == null)
             {
+                if (!AllowRuntimeUiAutoCreate) return;
                 var parent = _resultPanel.transform.Find("Panel") ?? _resultPanel.transform;
                 _resultCloseButton = CreateIconButton(
                     parent: parent,
@@ -1631,6 +1705,7 @@ namespace LoopSorting
                     pressed: hasKit ? "ui.button.close_red.pressed" : null,
                     disabled: hasKit ? "ui.button.close_red.disabled" : null,
                     icon: hasKit ? "ui.icon.close" : null);
+                MarkRuntimeUi(_resultCloseButton.gameObject);
                 var rect = _resultCloseButton.GetComponent<RectTransform>();
                 if (rect != null)
                 {
@@ -1840,8 +1915,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             var panelGO = new GameObject("ResultPanel");
             panelGO.transform.SetParent(_uiCanvas.transform, false);
+            MarkRuntimeUi(panelGO);
             _resultPanel = panelGO;
 
             var dim = panelGO.AddComponent<Image>();

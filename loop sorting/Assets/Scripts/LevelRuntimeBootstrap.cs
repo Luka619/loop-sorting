@@ -27,6 +27,11 @@ namespace LoopSorting
             {
                 controller.resultNewMechanicLevelIndices = new List<int>(config.resultNewMechanicLevelIndices);
             }
+            if (config != null)
+            {
+                controller.useRuntimeUiLayoutOverrides = config.useRuntimeUiLayoutOverrides;
+                controller.allowRuntimeUiAutoCreate = config.allowRuntimeUiAutoCreate;
+            }
             if (hasFlow)
             {
                 int start = Mathf.Clamp(config.flowStartIndex, 0, config.activeFlow.levels.Count - 1);

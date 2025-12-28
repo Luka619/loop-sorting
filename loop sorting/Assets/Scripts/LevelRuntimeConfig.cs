@@ -16,5 +16,10 @@ namespace LoopSorting
         public int flowStartIndex = 0;
         [Tooltip("0-based flow indices that unlock a new mechanic (used for win-screen progress).")]
         public List<int> resultNewMechanicLevelIndices = new List<int>();
+        [Header("UI Layout")]
+        [Tooltip("Allow runtime code to override prefab layout (positions/sizes/anchors).")]
+        public bool useRuntimeUiLayoutOverrides = false;
+        [Tooltip("Allow runtime to auto-create UI if prefabs or nodes are missing.")]
+        public bool allowRuntimeUiAutoCreate = true;
     }
 }

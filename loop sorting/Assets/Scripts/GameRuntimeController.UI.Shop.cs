@@ -88,8 +88,11 @@ namespace LoopSorting
                 return;
             }
 
+            if (!AllowRuntimeUiAutoCreate) return;
+
             _shopPanel = new GameObject("ShopPanel");
             _shopPanel.transform.SetParent(_uiCanvas.transform, false);
+            MarkRuntimeUi(_shopPanel);
 
             var dim = _shopPanel.AddComponent<Image>();
             dim.raycastTarget = true;

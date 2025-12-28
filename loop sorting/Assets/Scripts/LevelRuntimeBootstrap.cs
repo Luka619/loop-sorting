@@ -31,6 +31,7 @@ namespace LoopSorting
             {
                 controller.useRuntimeUiLayoutOverrides = config.useRuntimeUiLayoutOverrides;
                 controller.allowRuntimeUiAutoCreate = config.allowRuntimeUiAutoCreate;
+                controller.showResultNewMechanicProgress = config.showResultNewMechanicProgress;
             }
             if (hasFlow)
             {

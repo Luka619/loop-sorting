@@ -1298,7 +1298,7 @@ namespace LoopSorting
                     _resultWinFeatureProgress = bar != null ? bar.Find("ProgressText")?.GetComponent<TMP_Text>() : null;
                     _resultWinFeatureIcon = _resultWinFeatureRoot.Find("Icon")?.GetComponent<Image>();
                 }
-                if (_resultWinFeatureRoot == null && AllowRuntimeUiAutoCreate)
+                if (_resultWinFeatureRoot == null && AllowRuntimeUiAutoCreate && showResultNewMechanicProgress)
                 {
                     var rootGO = new GameObject("FeatureProgress");
                     rootGO.transform.SetParent(_resultWinRoot, false);
@@ -1600,6 +1600,11 @@ namespace LoopSorting
 
         private void UpdateResultWinFeatureProgress()
         {
+            if (!showResultNewMechanicProgress)
+            {
+                if (_resultWinFeatureRoot != null) _resultWinFeatureRoot.gameObject.SetActive(false);
+                return;
+            }
             if (_resultWinFeatureRoot == null) return;
 
             if (!TryComputeResultWinFeatureProgress(out int current, out int total))
@@ -2184,5 +2189,3 @@ namespace LoopSorting
 
     }
 }
-
-

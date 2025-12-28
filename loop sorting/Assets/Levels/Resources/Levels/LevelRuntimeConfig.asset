@@ -16,5 +16,6 @@ MonoBehaviour:
   activeFlow: {fileID: 11400000, guid: 322a9dff8bd937a45acfcd77f8fdc243, type: 2}
   flowStartIndex: 0
   resultNewMechanicLevelIndices: 0a00000014000000
+  showResultNewMechanicProgress: 0
   useRuntimeUiLayoutOverrides: 0
   allowRuntimeUiAutoCreate: 0

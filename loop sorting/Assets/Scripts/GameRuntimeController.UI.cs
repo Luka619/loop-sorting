@@ -47,6 +47,8 @@ namespace LoopSorting
         [Header("Result UI")]
         [Tooltip("0-based flow indices that unlock a new mechanic (used for win-screen progress).")]
         public List<int> resultNewMechanicLevelIndices = new List<int>();
+        [Tooltip("Show the new mechanic progress strip on the win result screen.")]
+        public bool showResultNewMechanicProgress = false;
         [Tooltip("Use separate state sprites for buttons (pressed/disabled via SpriteSwap). Disable if state sprites have mismatched size/border and cause visual jitter/misalignment.")]
         public bool usePressedButtonSprites = false;
         [Tooltip("Show the coins pill on the win result screen.")]

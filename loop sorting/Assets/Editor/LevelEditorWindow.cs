@@ -76,11 +76,39 @@ public class LevelEditorWindow : EditorWindow
     private int _pressureGraphTargetCap = -1;
     private int _pressureGraphLastBeltLen = -1;
     private readonly Dictionary<int, PressureSnapshot> _pressureByLayoutId = new Dictionary<int, PressureSnapshot>();
+    private bool _showStrategyPressureGraph = true;
+    private StrategyCompareBatch _strategyCompareBatch;
+    private readonly Dictionary<int, StrategyPressureSnapshot> _strategyPressureByLayoutId = new Dictionary<int, StrategyPressureSnapshot>();
+    private static readonly LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy[] StrategyCompareOrder =
+    {
+        LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy.Balanced,
+        LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy.Aggressive,
+        LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy.Cautious
+    };
 
     private struct PressureSnapshot
     {
         public int BeltLength;
         public int[] Peaks;
+    }
+
+    private struct StrategyPressureSnapshot
+    {
+        public int BeltLength;
+        public Dictionary<LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy, int[]> PeaksByStrategy;
+    }
+
+    private sealed class StrategyCompareBatch
+    {
+        public int LayoutId;
+        public int LayoutHash;
+        public int SeedSalt;
+        public int ActiveIndex;
+        public LoopSorting.Editor.LevelDifficultyMetrics.FailureRateSimulation ActiveSim;
+        public LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy[] Strategies;
+        public Dictionary<LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy, int[]> PeaksByStrategy =
+            new Dictionary<LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy, int[]>();
+        public int BeltLength;
     }
 
     // Preview-only camera framing (to match GameRuntimeController.FitCameraToLevel).
@@ -104,6 +132,7 @@ public class LevelEditorWindow : EditorWindow
     {
         SceneView.duringSceneGui -= OnSceneGUI;
         CancelDsrSimulation();
+        CancelStrategyCompareSimulation();
         if (_previewLayoutInstance != null)
         {
             DestroyImmediate(_previewLayoutInstance);
@@ -124,6 +153,7 @@ public class LevelEditorWindow : EditorWindow
         if (_tabIndex != _lastTabIndex)
         {
             CancelDsrSimulation();
+            CancelStrategyCompareSimulation();
             _lastTabIndex = _tabIndex;
         }
 
@@ -563,6 +593,150 @@ public class LevelEditorWindow : EditorWindow
         float overPct = runs > 0 ? (overTarget / (float)runs) * 100f : 0f;
         EditorGUILayout.LabelField("y = runs with peak used > x (percent), x = used slots");
         EditorGUILayout.LabelField($"Target { _pressureGraphTargetCap }: {overTarget}/{runs}  ({overPct:0.0}%)");
+
+        DrawStrategyPressureSection(layoutId);
+    }
+
+    private void DrawStrategyPressureSection(int layoutId)
+    {
+        _showStrategyPressureGraph = EditorGUILayout.Foldout(_showStrategyPressureGraph, "Strategy Pressure", true);
+        if (!_showStrategyPressureGraph)
+        {
+            return;
+        }
+
+        bool running = IsStrategyCompareRunning();
+        EditorGUILayout.BeginHorizontal();
+        if (!running)
+        {
+            if (GUILayout.Button("Run Strategy Compare", GUILayout.Width(160)))
+            {
+                StartStrategyCompareSimulation();
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("Cancel Strategy Compare", GUILayout.Width(160)))
+            {
+                CancelStrategyCompareSimulation();
+            }
+            if (_strategyCompareBatch != null && _strategyCompareBatch.Strategies != null &&
+                _strategyCompareBatch.ActiveIndex >= 0 &&
+                _strategyCompareBatch.ActiveIndex < _strategyCompareBatch.Strategies.Length)
+            {
+                var activeStrategy = _strategyCompareBatch.Strategies[_strategyCompareBatch.ActiveIndex];
+                string name = LoopSorting.Editor.LevelDifficultyMetrics.GetStrategyName(activeStrategy);
+                EditorGUILayout.LabelField($"Running {name} ({_strategyCompareBatch.ActiveIndex + 1}/{_strategyCompareBatch.Strategies.Length})");
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+
+        if (!_strategyPressureByLayoutId.TryGetValue(layoutId, out var snapshot) ||
+            snapshot.PeaksByStrategy == null || snapshot.PeaksByStrategy.Count == 0)
+        {
+            EditorGUILayout.HelpBox("Run the strategy comparison to see per-strategy belt usage.", MessageType.Info);
+            return;
+        }
+
+        int beltLength = snapshot.BeltLength > 0 ? snapshot.BeltLength : _pressureGraphLastBeltLen;
+        int minCap = Mathf.Clamp(_pressureGraphMinCap, 0, beltLength);
+        int maxCap = Mathf.Clamp(_pressureGraphMaxCap, minCap + 1, beltLength);
+        int step = Mathf.Clamp(_pressureGraphStep, 1, Mathf.Max(1, maxCap - minCap));
+        int sampleCount = ((maxCap - minCap) / step) + 1;
+
+        float graphHeight = 120f;
+        var rect = GUILayoutUtility.GetRect(1f, graphHeight);
+        EditorGUI.DrawRect(rect, new Color(0.12f, 0.12f, 0.12f, 0.2f));
+
+        Handles.BeginGUI();
+        for (int s = 0; s < StrategyCompareOrder.Length; s++)
+        {
+            var strategy = StrategyCompareOrder[s];
+            if (!snapshot.PeaksByStrategy.TryGetValue(strategy, out var peaks) || peaks == null || peaks.Length == 0)
+            {
+                continue;
+            }
+
+            var counts = new int[sampleCount];
+            for (int i = 0; i < sampleCount; i++)
+            {
+                int cap = minCap + i * step;
+                int over = 0;
+                for (int r = 0; r < peaks.Length; r++)
+                {
+                    if (peaks[r] > cap) over++;
+                }
+                counts[i] = over;
+            }
+
+            Handles.color = GetStrategyColor(strategy);
+            for (int i = 1; i < counts.Length; i++)
+            {
+                float x0 = rect.x + (i - 1) / (float)(counts.Length - 1) * rect.width;
+                float x1 = rect.x + i / (float)(counts.Length - 1) * rect.width;
+                float y0 = rect.yMax - (counts[i - 1] / (float)peaks.Length) * rect.height;
+                float y1 = rect.yMax - (counts[i] / (float)peaks.Length) * rect.height;
+                Handles.DrawLine(new Vector3(x0, y0), new Vector3(x1, y1));
+            }
+        }
+
+        float capRange = Mathf.Max(1f, maxCap - minCap);
+        float targetNorm = (_pressureGraphTargetCap - minCap) / capRange;
+        float targetX = rect.x + targetNorm * rect.width;
+        Handles.color = new Color(1f, 0.8f, 0.2f, 0.9f);
+        Handles.DrawLine(new Vector3(targetX, rect.y), new Vector3(targetX, rect.yMax));
+        Handles.EndGUI();
+
+        for (int s = 0; s < StrategyCompareOrder.Length; s++)
+        {
+            var strategy = StrategyCompareOrder[s];
+            if (!snapshot.PeaksByStrategy.TryGetValue(strategy, out var peaks) || peaks == null || peaks.Length == 0)
+            {
+                continue;
+            }
+
+            float avgPeak = ComputeAverage(peaks);
+            int p90 = ComputePercentile(peaks, 0.9f);
+            string name = LoopSorting.Editor.LevelDifficultyMetrics.GetStrategyName(strategy);
+            EditorGUILayout.LabelField($"{name}: runs {peaks.Length}  avg {avgPeak:0.0}  p90 {p90}");
+        }
+
+        EditorGUILayout.LabelField("y = runs with peak used > x (percent), x = used slots");
+    }
+
+    private static Color GetStrategyColor(LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy strategy)
+    {
+        switch (strategy)
+        {
+            case LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy.Aggressive:
+                return new Color(1f, 0.6f, 0.2f, 1f);
+            case LoopSorting.Editor.LevelDifficultyMetrics.SimStrategy.Cautious:
+                return new Color(0.3f, 0.85f, 0.35f, 1f);
+            default:
+                return new Color(0.2f, 0.8f, 0.9f, 1f);
+        }
+    }
+
+    private static float ComputeAverage(int[] values)
+    {
+        if (values == null || values.Length == 0) return 0f;
+        long sum = 0;
+        for (int i = 0; i < values.Length; i++)
+        {
+            sum += values[i];
+        }
+        return sum / (float)values.Length;
+    }
+
+    private static int ComputePercentile(int[] values, float percentile)
+    {
+        if (values == null || values.Length == 0) return 0;
+        var copy = new int[values.Length];
+        System.Array.Copy(values, copy, values.Length);
+        System.Array.Sort(copy);
+        float t = Mathf.Clamp01(percentile);
+        int idx = Mathf.Clamp(Mathf.RoundToInt((copy.Length - 1) * t), 0, copy.Length - 1);
+        return copy[idx];
     }
 
     private int GetMaxBoxCount()
@@ -2641,6 +2815,139 @@ public class LevelEditorWindow : EditorWindow
             CancelDsrSimulation(keepSnapshot: _previewSimHoldLastSnapshot);
         }
 
+        Repaint();
+    }
+
+    private bool IsStrategyCompareRunning()
+    {
+        return _strategyCompareBatch != null &&
+               _strategyCompareBatch.ActiveSim != null &&
+               !_strategyCompareBatch.ActiveSim.IsDone;
+    }
+
+    private void StartStrategyCompareSimulation()
+    {
+        CancelDsrSimulation();
+        CancelStrategyCompareSimulation();
+        if (_level == null) return;
+
+        int layoutId = _level.GetInstanceID();
+        _strategyPressureByLayoutId.Remove(layoutId);
+        int seedSalt = _dsrSimRandomizeSeed
+            ? unchecked((int)(System.DateTime.UtcNow.Ticks ^ (System.DateTime.UtcNow.Ticks >> 32)))
+            : _dsrSimSeed;
+
+        _strategyCompareBatch = new StrategyCompareBatch
+        {
+            LayoutId = layoutId,
+            LayoutHash = LoopSorting.Editor.LevelDifficultyMetrics.GetLayoutHash(_level),
+            SeedSalt = seedSalt,
+            ActiveIndex = 0,
+            Strategies = StrategyCompareOrder
+        };
+
+        if (_strategyCompareBatch.Strategies == null || _strategyCompareBatch.Strategies.Length == 0)
+        {
+            _strategyCompareBatch = null;
+            return;
+        }
+
+        var firstStrategy = _strategyCompareBatch.Strategies[0];
+        _strategyCompareBatch.ActiveSim = LoopSorting.Editor.LevelDifficultyMetrics.StartFailureRateSimulation(
+            _level,
+            seedSalt: seedSalt,
+            strategy: firstStrategy);
+
+        if (_strategyCompareBatch.ActiveSim == null)
+        {
+            _strategyCompareBatch = null;
+            return;
+        }
+
+        EditorApplication.update += OnStrategyCompareUpdate;
+        Repaint();
+    }
+
+    private void CancelStrategyCompareSimulation()
+    {
+        if (_strategyCompareBatch != null && _strategyCompareBatch.ActiveSim != null)
+        {
+            _strategyCompareBatch.ActiveSim.Cancel();
+        }
+        _strategyCompareBatch = null;
+        EditorApplication.update -= OnStrategyCompareUpdate;
+    }
+
+    private void OnStrategyCompareUpdate()
+    {
+        if (_strategyCompareBatch == null || _strategyCompareBatch.ActiveSim == null)
+        {
+            EditorApplication.update -= OnStrategyCompareUpdate;
+            return;
+        }
+
+        if (_level == null || LoopSorting.Editor.LevelDifficultyMetrics.GetLayoutHash(_level) != _strategyCompareBatch.LayoutHash)
+        {
+            CancelStrategyCompareSimulation();
+            return;
+        }
+
+        int ticks = Mathf.Clamp(_dsrSimTicksPerUpdate, 1, 100000);
+        double budget = Mathf.Clamp(_dsrSimBudgetMs, 0.1f, 200f) / 1000.0;
+        bool done = _strategyCompareBatch.ActiveSim.Step(ticks, budget);
+        if (done)
+        {
+            var sim = _strategyCompareBatch.ActiveSim;
+            var peaks = sim.PeakCounts;
+            if (peaks != null && peaks.Count > 0)
+            {
+                var peakCopy = new int[peaks.Count];
+                for (int i = 0; i < peakCopy.Length; i++)
+                {
+                    peakCopy[i] = peaks[i];
+                }
+                _strategyCompareBatch.PeaksByStrategy[sim.Strategy] = peakCopy;
+                if (_strategyCompareBatch.BeltLength <= 0)
+                {
+                    _strategyCompareBatch.BeltLength = sim.BeltLength;
+                }
+            }
+
+            _strategyCompareBatch.ActiveIndex++;
+            if (_strategyCompareBatch.ActiveIndex < _strategyCompareBatch.Strategies.Length)
+            {
+                var nextStrategy = _strategyCompareBatch.Strategies[_strategyCompareBatch.ActiveIndex];
+                _strategyCompareBatch.ActiveSim = LoopSorting.Editor.LevelDifficultyMetrics.StartFailureRateSimulation(
+                    _level,
+                    seedSalt: _strategyCompareBatch.SeedSalt,
+                    strategy: nextStrategy);
+                if (_strategyCompareBatch.ActiveSim == null)
+                {
+                    FinishStrategyCompare();
+                    return;
+                }
+            }
+            else
+            {
+                FinishStrategyCompare();
+                return;
+            }
+        }
+
+        Repaint();
+    }
+
+    private void FinishStrategyCompare()
+    {
+        if (_strategyCompareBatch != null)
+        {
+            _strategyPressureByLayoutId[_strategyCompareBatch.LayoutId] = new StrategyPressureSnapshot
+            {
+                BeltLength = _strategyCompareBatch.BeltLength,
+                PeaksByStrategy = _strategyCompareBatch.PeaksByStrategy
+            };
+        }
+        CancelStrategyCompareSimulation();
         Repaint();
     }
 

@@ -70,6 +70,7 @@ namespace LoopSorting
         {
             if (rect == null) return false;
             if (UseRuntimeUiLayoutOverrides) return true;
+            if (!AllowRuntimeUiAutoCreate) return false;
             return rect.GetComponentInParent<RuntimeUiElement>() != null;
         }
 

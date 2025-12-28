@@ -39,6 +39,23 @@ namespace LoopSorting.Editor
         private const int SimulationMaxTicks = 1600;
         private const double CacheCooldownSeconds = 0.25;
 
+        public enum SimStrategy
+        {
+            Balanced,
+            Aggressive,
+            Cautious
+        }
+
+        private struct StrategyProfile
+        {
+            public string Name;
+            public float WeightE;
+            public float WeightG;
+            public float StopFillHigh;
+            public float StopFillLow;
+            public float RandomJitter;
+        }
+
         private struct SimulationCacheEntry
         {
             public int Hash;
@@ -47,6 +64,48 @@ namespace LoopSorting.Editor
         }
 
         private static readonly Dictionary<int, SimulationCacheEntry> CacheByLayout = new Dictionary<int, SimulationCacheEntry>();
+
+        public static string GetStrategyName(SimStrategy strategy)
+        {
+            return GetStrategyProfile(strategy).Name;
+        }
+
+        private static StrategyProfile GetStrategyProfile(SimStrategy strategy)
+        {
+            switch (strategy)
+            {
+                case SimStrategy.Aggressive:
+                    return new StrategyProfile
+                    {
+                        Name = "Aggressive",
+                        WeightE = 0.25f,
+                        WeightG = 0.75f,
+                        StopFillHigh = 0.98f,
+                        StopFillLow = 0.88f,
+                        RandomJitter = StrategyRandomJitter * 1.2f
+                    };
+                case SimStrategy.Cautious:
+                    return new StrategyProfile
+                    {
+                        Name = "Cautious",
+                        WeightE = 0.75f,
+                        WeightG = 0.25f,
+                        StopFillHigh = 0.78f,
+                        StopFillLow = 0.60f,
+                        RandomJitter = StrategyRandomJitter * 0.8f
+                    };
+                default:
+                    return new StrategyProfile
+                    {
+                        Name = "Balanced",
+                        WeightE = StrategyWeightE,
+                        WeightG = StrategyWeightG,
+                        StopFillHigh = StopFillRatioHigh,
+                        StopFillLow = StopFillRatioLow,
+                        RandomJitter = StrategyRandomJitter
+                    };
+            }
+        }
 
         public static DsrMetrics Compute(LevelLayout layout, int maxBoxes = 0)
         {
@@ -113,6 +172,8 @@ namespace LoopSorting.Editor
             private readonly int _sourceHash;
             private readonly int _seedSalt;
             private readonly int _runsTotal;
+            private readonly SimStrategy _strategy;
+            private readonly StrategyProfile _strategyProfile;
             private int _runsCompleted;
             private int _runsStarted;
             private int _failures;
@@ -127,12 +188,14 @@ namespace LoopSorting.Editor
             private SimulationRunState _currentRun;
             private readonly List<int> _peakCounts = new List<int>();
 
-            internal FailureRateSimulation(LevelLayout layout, int runsTotal, int seedSalt)
+            internal FailureRateSimulation(LevelLayout layout, int runsTotal, int seedSalt, SimStrategy strategy)
             {
                 _sourceLayout = layout;
                 _sourceHash = layout == null ? 0 : ComputeLayoutHash(layout);
                 _seedSalt = seedSalt;
                 _runsTotal = Mathf.Max(1, runsTotal);
+                _strategy = strategy;
+                _strategyProfile = GetStrategyProfile(strategy);
             }
 
             public LevelLayout SourceLayout => _sourceLayout;
@@ -145,6 +208,8 @@ namespace LoopSorting.Editor
             public int RunsStarted => _runsStarted;
             public IReadOnlyList<int> PeakCounts => _peakCounts;
             public int BeltLength => _beltLength;
+            public SimStrategy Strategy => _strategy;
+            public string StrategyName => _strategyProfile.Name;
 
             public void Cancel()
             {
@@ -398,6 +463,7 @@ namespace LoopSorting.Editor
                     MaxBeltCount = game.Conveyor.BlockCount,
                     ReleaseAttemptsPerTick = Mathf.Max(1, Mathf.CeilToInt(DefaultConveyorTickSeconds / DefaultReleaseInterval)),
                     Rng = rng,
+                    Strategy = _strategyProfile,
                     InboundStreamCounts = new int[containers.Count],
                     ContainerIndexByRef = containerIndexByRef
                 };
@@ -514,6 +580,7 @@ namespace LoopSorting.Editor
             public int BeltLength;
             public int MaxBeltCount;
             public System.Random Rng;
+            public StrategyProfile Strategy;
             public int ReleaseAttemptsPerTick;
             public int[] InboundStreamCounts;
             public Dictionary<Container, int> ContainerIndexByRef;
@@ -529,8 +596,11 @@ namespace LoopSorting.Editor
             RefreshContainerBusy(state.Game, state.IsReleasing, state.ActiveReleaseIndex);
 
             float fillRatio = state.Game.Conveyor.BlockCount / Mathf.Max(1f, state.BeltLength);
-            if (state.CanClick && fillRatio >= StopFillRatioHigh) state.CanClick = false;
-            if (!state.CanClick && fillRatio <= StopFillRatioLow) state.CanClick = true;
+            float stopHigh = Mathf.Clamp01(state.Strategy.StopFillHigh);
+            float stopLow = Mathf.Clamp01(state.Strategy.StopFillLow);
+            if (stopLow > stopHigh) stopLow = stopHigh;
+            if (state.CanClick && fillRatio >= stopHigh) state.CanClick = false;
+            if (!state.CanClick && fillRatio <= stopLow) state.CanClick = true;
             if (!state.IsReleasing && !state.CanClick && state.NoProgressTicks >= state.BeltLength)
             {
                 state.CanClick = true;
@@ -549,6 +619,7 @@ namespace LoopSorting.Editor
                     state.BoxCompleted,
                     state.InboundStreamCounts,
                     state.BeltLength,
+                    state.Strategy,
                     state.Rng);
                 if (next >= 0)
                 {
@@ -658,10 +729,14 @@ namespace LoopSorting.Editor
             return SimulationOutcome.None;
         }
 
-        public static FailureRateSimulation StartFailureRateSimulation(LevelLayout layout, int runs = SimulationRuns, int seedSalt = 0)
+        public static FailureRateSimulation StartFailureRateSimulation(
+            LevelLayout layout,
+            int runs = SimulationRuns,
+            int seedSalt = 0,
+            SimStrategy strategy = SimStrategy.Balanced)
         {
             if (layout == null) return null;
-            return new FailureRateSimulation(layout, runs, seedSalt);
+            return new FailureRateSimulation(layout, runs, seedSalt, strategy);
         }
 
         private static bool TryGetCached(LevelLayout layout, int layoutHash, out DsrMetrics metrics)
@@ -994,6 +1069,7 @@ namespace LoopSorting.Editor
                 boxCompleted[i] = containers[i].IsUniformAndFull();
             }
 
+            var strategy = GetStrategyProfile(SimStrategy.Balanced);
             bool isReleasing = false;
             int activeReleaseIndex = -1;
             BlockColor activeColor = BlockColor.Red;
@@ -1012,8 +1088,11 @@ namespace LoopSorting.Editor
                 RefreshContainerBusy(game, isReleasing, activeReleaseIndex);
 
                 float fillRatio = game.Conveyor.BlockCount / Mathf.Max(1f, beltLength);
-                if (canClick && fillRatio >= StopFillRatioHigh) canClick = false;
-                if (!canClick && fillRatio <= StopFillRatioLow) canClick = true;
+                float stopHigh = Mathf.Clamp01(strategy.StopFillHigh);
+                float stopLow = Mathf.Clamp01(strategy.StopFillLow);
+                if (stopLow > stopHigh) stopLow = stopHigh;
+                if (canClick && fillRatio >= stopHigh) canClick = false;
+                if (!canClick && fillRatio <= stopLow) canClick = true;
                 if (!isReleasing && !canClick && noProgressTicks >= beltLength)
                 {
                     canClick = true;
@@ -1032,6 +1111,7 @@ namespace LoopSorting.Editor
                         boxCompleted,
                         inboundStreamCounts,
                         beltLength,
+                        strategy,
                         rng);
                     if (next >= 0)
                     {
@@ -1471,6 +1551,7 @@ namespace LoopSorting.Editor
             bool[] boxCompleted,
             int[] inboundStreamCounts,
             int beltLength,
+            StrategyProfile strategy,
             System.Random rng)
         {
             float bestScore = 0f;
@@ -1485,10 +1566,10 @@ namespace LoopSorting.Editor
                 if (container.Count == 0) continue;
                 if (!container.TryPeek(out var first)) continue;
 
-                float score = ScoreCandidate(game, containerToBelt, i, first.Color, beltLength);
+                float score = ScoreCandidate(game, containerToBelt, i, first.Color, beltLength, strategy);
                 if (score > 0f)
                 {
-                    score += (float)rng.NextDouble() * StrategyRandomJitter;
+                    score += (float)rng.NextDouble() * strategy.RandomJitter;
                 }
                 if (score > bestScore)
                 {
@@ -1505,7 +1586,8 @@ namespace LoopSorting.Editor
             Dictionary<int, int> containerToBelt,
             int sourceIndex,
             BlockColor color,
-            int beltLength)
+            int beltLength,
+            StrategyProfile strategy)
         {
             var source = game.Containers[sourceIndex];
             int run = CountFrontRun(source, color);
@@ -1580,7 +1662,7 @@ namespace LoopSorting.Editor
 
             float gScore = 0.6f * runRatio + 0.4f * bestTargetFill;
             float exposeBonus = exposesDifferent ? (0.1f + 0.2f * (1f - runRatio)) : 0f;
-            return Mathf.Clamp01(StrategyWeightE * eScore + StrategyWeightG * gScore + exposeBonus);
+            return Mathf.Clamp01(strategy.WeightE * eScore + strategy.WeightG * gScore + exposeBonus);
         }
 
         private static int ComputeForwardDistance(int source, int target, int beltLength)

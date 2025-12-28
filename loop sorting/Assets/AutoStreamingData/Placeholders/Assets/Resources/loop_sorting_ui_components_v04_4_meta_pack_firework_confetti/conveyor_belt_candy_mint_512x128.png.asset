@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: conveyor_belt_candy_mint_512x128.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 8
+  m_CompleteImageSize: 320
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 320
+  _typelessdata: fcfdffffffffffff000000000000000071e9c8f13b497c440084f8327090010004c987d50976a21e5d754bf0ffff0f8072880334e42308250c80b19c078bc991fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff000000000000000004b17327fae7c8ad7080a0060000001c02c987ed7f1b0f2cd58b1b0644a44dda6171026bf3021402e23bd17e020000f8fcfdffffffffffff0000000000000000fcfdffffffffffff000000000000000004916b1d1074158023ff2b0a00c030045e6806f33b4b1e06444aa5f2cdf3c94bfcfdffffffffffff00000000000000005269020d00e03bb39c2401090013b001fcfdffffffffffff000000000000000043418f55ed00003401000000000000126f405fcb034afddffffb7fffeffffd8ffcfdffffffffffff91917b7b55554d4d
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

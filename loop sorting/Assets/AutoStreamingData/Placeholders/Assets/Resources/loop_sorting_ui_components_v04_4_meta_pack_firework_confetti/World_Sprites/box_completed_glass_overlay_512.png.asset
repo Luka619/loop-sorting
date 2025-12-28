@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_completed_glass_overlay_512.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 5d9009a86a007f07245a00c44798210061513c6afaa992ffd9711b30fdc00f0061513c6afaa992ffd9711b30fdc00f0061513c6afaa992ffd9711b30fdc00f00d2c84173ef6dc1ab1e080c1f23070a0031434b4747a3000000c00d00000d000013457ddf6701d038fed01084733705026f80f8ff030048492929a5a5b494951afcfdffffffffffffffffffffffff00006f80fcff0300ecedbdbdb7f7f6de86db72080628118880347633b49ee789cb796f40f73d4200a4cc54992a53714a05401345fdff8701d0387653208873370502fcfdffffffffffffffffffffffff0000fcfdffffffffffffffffffffffff0000fcfdffffffffffffffffffffffff00001345ffff9f01d1c484e1384e4c1886e36f40b7bd2300a4e4949c9253724a4ea90271028a150330278b2d2c8104c3b02e6f80fcff0300ec89bdb3b7f7f6dededbfcfdffffffffffffffffffffffff0000fcfdffffffffffffffffffffffff00001345ffff8f01d1c48ce1384ece1886e36f40e73d3200a4d0949a8a5375aa4c9551f159a86af0b65f6062100010957dbf0409112d2797aab66d3ef808fcc0ffff0409114d279ba9b6ef5df808fcc0ffff0409112d279ba9b66d5ef808fcc0fffff184b27ec0cf0088409be0f6c8f6ccf63143cb47c29d000000000200d003008ad340696d73810100409204402e225f8b6f40f73d2200a48494901252c268933a6f40e73d2200a4a494949252522ad99b6f40f73d2200a4a494949252526199932d428b8f9579010000000000008034dc6f40bf7b130084a010148242500849c9
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

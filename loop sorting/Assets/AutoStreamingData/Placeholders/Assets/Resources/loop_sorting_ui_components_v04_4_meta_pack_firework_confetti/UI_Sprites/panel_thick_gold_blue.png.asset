@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: panel_thick_gold_blue.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: f1488e715d6d1aabe9028076eaad05007d08ff312b18d8b5729f7ffdc800000061513ccdb53c4d7ef72856a0fe00f0ff618990c30cadc06c38421b00fe3ff0ff7d489ab171cefe281a927068200000001f828bbdaf91400030bfefc2530519a013857bf2a614c4f7df2030fccd020000f1d0d3415f29262d55d6133f3fcb815d7d0725904cd51c53edf0182c85431d1cf1c80763b597fb766dd7837f75aba8065269be71c7547cbd129c016740b981fd6f401f2336000048000db0012d2001400271022bad94bb32da724d02a87c45a8020902ebcc915dd54658b18a877f0e006f2067cdba7d6dc9bfd9bf0b2b2a01486f202bcdaaf2c4cff05fb8132b2a014902f1014d6da75c3f1d5e5111a9730ccf6f404ba72200a4ec949b6a52554a0000027102ab9c95db321ef34c01a86ec120d2e808756a1fddbcba7bd88d9f7e9a826f2003fdcbf1e5cff85fbc0b2b4a01406f20576dba7dc5cff85927cb3cda47dc027172cd5d670b7de6c771c1887ccce76f404b2b1300a4ea5493aa52512a480551d16967ee02a21ebceb500108512ab45d1024adebd3f7c114a3120179f82b32041124e9f714d9f9f93c980afc3f00fc041124e9f7f4d6f7d93c960afc3f00fc71e9b3d1b516bcfe360b000005f8f9cb6f400f2b1b0000a094924a5375aa4c9913831f35bba75000d0931110dc110d276f40a3620600a4a494949252927692574f40e983cbee0100000000000040c99f6f40a362420000000000000000d9af9313839da5ba22340000a8f67920e1cb7c6f407d0e430000000000000000000688
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

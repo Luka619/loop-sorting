@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_completed_badge_check_512.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: f18880914a51002ccb7480b2fd390f055d5009a78d73d23c68fa5433797b2d0c040991751b15815fda744af003c0ffff5d5009a78dfcd00c22d651a9b3507f7f62448b6505c148f588a480440088008821835d120692010000008a00200600005d70122bcd0362ed83a2504b771b9f086201c3ff8fe953b7e1ffffffffffff1f722857837dc68ffe7e772d7aa3f7f5bf6fc0feebb9f54949293925f7f6ffa5be52c942f5bf318d1a9e243e8b8fe181c8a282cbde8bc06400c00cfbcc50c34ca402898371cca2dc04ec3feed91bc33ffc62291bb1acbb9146f9db2fbcf8e06ffff28813cc6a1a6f7d2f3d3e9f26a74d1b148955ac6609bfd74c59b9bf7457ff7f028983c1fee39ebdc94cca4d80c33ffcd34021cb8adc0100401225c191e048a20271026baa54dd50dddec501a863307f14091d2ce76abfdf5a7f7f7f39ff757a14294eecfb5d73ae5b7f7f7f7af9ffc96f008d68033674f87f787feb3df166bc528903f5bd0f8b3e81397bfc1797c7f96f403f430e0000208002480135c006987d28ce116b06c2794d9f01050f2aeeef5d5009b48dc323c327cd03ca79577f7f0409912d7dffd9f72e4dc101fcc0ffff5d08113588ebd95865c21901b37f7f57f1b03d2db6aed4589808a8008091715e31835f18010400000000020050010089d280a10e58021e0000000000001650052d82036a67d024000000000000f0cd556f403f430600a48494901252426b90d26f401fc71e0000000000000000e22dfb2d8257020732000000000000008038a66f4011000000000000000000000002a8
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

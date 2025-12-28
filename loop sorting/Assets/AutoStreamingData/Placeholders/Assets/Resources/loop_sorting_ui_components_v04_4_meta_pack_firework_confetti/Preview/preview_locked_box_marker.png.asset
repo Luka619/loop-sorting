@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: preview_locked_box_marker.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 6e8828e12548dc11d0430d3f66498a0a7d1024881ddf10a0fd1eab037f007f055d102421d687640059b721aa41f870065d102461158466005d20204c7aee74067d1024281dbe0e805d1eac7373ac73ac61427733791a00407012d8425424952404711561074f15608806007571dfc75d2e42c7433c6043ff8f8833333b00f0ff188112053ec4e70bbc6f9eaf2f1ef0f90c81dae15153ca5113e677a9e4f0379d5e280368882e1d43e83c9f1cd0fee87131435f5adb99000000800800080e00905d7015a1178649b27c0080eafe0700c25d50cd66cc929e7d383122002d00a8ad5d50cd66cc929e7d383122a82d00a8ad5d82e21df8918844a2561b11c900b0b3528904688f34a80bd1343e8e4f2ab1dfc1426f2bf519004084a1042a49301da25e6802e89a00d8110976b6506087456e18815e232008e203df4a259fcfe7f3f91f8a10a10ee019c2c605c4b59502000061513c4a7980d102decf3f38fcc00f0002513c915aa0b40fd856918b00f4efff6142ef2ff51d0040849160025d3012d0146902c85500b43f9e25ffb15f6bcf9b6269256145e8916a2006d33b9dd31d8d611165eafced7bfffd2d397afdfff99f04890793e77bbdfe61b00105ffffff03021165a8c51bf3c5b1dae6cd1ffccfffc1422fefd74c004004840423094111e2714297fbca020091884402007953904e6f80025103000000000000000040ba936f8010510300000000000000000090921f4255575b8f0100000000000000f13ed34067696df50000409224008092dc6d6f8082c6020000000000000000000184
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

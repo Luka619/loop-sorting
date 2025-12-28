@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_card_yellow.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: f1b024672bc3a32ea4eba93f35f800005d8890c57fbb8e520c040e72885d3800048990addfad61f8a800a9f003c00f000489902dffee43f8a800a9f003c00f005d8810d4e345d99f2b34e0723ffe38005d2802344b3381792924004020c40500138327415ad77e51f0ffff13fcffdf046f208350bf8449c9bdb9ffff6f6b45296f208350bf886dc9bfd9bf5b6f6201486f208350ff0cfdcdffdd5a5b4b4a020013a5d3fdba6adcf0f57dff0f1ccff3bc020982111e1b1d006c14ea9b86000f00516982a37fbb30da51f3874071a2e6156f20e35fcb280100293925f7e6dedefb6f20e35f8f2c0100292925f7e4defedb6f20e35fdfa0810029b935f7f6dfbfdf0469a1abdebee47a513d672af43dcff361090234796c02e06263073000300cc361e925347fed0780f93a036d0000f0dc04c987b1e7f7e7b4115d00080000f0ff04c987b1e7f7e7bc125d00080000f0ff5dc807b4e7f7e7e4564d00000000a873f188b6b13cb200d2daa595a8a8807476528153f6cc8902010000000000000238
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

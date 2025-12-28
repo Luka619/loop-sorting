@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: card_setting_row.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 5d503c34d662a63fac8d84b2fe572d00048990d1efdbfb8f2d5570f8ffc00f00048990d1efdbfb8f2d5570f8ffc00f00048990d1efdbfb8f2d5570f8ffc00f005d503c34d654a647ac0d837432ebbca131834323134e000000200b009001000061e98531c83b5921fef37d07fdffff5f6f2083b0ce776dc9bdf9bfdb6f2a01086f208330bff74dc93fb9bffb77eb45256fc0fedb9df9fdcdfdffbf5b6f61014951690635986f14ab6ce4056bfdbf335e61090234d95f01e0233d1394c0300c037281f9d7fdeaf0f1177c3ddfcfe7f3f96f20b35bda5fed6d002025f7f6dededb6f20b35bea5f6c49002025b7e49ededb6f20b35bfa5fcc49002025e7e4dededb724103c5760604a0f9383e8fcfe3f3f85244cbac3b401a0080842023c48e117872885eb4f404b338eb000000a06067fc5dc807b46fecd7b234620000000070ae5dc807b4ebfbd7b234620000000070af04c987b1effbd7b2346600080000f003d2e83ab4f64ac0d263c0800a1900a6f8d340cbb0848600004092240992a44864
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

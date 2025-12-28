@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_complete_burst_sheet_8f_1024x512.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 7d8769e24a1ad354341c0007400000305d0891c32f8d08c095180a4b40cd04005d0891a32f8d08c095180e5580cb05017d877de0ca1cd4d12e680e82004000005d0891a32f8d0ac09538103540bd01005d0891630d6b08809316044100c4040071827bb2a80f04008009802c2012b4307e80f18fda3cf001800027fac619d8d1f380777ce2070100005012b807fe0ded6f80f7b107e101005042fca9249524d26f80f9b125e1018014d60fb895d7f256d3803f35d3972c80000002a001c801e4d28892a3d3d7214d1e0037527f738000c24443e107c16d88f68ed4468008000051b15074ce82773cb0f759440ccf34006f80f7af07e181592449a4012f0000006f80f7af05e17523aec5adaa130a0000d1424f8fd90120111847d018017924407d87edb0431e80968ba783d6c051801002913134af18807318446f1800827f42f1c8d0b15a2a00d6910284a1a15001505d5064b48901e66c63cb82a82c4dbc7502913154b118a095186a9118007f612f02913114af1a406f18208f1800000640
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

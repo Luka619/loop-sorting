@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_green_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 5244294c6ac07a43478c1122080022003e4429c7e0cd7fd605020000000000005d0811941ce11338d158ff7300507f7f5d0811741cf11338d1b8fb736c517f7f7189e7514c705e280c80fc5fa9c32da81f8269b046900000305ee826304d38a051711254c904ecce45a9394af93d2f016102d934bf18169d4832c936fb9b4d026f0009f75ac169c93dbdb7ff6f6b01006f0009775bc149c9bdbdb7ff7d61010032456dabe04db6faf848abed0b406caa1f8219f4ae300500304e9ea1dac0356002f168cbac9c099dd2cd6102a8cfcf946f2077f1ff8a49c9b9fd7f5b0b4a02006f206765ef8e49c9bdf97f5b4b4a02006f2027e1ef8e49c9bdf9bf5b4b4a020002f16847bc8c096f94086c6babb12f536f40692f4300004a4008880131400520028983a3218b8f0195cdba1504e31ffcd102df773560572211623217010800006f2013f58e2d48c9bdfd7f5b4b4a01406f2013f5de2148c9bdfd7f5b4b4a014902898325c5a95163c7da6380054b3f586f40692f17000050800c880125a00494c244df3206c108008008008988f089885dd0db61ee557aec459d4073705e5e6d5d089125b7fd14adbb081072005038005e0811551dd3921a81fc1fc0c4ebbfdfc244ef7203c100800880a880ba8fb8ff2183f5468b32240000004000000b008c6f4009ae2c00000000000000800db3616f40ddc31a00a48494901252c21e93076f409d4f3300000000000000404a90926f409d4f3700a4a49494925212f18e9fa28279e46eb74100c08400245e2b96f36f40158d2b00000000000000000001a8
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

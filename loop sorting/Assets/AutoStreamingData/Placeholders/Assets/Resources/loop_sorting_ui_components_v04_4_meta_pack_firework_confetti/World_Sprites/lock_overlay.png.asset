@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: lock_overlay.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 148900085a006e5f5f76b7a9ad0000000409119365571900fd7ef7f90d3f000004091193655719007f9ff7f9033f00005d0811334dd705de200e11756cf80000f1503ca3aa89b8f1680148747050b480614267e7b50a00405012de824c249144027102f9ce00fff77e6fad01a0fb05266fc0fefdf3f54969292d75f7eef69a6d6fc0fefff5fb69c9bdb9b7f7776b01496fc0fefdf3f949c929b925ff76fb462c02b1734573007be71dc2ff7da75c8f586f40a7b91700a4ced259ba5b776b4d29516908ad5b0110a2387c01f331574ace6fc0fefdf7ff190fcda1393487e6d01c6fc0fefdf7ff81f5a1bdb7f7f610dedb6fc0fefdf5ffa5a494940253600a0cf25181bffdbdf7b7ed05fe01587cfc3f736f4097392300a4f6d6d81a5b63684fed02698811bf6d1c007c9fe7c39f4ff29c6fc0fefdf5fbe903792375a5b49496d26fc0fefdf7ff010000000000001843c26fc0fefdf5ff1178f8c925bda494949261690633141c0b5fa0d60300f17cdff76f40a7b9330000d094de9a5b63eb6c9df1783e680aba824c419f0000063d3f3f025109a3f7eea3fcdff7490168a5f2575d0811350862348669000f013fa0757f040911f5f77b7fdf751d2009fc80ffff144931e512908e4220c4ecdd7dbf3f73214399958d63010000004000000b00cad34073716d7501004092044036225f8b2d42a19f99c70100000000000070146b6f40a7b92300a4a494949252526b92926f40a7b93300a0249484925012e1fd93c1421f5eef2a002092480480ecddc48d518121191d17150f0100000000002040
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

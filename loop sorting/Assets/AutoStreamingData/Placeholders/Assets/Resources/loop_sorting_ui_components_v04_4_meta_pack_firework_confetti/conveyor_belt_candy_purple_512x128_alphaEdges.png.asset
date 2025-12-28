@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: conveyor_belt_candy_purple_512x128_alphaEdges.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 8
+  m_CompleteImageSize: 320
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 320
+  _typelessdata: fcfdffffffffffff000000000000000072e848d3eb7a8807050c2e64f0c302000291312de474631c08a35756a95aa5aa7281c3071b54f081f9603e980fe20394fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff000000000000000004b173a7f2ebfe0b694180060000001c048115e3f79ed148edfe0100000000fc61115fcd591faf000ecfb8ae020000d3fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000005e68060504c239d39a020410308302005db03d27f67d62470704d000006d7b06fcfdffffffffffff00000000000000005269020d00c059b39c0000000003b001fcfdffffffffffff000000000000000013437d4d0b01002c010000000000de076f405f6f2246b5d6d6da5a5b6b6b6dcdfcfdffffffffffff898977775e5e4a4a
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

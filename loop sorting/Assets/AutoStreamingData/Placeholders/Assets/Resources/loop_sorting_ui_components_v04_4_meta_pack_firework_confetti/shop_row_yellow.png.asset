@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_row_yellow.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 8
+  m_CompleteImageSize: 320
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 6
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 320
+  _typelessdata: fcfdffffffffffff000000000000000062418f7c4400007a10000330000000000291312be7b70e0080dff1c89bfff73f5e6882b167408c0290e0991c069e1900fcfdffffffffffff0000000000000000fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000006f8000060002a4a494949252524a124914412d11af02001601000000000040bf14412d0fa70200120100000000000060fcfdffffffffffff0000000000000000fcfdffffffffffff00000000000000006f40158161800100000000048000000052c9a8114d807b07840000d88fe183fdfcfdffffffffffff000000000000000061e98c15220080feb1af5a020100f024fcfdffffffffffff000000000000000062411ffb8a0000a2000000000000003c0481d1d0b2b45c625252000000000080fcfdffffffffffff68685a5a30302929
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

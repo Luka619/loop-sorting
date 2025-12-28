@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: EmojiOne.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 1
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 5d5027ab89cca3f489f25361dc32ff7f519174f4da43ba4667ee5d3272759e815d888ea7622909786b2b0b302c4998b2f1104527aaa8a29c286aac9b127306bd14a90634cab8a2ce84bb4c72ee7bbf58f14816386243b14426a90440604080105d84cf6d6be8df6bf6b4365e84ad71eb5284eb896be0b9d6fcb2c95506f46e716e481ab56f9b94068816091efcf9a70762842d9412c87d7bbe33dcd7ccedfcff62842f9416c877d733ebbdcddeccffcfc2843b3a548800400d00c03333222262c244c3e207c13bd3ecedccf7f7bcb7d7084103175a0804e06bfff60fbe400128c284439728c8c5b28bcc104bbfbb71bbd2488e63dd550619370007c0de0620006244f3e00ac1334bdecc7dcdf7effbd3c284239658c8888889888ca8889799f1f184bd9516ca9bf67ffe766adf6bf66ac284b51d16c8edcc7cd7fc77df37d37ec2842dfe41c84cec7ddcf7d77f37dabb5d901334ea88aecd6cea8fe34620980bf184bd9516ca9bf677f3766adf6bf66ac2843b3a3c8811110200e000400e00e87da886f1997ee3b9f69da424f990595152898831eacba28c809bc2418178d8f86284239512489cdd7dddbddd15ec137af1b087e1568f9d5bdeb08c73df0706bd6284b99116ca7b6b7353f7d7bfcfdece6284259442c89ab4993d99fe88dc88cc628103d155c695100000000000690fe0e2e8d923d297052927a4aaaaaaea2fa4f17082e1cc0327376efda8000000bf0cf184bb5910c8802280228022a0dff112f14801b86b250346326531000000372061c987e77f7928f49f7b2e0000000081
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

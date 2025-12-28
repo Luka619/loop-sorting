@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_price_green_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 7d2891f19216a032b69e5f5e586c6c5d5dc80974c152014051bcf2737ffd015d0411244796fb16d100749cfa033f00fc041124479efb167101b4ccfa033f00fc51890e94c17301407050f063f9b3413d6f40bdcf3200849ed4553a4a57e92a3d027102cb1d0f513778ef4c02a87d8fa23103d1ffe2dd0a8daa12d97dff9368066f205bc55aa54cc9bfdd7f5b4b4a02406f202b4d7a894cc9bfd97f0b0b4a0200027102c73cb64eff3810d461ac331d826f40cd4743000068000b70000da002044381bbf16595ea07222911a58097a0926f00cd5d72f90114f0f6255a5f2949491f02e5526dc551a200604cfba76602572d02e3406bbb53920000ba37ea9f852251850b5385e017ee3f2ef709f6e3f09272807157c5c7b7940000c08f051204106fa005af5500a4a4949492b664fc24f25dc88735b97c52f03c0580acadadb8335d801d2b779d9d94003e01000000007261c987f54d4e7ff0fb7c100001c01ff802a99d6bfc532f03005ee44b830083c66f40bf631200fcdffffb7f65ffeeffbf
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

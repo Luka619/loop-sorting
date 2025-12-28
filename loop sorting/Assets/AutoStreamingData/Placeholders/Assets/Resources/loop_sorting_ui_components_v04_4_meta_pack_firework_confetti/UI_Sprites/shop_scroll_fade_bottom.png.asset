@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_scroll_fade_bottom.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 5e8892316a44ea3e80767f5b050c2890048990a5c576362d620805f0ff00f0ffe28890a5d3d7993008c1ff5501f0ffff048990a5c57736e9620805f0ff00f0ff5d503cb4eb43b62cac8912583074b1b372801969ff2aadb40000809c0514000002115fab8c26b85097a265c2a8ffa00e6f008330a25b48c9bdfd7f5b4b4a02006f008330a2db48c9bdfd7f5b4b4a02006f008330a2db48c9bdfd7f5b4b4a0200028983c3ffdb97dd9fdfc6c181dc4f561fa2dd9b954c680070ce9ca3b6e814017281f9cf1e62e0d9019f007fc01ff0074f80ffbfe763f987bd2b2f00000000002d8203411cbbafc0ceffef0000000000610991290ef9fd2f883bd80502fe0f00538147a8ec130400bb81db0eed3fb8ffd28065a34d71e9ee00000010d000cf605d885ef4f7cac1e35a6e000000a0c82261c907341872d0d6a17603000000f07f61c907341872bcd6b07603000000f0ff61c907341872bcd6b07603000000f0ff02115ff45d3db0191bc03b1b004080d16f40ebea4300a4949492525208084a29
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

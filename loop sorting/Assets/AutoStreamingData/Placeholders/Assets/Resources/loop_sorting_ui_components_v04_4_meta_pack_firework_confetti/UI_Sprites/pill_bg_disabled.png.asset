@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: pill_bg_disabled.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: df45414d720100e3f7117642d87dd2ef5d907f74ede5d02cc0a81032507ae4757d8749d08217cc6c36000002410046405d907f74edfad03cc0a81170417ae873f1e8fc2313ad04c0481c884d050daffdd2803f3913fbac8c0000000210000760e2e848f43993bef514c05d775d3aa100610253c3b735fedd6cb3cdadd6ec86706f20a7e74b5849c92db9b7f7f6de060061029347d5264f8e482289369b48027651316067ef02fe4ea5fb53b5bdc330006f402fcf1700a4c8949d6a53494a0a097d28ceb11717e05bbd9e01050f0bc6ef5d0811f4ebfabff4596a8000f8c00000040991adde2eb956977d8001fc3f00005d0811f4ebea7fef586e900073c7000061f154f4d605e85f20b66e10200069eb6f403fcf1300a4040000005a2be807fd73a0093bf43a1d006049b2644a31f5486f408b631700a48014900212406ad0376f40c7631700000480001000422adadb73407933d5b001000000000092a0e4fd738047ebf655740040920420a5924be56f407fcf2200a4a49494921264c24d45
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

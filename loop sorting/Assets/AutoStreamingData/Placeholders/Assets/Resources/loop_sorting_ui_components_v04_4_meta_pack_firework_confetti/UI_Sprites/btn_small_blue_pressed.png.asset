@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_blue_pressed.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: a282dfa8a773190000fd7fd1d395196ef13086215a61ace3b70da8bf00685b7f5d503c47f57c841c2009d0720000a87372285794f83208e5ae008cde74e07ef8a2829db487721400707f097b3bd13d336f80cee002000048800da8012d400100022998a340062124c04c3d6386f74fffc1825165c613a38048a2cdb6b6dcff516f2079a18bde49c93db9bfff6f6b0140c18211c99b9fb3c04862c974d06cc4abf10882e3e4ea0c400c5394fefefefcf86f80dee4020024c2949c821375c24ec151c9a347f77a05b8ee3a032cb0652fbd6284659f0b081231ec16de6fccedcccc0251094b4c956ed391744722aad6afaaf1c8aec306371d9cf8d99f007475aa9d51a9d687cd7a3d948b8a800000c42c106f80d4e2020000208002480135c004986f80e60e030000000000005ac068b0612d82796feb5c7d000000000048b0491b1f82b5dfe3de1d0000208000024c759a6fa0fd5c7c00000000000000004829f36f80daec02000000000000500928459c6f80d2d80200a4a494949212664a4929
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

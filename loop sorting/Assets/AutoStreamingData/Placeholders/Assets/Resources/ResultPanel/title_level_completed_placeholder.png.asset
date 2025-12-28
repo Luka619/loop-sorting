@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: title_level_completed_placeholder.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 2da219037959700080f4ceefd76c22891f82f3dbc6642c00009050cec75c6aeb1f82f37be3d02c000081d1298d71ce7b1f82b35be3552c0000a094dee7dcda182d82935dcf542d00f0405f7eb24a33c96f406fcf4200b49ed68ffa413fe807fdb284e77c4a2802ffc45039600c1543655ec889d1a82a303c029fd17f2c304ef85d1024676d838d5a23ae436b2955bc725d5043ebac44e25a5be9506d547f3d0004b131c71d33165286badc7adff7f1fc6fa02bc3d300a48a54900a52558a4991f128ce03d16e0a604f149e5d6ca0a186f1c8de156d3ec05c38681e7f7f08747552c909f599508f1896000000a0c73d3a7dc809350cfa65e5e0820000005b53a30429f423e769023a79615df8ffff73df6fa02fc5950084eed45d7a5b4feb695d2da2190f194e550000000000ec1b37e6728061791f1da78a00000000f0c93d502da2a3ce01fb45000000000090cc6f0472800501d5dc8aa000000000c0ef150072806377251db18e00000000e0ef9613d28063692b25bfa800000000f0030710
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

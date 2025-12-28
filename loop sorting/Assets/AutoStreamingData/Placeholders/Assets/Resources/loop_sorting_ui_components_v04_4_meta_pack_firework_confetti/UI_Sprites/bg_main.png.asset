@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: bg_main.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 21
+  m_Height: 32
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 6f20f3f01f7848e97d7b5d56530a00006f20f3f01f786cc9bffd7f5b6b4a02006f20f3fb2ef84cc9bfd97e132b4801006f20f3e41ff40049b00d7c010b4802406f2093741efd48e97dfb5f5a532a02006f2093786e5549c9bdbdffdb6f6b49496f20d3f42ed149c9bdfd7f5b4b4a41496f20d3f82ed10149b00d7c010b4802006f20b3557f5e4969bdfb7f5a534a00006f20bb56d2b700a4c4d27ef7f79e94926f00b3bde6be49e9bdfd7f5b4b4a0a006f20d7dd2fde0049b00d7c010b4802006f208b5c5e7f6906cda49db4d34d6b016f20ff3e8293156ec48db81177f8ff936f20ed33d392a17a548a4a126bfbde926f20cd5cbefba4fdb49dee936f2a01006f20abbef3976cc9fd99fe0b372a05296f209fb683b76cc9fdddbe0b2b2a01286f20cfb2d3b2ecc9fddf7e0b4b4941486f20bdb6f3920049b00d7c010b4802006f20e7bf0397000000000000c0fc07b56f20f73b4f1f01000000000040fc44dc6f20e73c4f7b010000000000c06c93376f20abb7ef1700000000000000e004a0
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

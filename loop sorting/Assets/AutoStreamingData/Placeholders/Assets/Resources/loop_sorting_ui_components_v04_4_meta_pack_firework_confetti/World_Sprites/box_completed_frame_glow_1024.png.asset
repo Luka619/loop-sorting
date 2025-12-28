@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_completed_frame_glow_1024.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 14e94334b261aa3f807a7b5b959181015dc833f47bdeddf75d63205c5df888005dc833f47bdedfe71a6b10726df8a8015dc833f47bdedfe71b6710726df8a8016e28fcf1b7f1df44c80b7dd2630b1aa022434fd9fa02000000fb0000ea000080516902946fbc01f89e77e099678bcf3da2827fd33fff0b0000c8de2c9693d5fb1f822bfee95b5c000020224c1897ebfb3d82437ffad705000ff8e286d7ed8bc91345ff3e7f01dfdabfa130a0fe9b8622c142cfd3ed05004004b604e70961919002e98cd1dfef1ce8fe3eefc19ff0000f1383eb4ff54e3e0000a974e5022c5c7d6f80e2fa02008cfe561988036a406ec51383336eea5b7d0070b215049e6c050602698851cf6b1a207e3eefa99fdcc22d2143d1bd99dd01000000a000400c00c461e90c341aca08fc208cf10d300cc330a282675ff9bd7e00609efdc49a0724b12d82f36eee6b7c00d0b2ff5b242609407380afcefd5e3c00f0268b358b35511102698851c7eb19207e3eefa99fdcc92d6f40e3b5420024f4d41eda5363692c8d52a9c271d604221b84e284fd44f352c25d8810f47beeddef5c67102c3fa8bc865d8810f47bee9bdf1a6700ac3f50bd015d8810f47bee9bdf1a6b00ac3f50fd0572b01623b2412aa80f18808347c3896661425357d14e0040841012425c70138ac1425b5ff53f0040241100927e276a376f40d3381700a484949012524268db3e6f40b3b12300000000000000000090d26f40b3b1330080249004924012489a932e422343f903000000000000006085316f404def1600a4a494949252524a4d85
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

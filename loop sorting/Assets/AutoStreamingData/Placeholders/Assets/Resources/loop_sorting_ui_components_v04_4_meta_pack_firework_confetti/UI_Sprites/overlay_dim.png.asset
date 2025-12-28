@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: overlay_dim.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 21
+  m_Height: 32
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 6249e59193807284b98b5d6909a9a0005d485954b61401b8b15d47733fa00500f150bca19c614ec4a610a806737275a8f1889bd1106500aef1038c4068a580000269ad51fdae12085e92db5789486924728065b7e68680520000000208509a3fd2e87734af29d8ab2a01aee00f59c24a02098291ab9e160050efca3b8f800f900269ad31052f1400e2d3c3d7894889946f4079263700b4ced6d99a5b714006a85d6806b4c6f600c0f37d4a0b4791c80a020982d1ecaa1300d20ff3bd8f000a200269ad71dc281800deb2db578dc44bbcd280f9cab49e70660000a4462005ce300269df71e42a1300e2f3d300949ff009020982b1b3a01900d20ff33d8f000f3062a9c2b1dc107385090a7f82279009855d503cf4ab51db1812cd0200bf5dbd8e7d88f831af1464f31696727357260e38728818f4aa96d6e7a68000422cbcb5c87380b7864b41050000000000008df0996f40e7ee4d00000000000000000048496f407b4f3c00000000000000006229be7280cb6a7e3e40180000000000003030
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

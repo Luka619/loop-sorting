@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: pink_long_pressed.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 71c9eaf10ff35eab1482ff8f0500000061513c347cd9706090254a00fc0000fc61513c347cd9706090254a00fc0000fc61513c347cd9706090251a00fc00f0ff51c9c1836d6626c0ef2e1edbbcc42c001f8257a66d356800508e4944030e19e0526982f1b3423e5e1ffc2fbffbb20a1a3d0293836dadbc942216fbdc3ff71d001f02d7ffd940eb5471ffda7dd4960b001f02d7ffdb44ed58b1cf18ad969c1304714988d1ef34dadff2125bafbdfe190dc142a3b1b80c004004a304350979912451510934fe42e31fe5b783ca7051febf615109eb77bffb75bb115fa4fec0ffff5d5089e1eded5f544d3e31a12050bbaf04899b2b843cdb50b1ae510afcc0ff03f1e8c371fcbb80f2970181085a7772733d42b3f87d5e0080c42846e6d9cf13bf2e42970cc70000000000002004a1f4ed6f40f7f72c00000000000000404afabf1f82672f63624d000000000000a0f5fb6f4077fb3c00000000000000404afabf3d4263dd5d2000000000000050c95c8ee2804d29a1cc104400000000000020d0
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

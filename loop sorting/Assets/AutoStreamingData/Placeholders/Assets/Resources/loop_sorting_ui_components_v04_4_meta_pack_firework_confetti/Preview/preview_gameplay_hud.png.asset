@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: preview_gameplay_hud.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 21
+  m_Height: 32
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 617956010ebc8755365e3804c0d3350004c909c1361df83b180ab8f30300f003041145686ac15c05cffb2ff10741e0036f80ec540300a4c2449890112a00014051f15c285a00786771770e4011874ac81fcab3c4beefbd0300000061f781f1ff04f11e71be963382c7a400c00b8200f06f80067103000064800c9001324006c85e6808e89d001839d46cf0e4e1068f1e1f42c5c5c5f5ff3100004263700e80312d8a03618c20b98f72cc752776730c7f6f800c5d03000044800810012240048802f15ca1cd003c2666e7bf0840cb722c1f42b9b9b9ff9fff01c0ffefbdf7ffff628903618c68558b46570cc0022cc0026f800e610300004480081001224004884f6808680e80cc84ec61073fe9a0c67b5e881868184d9c1950fc3d02284888346ec8286144309333f1ea0107bc76e0756f80005b030000648008100122400484027135c88b0121dc814ebd010023f4276f80c8e303f400000000000000009092e2c80728e60bcfc50100000000403fff6f80fa3c030000000000000000400488
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

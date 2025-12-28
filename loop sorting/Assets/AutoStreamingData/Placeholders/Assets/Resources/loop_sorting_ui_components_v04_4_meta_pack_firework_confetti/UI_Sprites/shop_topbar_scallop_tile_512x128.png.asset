@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_topbar_scallop_tile_512x128.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: d2a812f4ae4f807cbbb96dafa4142005025109348d1ce6ac1ac017d51c410f00025109148d1ec88a1ec017d71c418f22025109148d1ee6ac1ac017b51c418f22025109348d18c6ac18c019311e600f5a7d870f73c212807e23003e030a500a4e61717334faa5c8ed009a6f023cefff0f14814b81b6984786417f7f7f7f7f7f7014810f81b7b8470a417f7f7f7f7f7f7114814f81e8bc450a417f7f7f7f7f7f71516906f4f34bdfcfd45d80727f7f3f726f409b671b00004c80093001352005405dd02c34d661be1f60fa830c4c7b30e35d081135985234aaecc00a013f20747f5d081135985234aaecc00a013f80747f040911f5cf5f9fb7db19b808fc00f0ff025109d45b15ea7b777e151500f4cfffd380a3cccd7030004092229191d849ec6142b7beba4e0000000000116025a05f6f40fbf63e00000000000000404afabf1f824b6feef05100000000004020c5e86f40ebfe3f00000000000000404afabf3d426377ec3e00000000000090c97a8b6f4069aa1a0000000000000010400194
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

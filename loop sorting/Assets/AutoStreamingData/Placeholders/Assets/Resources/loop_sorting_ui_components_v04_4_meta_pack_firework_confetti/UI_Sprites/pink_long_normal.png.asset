@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: pink_long_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 5d500934c91d903c60ec42c234e3a35f5d08918f5626036c59e90f7200a0757f6109912f928c0a005b4aea1efc00f0ff6109912fb28a0a005b4aea1efc00f0fff188e795890cbc92840200650d2fbdfd7280b394788e728a000064a85539d969c28433743ac8ff7ff6ffa7ff7778b7026f20a38f0ad048c939b937f7f7ff05006f20a38f9aa04dc93df9b7fff7ff05006f20b39be4ac484929b9a7f7f6bf46495229a361e2f6ca3e9c601c0407a200821f824f2f8ec66c00d0466da904af04057d28d7f5a5033a5e1f020dedb9f93f3f1f824b01b3d757480040ceefffffffff025109ab8f95ddb05b5a5500a86af5ff025189215ced8bc078624e0098f4ffff61713b34cd035bc9802b3a0800e48cf71f824b9c62c46d00000125425a1762293d42dfcc48b10000000000008058a45f6f4057ca4f00000000000000404afabf6f4057ca4f00000000000000404afabf2d424791883a0100000000004084cc89df859b21450a002069f28889520662de728093ac9c8096760000000000092c10
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

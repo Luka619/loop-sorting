@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: mint_long_pressed.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 5d488e758cde404d5c0f8070368c282c5d880734396503282d7d5a33809d7f7f51890734392503282dfd5a01a85d7f7f5d880734396503282d715771815d737fd380b5d2e7d21080f07ff8df6edbb6ef6f4039cb2300004c400b480012000000517102d4dbe332cd85af025affad2d001f82b1dd1af5cf40f0ffbd7bafe50c041f028b2857edfb94f1deb97bcf652d002e02b1cd1e734ffbb777b39b3bec0e8872680254cd2b08f71e81f2f563da4b456f405d63420084fed6dd7a5b4b2a4b4972815d9cfd61f0010009801ee007f8010409910d7ef57deb91661f00fcff0f000409910d5f947feb91661f00fcff0f025d08914db411d5ee7b330100734da38951715b94bb40fd1820d30941608ef8336f405d63320000208002480135c004986f40ede73600a4801490025ac068d0617280f3e08e3f0fd50000000000406afc518101e3d84b47d900000000000080ad2d825dcedd785900000000004084cc896f40bdeb4700802490049240092a459c6f4049cb030000000000000032000588
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

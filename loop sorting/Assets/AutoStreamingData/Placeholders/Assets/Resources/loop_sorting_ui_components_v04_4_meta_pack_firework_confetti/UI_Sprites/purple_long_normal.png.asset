@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: purple_long_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 72281154bb4900c876e069834caefbf951510954a0c6d922c0d5ea7207a06d7f51510954a0209922c0d5d88038a06d7f5d503ccb55e20850980130734001a89b72481a14a22c38e9ee002637f0875dfca242150b058f010040044144304104bf02e9e3635d9164e71f2e591380172fd87d0731d788d05d55629b6baf0fc500121f8219b9646aa640b07f5db1f84839401f82959b6468e640b05f1d31b94018025171722db5b5d6dc380f506bb92f220021833b9ec3e9780000009e002005000251099e35a9b91e934e530074b97f747c5d089125798c1fb328170c00f92071df5d089125798a1db328170a003f00715f5d089125798a1fb326170c00330098af04e9b3c33fe85d0f4f7b5cf9ffefbdef7280311fedf02c0b01008080080edc9813831b7e877c5c0000a88d6d536963eddf45c10b9c0140847901d64d9897d7ff51810fd51a5640cb00000000000080ad2da2c79c4d824e001040000104b0598913839bce63ff1900f056761ccc1aada46f40afff2300a4a49494925256aa4815
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_orange_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: ae87cfbe460f000b1b3f8c1e3d2456b5f12882d52d381e930e0800f9f861685d0489903528c40b12ca8091f7ff00f0ffe2888ea30b0401711462fed92778c2a7ae8753dafa1200b3190e351a80b596282143856f27e5010000002a000005005c3384e7f82e170063dcee839c76048cea138563f02200457deffba9c1f3388f126f0083e00e00ecc9bfb9ffdb6f62414913857ba08f0044849ae7fb4f20baaeeb1383738997a45f007067f102dc59bc846f40b776230084ded4937a524fea495da2824b6597403e00205e7ba8d10b12bdc2842b7e3088de27f1ff16fecee2ec2eef05ff97171ca194c01ecbf90073404461b173341d050e430eb32809ec3fcff3a282d3b79fa21f00b053aedba1b81d02d2808f9765710f2301000016308008b02d820fe57ae6720000000000a4ad35967d87c3be0616f0201004020d458115f261c987357d08cc7688670a00f5fb0fc07d8773b30a0ef0301860208b0283e6292d826f6797501b0000000000f8d656516f40b7f22200fcdffffb7f65bfefff7d
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

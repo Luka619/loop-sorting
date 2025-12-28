@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_red_pressed.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 3384e37ea60200c5bc6e20ed6410e365f148eb5525349ab7440200b96068685c7d47518438015b5ae3001020d03c120aef452711146c513c01000200040b841433847b3f2108c2080c1c280c81188a40d2806961ffc8443400000002900007b8712990b169367c8d188077bde50d2800f1088e6146a1c29a8a55838d4598ff151f029bd957b652a4c0141190023436555f008f03a5a43494044986f890de0a5951e997c3180686fe249e00db3f7f77fcd280af5bb5ce40340000244cf1142595028983cf4ddb07009dc4a07c00733a0913037ddb459e4290f0feafa897da02686f209b6325a7ecc9f9dfbe132b4801486f209fca35ae70c93e99f7ab6fe5a52c02714a27328f8fc91800b260aa833ff0f180b1c5cbaa4a42000000202020202002b173d4ad7cbe8b1e91af1c00f335a56301c7a04ee16d362945bd19af69f56d6f20a7fba4afb4cffdd9bf0b2b2a0129c1021b4b2a3a851c69e2b864b4ecf9ab61710247451c05471ec089bade5314450281bfd3d5aa4e440000000000000720f148dad5ad3e41fb8e0a0001050f3daa5d84f92907e127892499255b675af75a5d10246be16986fcd92250732d50ff065d50bcc193014b4ffb2c536834fffd2571c991716b16c08b109ea0a6380b1d5c6fa079f20800a4a454d65a5a6feb0efd6fa0ad7b1000a0249484925012f245bcd3a0996901fb440000000000ac26fe9972809ba9d1e692a2000000000000363b6f4037c70600a02494849250129927931383dd1baea24c0000b9b66900227dbb6f402d2a0200fcdffffb7fffafeef7fd
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: box_completed_frame_glow_512.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 72480ec5fbb7bfe719084d66792482045d4859f47bde41f8bfff8469507bae0c0449d9f17bee81f8bffb840900ff0f001f82c34118284240088052632004000014890e74b601220b5cc2531da306c55c7280fb9fe3a39b7d0100c0940410000051e90cf47bde81f8bf7b93554d2f780721832fc1153f2700005096926c8dffcb1fa2db59b77d3a00002044840a1df2fd2d82afd135bd4a0030cd34cf7cd417eb51e90cf47bce41f8bfff73e33155aab36f4093383200a4c814993253652a4d291383c341181d42c008f8260000be09006f40e334420014cec489385125a804956f40f73d130048493d79bd5f6f692dad6f4087313300dcb41b76124ec009380102e98cf1eff31c18fe9ff79b974ff2246f40e3941300a4d4949a5253724a4da90269d6f1f7f31e60febfff65994cc0062183eb7139394b00c0ff8b89a90f50d6d280fdb5e7b5a18d010018bf54540a006f40d3bc3200e8ebcb73d256c30b680002e98cf1ef731d18fe9ff79d974ffa247340f5e9c5e5010040c2a44a64444fec71099ef1df3fd6bd1b8205ea704d2b935d4859f47bde81f8bf7f8433f9e883815d4859f47bde81f8bf7f84733fa085005d4859f47bde81f8bf7f84733fa02d0014291c34b2c0631b0018985e5fa60657728093dd93d17daf01000000080c343873a09fc99f763700409224099033f9886f4093383200000000000000c07690576f40e39413000000000000000048f8bf6f409338120000000000000000d9ef92d28095e397d583b10100000000400d3b51819f97a39f7f7f0100000000002040
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

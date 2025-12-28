@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: preview_tile_orange_512x128_3x2.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 2e827da6a10704ffff7ff7a14608000004899089cb4909ad1059c0f8ffc00f0004899089cb4909ad1059c0f8ffc00f0004899089cb4909ad1059c0f8ffc00f006e6885f1e6f05243d8fffddd9b8a02282d822999dc0119001076d2592616884031038b032e4db9342212a45a0525f1d36f20e3b03f7aedc9bdfd7f5b4b6301006f20e3b04ffa4dc92df927f777ef45296fc0fec955fd6dc9bdb9bfff776b0101026986c9075bd239f999e45195476f56d28065c32b7dc5040106001ae0000e40f188e731c40a1662f4b00d3f60fefdfd1f8207c13df9b340702f0052ad35d79c6f00e330d3df484900508af6f6dededb6f00e330d3dfc849009092f6f6dededb62818fd15e77764084fffedffffddfff6142d7e63e4e00488411e6425250128a02913134d11ac05b1d6af51c007ffb2f04c987b16ffad7c2f56500080000f08304c987b16bfad7c2d56500080000f0ff04c987b16bfad7c2f56500080000f0ff029110f48c1680f512e05b150a0800f67380d7b647b361004092244942244d64
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

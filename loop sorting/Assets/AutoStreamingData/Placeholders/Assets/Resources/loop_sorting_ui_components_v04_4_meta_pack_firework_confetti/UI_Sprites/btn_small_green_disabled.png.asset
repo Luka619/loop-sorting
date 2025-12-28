@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_green_disabled.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 338497cbfd4cc10382e13082e1088ae13e448f0de1cdd7db0a232040841013c25d503c8dab26696dd70a5073800da8733e448f0de13de14bac280601c0103242a2820f7c78fc5100f4d70ebf9dfa379d6f409b7d2300fc9edff3bb7a57efea5db28459bbc90f24dfc4503d62c2053226d102f97b3ed07bd5a29a9d7cbff7ff076f20917aaa2cedcffddf7e0b4b4a02402183b1ed5346ff48702389f7db8c76ab51098283f11b0b8090ba16eb727155396f409b7d130000180003b00016c00218f1c8a30377d912e0f8389cdd5c595e6e7189e7f1f83a38b91f1990726abccdad1f82ff4919f0975000c8b86587ee92f6e28800b5a62bde5d24e0a1f2734f155502715b14f71840191bc0b478019f7f026f409b7d1300002a4001a8000c8005b02da231e9f780570000000000bcbb23dc02e9a523d68b9d04e0e1c613809d0f6602c987b5d9e55302b5494d0040df0f6a0289cc234bff6303a059d611807f9f082da2537714234b0000000000b0e95b596f409b7d1300a4a49494925274ca4d55
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

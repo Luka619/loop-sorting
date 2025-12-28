@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shop_group_bar.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: f188faf15a9b009e532b80ecbd0f0f0f04898731be86093064fcad0902ffffff5d8807343e86093064f8bd9d407f7f7f048987313e96093864f0ad1900ffffff5d88671432e528806e55001834e5a36e6f407926230024ca849c50134a0a492162294955987a570658d9259dd0808ffe6f20192d142c48c9bdfdbfff6f6b01006f201929648c49c93df9b7ff7feb05006f203b46496549c92db9b7f777ff05007281276a2409f0fd003f801e6007f0036f401dce0600004a400c50012a4001407da8c231cf1420adec83383dec9860605d081155b3e8fe396d7a007300a0bd895d0811152349ee1974b8007300507daf5d081115a369ea18747800730060bda9e2680df4ac0e008bea07dafa77d2c203d3805f184744650040922421934849ec6f405dc64600000000000000400bd04e2d42ddb48e2c0100000000004086ec8d6f406daa0f000020000480005063d9926f406daa0f00a48014900212406f91d26f4049a64d00a0249484925009e22df36f4065050700a4a494949252524a4a98
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

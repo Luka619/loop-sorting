@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: orange_square_disabled.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: 52445d0a4a009d318284204200000000025109342972d80408846dba1fff0100025109e732853b8720009b73a8ff0f00025109e732853b8720009b73a8ff0f00e2481a942b08de040640db3a220320006f4035080400004c400a500010000000d2880374282ba0e67c31588f5f793a02e300439bcdfe4a0d29bb67f7cc7f00a86f009b413d2c494929b925f7f6ff05006f00abc13c2c4dc92db9b7f776ff05013245dbe4e04de4f978c8ae8f0640faaed380272a2b940100406227d191704852027102b46f5cc46ffa7b6f1600dc49246f20fb9355ae481929b3a7bedefc8b7d6f20c71b65836dc9fdd9bf0b6f2a01486f20fb9755827dc9fdd9be0b2f2a01490289832b5a7b8ef1deaec281811ccc426f401f2a3600a4c2549c8a53724a0521028983554354c1d09d4592fe067e42a7d10247c15f321bb3a3885402c84d26036f20a7875bab6dc9fddf7a130b4a01486f20b7873aaf4cc9fd5f78130b48014802898303f31509fafe32b341819cce426f402faa46000050800c080121a004942146432705c118040090911888ac42715d50bcc15481730efd39542aff38ad3404514327cef1a85b01baaa0afc00f0ff04514327ce95eb5901baaa8aff3ff003c244e32505c180488448ec48fc4ff4f7218363a62f22010000004000600100ae2d821714032400000000000000e001552d821d39ea235100000000000050162b6f405bc73200000000000000404a90d2c142e3bdd00900402491040020fbb5893d828955b0c004000000000000c038956f4041084e00a4a494949252520a4d95
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: preview_tile_purple_512x128_3x2.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 04e9d5a3c4d4df13792d81f8ffdf8b0004c987b5ad07a214577d47f0ffff0f0004c987b5ad07a214577d47f0ffff0f0004c987b5ad17a214577d47f0ffff0ff86289bbb194809bc519fded6ff63a86062183378623b3410000008a00600900401303efff7fd10d7531e780ecb556013b6f2083d03efe49c9bdfd7fdf6b6b01006f2083d03e7a6dc9fdff7ffb6f6b01486fc0fec159fd4dc9bfdd7f5b4b49020061898323a7195f4fac731300eabaaeeb4341ffc0809a010000100190008800c0728885c15ffdf89d3f13c117327db3d71f02e5ff61cbe56e0141ceefdd7bef391f02e5ff63c7e7680140ceefbf77dfbd6f00a350075f0580ff2b25a5a4949492518983a35f1b759ef3120049bbffb37721836fec8b47650000006000200d00dc72c83a34e434a09013820100a027dd205dc889e3bf5df9eb7b1f00010000a80104c9892344a79b70912e00080000ff0361c98923e40d55c2856909000200ff0351316534d661be42a0fb82a1a4c00973d280495be036700c0000000000000850
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

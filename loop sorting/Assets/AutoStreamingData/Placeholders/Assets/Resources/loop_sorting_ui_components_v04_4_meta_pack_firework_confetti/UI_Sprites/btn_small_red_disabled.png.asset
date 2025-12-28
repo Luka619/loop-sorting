@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: btn_small_red_disabled.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: 33847b69f7140086d5ac809c769092f55189b87547107ed5a604007273c51c5c5d88907545fcdf2c24a4007280f8707f7e80dd3dc40cf071e4b4190da0000000a28277cbc6ee7000b01d0adb2178532e6f40eb72120000280001300016c00238a282af63c3fb3500801abd20de8b9a731345fd296283dfffff3d2df8bee755036f20d76e15236cc9f999ff5b6f62414902f168a733a5c8cf5498bb70acef6f5013837765aedc5100306ab41c8c1a2d076f40db7e2200a49ed4537a524fea493da282abf1e66d7400e0d97b6cd1036c5102f177f4cdf8bdad1ab6cf1a06f5d1325d24c7fad42b699d24597fbadf92f792718988b18b38fc8bf89f581e15f334a9a28233c3ce6d5000f03769bf65f49b0a6f40db7a2200b4fed6d77a5a4feb693d7380cb45f6e83c00000000c0fccc0e775d28a3cbbc6505a0cd1a0c01000002b904c987912ff55bc32a7500080000f0ff5de8e3cb9c4507a0ad1a0e010010c064a28297f3e94c380000008095619261426f40eb5e1300b496d6d25a5a4f290104
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: purple_square_normal.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 32
+  m_CompleteImageSize: 576
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 576
+  _typelessdata: f1488e910aa3d8040a0480ce0a0700007d28e051420ae226239e7fbf4dea0d0061513ced467d821e514210a402ff0f005e081193820af0469b7bf19b8f100000e28855f406037e420282fbb8810028006f40210001000050000400000000000071e9e3f126b19ea20882bf73b557440d7102b929a9e90b5d6a76c9dfbe3b02331f02db5e519c38b931779fb5a7e23c402e02953b81fa6abb37b33d93dd96092c51710287394e5c4434d953317ae427206f4015244100004a400988012a400140617172678218e046531a67b9165555556f20e9de947a4cc92f3d7fdb5fe142556f20a9fed4726cc9fdd9be0b6b2a01486f20d9f2e5d74dc9bdfdbf5b6b62014902f168c7f1b6094816888ee5ab333d536f405df40900002000048000100002400269887132321138482886779fe9322e31033f1ee5798d417f1f49371b4d04036f20ed56d47d6cc9fdd9be132f2a01486f20dd5a95f27cc9fcdd7a130b48020013856543ca03c540f5dcdf0f54cffdfd6f4065283d000050800c9001324006c814091e34f944081680010fecd8514aa75e089121c76cce35940ad802d180c5bf6151094b8b9db9efb7e43ea28200f0ff5d50092bdd7997390b0751d93280757f14690dd44582925f07a0606063fdb3726f4041a000000000000080000a2005946f4061000100000000000000000330006f40454c1900000000000000c06c93576f4009cc4b000000000000000000d8db6f40454c4f000000000000000062f9926f4045441100000000000000004001a5fcfdffffffffffff0000000000000000
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!28 &2800000
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: preview_firework_confetti_effect.png
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 32
+  m_Height: 21
+  m_CompleteImageSize: 384
+  m_MipsStripped: 0
+  m_TextureFormat: 50
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMasterTextureLimit: 0
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 384
+  _typelessdata: e34093130e730083140f3213fc9696da620972a1264093d4f123aa000055f5ff5e8807a88a008d0939b05c0180707ff8f1b0246826c03b00c60401783805fd7f0411182107f17191a4080d11043ef003b28480ed0130001382dc18412c0f11440849482882694095f74795f00755055814b1312812eb408919b090400757bfcd4d82068249012492482289361b001876188182a110f5098003e00038f0e9ab4f1f6a062185301138f01fc60040f8ae566f80e6fd01480050000a4001280005a07f80fcf700003e496e7b27b84bde09ee7149592814459a28ca0000ac0507cac86f80f6fbffcd000029f97f0100000000188182a1800100bcdf951338000ea0035151db2a09438b2909010270fd2d6d007d281f281cb2d03000d0008080808080511169a1049c8aacbd0080007056f81004c909a130303033080402f0ffffff036f80f8fd01fe010000000000c0ff95926f80f8fb01fe010000000000c0ff95925dc80941dfff37dd4e00800000807f06144925a91ec091800300000000c0c840
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+  m_OriginalWidth: 0
+  m_OriginalHeight: 0
+  m_OriginalAssetGuid: 00000000000000000000000000000000

@@ -15,7 +15,7 @@ MonoBehaviour:
   ProjectConf:
     projectName: loopsorting
     Appid: wxe3b76d7188878c00
-    CDN: https://a.unity.cn/client_api/v1/buckets/bf041097-85d4-4bb2-8953-116363119d32/release_by_badge/v0_3/content
+    CDN: https://a.unity.cn/client_api/v1/buckets/bf041097-85d4-4bb2-8953-116363119d32/release_by_badge/v0_4/content
     assetLoadType: 0
     compressDataPackage: 0
     VideoUrl: 

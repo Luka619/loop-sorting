@@ -1543,11 +1543,33 @@ namespace LoopSorting
                 return;
             }
 
+            if (TryGetInsertStartPosition(beltIndex, out var insertStart))
+            {
+                go.transform.position = insertStart;
+            }
+
             // Detach from belt tracking so the slot can be reused immediately.
             StopBeltSpawnAnimation(beltIndex);
             StopBeltBlockOffsetAnimation(beltIndex);
             _beltBlockVisuals.Remove(beltIndex);
             StartCoroutine(AnimateBeltEnterBox(go, containerIndex));
+        }
+
+        private bool TryGetInsertStartPosition(int beltIndex, out Vector3 position)
+        {
+            if (_beltFrozenPositions.TryGetValue(beltIndex, out position))
+            {
+                return true;
+            }
+
+            if (beltIndex >= 0 && beltIndex < _slotBasePositions.Count)
+            {
+                position = _slotBasePositions[beltIndex] + GetBeltBlockOffset(beltIndex) + new Vector3(0f, 0f, beltBlockZOffset);
+                return true;
+            }
+
+            position = Vector3.zero;
+            return false;
         }
 
         private bool IsInboundLocked(int containerIndex)

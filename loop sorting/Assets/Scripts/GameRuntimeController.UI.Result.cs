@@ -192,7 +192,23 @@ namespace LoopSorting
             CaptureResultButtonsBaseLayoutIfNeeded();
 
             AnimateUiPanel(_resultPanel, true, seconds: 0.22f);
-            _resultText.text = win ? LocalizedText.ResultVictory : LocalizedText.ResultFailed;
+            if (_resultText != null)
+            {
+                if (win)
+                {
+                    if (LoadResultWinTitleSprite() == null)
+                    {
+                        _resultText.text = LocalizedText.ResultVictory;
+                    }
+                }
+                else
+                {
+                    if (LoadResultLoseTitleSprite() == null)
+                    {
+                        _resultText.text = LocalizedText.ResultFailed;
+                    }
+                }
+            }
             _resultPanelMode = win ? ResultPanelMode.Win : ResultPanelMode.Lose;
 
             if (win)
@@ -642,24 +658,30 @@ namespace LoopSorting
             SetResultWinLayoutActive(false);
             SetResultLoseLayoutActive(true);
             SetResultBannerVisible(false);
-            var loseTitleSprite = LoadResultLoseTitleSprite();
-            if (loseTitleSprite != null)
+            EnsureResultLoseTitleImage();
+            if (_resultLoseTitleImage != null && _resultLoseTitleImage.sprite == null)
             {
-                EnsureResultLoseTitleImage();
-                if (_resultLoseTitleImage != null)
+                var loseTitleSprite = LoadResultLoseTitleSprite();
+                if (loseTitleSprite != null)
                 {
                     _resultLoseTitleImage.sprite = loseTitleSprite;
                     _resultLoseTitleImage.color = Color.white;
-                    _resultLoseTitleImage.gameObject.SetActive(true);
                 }
-                if (_resultText != null) _resultText.gameObject.SetActive(false);
             }
-            else
+            bool showLoseTitleImage = _resultLoseTitleImage != null && _resultLoseTitleImage.sprite != null;
+            if (_resultLoseTitleImage != null) _resultLoseTitleImage.gameObject.SetActive(showLoseTitleImage);
+            if (_resultText != null)
             {
-                if (_resultLoseTitleImage != null) _resultLoseTitleImage.gameObject.SetActive(false);
-                if (_resultText != null)
+                if (showLoseTitleImage)
                 {
-                    _resultText.text = "\u53ef\u60dc\uff0c\u5c31\u5dee\u4e00\u70b9";
+                    _resultText.gameObject.SetActive(false);
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(_resultText.text) || _resultText.text == LocalizedText.ResultFailed)
+                    {
+                        _resultText.text = "\u53ef\u60dc\uff0c\u5c31\u5dee\u4e00\u70b9";
+                    }
                     _resultText.enableAutoSizing = true;
                     _resultText.fontSizeMax = 62f;
                     _resultText.fontSizeMin = 36f;
@@ -695,7 +717,11 @@ namespace LoopSorting
                     iconRect.sizeDelta = new Vector2(200f, 200f);
                 }
             }
-            if (_resultLoseCardBg != null) _resultLoseCardBg.enabled = true;
+            if (_resultLoseCardBg != null)
+            {
+                _resultLoseCardBg.sprite = null;
+                _resultLoseCardBg.enabled = false;
+            }
 
             if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(true);
 

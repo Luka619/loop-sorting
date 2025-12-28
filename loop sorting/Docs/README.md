@@ -22,7 +22,7 @@
 - UI 概念到资源工作流：`Tools/UiRestyleV05/UI_CONCEPT_TO_ASSETS_WORKFLOW_V05.md`
 - Prompt 结构规划：`Tools/UiRestyleV05/UI_PROMPT_STRUCTURE_PLAN_V05.md`
 - Box Completed FX 重设：`Tools/UiRestyleV05/BOX_COMPLETED_FX_REDESIGN_V05.md`
-- ImageGen（OpenAI-compatible Images API）：`Tools/ImageGen.md`
+- ImageGen（API易 / OpenAI-compatible Images API）：`Tools/ImageGen.md`
 
 ## Tools（保留原路径的“数据型文档”）
 - Prompt Sheet（由 Prompt DB 导出/用于人工浏览）：`../Tools/UiRestyleV05/_prompt_sheet_all_v05.md`

@@ -125,8 +125,9 @@ DO NOT:
    - 已存在但需要更贴合概念稿：修改该条目的 prompt（保持文件名不变）
    - 缺失：补一条 prompt（文件名必须与工程一致）
 3) 用 API易 批量生成组件 PNG（透明背景，且不做后处理）：
+（必须使用代理 `https://api.apiyi.com/v1`，并指定代理 key 文件。）
 ```powershell
-python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --model gpt-image-1.5 --quality low --gen-size auto --background transparent --parallel 5 --prompt-sheet Tools/UiRestyleV05/_prompt_db_all_v05.json --out-dir Tools/UiRestyleV05/_openai_output
+python Tools/UiRestyleV05/GenerateOpenAiImages.py --api-base https://api.apiyi.com/v1 --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt --model gpt-image-1.5 --quality low --gen-size auto --background transparent --parallel 5 --prompt-sheet Tools/UiRestyleV05/_prompt_db_all_v05.json --out-dir Tools/UiRestyleV05/_openai_output
 ```
 4) 把输出覆盖到你要对比的 PackRoot（不影响其它风格包）：
 ```powershell

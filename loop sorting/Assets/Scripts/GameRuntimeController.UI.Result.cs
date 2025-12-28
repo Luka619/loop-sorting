@@ -990,6 +990,20 @@ namespace LoopSorting
             var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
             if (primaryRect == null || secondaryRect == null) return;
 
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (_resultButtonsBaseLayoutCaptured)
+            {
+                float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
+                float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
+                float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
+                float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
+                float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
+                if (xDelta >= 60f && yDelta <= yTolerance)
+                {
+                    return;
+                }
+            }
+
             var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
             float panelHeight = panelRect != null && panelRect.rect.height > 1f ? panelRect.rect.height : 1920f;
             float baseY = Mathf.Clamp(panelHeight * 0.12f, 140f, 240f);
@@ -1014,6 +1028,20 @@ namespace LoopSorting
             var primaryRect = _primaryButton.GetComponent<RectTransform>();
             var secondaryRect = _secondaryButton.GetComponent<RectTransform>();
             if (primaryRect == null || secondaryRect == null) return;
+
+            if (!_resultButtonsBaseLayoutCaptured) CaptureResultButtonsBaseLayoutIfNeeded();
+            if (_resultButtonsBaseLayoutCaptured)
+            {
+                float yDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.y - _resultSecondaryBaseAnchoredPosition.y);
+                float xDelta = Mathf.Abs(_resultPrimaryBaseAnchoredPosition.x - _resultSecondaryBaseAnchoredPosition.x);
+                float primaryH = Mathf.Abs(_resultPrimaryBaseSizeDelta.y);
+                float secondaryH = Mathf.Abs(_resultSecondaryBaseSizeDelta.y);
+                float yTolerance = Mathf.Max(6f, Mathf.Min(primaryH, secondaryH) * 0.25f);
+                if (xDelta >= 60f && yDelta <= yTolerance)
+                {
+                    return;
+                }
+            }
 
             var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
             float panelHeight = panelRect != null && panelRect.rect.height > 1f ? panelRect.rect.height : 760f;
@@ -1170,7 +1198,6 @@ namespace LoopSorting
                     rect.anchorMax = new Vector2(0.5f, 0.5f);
                     rect.pivot = new Vector2(0.5f, 0.5f);
                     rect.anchoredPosition = new Vector2(0f, 280f);
-                    rect.sizeDelta = new Vector2(720f, 240f);
                     _resultWinTitleImage = img;
                 }
             }
@@ -1455,7 +1482,6 @@ namespace LoopSorting
                 rect.anchorMax = new Vector2(0.5f, 1f);
                 rect.pivot = new Vector2(0.5f, 1f);
                 rect.anchoredPosition = new Vector2(0f, -84f);
-                rect.sizeDelta = new Vector2(720f, 140f);
                 _resultLoseTitleImage = img;
             }
         }

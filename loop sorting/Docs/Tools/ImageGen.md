@@ -1,18 +1,22 @@
 # Image Generation (API易 / OpenAI-compatible)
 
-> 总索引：`../README.md`
+> Index: `../README.md`
 
-This folder contains a small script to generate PNGs using an OpenAI-compatible Images API (e.g. API易), with model `gpt-image-1.5`.
+This folder contains a small script to generate PNGs using an OpenAI-compatible Images API (API易), model `gpt-image-1.5`.
 
-## Setup
+## Required
+- Base URL must be the **proxy** (API易), never the official API:
+  - `https://api.apiyi.com/v1`
+- API key file (proxy key, not OpenAI):
+  - `Tools/UiRestyleV05/_secrets/openai_api_key.txt` (one line, no quotes, do not commit)
 
-- Set env vars (PowerShell):
-  - `APIYI_BASE_URL` (proxy base URL, e.g. `https://api.apiyi.com/v1`; never use `https://api.openai.com/v1`)
-  - `APIYI_API_KEY` (your key)
+## Setup (PowerShell)
+- `APIYI_BASE_URL` (e.g. `https://api.apiyi.com/v1`)
+- `APIYI_API_KEY` (your proxy key)
 
 Or pass them per-command:
 - `--api-base https://api.apiyi.com/v1` (proxy only; never use `https://api.openai.com/v1`)
-- `--api-key-file <path>` (or `--api-key <key>`)
+- `--api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt` (or `--api-key <key>`)
 
 If your gateway is OpenAI-compatible, the script will call `POST {baseUrl}/images/generations` (or `{baseUrl}/v1/images/generations` if `baseUrl` doesn't end with `/v1`).
 
@@ -26,6 +30,8 @@ For the full UI batch workflow using API易, see `UiRestyleV05/UI_CONCEPT_TO_ASS
 
 ```powershell
 python Tools/ImageGen/apiyi_image_gen.py `
+  --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --size 512x512 `
   --quality low `
@@ -38,6 +44,8 @@ Optional (copy Unity import settings + update mapping):
 
 ```powershell
 python Tools/ImageGen/apiyi_image_gen.py `
+  --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --size 512x512 `
   --quality low `
@@ -60,7 +68,7 @@ With explicit API parameters:
 ```powershell
 powershell -ExecutionPolicy Bypass -File Tools/ImageGen/generate_title_fangkuai_zhuan_bu_ting.ps1 `
   -ApiBase https://api.apiyi.com/v1 `
-  -ApiKeyFile C:\\path\\to\\api_key.txt
+  -ApiKeyFile Tools/UiRestyleV05/_secrets/openai_api_key.txt
 ```
 
 Or call directly:
@@ -68,7 +76,7 @@ Or call directly:
 ```powershell
 python Tools/ImageGen/apiyi_image_gen.py `
   --api-base https://api.apiyi.com/v1 `
-  --api-key-file C:\\path\\to\\api_key.txt `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --size 1536x1024 `
   --quality low `

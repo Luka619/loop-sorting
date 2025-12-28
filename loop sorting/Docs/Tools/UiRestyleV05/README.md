@@ -1,25 +1,20 @@
-# UiRestyleV05（Creamy Plastic）
+﻿# UiRestyleV05锛圕reamy Plastic锛?
+## API易 / gpt-image-1.5 (proxy only)
+- Base URL: `https://api.apiyi.com/v1` (proxy only; never use `https://api.openai.com/v1`)
+- Key file: `Tools/UiRestyleV05/_secrets/openai_api_key.txt` (proxy key, one line, no quotes, do not commit)
+- This same key file can be reused by `Tools/ImageGen` for single-asset generation.
 
-> 总索引：`../../README.md`
+> 鎬荤储寮曪細`../../README.md`
 
-目的：用大模型批量生成 UI PNG，并**只替换 Unity 工程里的 `.png`（不动 `.meta`）**，方便快速横向对比多套 UI 资产。
+鐩殑锛氱敤澶фā鍨嬫壒閲忕敓鎴?UI PNG锛屽苟**鍙浛鎹?Unity 宸ョ▼閲岀殑 `.png`锛堜笉鍔?`.meta`锛?*锛屾柟渚垮揩閫熸í鍚戝姣斿濂?UI 璧勪骇銆?
+**閲嶈锛堜笉鍋氳鍒?瀵归綈锛?*  
+鏈伐鍏烽摼涓嶅啀鍋氫换浣曗€滃榻愬昂瀵?鎶犲浘/瑁佸垏/bbox 褰掍竴鍖栤€濄€傞€忔槑 UI 璧勪骇闈炲父瀹规槗鍥犱负杩欎簺鍚庡鐞嗚€岃鎴柇锛堥槾褰?澶栬疆寤撴渶甯歌锛夈€傛纭仛娉曟槸锛?*浠庢簮澶寸敓鎴愭椂灏辩暀瓒冲畨鍏ㄨ竟璺濓紙padding锛?*銆?
+## 1) 浣犻渶瑕佸噯澶囦粈涔?- 鐢熸垚鐨勬枃浠跺悕蹇呴』涓庡伐绋嬪唴鐩爣鏂囦欢涓€鑷达紙鍚屽悕瑕嗙洊锛夈€? 
+- 鐢熸垚鐨勭洰褰曠粨鏋勫缓璁繚鎸佷竴鑷达紙渚嬪 `UI_Sprites/`銆乣World_Sprites/`銆乣setting_page_assets/`銆乣BoosterPurchase/`銆乣ResourcesRoot/`锛夈€?- API Key锛氭斁鍒?`Tools/UiRestyleV05/_secrets/openai_api_key.txt`锛堜竴琛岋紝涓嶈寮曞彿锛屼笉鎻愪氦锛涜繖鏄?*浠ｇ悊**鐨?Key锛夈€?- **绂佹浣跨敤瀹樻柟 API锛坄https://api.openai.com/v1`锛?*锛屽繀椤婚€氳繃浠ｇ悊璋冪敤銆?
+## 2) Prompt锛堜富瀛樺偍锛歅rompt DB锛?- Prompt DB锛歚Tools/UiRestyleV05/_prompt_db_all_v05.json`
+- 锛堝彲閫夛級瀵煎嚭娴忚鐗?Markdown锛歚python Tools/UiRestyleV05/PromptDbCli.py export-md --out Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
 
-**重要（不做裁切/对齐）**  
-本工具链不再做任何“对齐尺寸/抠图/裁切/bbox 归一化”。透明 UI 资产非常容易因为这些后处理而被截断（阴影/外轮廓最常见）。正确做法是：**从源头生成时就留足安全边距（padding）**。
-
-## 1) 你需要准备什么
-- 生成的文件名必须与工程内目标文件一致（同名覆盖）。  
-- 生成的目录结构建议保持一致（例如 `UI_Sprites/`、`World_Sprites/`、`setting_page_assets/`、`BoosterPurchase/`、`ResourcesRoot/`）。
-- API Key：放到 `Tools/UiRestyleV05/_secrets/openai_api_key.txt`（一行，不要引号，不提交；这是**代理**的 Key）。
-- **禁止使用官方 API（`https://api.openai.com/v1`）**，必须通过代理调用。
-
-## 2) Prompt（主存储：Prompt DB）
-- Prompt DB：`Tools/UiRestyleV05/_prompt_db_all_v05.json`
-- （可选）导出浏览版 Markdown：`python Tools/UiRestyleV05/PromptDbCli.py export-md --out Tools/UiRestyleV05/_prompt_sheet_all_v05.md`
-
-## 3) 用代理批量出图（必须）
-统一使用代理（示例：`https://api.apiyi.com/v1`），不要直连官方 API。
-
+## 3) 鐢ㄤ唬鐞嗘壒閲忓嚭鍥撅紙蹇呴』锛?缁熶竴浣跨敤浠ｇ悊锛堢ず渚嬶細`https://api.apiyi.com/v1`锛夛紝涓嶈鐩磋繛瀹樻柟 API銆?
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
@@ -35,8 +30,7 @@ python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --overwrite
 ```
 
-背景图注意：`UI_Sprites/bg_main.png` 这类主背景不要用透明背景生成，否则可能得到“全透明背景”导致关卡内背景缺失。建议单独用 `--background opaque` 重出：
-
+鑳屾櫙鍥炬敞鎰忥細`UI_Sprites/bg_main.png` 杩欑被涓昏儗鏅笉瑕佺敤閫忔槑鑳屾櫙鐢熸垚锛屽惁鍒欏彲鑳藉緱鍒扳€滃叏閫忔槑鑳屾櫙鈥濆鑷村叧鍗″唴鑳屾櫙缂哄け銆傚缓璁崟鐙敤 `--background opaque` 閲嶅嚭锛?
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
@@ -51,38 +45,33 @@ python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --overwrite
 ```
 
-## 4) 覆盖到 Unity 工程（保留 `.meta` + 自动备份）
-```powershell
+## 4) 瑕嗙洊鍒?Unity 宸ョ▼锛堜繚鐣?`.meta` + 鑷姩澶囦唤锛?```powershell
 powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -SourceDir Tools/UiRestyleV05/_openai_output -Backup -AllowPartial
 ```
 
-（可选）也替换 World_Sprites：
-```powershell
+锛堝彲閫夛級涔熸浛鎹?World_Sprites锛?```powershell
 powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -SourceDir Tools/UiRestyleV05/_openai_output -IncludeWorldSprites -Backup -AllowPartial
 ```
 
-（可选）也替换额外 Resources（设置页/BoosterPurchase 等）：
-```powershell
+锛堝彲閫夛級涔熸浛鎹㈤澶?Resources锛堣缃〉/BoosterPurchase 绛夛級锛?```powershell
 powershell -ExecutionPolicy Bypass -File Tools/UiRestyleV05/ReplacePngs.ps1 -SourceDir Tools/UiRestyleV05/_openai_output -IncludeExtraResources -Backup -AllowPartial
 ```
 
-## 5) 网页版/其它来源图片的整理（可选）
-如果你的图片来自网页版下载或其它来源，只想把它们按目录结构“拷贝成可替换的形态”，可以用：
+## 5) 缃戦〉鐗?鍏跺畠鏉ユ簮鍥剧墖鐨勬暣鐞嗭紙鍙€夛級
+濡傛灉浣犵殑鍥剧墖鏉ヨ嚜缃戦〉鐗堜笅杞芥垨鍏跺畠鏉ユ簮锛屽彧鎯虫妸瀹冧滑鎸夌洰褰曠粨鏋勨€滄嫹璐濇垚鍙浛鎹㈢殑褰㈡€佲€濓紝鍙互鐢細
 
 ```powershell
 python Tools/UiRestyleV05/NormalizeWebImages.py --in-dir D:\\ui_web_out --out-dir Tools/UiRestyleV05/_web_output --allow-partial --overwrite
 ```
 
-说明：这个脚本**不会**做任何裁切/对齐/尺寸归一化，只负责结构化拷贝并统一保存为 PNG。
+璇存槑锛氳繖涓剼鏈?*涓嶄細**鍋氫换浣曡鍒?瀵归綈/灏哄褰掍竴鍖栵紝鍙礋璐ｇ粨鏋勫寲鎷疯礉骞剁粺涓€淇濆瓨涓?PNG銆?
+## 6) 澶氬 UI 璧勪骇蹇€熷垏鎹紙妯悜瀵规瘮锛?鎺ㄨ崘鎶婃瘡涓€濂?UIKit 鏀惧埌 `Assets/Resources/<PackRoot>/...`锛岀劧鍚庡彧鏀逛竴涓牴鐩綍灏辫兘鏁村鍒囨崲锛?
+- 瑕嗙洊鍒版寚瀹氬寘锛歚Tools/UiRestyleV05/ReplacePngs.ps1 -KitRoot Assets/Resources/<PackRoot>`
+- 杩愯鏃跺垏鎹紙PlayerPrefs锛夛細`LoopSortingUIKit.ResourcesRoot = "<PackRoot>"`
 
-## 6) 多套 UI 资产快速切换（横向对比）
-推荐把每一套 UIKit 放到 `Assets/Resources/<PackRoot>/...`，然后只改一个根目录就能整套切换：
-
-- 覆盖到指定包：`Tools/UiRestyleV05/ReplacePngs.ps1 -KitRoot Assets/Resources/<PackRoot>`
-- 运行时切换（PlayerPrefs）：`LoopSortingUIKit.ResourcesRoot = "<PackRoot>"`
-
-示例（Unity Editor / 开发版）：
+绀轰緥锛圲nity Editor / 寮€鍙戠増锛夛細
 ```csharp
 PlayerPrefs.SetString("LoopSortingUIKit.ResourcesRoot", "loop_sorting_ui_components_v05_pack_b");
 PlayerPrefs.Save();
 ```
+

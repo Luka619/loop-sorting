@@ -27,9 +27,11 @@
 6) （可选）World_Sprites：完成锁等世界 UI 视觉统一
 
 ## 4) 直接用 API 易批量出图到 `_openai_output`
+（必须使用代理 `https://api.apiyi.com/v1`，不要直连官方 API。）
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --quality low `
   --gen-size auto `
@@ -44,6 +46,7 @@ python Tools/UiRestyleV05/GenerateOpenAiImages.py `
 ```powershell
 python Tools/UiRestyleV05/GenerateOpenAiImages.py `
   --api-base https://api.apiyi.com/v1 `
+  --api-key-file Tools/UiRestyleV05/_secrets/openai_api_key.txt `
   --model gpt-image-1.5 `
   --quality low `
   --gen-size auto `

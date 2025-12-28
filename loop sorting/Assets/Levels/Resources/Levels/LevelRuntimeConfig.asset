@@ -17,4 +17,4 @@ MonoBehaviour:
   flowStartIndex: 0
   resultNewMechanicLevelIndices: 0a00000014000000
   useRuntimeUiLayoutOverrides: 0
-  allowRuntimeUiAutoCreate: 1
+  allowRuntimeUiAutoCreate: 0

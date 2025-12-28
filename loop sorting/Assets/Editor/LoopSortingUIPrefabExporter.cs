@@ -91,7 +91,8 @@ namespace LoopSorting.Editor
 
                 SavePanelPrefab<SettingsPanelPrefabRefs>(canvasGO.transform, "SettingsPanel", "SettingsPanel", overwriteExisting);
                 SavePanelPrefab<ShopPanelPrefabRefs>(canvasGO.transform, "ShopPanel", "ShopPanel", overwriteExisting);
-                SavePanelPrefab<ResultPanelPrefabRefs>(canvasGO.transform, "ResultPanel", "ResultPanel", overwriteExisting);
+                SavePanelPrefab<ResultPanelPrefabRefs>(canvasGO.transform, "ResultPanel_Win", "ResultPanel_Win", overwriteExisting);
+                SavePanelPrefab<ResultPanelPrefabRefs>(canvasGO.transform, "ResultPanel_Lose", "ResultPanel_Lose", overwriteExisting);
                 SavePanelPrefab<BoosterPurchasePanelPrefabRefs>(canvasGO.transform, "BoosterPurchasePanel", "BoosterPurchasePanel", overwriteExisting);
                 GenerateGameplayHudUnder(root.transform, overwriteExisting);
 

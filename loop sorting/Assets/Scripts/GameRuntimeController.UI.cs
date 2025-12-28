@@ -28,7 +28,8 @@ namespace LoopSorting
 
         private const string SettingsPanelPrefabResourcePath = "UI/SettingsPanel";
         private const string ShopPanelPrefabResourcePath = "UI/ShopPanel";
-        private const string ResultPanelPrefabResourcePath = "UI/ResultPanel";
+        private const string ResultPanelWinPrefabResourcePath = "UI/ResultPanel_Win";
+        private const string ResultPanelLosePrefabResourcePath = "UI/ResultPanel_Lose";
         private const string BoosterPurchasePanelPrefabResourcePath = "UI/BoosterPurchasePanel";
         private const string GameplayHudPrefabResourcePath = "UI/GameplayHUD";
         private const string MainMenuCanvasPrefabResourcePath = "UI/MainMenuCanvas";
@@ -182,6 +183,8 @@ namespace LoopSorting
         private RectTransform _lockChipLayer;
         private readonly Dictionary<int, RectTransform> _lockChipByBox = new Dictionary<int, RectTransform>();
         private GameObject _resultPanel;
+        private GameObject _resultPanelWin;
+        private GameObject _resultPanelLose;
         private TMP_Text _resultText;
         private Button _primaryButton;
         private Button _secondaryButton;

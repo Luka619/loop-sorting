@@ -187,7 +187,7 @@ namespace LoopSorting
                 _audio.PlayBgmStinger(win ? BgmStingerId.Win : BgmStingerId.Lose);
                 _audio.Bgm.FadeOutLoops(fadeSeconds: 0.9f);
             }
-            EnsureResultPanel();
+            EnsureResultPanelForMode(win);
             EnsureResultCloseButton();
             CaptureResultButtonsBaseLayoutIfNeeded();
 
@@ -417,7 +417,6 @@ namespace LoopSorting
 
             EnsureResultPanelLayoutRefs();
             EnsureResultWinLayout();
-            EnsureResultLoseLayout();
             ApplyResultPanelLayoutForWin();
             ApplyResultButtonsLayoutForWinOverlay();
 
@@ -651,7 +650,6 @@ namespace LoopSorting
         private void ConfigureResultLoseReviveLayout()
         {
             EnsureResultPanelLayoutRefs();
-            EnsureResultWinLayout();
             EnsureResultLoseLayout();
             RestoreResultPanelLayoutBase();
             ApplyResultPanelLayoutForLoseOverlay();
@@ -1116,11 +1114,33 @@ namespace LoopSorting
 
         private void SetResultWinLayoutActive(bool active)
         {
+            if (_resultWinRoot == null)
+            {
+                EnsureResultPanelLayoutRefs();
+                if (_resultPanelLayoutRoot != null)
+                {
+                    _resultWinRoot = _resultPanelLayoutRoot.Find("WinLayout") as RectTransform;
+                }
+            }
             if (_resultWinRoot != null) _resultWinRoot.gameObject.SetActive(active);
         }
 
         private void SetResultLoseLayoutActive(bool active)
         {
+            if (_resultLoseCardRoot == null)
+            {
+                EnsureResultPanelLayoutRefs();
+                if (_resultPanelLayoutRoot != null)
+                {
+                    _resultLoseCardRoot = _resultPanelLayoutRoot.Find("LoseCard") as RectTransform;
+                    if (_resultLoseCardRoot != null)
+                    {
+                        _resultLoseCardBg = _resultLoseCardRoot.GetComponent<Image>();
+                        _resultLoseCardIcon = _resultLoseCardRoot.Find("Icon")?.GetComponent<Image>();
+                        _resultLoseCardDesc = _resultLoseCardRoot.Find("Desc")?.GetComponent<TMP_Text>();
+                    }
+                }
+            }
             if (_resultLoseCardRoot != null) _resultLoseCardRoot.gameObject.SetActive(active);
         }
 
@@ -1873,54 +1893,161 @@ namespace LoopSorting
         }
 
 
+        private void ResetResultPanelRefs()
+        {
+            _resultText = null;
+            _primaryButton = null;
+            _secondaryButton = null;
+            _primaryLabel = null;
+            _secondaryLabel = null;
+            _resultPrimaryIcon = null;
+            _resultSecondaryIcon = null;
+            _resultCloseButton = null;
+            _resultCloseImage = null;
+
+            _resultButtonsBaseLayoutCaptured = false;
+            _resultPanelBaseLayoutCaptured = false;
+
+            _resultWinRewardRootPrimary = null;
+            _resultWinRewardAdPrimary = null;
+            _resultWinRewardAmountPrimary = null;
+            _resultWinRewardCoinPrimary = null;
+            _resultWinRewardRootSecondary = null;
+            _resultWinRewardAdSecondary = null;
+            _resultWinRewardAmountSecondary = null;
+            _resultWinRewardCoinSecondary = null;
+
+            _resultPanelBoxRect = null;
+            _resultPanelBoxImage = null;
+            _resultPanelLayoutRoot = null;
+            _resultGlassOverlayRect = null;
+            _resultGlassOverlayImage = null;
+
+            _resultWinRoot = null;
+            _resultWinCoinsRoot = null;
+            _resultWinLivesRoot = null;
+            _resultWinCoinsText = null;
+            _resultWinLivesText = null;
+            _resultWinPercentText = null;
+            _resultWinTitleImage = null;
+            _resultWinFeatureRoot = null;
+            _resultWinFeatureLabel = null;
+            _resultWinFeatureProgress = null;
+            _resultWinFeatureFill = null;
+            _resultWinFeatureIcon = null;
+
+            _resultLoseCardRoot = null;
+            _resultLoseCardBg = null;
+            _resultLoseCardDesc = null;
+            _resultLoseCardIcon = null;
+            _resultLoseTitleImage = null;
+        }
+
+        private void BindResultPanelPrefab(ResultPanelPrefabRefs prefab, bool hasKit)
+        {
+            if (prefab == null) return;
+
+            prefab.AutoAssign();
+
+            _resultPanel = prefab.gameObject;
+            _resultText = prefab.resultText;
+            _primaryButton = prefab.primaryButton;
+            _primaryLabel = prefab.primaryLabel;
+            _resultPrimaryIcon = prefab.primaryIcon;
+            _secondaryButton = prefab.secondaryButton;
+            _secondaryLabel = prefab.secondaryLabel;
+            _resultSecondaryIcon = prefab.secondaryIcon;
+
+            ConfigureResultPanelButtons();
+            RebindResultPanelPrefabSprites(hasKit);
+            EnsureResultDimLayer();
+            EnsureResultGlassOverlay();
+            EnsureResultPanelLayoutRefs();
+        }
+
+        private void ConfigureResultPanelButtons()
+        {
+            if (_primaryButton != null)
+            {
+                _primaryButton.onClick.RemoveAllListeners();
+                _primaryButton.onClick.AddListener(OnPrimaryClicked);
+            }
+            if (_secondaryButton != null)
+            {
+                _secondaryButton.onClick.RemoveAllListeners();
+                _secondaryButton.onClick.AddListener(OnSecondaryClicked);
+            }
+        }
+
+        private void UseResultPanel(GameObject panel)
+        {
+            if (panel == null) return;
+
+            if (_resultPanel != null && _resultPanel != panel)
+            {
+                _resultPanel.SetActive(false);
+            }
+
+            _resultPanel = panel;
+            ResetResultPanelRefs();
+
+            var prefab = _resultPanel.GetComponent<ResultPanelPrefabRefs>();
+            if (prefab == null && AllowRuntimeUiAutoCreate)
+            {
+                prefab = _resultPanel.AddComponent<ResultPanelPrefabRefs>();
+            }
+            if (prefab != null)
+            {
+                BindResultPanelPrefab(prefab, LoopSortingUIKit.IsAvailable());
+            }
+        }
+
         private void EnsureResultPanel()
         {
+            EnsureResultPanelForMode(win: true);
+            EnsureResultPanelForMode(win: false);
+        }
+
+        private void EnsureResultPanelForMode(bool win)
+        {
             if (_uiCanvas == null) return;
-            if (_resultPanel != null) return;
+
+            var target = win ? _resultPanelWin : _resultPanelLose;
+            if (target != null)
+            {
+                UseResultPanel(target);
+                return;
+            }
 
             bool hasKit = LoopSortingUIKit.IsAvailable();
+            string resourcePath = win ? ResultPanelWinPrefabResourcePath : ResultPanelLosePrefabResourcePath;
 
-            if (TryInstantiateUiPrefab(ResultPanelPrefabResourcePath, out ResultPanelPrefabRefs prefab))
+            if (TryInstantiateUiPrefab(resourcePath, out ResultPanelPrefabRefs prefab))
             {
-                prefab.AutoAssign();
-
-                _resultPanel = prefab.gameObject;
-                _resultText = prefab.resultText;
-                _primaryButton = prefab.primaryButton;
-                _primaryLabel = prefab.primaryLabel;
-                _resultPrimaryIcon = prefab.primaryIcon;
-                _secondaryButton = prefab.secondaryButton;
-                _secondaryLabel = prefab.secondaryLabel;
-                _resultSecondaryIcon = prefab.secondaryIcon;
-
-                if (_primaryButton != null)
-                {
-                    _primaryButton.onClick.RemoveAllListeners();
-                    _primaryButton.onClick.AddListener(OnPrimaryClicked);
-                }
-                if (_secondaryButton != null)
-                {
-                    _secondaryButton.onClick.RemoveAllListeners();
-                    _secondaryButton.onClick.AddListener(OnSecondaryClicked);
-                }
-
-                RebindResultPanelPrefabSprites(hasKit);
-                EnsureResultDimLayer();
-                EnsureResultGlassOverlay();
-                EnsureResultPanelLayoutRefs();
-                EnsureResultWinLayout();
-                EnsureResultLoseLayout();
-                CaptureResultPanelBaseLayoutIfNeeded();
+                ResetResultPanelRefs();
+                BindResultPanelPrefab(prefab, hasKit);
+                if (win) _resultPanelWin = _resultPanel;
+                else _resultPanelLose = _resultPanel;
                 _resultPanel.SetActive(false);
                 return;
             }
 
             if (!AllowRuntimeUiAutoCreate) return;
 
-            var panelGO = new GameObject("ResultPanel");
+            var panelGO = new GameObject(win ? "ResultPanel_Win" : "ResultPanel_Lose");
             panelGO.transform.SetParent(_uiCanvas.transform, false);
             MarkRuntimeUi(panelGO);
+
+            if (_resultPanel != null && _resultPanel != panelGO)
+            {
+                _resultPanel.SetActive(false);
+            }
+
             _resultPanel = panelGO;
+            if (win) _resultPanelWin = panelGO;
+            else _resultPanelLose = panelGO;
+
+            ResetResultPanelRefs();
 
             var dim = panelGO.AddComponent<Image>();
             dim.raycastTarget = true;
@@ -1957,18 +2084,20 @@ namespace LoopSorting
                     decorPath: "UI_Sprites/panel_result_decor.png",
                     fallbackSprite: fallback,
                     noSpriteColor: new Color(0.12f, 0.12f, 0.12f, 0.95f));
-
-                contentParent = TryCreatePaddingTrimmedLayoutRoot(
-                    parent: boxGO.transform,
-                    panelRect: boxRect,
-                    sprite: boxImg.sprite,
-                    desiredVisibleSizeUnits: new Vector2(900f, 760f),
-                    centerStretchFraction: 1f / 3f);
             }
             else
             {
                 boxImg.color = new Color(0.12f, 0.12f, 0.12f, 0.95f);
             }
+
+            var contentGO = new GameObject("LayoutRoot");
+            contentGO.transform.SetParent(boxGO.transform, false);
+            var contentRect = contentGO.AddComponent<RectTransform>();
+            contentRect.anchorMin = Vector2.zero;
+            contentRect.anchorMax = Vector2.one;
+            contentRect.offsetMin = Vector2.zero;
+            contentRect.offsetMax = Vector2.zero;
+            contentParent = contentGO.transform;
 
             var bannerGO = new GameObject("Banner");
             bannerGO.transform.SetParent(contentParent, false);
@@ -1980,26 +2109,42 @@ namespace LoopSorting
                 bannerImg.type = bannerImg.sprite != null && bannerImg.sprite.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
                 bannerImg.color = Color.white;
             }
+            else
+            {
+                bannerImg.color = new Color(1f, 1f, 1f, 0f);
+            }
             var bannerRect = bannerGO.GetComponent<RectTransform>();
             bannerRect.anchorMin = new Vector2(0.5f, 1f);
             bannerRect.anchorMax = new Vector2(0.5f, 1f);
             bannerRect.pivot = new Vector2(0.5f, 1f);
-            bannerRect.anchoredPosition = new Vector2(0f, -80f);
-            bannerRect.sizeDelta = new Vector2(620f, 96f);
+            bannerRect.anchoredPosition = new Vector2(0f, 0f);
+            bannerRect.sizeDelta = new Vector2(260f, 66f);
 
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(contentParent, false);
-            _resultText = titleGO.AddComponent<TextMeshProUGUI>();
-            _resultText.raycastTarget = false;
-            _resultText.alignment = TextAlignmentOptions.Center;
-            _resultText.fontSize = 62;
-            _resultText.color = Color.white;
-            var titleRect = _resultText.GetComponent<RectTransform>();
+            var title = titleGO.AddComponent<TextMeshProUGUI>();
+            title.raycastTarget = false;
+            title.alignment = TextAlignmentOptions.Center;
+            title.enableWordWrapping = false;
+            title.color = Color.white;
+            title.fontSize = 62;
+            title.font = TMP_Settings.defaultFontAsset;
+            title.text = LocalizedText.ResultVictory;
+            ApplyTmpOutlineUnderlay(
+                title,
+                outlineWidth: 0.22f,
+                outlineColor: new Color(0.10f, 0.06f, 0.04f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.35f),
+                underlayOffset: new Vector2(2f, -2f),
+                underlaySoftness: 0.28f,
+                underlayDilate: 0.02f);
+            var titleRect = title.GetComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
             titleRect.anchoredPosition = new Vector2(0f, -84f);
             titleRect.sizeDelta = new Vector2(600f, 90f);
+            _resultText = title;
 
             _primaryButton = CreateLongButton(
                 parent: contentParent,
@@ -2012,7 +2157,6 @@ namespace LoopSorting
                 label: LocalizedText.ResultNext,
                 out _primaryLabel,
                 reserveIconSpace: true);
-            _primaryButton.onClick.AddListener(OnPrimaryClicked);
 
             _resultPrimaryIcon = CreateButtonIcon(_primaryButton.transform);
 
@@ -2027,19 +2171,18 @@ namespace LoopSorting
                 label: LocalizedText.SettingsRetry,
                 out _secondaryLabel,
                 reserveIconSpace: true);
-            _secondaryButton.onClick.AddListener(OnSecondaryClicked);
 
             _resultSecondaryIcon = CreateButtonIcon(_secondaryButton.transform);
+            ConfigureResultPanelButtons();
 
             EnsureResultPanelLayoutRefs();
-            EnsureResultWinLayout();
-            EnsureResultLoseLayout();
-            CaptureResultPanelBaseLayoutIfNeeded();
             _resultPanel.SetActive(false);
         }
 
+
+
+
     }
 }
-
 
 

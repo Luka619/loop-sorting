@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 15
   m_EditorClassIdentifier: 
-  beltCapacity: 24
+  beltCapacity: 62
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1
@@ -53,14 +53,17 @@ MonoBehaviour:
       count: 12
       hidden: 0
     - color: 1
-      count: 12
+      count: 6
+      hidden: 0
+    - color: 2
+      count: 6
       hidden: 1
     initialBlocks: 
     beltSlotIndex: 0
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: -0, y: -4.5}
+    position: {x: 1.5, y: -5}
     size: {x: 1.53, y: 4.08}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -68,18 +71,21 @@ MonoBehaviour:
     opening: 3
     autoAlignSlot: 1
     colorCounts:
-    - color: 1
+    - color: 0
       count: 12
       hidden: 0
-    - color: 2
-      count: 12
+    - color: 3
+      count: 6
+      hidden: 0
+    - color: 4
+      count: 6
       hidden: 1
     initialBlocks: 
     beltSlotIndex: 0
     locked: 0
     unlockColor: 0
   - name: Box 3
-    position: {x: -1, y: -0.5}
+    position: {x: -1, y: 0.5}
     size: {x: 4.08, y: 1.53}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8
@@ -87,18 +93,24 @@ MonoBehaviour:
     opening: 0
     autoAlignSlot: 1
     colorCounts:
-    - color: 2
-      count: 12
+    - color: 0
+      count: 6
+      hidden: 0
+    - color: 1
+      count: 6
+      hidden: 0
+    - color: 3
+      count: 6
       hidden: 0
     - color: 5
-      count: 12
+      count: 6
       hidden: 1
     initialBlocks: 
     beltSlotIndex: 0
     locked: 0
     unlockColor: 0
   - name: Box 4
-    position: {x: 1.5, y: 2}
+    position: {x: 2.5, y: -0}
     size: {x: 4.08, y: 1.53}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8
@@ -106,11 +118,92 @@ MonoBehaviour:
     opening: 1
     autoAlignSlot: 1
     colorCounts:
-    - color: 5
-      count: 12
-      hidden: 0
     - color: 0
-      count: 12
+      count: 6
+      hidden: 0
+    - color: 2
+      count: 6
+      hidden: 1
+    - color: 4
+      count: 6
+      hidden: 0
+    - color: 5
+      count: 6
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 5
+    position: {x: 3, y: 4.5}
+    size: {x: 1.53, y: 4.08}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 8
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 0
+      count: 6
+      hidden: 0
+    - color: 1
+      count: 6
+      hidden: 1
+    - color: 2
+      count: 6
+      hidden: 0
+    - color: 5
+      count: 6
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 6
+    position: {x: -2, y: -6.5}
+    size: {x: 1.53, y: 4.08}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 8
+    opening: 3
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 0
+      count: 6
+      hidden: 0
+    - color: 3
+      count: 6
+      hidden: 1
+    - color: 4
+      count: 6
+      hidden: 0
+    - color: 5
+      count: 6
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 0
+    locked: 0
+    unlockColor: 0
+  - name: Box 7
+    position: {x: -2.5, y: -2}
+    size: {x: 4.08, y: 1.53}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 8
+    rows: 3
+    opening: 0
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 1
+      count: 6
+      hidden: 0
+    - color: 2
+      count: 6
+      hidden: 0
+    - color: 3
+      count: 6
+      hidden: 0
+    - color: 4
+      count: 6
       hidden: 1
     initialBlocks: 
     beltSlotIndex: 0

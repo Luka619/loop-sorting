@@ -28,7 +28,8 @@ namespace LoopSorting.Editor
                  "GameplayHUD",
                  "SettingsPanel",
                  "ShopPanel",
-                 "ResultPanel",
+                 "ResultPanel_Win",
+                 "ResultPanel_Lose",
                  "BoosterPurchasePanel",
              };
 
@@ -76,7 +77,8 @@ namespace LoopSorting.Editor
                  "GameplayHUD",
                  "SettingsPanel",
                  "ShopPanel",
-                 "ResultPanel",
+                 "ResultPanel_Win",
+                 "ResultPanel_Lose",
                  "BoosterPurchasePanel",
             };
 

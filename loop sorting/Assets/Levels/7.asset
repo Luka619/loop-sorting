@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 7
   m_EditorClassIdentifier: 
-  beltCapacity: 39
+  beltCapacity: 32
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1
@@ -48,10 +48,13 @@ MonoBehaviour:
     autoAlignSlot: 1
     colorCounts:
     - color: 0
-      count: 12
+      count: 18
       hidden: 0
     - color: 1
-      count: 12
+      count: 3
+      hidden: 0
+    - color: 2
+      count: 3
       hidden: 0
     initialBlocks: 
     beltSlotIndex: 2
@@ -66,14 +69,14 @@ MonoBehaviour:
     opening: 2
     autoAlignSlot: 1
     colorCounts:
-    - color: 2
-      count: 9
-      hidden: 0
-    - color: 3
-      count: 9
+    - color: 0
+      count: 18
       hidden: 0
     - color: 1
-      count: 6
+      count: 3
+      hidden: 0
+    - color: 3
+      count: 3
       hidden: 0
     initialBlocks: 
     beltSlotIndex: 25
@@ -88,13 +91,13 @@ MonoBehaviour:
     opening: 2
     autoAlignSlot: 1
     colorCounts:
-    - color: 3
-      count: 15
+    - color: 2
+      count: 12
+      hidden: 0
+    - color: 4
+      count: 6
       hidden: 0
     - color: 0
-      count: 3
-      hidden: 0
-    - color: 2
       count: 6
       hidden: 0
     initialBlocks: 
@@ -110,16 +113,60 @@ MonoBehaviour:
     opening: 3
     autoAlignSlot: 1
     colorCounts:
-    - color: 0
-      count: 9
+    - color: 3
+      count: 12
       hidden: 0
-    - color: 1
+    - color: 4
       count: 6
       hidden: 0
-    - color: 2
-      count: 9
+    - color: 0
+      count: 6
       hidden: 0
     initialBlocks: 
     beltSlotIndex: 5
+    locked: 0
+    unlockColor: 0
+  - name: Box 5
+    position: {x: 5, y: -3.5}
+    size: {x: 0.90000004, y: 2.4}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 8
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 1
+      count: 18
+      hidden: 0
+    - color: 2
+      count: 3
+      hidden: 0
+    - color: 3
+      count: 3
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 9
+    locked: 0
+    unlockColor: 0
+  - name: Box 6
+    position: {x: 3, y: -3.5}
+    size: {x: 0.90000004, y: 2.4}
+    color: {r: 0, g: 0, b: 0, a: 0}
+    columns: 3
+    rows: 8
+    opening: 2
+    autoAlignSlot: 1
+    colorCounts:
+    - color: 4
+      count: 12
+      hidden: 0
+    - color: 2
+      count: 6
+      hidden: 0
+    - color: 3
+      count: 6
+      hidden: 0
+    initialBlocks: 
+    beltSlotIndex: 12
     locked: 0
     unlockColor: 0

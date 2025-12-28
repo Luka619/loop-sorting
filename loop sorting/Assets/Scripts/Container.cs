@@ -150,6 +150,27 @@ namespace LoopSorting
             return true;
         }
 
+        public bool TryForcePush(Block block, bool ignoreBusy = true, bool ignoreLocked = false)
+        {
+            if (_locked && !ignoreLocked)
+            {
+                return false;
+            }
+
+            if (_busy && !ignoreBusy)
+            {
+                return false;
+            }
+
+            if (_blocks.Count >= _capacity)
+            {
+                return false;
+            }
+
+            _blocks.Insert(0, block);
+            return true;
+        }
+
         public bool IsUniform()
         {
             if (_blocks.Count <= 1)

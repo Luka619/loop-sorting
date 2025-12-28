@@ -94,6 +94,12 @@ namespace LoopSorting
             return true;
         }
 
+        public void ClearSlot(int index)
+        {
+            ValidateIndex(index);
+            _slots[index] = null;
+        }
+
         public Block? GetSlot(int index)
         {
             ValidateIndex(index);

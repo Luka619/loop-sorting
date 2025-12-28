@@ -3,20 +3,24 @@
   "WorkspaceRootPath": "D:\\A-workspace\\loop-sorting\\loop sorting\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|d:\\a-workspace\\loop-sorting\\loop sorting\\assets\\shaders\\loopsortingunlittexture.shader||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|solutionrelative:assets\\shaders\\loopsortingunlittexture.shader||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\A-workspace\\loop-sorting\\loop sorting\\Library\\PackageCache\\com.unity.ugui@1.0.0\\Runtime\\UI\\Core\\Image.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Library\\PackageCache\\com.unity.ugui@1.0.0\\Runtime\\UI\\Core\\Image.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|d:\\a-workspace\\loop-sorting\\loop sorting\\assets\\scripts\\boxview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\boxview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|D:\\A-workspace\\loop-sorting\\loop sorting\\assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AA7C4B8C-06C4-F51B-59D8-F8F0FBA0B6A3}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{0A30ABEE-27FD-B927-5DA6-9D08FC043625}|Assembly-CSharp-Editor.csproj|D:\\A-workspace\\loop-sorting\\loop sorting\\assets\\editor\\leveleditorwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A30ABEE-27FD-B927-5DA6-9D08FC043625}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\editor\\leveleditorwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89312C0D-198A-1B71-2947-DBCA079B846E}|LoopSorting.Runtime.csproj|D:\\A-workspace\\loop-sorting\\loop sorting\\assets\\scripts\\boxview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89312C0D-198A-1B71-2947-DBCA079B846E}|LoopSorting.Runtime.csproj|solutionrelative:assets\\scripts\\boxview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89312C0D-198A-1B71-2947-DBCA079B846E}|LoopSorting.Runtime.csproj|D:\\A-workspace\\loop-sorting\\loop sorting\\assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89312C0D-198A-1B71-2947-DBCA079B846E}|LoopSorting.Runtime.csproj|solutionrelative:assets\\scripts\\levelruntimeplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -31,6 +35,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "LoopSortingUnlitTexture.shader",
+              "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Shaders\\LoopSortingUnlitTexture.shader",
+              "RelativeDocumentMoniker": "Assets\\Shaders\\LoopSortingUnlitTexture.shader",
+              "ToolTip": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Shaders\\LoopSortingUnlitTexture.shader",
+              "RelativeToolTip": "Assets\\Shaders\\LoopSortingUnlitTexture.shader",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002777|",
+              "WhenOpened": "2025-12-20T17:23:57.916Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Image.cs",
               "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Library\\PackageCache\\com.unity.ugui@1.0.0\\Runtime\\UI\\Core\\Image.cs",
               "RelativeDocumentMoniker": "Library\\PackageCache\\com.unity.ugui@1.0.0\\Runtime\\UI\\Core\\Image.cs",
@@ -43,7 +60,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "BoxView.cs",
               "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Scripts\\BoxView.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\BoxView.cs",
@@ -51,12 +68,11 @@
               "RelativeToolTip": "Assets\\Scripts\\BoxView.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-13T10:57:56.605Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T10:57:56.605Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "LevelRuntimePlayer.cs",
               "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Scripts\\LevelRuntimePlayer.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\LevelRuntimePlayer.cs",
@@ -68,7 +84,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "LevelEditorWindow.cs",
               "DocumentMoniker": "D:\\A-workspace\\loop-sorting\\loop sorting\\Assets\\Editor\\LevelEditorWindow.cs",
               "RelativeDocumentMoniker": "Assets\\Editor\\LevelEditorWindow.cs",

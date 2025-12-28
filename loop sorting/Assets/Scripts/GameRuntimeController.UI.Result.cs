@@ -16,6 +16,15 @@ namespace LoopSorting
     {
         private static TMP_SpriteAsset _resultCoinSpriteAsset;
         private Image _resultLoseTitleImage;
+        private Coroutine _resultTitleIntroRoutine;
+        private Coroutine _resultPercentIntroRoutine;
+        private Coroutine _resultPanelIntroRoutine;
+        private Coroutine _resultButtonsIntroRoutine;
+        private Vector3 _resultPanelIntroBaseScale = Vector3.one;
+        private Vector3 _resultPrimaryIntroBaseScale = Vector3.one;
+        private Vector3 _resultSecondaryIntroBaseScale = Vector3.one;
+        private bool _resultIntroScalesCaptured;
+        private bool _resultWinPercentStyled;
         private static Texture2D _resultGlassOverlayNoiseTexture;
         private static Sprite _resultGlassOverlaySprite;
         private static bool _resultGlassOverlaySpriteTried;
@@ -427,6 +436,7 @@ namespace LoopSorting
             SetResultLoseLayoutActive(false);
             UpdateResultWinStats();
             UpdateResultWinFeatureProgress();
+            PlayResultIntroAnimations(win: true);
         }
 
         private void EnsureWinRewardLayoutPrimary()
@@ -843,6 +853,136 @@ namespace LoopSorting
             {
                 _primaryButton.interactable = _progress.Coins >= LoseReviveCoinsCost;
             }
+            PlayResultIntroAnimations(win: false);
+        }
+
+        private void PlayResultIntroAnimations(bool win)
+        {
+            StopResultIntroRoutinesSafe();
+
+            if (!_resultIntroScalesCaptured)
+            {
+                if (_resultPanelBoxRect != null) _resultPanelIntroBaseScale = _resultPanelBoxRect.localScale;
+                if (_primaryButton != null) _resultPrimaryIntroBaseScale = _primaryButton.transform.localScale;
+                if (_secondaryButton != null) _resultSecondaryIntroBaseScale = _secondaryButton.transform.localScale;
+                _resultIntroScalesCaptured = true;
+            }
+
+            if (_resultPanelBoxRect != null && _resultPanelBoxRect.gameObject.activeInHierarchy)
+            {
+                _resultPanelIntroRoutine = StartCoroutine(ResultScalePopRoutine(_resultPanelBoxRect, delay: 0.02f, fromScale: 0.96f, seconds: 0.20f));
+            }
+
+            _resultButtonsIntroRoutine = StartCoroutine(ResultButtonsPopRoutine(0.18f));
+
+            var title = GetActiveResultTitleTransform(win);
+            if (title != null)
+            {
+                _resultTitleIntroRoutine = StartCoroutine(ResultScalePopRoutine(title, delay: 0.06f, fromScale: 0.88f, seconds: 0.22f));
+            }
+
+            if (win && _resultWinPercentText != null && _resultWinPercentText.gameObject.activeInHierarchy)
+            {
+                _resultPercentIntroRoutine = StartCoroutine(ResultScalePopRoutine(_resultWinPercentText.transform, delay: 0.12f, fromScale: 0.92f, seconds: 0.18f));
+            }
+        }
+
+        private void StopResultIntroRoutinesSafe()
+        {
+            if (_resultTitleIntroRoutine != null)
+            {
+                StopCoroutine(_resultTitleIntroRoutine);
+                _resultTitleIntroRoutine = null;
+            }
+            if (_resultPercentIntroRoutine != null)
+            {
+                StopCoroutine(_resultPercentIntroRoutine);
+                _resultPercentIntroRoutine = null;
+            }
+            if (_resultPanelIntroRoutine != null)
+            {
+                StopCoroutine(_resultPanelIntroRoutine);
+                _resultPanelIntroRoutine = null;
+            }
+            if (_resultButtonsIntroRoutine != null)
+            {
+                StopCoroutine(_resultButtonsIntroRoutine);
+                _resultButtonsIntroRoutine = null;
+            }
+
+            if (_resultIntroScalesCaptured)
+            {
+                if (_resultPanelBoxRect != null) _resultPanelBoxRect.localScale = _resultPanelIntroBaseScale;
+                if (_primaryButton != null) _primaryButton.transform.localScale = _resultPrimaryIntroBaseScale;
+                if (_secondaryButton != null) _secondaryButton.transform.localScale = _resultSecondaryIntroBaseScale;
+            }
+        }
+
+        private Transform GetActiveResultTitleTransform(bool win)
+        {
+            if (win)
+            {
+                if (_resultWinTitleImage != null && _resultWinTitleImage.gameObject.activeInHierarchy)
+                {
+                    return _resultWinTitleImage.transform;
+                }
+                if (_resultText != null && _resultText.gameObject.activeInHierarchy)
+                {
+                    return _resultText.transform;
+                }
+                return null;
+            }
+
+            if (_resultLoseTitleImage != null && _resultLoseTitleImage.gameObject.activeInHierarchy)
+            {
+                return _resultLoseTitleImage.transform;
+            }
+            if (_resultText != null && _resultText.gameObject.activeInHierarchy)
+            {
+                return _resultText.transform;
+            }
+            return null;
+        }
+
+        private IEnumerator ResultScalePopRoutine(Transform target, float delay, float fromScale, float seconds)
+        {
+            if (target == null) yield break;
+            var baseScale = target.localScale;
+            if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+            if (target == null) yield break;
+            target.localScale = baseScale * fromScale;
+            yield return MotionUtil.ScalePop(target, target.localScale, baseScale, seconds, easeOutBack: true);
+        }
+
+        private IEnumerator ResultButtonsPopRoutine(float delay)
+        {
+            var primary = _primaryButton != null && _primaryButton.gameObject.activeInHierarchy ? _primaryButton.transform : null;
+            var secondary = _secondaryButton != null && _secondaryButton.gameObject.activeInHierarchy ? _secondaryButton.transform : null;
+            if (primary == null && secondary == null) yield break;
+
+            Vector3 primaryBase = primary != null ? (_resultIntroScalesCaptured ? _resultPrimaryIntroBaseScale : primary.localScale) : Vector3.one;
+            Vector3 secondaryBase = secondary != null ? (_resultIntroScalesCaptured ? _resultSecondaryIntroBaseScale : secondary.localScale) : Vector3.one;
+
+            if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+
+            float fromScale = 0.92f;
+            if (primary != null) primary.localScale = primaryBase * fromScale;
+            if (secondary != null) secondary.localScale = secondaryBase * fromScale;
+
+            float seconds = 0.18f;
+            float t = 0f;
+            while (t < seconds)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float e = MotionUtil.EaseOutBack(u);
+                if (primary != null) primary.localScale = Vector3.LerpUnclamped(primaryBase * fromScale, primaryBase, e);
+                if (secondary != null) secondary.localScale = Vector3.LerpUnclamped(secondaryBase * fromScale, secondaryBase, e);
+                yield return null;
+            }
+
+            if (primary != null) primary.localScale = primaryBase;
+            if (secondary != null) secondary.localScale = secondaryBase;
         }
 
         private void EnsureResultPanelLayoutRefs()
@@ -1263,6 +1403,7 @@ namespace LoopSorting
                     _resultWinPercentText = tmp;
                 }
             }
+            EnsureResultWinPercentStyle();
 
             if (_resultWinTitleImage == null)
             {
@@ -1430,6 +1571,20 @@ namespace LoopSorting
                     _hudRightInsetUnits,
                     rightSide: false);
             }
+        }
+
+        private void EnsureResultWinPercentStyle()
+        {
+            if (_resultWinPercentText == null || _resultWinPercentStyled) return;
+            ApplyTmpOutlineUnderlay(
+                _resultWinPercentText,
+                outlineWidth: 0.28f,
+                outlineColor: new Color(0.12f, 0.07f, 0.04f, 1f),
+                underlayColor: new Color(0f, 0f, 0f, 0.55f),
+                underlayOffset: new Vector2(2f, -2f),
+                underlaySoftness: 0.28f,
+                underlayDilate: 0.02f);
+            _resultWinPercentStyled = true;
         }
 
         private static void ApplyResultWinPillRect(
@@ -1844,8 +1999,84 @@ namespace LoopSorting
 
             EnsureBgm();
 
+            if (HasAnyEmptyBoxSlots())
+            {
+                ForceFillBoxesFromBeltForRevive();
+            }
+
             // Apply one Sort (Fill) booster use as the revive benefit (no inventory consumption).
             StartCoroutine(BoosterSortSequence(consumeBooster: false));
+        }
+
+        private bool HasAnyEmptyBoxSlots()
+        {
+            if (_game == null) return false;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                var c = _game.Containers[i];
+                if (c == null) continue;
+                if (c.Count < c.Capacity) return true;
+            }
+            return false;
+        }
+
+        private void ForceFillBoxesFromBeltForRevive()
+        {
+            if (_game == null) return;
+
+            int emptySlots = 0;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                var c = _game.Containers[i];
+                if (c == null) continue;
+                emptySlots += Mathf.Max(0, c.Capacity - c.Count);
+            }
+
+            if (emptySlots <= 0) return;
+
+            int moved = 0;
+            var belt = _game.Conveyor;
+            for (int i = 0; i < belt.Length && emptySlots > 0; i++)
+            {
+                var slot = belt.GetSlot(i);
+                if (!slot.HasValue) continue;
+
+                int target = FindFirstContainerWithSpaceForForceFill();
+                if (target < 0) break;
+
+                var container = _game.Containers[target];
+                if (container == null) continue;
+                if (!container.TryForcePush(slot.Value, ignoreBusy: true, ignoreLocked: false)) continue;
+
+                belt.ClearSlot(i);
+                emptySlots--;
+                moved++;
+            }
+
+            if (moved > 0)
+            {
+                SyncContainersVisuals();
+                SyncBeltVisuals();
+                UpdateLocks();
+                UpdateCompletionStates();
+                UpdateBeltCounter();
+            }
+        }
+
+        private int FindFirstContainerWithSpaceForForceFill()
+        {
+            if (_game == null) return -1;
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                if (i < _boxLocked.Count && _boxLocked[i]) continue;
+                var c = _game.Containers[i];
+                if (c == null) continue;
+                if (c.Count >= c.Capacity) continue;
+                return i;
+            }
+            return -1;
         }
 
         private void GrantCoins(int amount)
@@ -1900,6 +2131,7 @@ namespace LoopSorting
 
         private void ResetResultPanelRefs()
         {
+            StopResultIntroRoutinesSafe();
             _resultText = null;
             _primaryButton = null;
             _secondaryButton = null;
@@ -1935,7 +2167,9 @@ namespace LoopSorting
             _resultWinLivesText = null;
             _resultWinPercentText = null;
             _resultWinTitleImage = null;
+            _resultWinPercentStyled = false;
             _resultWinFeatureRoot = null;
+            _resultIntroScalesCaptured = false;
             _resultWinFeatureLabel = null;
             _resultWinFeatureProgress = null;
             _resultWinFeatureFill = null;

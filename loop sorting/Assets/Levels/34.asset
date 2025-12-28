@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 34
   m_EditorClassIdentifier: 
-  beltCapacity: 55
+  beltCapacity: 45
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1
@@ -22,6 +22,7 @@ MonoBehaviour:
   autoResolveLayoutOverlap: 1
   minBoxToBeltGap: 0.08
   preferredBoxToBeltGap: 0.18
+  minBoxToBoxGap: 0.05
   overlapResolveIterations: 3
   cameraMaxOrthoSize: 11.37
   minBlockPixelSize: 0

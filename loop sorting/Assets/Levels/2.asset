@@ -51,11 +51,11 @@ MonoBehaviour:
       count: 12
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 43
+    beltSlotIndex: 12
     locked: 0
     unlockColor: 2
   - name: 0
-    position: {x: 2, y: 4}
+    position: {x: 1.5, y: 4}
     size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8
@@ -70,7 +70,7 @@ MonoBehaviour:
       count: 12
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 38
+    beltSlotIndex: 11
     locked: 0
     unlockColor: 4
   - name: 0
@@ -86,6 +86,6 @@ MonoBehaviour:
       count: 12
       hidden: 0
     initialBlocks: 
-    beltSlotIndex: 46
+    beltSlotIndex: 13
     locked: 0
     unlockColor: 5

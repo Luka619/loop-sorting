@@ -1,4 +1,5 @@
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEditor;
@@ -56,7 +57,7 @@ namespace LoopSorting.Editor
                 atlasWidth: 2048,
                 atlasHeight: 2048,
                 atlasPopulationMode: AtlasPopulationMode.Dynamic,
-                enableMultiAtlasSupport: false);
+                enableMultiAtlasSupport: true);
 
             if (fontAsset == null)
             {
@@ -66,6 +67,7 @@ namespace LoopSorting.Editor
 
             fontAsset.name = Path.GetFileNameWithoutExtension(OutputPath);
             fontAsset.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+            fontAsset.isMultiAtlasTexturesEnabled = true;
 
             if (!fontAsset.TryAddCharacters(characters, out string missing))
             {
@@ -80,14 +82,7 @@ namespace LoopSorting.Editor
             fontAsset.atlasPopulationMode = AtlasPopulationMode.Static;
 
             AssetDatabase.CreateAsset(fontAsset, OutputPath);
-            if (fontAsset.atlasTexture != null)
-            {
-                AssetDatabase.AddObjectToAsset(fontAsset.atlasTexture, fontAsset);
-            }
-            if (fontAsset.material != null)
-            {
-                AssetDatabase.AddObjectToAsset(fontAsset.material, fontAsset);
-            }
+            AddFontSubAssets(fontAsset);
 
             AddToTmpFallback(fontAsset);
             AssetDatabase.SaveAssets();
@@ -127,19 +122,59 @@ namespace LoopSorting.Editor
             var atlas = fontAsset.atlasTexture;
             if (atlas == null) return;
 
-            fontAsset.atlasTextures = new[] { atlas };
-            fontAsset.isMultiAtlasTexturesEnabled = false;
+            if (fontAsset.atlasTextures == null || fontAsset.atlasTextures.Length == 0)
+            {
+                fontAsset.atlasTextures = new[] { atlas };
+            }
+            fontAsset.isMultiAtlasTexturesEnabled = true;
             var so = new SerializedObject(fontAsset);
             var atlasIndex = so.FindProperty("m_AtlasTextureIndex");
             if (atlasIndex != null)
             {
-                atlasIndex.intValue = 0;
+                if (atlasIndex.intValue < 0) atlasIndex.intValue = 0;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
 
             if (fontAsset.material != null)
             {
                 fontAsset.material.SetTexture(ShaderUtilities.ID_MainTex, atlas);
+            }
+        }
+
+        private static void AddFontSubAssets(TMP_FontAsset fontAsset)
+        {
+            if (fontAsset == null) return;
+            var assetPath = AssetDatabase.GetAssetPath(fontAsset);
+            if (string.IsNullOrEmpty(assetPath)) return;
+
+            var textures = fontAsset.atlasTextures;
+            if (textures != null)
+            {
+                for (int i = 0; i < textures.Length; i++)
+                {
+                    var tex = textures[i];
+                    if (tex == null) continue;
+                    if (string.IsNullOrEmpty(tex.name))
+                    {
+                        tex.name = $"{fontAsset.name} Atlas {i}";
+                    }
+                    if (AssetDatabase.GetAssetPath(tex) != assetPath)
+                    {
+                        AssetDatabase.AddObjectToAsset(tex, fontAsset);
+                    }
+                }
+            }
+
+            if (fontAsset.material != null)
+            {
+                if (string.IsNullOrEmpty(fontAsset.material.name))
+                {
+                    fontAsset.material.name = $"{fontAsset.name} Material";
+                }
+                if (AssetDatabase.GetAssetPath(fontAsset.material) != assetPath)
+                {
+                    AssetDatabase.AddObjectToAsset(fontAsset.material, fontAsset);
+                }
             }
         }
 

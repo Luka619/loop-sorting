@@ -121,6 +121,7 @@ namespace LoopSorting
         private List<GameObject> _slotMarkers = new List<GameObject>();
         private List<Vector3> _slotBasePositions = new List<Vector3>();
         private List<Vector3> _slotCurrentPositions = new List<Vector3>();
+        private List<Vector3> _slotPrevPositions = new List<Vector3>();
         private Material _slotMarkerMaterial;
         private bool _beltLoop;
         private float _tickTimer;
@@ -128,10 +129,11 @@ namespace LoopSorting
         private int _beltCapacity;
         private float _beltSpacingUsed;
         private bool _isReleasing;
+        private bool _releaseWaitingOnBelt;
         private int? _activeReleasePort;
         private int _activeReleaseContainerIndex = -1;
-        private float _speedMultiplier = 2.5f;
-        private int _speedIndex = 0;
+        private float _speedMultiplier = 1.5f;
+        private int _speedIndex = 1;
         private bool _didLogOrangeLongNineSlice;
         private readonly GameProgressState _progress = new GameProgressState
         {
@@ -643,7 +645,7 @@ namespace LoopSorting
 
         private int? TryGetBlockedPort()
         {
-            if (!_isReleasing || _game == null || !_activeReleasePort.HasValue)
+            if (!_isReleasing || !_releaseWaitingOnBelt || _game == null || !_activeReleasePort.HasValue)
             {
                 return null;
             }
@@ -1357,9 +1359,6 @@ namespace LoopSorting
             if (_tickTimer >= conveyorTickSeconds)
             {
                 _tickTimer = 0f;
-                // Align belt visuals to base positions so in/out happens straight in front of box mouths.
-                ResetSlotPositionsToBase();
-                UpdateBeltBlockVisuals(0f);
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
                 _portEvents.Clear();
                 _game.TickConveyor(blocked, _portEvents, allowInsert: true, canInsertAtPort: CanInsertAtPort);
@@ -1375,7 +1374,7 @@ namespace LoopSorting
                     _conveyorTickSfxCountdown = 6 + _rng.Next(2); // 6~7 ticks
                 }
                 SyncBeltVisuals();
-                ResetSlotPositionsToBase();
+                UpdateSlotMarkersVisuals(0f);
                 UpdateBeltBlockVisuals(0f);
                 SyncContainersVisuals();
                 UpdateLocks();
@@ -2973,7 +2972,7 @@ namespace LoopSorting
                 EnsurePortAlignCapacity(i + 1);
                 var portAnchor = ResolvePortAlignAnchor(spec);
                 _portAlignPositions[i] = portAnchor;
-                _portAlignEnabled[i] = ShouldEnablePortAlignment(portAnchor);
+                _portAlignEnabled[i] = ShouldEnablePortAlignment(slotIndex, portAnchor);
 
                 if (debugLogBoxPorts && _beltSlots != null && slotIndex >= 0 && slotIndex < _beltSlots.Count)
                 {
@@ -3339,6 +3338,7 @@ namespace LoopSorting
                 return;
             }
 
+            CaptureSlotPrevPositions();
             int count = _slotBasePositions.Count;
             bool updateVisuals = ShouldUpdateSlotMarkerVisuals() && showSlotMarkersRuntime && _slotMarkers.Count > 0;
             Quaternion markerRotation = Quaternion.identity;
@@ -3476,7 +3476,7 @@ namespace LoopSorting
 
         private void RefreshBeltWaitingState()
         {
-            if (!_isReleasing || !_activeReleasePort.HasValue || _game == null)
+            if (!_isReleasing || !_releaseWaitingOnBelt || !_activeReleasePort.HasValue || _game == null)
             {
                 ClearBeltWaitingState();
                 return;
@@ -3606,8 +3606,21 @@ namespace LoopSorting
 
             float tolerance = GetPortAlignTolerance();
             var anchor = _portAlignPositions[containerIndex];
-            float dist = Vector3.Distance(_slotCurrentPositions[beltIndex], anchor);
-            return dist <= tolerance;
+            var current = _slotCurrentPositions[beltIndex];
+            float dist = Vector3.Distance(current, anchor);
+            if (dist <= tolerance)
+            {
+                return true;
+            }
+
+            if (_slotPrevPositions.Count > beltIndex)
+            {
+                var prev = _slotPrevPositions[beltIndex];
+                float segDist = DistancePointToSegment(anchor, prev, current);
+                return segDist <= tolerance;
+            }
+
+            return false;
         }
 
         private bool CanInsertAtPort(int beltIndex)
@@ -3706,9 +3719,14 @@ namespace LoopSorting
             return new Vector3(mouth2.x, mouth2.y, 0f);
         }
 
-        private bool ShouldEnablePortAlignment(Vector3 anchor)
+        private bool ShouldEnablePortAlignment(int beltIndex, Vector3 anchor)
         {
             if (_slotBasePositions.Count == 0)
+            {
+                return false;
+            }
+
+            if (beltIndex < 0 || beltIndex >= _slotBasePositions.Count)
             {
                 return false;
             }
@@ -3716,18 +3734,8 @@ namespace LoopSorting
             float tolerance = GetPortAlignTolerance();
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             float maxAllowed = Mathf.Max(tolerance * 2.5f, spacing * 0.8f);
-            float minDist = float.MaxValue;
-
-            for (int i = 0; i < _slotBasePositions.Count; i++)
-            {
-                float dist = Vector3.Distance(_slotBasePositions[i], anchor);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                }
-            }
-
-            return minDist <= maxAllowed;
+            float dist = Vector3.Distance(_slotBasePositions[beltIndex], anchor);
+            return dist <= maxAllowed;
         }
 
         private float GetBeltBlockBaseSize()
@@ -3794,7 +3802,7 @@ namespace LoopSorting
 
         private IEnumerator AnimateBeltSpawn(int beltIndex, Vector3 startOffset)
         {
-            float duration = Mathf.Clamp(conveyorTickSeconds * 0.55f, 0.06f, 0.22f);
+            float duration = Mathf.Clamp(conveyorTickSeconds * 4.0f, 0.12f, 0.40f);
             duration = Mathf.Max(0.0001f, duration);
 
             float t = 0f;
@@ -3829,6 +3837,33 @@ namespace LoopSorting
                 _slotCurrentPositions.Add(Vector3.zero);
             }
             _slotCurrentPositions[index] = pos;
+        }
+
+        private void CaptureSlotPrevPositions()
+        {
+            int count = _slotCurrentPositions.Count;
+            while (_slotPrevPositions.Count < count)
+            {
+                _slotPrevPositions.Add(Vector3.zero);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                _slotPrevPositions[i] = _slotCurrentPositions[i];
+            }
+        }
+
+        private static float DistancePointToSegment(Vector3 p, Vector3 a, Vector3 b)
+        {
+            var ab = b - a;
+            float denom = ab.sqrMagnitude;
+            if (denom < 0.000001f)
+            {
+                return Vector3.Distance(p, a);
+            }
+            float t = Vector3.Dot(p - a, ab) / denom;
+            t = Mathf.Clamp01(t);
+            var proj = a + ab * t;
+            return Vector3.Distance(p, proj);
         }
     }
 }

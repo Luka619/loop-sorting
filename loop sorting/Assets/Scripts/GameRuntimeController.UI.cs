@@ -187,10 +187,10 @@ namespace LoopSorting
         private Image _resultPrimaryIcon;
         private Image _resultSecondaryIcon;
         private RectTransform _resultPanelBoxRect;
-        private RectTransform _resultGlassOverlayRect;
-        private Image _resultGlassOverlayImage;
         private Image _resultPanelBoxImage;
         private RectTransform _resultPanelLayoutRoot;
+        private RectTransform _resultGlassOverlayRect;
+        private Image _resultGlassOverlayImage;
         private bool _resultPanelBaseLayoutCaptured;
         private Vector2 _resultPanelBaseAnchorMin;
         private Vector2 _resultPanelBaseAnchorMax;
@@ -1709,6 +1709,7 @@ namespace LoopSorting
             _isReleasing = true;
             _activeReleasePort = _containerToBelt.TryGetValue(containerIndex, out var portIdx) ? portIdx : (int?)null;
             _activeReleaseContainerIndex = containerIndex;
+            _releaseWaitingOnBelt = false;
 
             var container = _game.Containers[containerIndex];
             // This container cannot accept incoming blocks while releasing.
@@ -1740,6 +1741,7 @@ namespace LoopSorting
                 if (_activeReleasePort.HasValue &&
                     !IsPortAlignedToMouth(containerIndex, _activeReleasePort.Value))
                 {
+                    _releaseWaitingOnBelt = false;
                     yield return null;
                     continue;
                 }
@@ -1747,11 +1749,13 @@ namespace LoopSorting
                 var result = _game.TryReleaseFromContainer(containerIndex);
                 if (result == ReleaseResult.BeltBlocked)
                 {
+                    _releaseWaitingOnBelt = true;
                     PlaySfx(SfxId.BlockReject);
                     // Slot is occupied, wait and retry next frame/interval. Belt moves independently.
                     yield return new WaitForSeconds(releaseBlockedRetry / Mathf.Max(0.0001f, _speedMultiplier));
                     continue;
                 }
+                _releaseWaitingOnBelt = false;
                 if (result != ReleaseResult.Success)
                 {
                     break;
@@ -1779,6 +1783,7 @@ namespace LoopSorting
             }
             PlaySfx(SfxId.RunShipEnd);
             _isReleasing = false;
+            _releaseWaitingOnBelt = false;
             _activeReleasePort = null;
             _activeReleaseContainerIndex = -1;
             ClearBeltWaitingState();

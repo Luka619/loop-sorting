@@ -3,15 +3,141 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Globalization;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.TextCore;
 using TMPro;
 
 namespace LoopSorting
 {
     public partial class GameRuntimeController
     {
+        private static TMP_SpriteAsset _resultCoinSpriteAsset;
+        private Image _resultLoseTitleImage;
+        private static Texture2D _resultGlassOverlayNoiseTexture;
+        private static Sprite _resultGlassOverlaySprite;
+        private static bool _resultGlassOverlaySpriteTried;
+
+        private static void EnsureTmpSpriteAssetVersion(TMP_SpriteAsset asset)
+        {
+            if (asset == null) return;
+            var field = typeof(TMP_SpriteAsset).GetField("m_Version", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field == null) return;
+            var value = field.GetValue(asset) as string;
+            if (string.IsNullOrEmpty(value))
+            {
+                field.SetValue(asset, "1.1.0");
+            }
+        }
+
+        private static TMP_SpriteAsset GetResultCoinSpriteAsset(Sprite coinSprite)
+        {
+            if (coinSprite == null || coinSprite.texture == null) return null;
+            if (_resultCoinSpriteAsset != null && _resultCoinSpriteAsset.spriteSheet == coinSprite.texture)
+            {
+                return _resultCoinSpriteAsset;
+            }
+
+            var asset = ScriptableObject.CreateInstance<TMP_SpriteAsset>();
+            asset.hideFlags = HideFlags.DontSave;
+            asset.name = "ResultCoinSpriteAsset";
+            asset.hashCode = TMP_TextUtilities.GetSimpleHashCode(asset.name);
+            asset.spriteSheet = coinSprite.texture;
+            asset.fallbackSpriteAssets = new List<TMP_SpriteAsset>();
+            asset.spriteInfoList = new List<TMP_Sprite>();
+
+            var shader = Shader.Find("TextMeshPro/Sprite") ?? Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                var material = new Material(shader);
+                material.mainTexture = coinSprite.texture;
+                material.hideFlags = HideFlags.DontSave;
+                asset.material = material;
+                asset.materialHashCode = TMP_TextUtilities.GetSimpleHashCode(material.name);
+            }
+
+            var rect = coinSprite.textureRect;
+            var glyphRect = new GlyphRect(
+                Mathf.RoundToInt(rect.x),
+                Mathf.RoundToInt(rect.y),
+                Mathf.RoundToInt(rect.width),
+                Mathf.RoundToInt(rect.height));
+            var metrics = new GlyphMetrics(rect.width, rect.height, 0f, rect.height * 0.9f, rect.width);
+            var glyph = new TMP_SpriteGlyph(0, metrics, glyphRect, 1f, 0, coinSprite);
+            var character = new TMP_SpriteCharacter(0xE000, asset, glyph);
+            character.name = "coin";
+
+            asset.spriteGlyphTable.Clear();
+            asset.spriteGlyphTable.Add(glyph);
+            asset.spriteCharacterTable.Clear();
+            asset.spriteCharacterTable.Add(character);
+            EnsureTmpSpriteAssetVersion(asset);
+            asset.UpdateLookupTables();
+            if (asset.spriteCharacterTable.Count == 0)
+            {
+                asset.spriteGlyphTable.Clear();
+                asset.spriteCharacterTable.Clear();
+                asset.spriteGlyphTable.Add(glyph);
+                asset.spriteCharacterTable.Add(character);
+                EnsureTmpSpriteAssetVersion(asset);
+                asset.UpdateLookupTables();
+            }
+            MaterialReferenceManager.AddSpriteAsset(asset);
+
+            _resultCoinSpriteAsset = asset;
+            return asset;
+        }
+
+        private static Sprite LoadResultGlassOverlaySprite()
+        {
+            if (_resultGlassOverlaySpriteTried) return _resultGlassOverlaySprite;
+            _resultGlassOverlaySpriteTried = true;
+
+            var tex = Resources.Load<Texture2D>("ResultPanel/glass_overlay_full_placeholder");
+            if (tex == null)
+            {
+                tex = BuildResultGlassOverlayNoiseTexture();
+            }
+
+            if (tex != null)
+            {
+                _resultGlassOverlaySprite = Sprite.Create(
+                    tex,
+                    new Rect(0f, 0f, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+            }
+
+            return _resultGlassOverlaySprite;
+        }
+
+        private static Texture2D BuildResultGlassOverlayNoiseTexture()
+        {
+            if (_resultGlassOverlayNoiseTexture != null) return _resultGlassOverlayNoiseTexture;
+
+            const int size = 96;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Repeat;
+            tex.filterMode = FilterMode.Bilinear;
+            tex.hideFlags = HideFlags.DontSave;
+
+            var rng = new System.Random(12341);
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                float v = 0.86f + (float)rng.NextDouble() * 0.14f;
+                pixels[i] = new Color(v, v, v, 1f);
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+
+            _resultGlassOverlayNoiseTexture = tex;
+            return tex;
+        }
+
         private void BeginEndSequence(bool win, float delaySeconds)
         {
             if (_endSequenceRoutine != null) return;
@@ -24,6 +150,14 @@ namespace LoopSorting
 
             _endSequenceRoutine = StartCoroutine(PlayEndSequenceThenShowResult(win, delaySeconds));
         }
+
+#if UNITY_EDITOR
+        public void DebugForceLose()
+        {
+            if (_gameOver || _endSequenceRoutine != null) return;
+            BeginEndSequence(win: false, delaySeconds: LoseEndSequenceDelaySeconds);
+        }
+#endif
 
         private IEnumerator PlayEndSequenceThenShowResult(bool win, float delaySeconds)
         {
@@ -273,6 +407,7 @@ namespace LoopSorting
 
             SetResultBannerVisible(false);
             if (_resultText != null) _resultText.gameObject.SetActive(false);
+            if (_resultLoseTitleImage != null) _resultLoseTitleImage.gameObject.SetActive(false);
             SetResultWinLayoutActive(true);
             SetResultLoseLayoutActive(false);
             UpdateResultWinStats();
@@ -501,14 +636,65 @@ namespace LoopSorting
             EnsureResultWinLayout();
             EnsureResultLoseLayout();
             RestoreResultPanelLayoutBase();
+            ApplyResultPanelLayoutForLoseOverlay();
             RestoreResultButtonsLayoutBase();
             ApplyResultButtonsLayoutForLoseOverlay();
             SetResultWinLayoutActive(false);
             SetResultLoseLayoutActive(true);
             SetResultBannerVisible(false);
-            if (_resultText != null) _resultText.gameObject.SetActive(true);
-            if (_resultLoseCardDesc != null) _resultLoseCardDesc.text = LocalizedText.ResultRevive;
-            if (_resultLoseCardIcon != null) _resultLoseCardIcon.gameObject.SetActive(_resultLoseCardIcon.sprite != null);
+            var loseTitleSprite = LoadResultLoseTitleSprite();
+            if (loseTitleSprite != null)
+            {
+                EnsureResultLoseTitleImage();
+                if (_resultLoseTitleImage != null)
+                {
+                    _resultLoseTitleImage.sprite = loseTitleSprite;
+                    _resultLoseTitleImage.color = Color.white;
+                    _resultLoseTitleImage.gameObject.SetActive(true);
+                }
+                if (_resultText != null) _resultText.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (_resultLoseTitleImage != null) _resultLoseTitleImage.gameObject.SetActive(false);
+                if (_resultText != null)
+                {
+                    _resultText.text = "\u53ef\u60dc\uff0c\u5c31\u5dee\u4e00\u70b9";
+                    _resultText.enableAutoSizing = true;
+                    _resultText.fontSizeMax = 62f;
+                    _resultText.fontSizeMin = 36f;
+                    _resultText.gameObject.SetActive(true);
+                }
+            }
+            if (_resultLoseCardRoot != null)
+            {
+                _resultLoseCardRoot.anchoredPosition = new Vector2(0f, 120f);
+                _resultLoseCardRoot.sizeDelta = new Vector2(700f, 320f);
+            }
+            if (_resultLoseCardDesc != null) _resultLoseCardDesc.text = "\u4f7f\u7528\u6392\u5e8f\u9053\u5177\u81ea\u52a8\u6574\u7406\u4e00\u4e2a\u79ef\u6728\u76d2\u5b50";
+            if (_resultLoseCardIcon != null)
+            {
+                Sprite sortSprite = null;
+                if (LoopSortingUIKit.IsAvailable())
+                {
+                    sortSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.sort");
+                }
+                if (sortSprite == null)
+                {
+                    sortSprite =
+                        TryLoadBoosterPurchaseSprite("icon_booster_sort") ??
+                        TryLoadBoosterPurchaseSprite("icon_booster_Sort");
+                }
+                _resultLoseCardIcon.sprite = sortSprite;
+                _resultLoseCardIcon.color = sortSprite != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                _resultLoseCardIcon.preserveAspect = true;
+                _resultLoseCardIcon.gameObject.SetActive(sortSprite != null);
+                var iconRect = _resultLoseCardIcon.rectTransform;
+                if (iconRect != null)
+                {
+                    iconRect.sizeDelta = new Vector2(200f, 200f);
+                }
+            }
             if (_resultLoseCardBg != null) _resultLoseCardBg.enabled = true;
 
             if (_resultCloseButton != null) _resultCloseButton.gameObject.SetActive(true);
@@ -516,42 +702,103 @@ namespace LoopSorting
             if (_resultWinRewardRootPrimary != null) _resultWinRewardRootPrimary.gameObject.SetActive(false);
             if (_resultWinRewardRootSecondary != null) _resultWinRewardRootSecondary.gameObject.SetActive(false);
 
+            Sprite coinSprite = null;
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                coinSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
+            }
+            TMP_SpriteAsset coinSpriteAsset = GetResultCoinSpriteAsset(coinSprite);
+            bool useInlineCoin = coinSpriteAsset != null;
+            bool showPrimaryIcon = !useInlineCoin && coinSprite != null;
+
             if (_primaryLabel != null)
             {
-                _primaryLabel.text = LocalizedText.ResultReviveCost(LoseReviveCoinsCost);
+                if (useInlineCoin)
+                {
+                    _primaryLabel.spriteAsset = coinSpriteAsset;
+                    _primaryLabel.text = "\u7ee7\u7eed\u73a9 <sprite index=0>" + LoseReviveCoinsCost;
+                }
+                else
+                {
+                    _primaryLabel.spriteAsset = null;
+                    _primaryLabel.text = "\u7ee7\u7eed\u73a9 \u91d1\u5e01" + LoseReviveCoinsCost;
+                }
                 _primaryLabel.gameObject.SetActive(true);
+                _primaryLabel.alignment = TextAlignmentOptions.Center;
+                _primaryLabel.enableWordWrapping = false;
+                var labelRect = _primaryLabel.rectTransform;
+                if (labelRect != null)
+                {
+                    if (useInlineCoin)
+                    {
+                        labelRect.offsetMin = Vector2.zero;
+                        labelRect.offsetMax = Vector2.zero;
+                    }
+                    else if (showPrimaryIcon)
+                    {
+                        labelRect.offsetMin = new Vector2(160f, 0f);
+                        labelRect.offsetMax = new Vector2(-60f, 0f);
+                    }
+                    else
+                    {
+                        labelRect.offsetMin = Vector2.zero;
+                        labelRect.offsetMax = Vector2.zero;
+                    }
+                }
             }
             if (_secondaryLabel != null)
             {
-                _secondaryLabel.text = LocalizedText.ResultRevive;
+                _secondaryLabel.text = "\u514d\u8d39";
                 _secondaryLabel.gameObject.SetActive(true);
+                _secondaryLabel.alignment = TextAlignmentOptions.Center;
+                _secondaryLabel.enableWordWrapping = false;
             }
 
-            bool hasKit = LoopSortingUIKit.IsAvailable();
-            if (hasKit)
+            if (_resultPrimaryIcon != null)
             {
-                if (_resultPrimaryIcon != null)
-                {
-                    _resultPrimaryIcon.sprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
-                    _resultPrimaryIcon.color = Color.white;
-                    _resultPrimaryIcon.preserveAspect = true;
-                    _resultPrimaryIcon.gameObject.SetActive(_resultPrimaryIcon.sprite != null);
-                }
-                if (_resultSecondaryIcon != null)
-                {
-                    var video =
-                        LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false) ??
-                        TryLoadBoosterPurchaseSprite("icon_video");
-                    _resultSecondaryIcon.sprite = video != null ? video : LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
-                    _resultSecondaryIcon.color = Color.white;
-                    _resultSecondaryIcon.preserveAspect = true;
-                    _resultSecondaryIcon.gameObject.SetActive(_resultSecondaryIcon.sprite != null);
-                }
+                _resultPrimaryIcon.sprite = coinSprite;
+                _resultPrimaryIcon.color = Color.white;
+                _resultPrimaryIcon.preserveAspect = true;
+                _resultPrimaryIcon.gameObject.SetActive(showPrimaryIcon);
             }
-            else
+
+            Sprite videoSprite = null;
+            if (LoopSortingUIKit.IsAvailable())
             {
-                if (_resultPrimaryIcon != null) _resultPrimaryIcon.gameObject.SetActive(false);
-                if (_resultSecondaryIcon != null) _resultSecondaryIcon.gameObject.SetActive(false);
+                videoSprite = LoopSortingUIKit.LoadSprite("UI_Sprites/icon_video.png", 100f, applyNineSlice: false);
+            }
+            if (videoSprite == null)
+            {
+                videoSprite = TryLoadBoosterPurchaseSprite("icon_video");
+            }
+            if (videoSprite == null && LoopSortingUIKit.IsAvailable())
+            {
+                videoSprite = LoopSortingUIKit.LoadSpriteByKey("ui.icon.coin");
+            }
+            if (_resultSecondaryIcon != null)
+            {
+                _resultSecondaryIcon.sprite = videoSprite;
+                _resultSecondaryIcon.color = Color.white;
+                _resultSecondaryIcon.preserveAspect = true;
+                _resultSecondaryIcon.gameObject.SetActive(videoSprite != null);
+            }
+
+            if (_secondaryLabel != null)
+            {
+                var labelRect = _secondaryLabel.rectTransform;
+                if (labelRect != null)
+                {
+                    if (_resultSecondaryIcon != null && _resultSecondaryIcon.gameObject.activeSelf)
+                    {
+                        labelRect.offsetMin = new Vector2(160f, 0f);
+                        labelRect.offsetMax = new Vector2(-60f, 0f);
+                    }
+                    else
+                    {
+                        labelRect.offsetMin = Vector2.zero;
+                        labelRect.offsetMax = Vector2.zero;
+                    }
+                }
             }
 
             if (_primaryButton != null)
@@ -610,24 +857,29 @@ namespace LoopSorting
                 _resultGlassOverlayImage = go.AddComponent<Image>();
                 _resultGlassOverlayImage.raycastTarget = false;
                 _resultGlassOverlayImage.preserveAspect = false;
-                go.transform.SetSiblingIndex(0);
             }
 
             if (_resultGlassOverlayImage == null) return;
 
-            Sprite glass = null;
-            if (LoopSortingUIKit.IsAvailable())
-            {
-                glass =
-                    LoopSortingUIKit.LoadSprite("World_Sprites/box_completed_glass_overlay_1024.png", pixelsPerUnit: 100f, applyNineSlice: true) ??
-                    LoopSortingUIKit.LoadSprite("World_Sprites/box_completed_glass_overlay_512.png", pixelsPerUnit: 100f, applyNineSlice: true);
-            }
+            var sprite = LoadResultGlassOverlaySprite();
+            _resultGlassOverlayImage.sprite = sprite;
+            bool isNoise = _resultGlassOverlayNoiseTexture != null && sprite != null && sprite.texture == _resultGlassOverlayNoiseTexture;
+            _resultGlassOverlayImage.type = isNoise ? Image.Type.Tiled : Image.Type.Simple;
+            _resultGlassOverlayImage.color = new Color(0f, 0f, 0f, 0.30f);
 
-            _resultGlassOverlayImage.sprite = glass;
-            _resultGlassOverlayImage.type = glass != null && glass.border.sqrMagnitude > 0 ? Image.Type.Sliced : Image.Type.Simple;
-            _resultGlassOverlayImage.color = glass != null
-                ? new Color(0.86f, 0.90f, 0.95f, 0.24f)
-                : new Color(0.90f, 0.94f, 0.98f, 0.12f);
+            _resultGlassOverlayRect.anchorMin = Vector2.zero;
+            _resultGlassOverlayRect.anchorMax = Vector2.one;
+            _resultGlassOverlayRect.offsetMin = Vector2.zero;
+            _resultGlassOverlayRect.offsetMax = Vector2.zero;
+            var panel = _resultPanel.transform.Find("Panel");
+            if (panel != null)
+            {
+                _resultGlassOverlayRect.SetSiblingIndex(panel.GetSiblingIndex());
+            }
+            else
+            {
+                _resultGlassOverlayRect.SetSiblingIndex(0);
+            }
         }
 
         private void CaptureResultPanelBaseLayoutIfNeeded()
@@ -669,6 +921,18 @@ namespace LoopSorting
 
             var decor = _resultPanelBoxRect.Find("Decor");
             if (decor != null) decor.gameObject.SetActive(false);
+        }
+
+        private void ApplyResultPanelLayoutForLoseOverlay()
+        {
+            EnsureResultPanelLayoutRefs();
+            if (!_resultPanelBaseLayoutCaptured) CaptureResultPanelBaseLayoutIfNeeded();
+            if (!_resultPanelBaseLayoutCaptured || _resultPanelBoxRect == null) return;
+
+            var size = _resultPanelBaseSizeDelta;
+            size.y -= 180f;
+            _resultPanelBoxRect.sizeDelta = size;
+            _resultPanelBoxRect.anchoredPosition = _resultPanelBaseAnchoredPosition + new Vector2(0f, 12f);
         }
 
         private void RestoreResultPanelLayoutBase()
@@ -727,8 +991,8 @@ namespace LoopSorting
 
             var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
             float panelHeight = panelRect != null && panelRect.rect.height > 1f ? panelRect.rect.height : 760f;
-            float baseY = Mathf.Clamp(panelHeight * 0.18f, 110f, 200f);
-            float gap = Mathf.Clamp(panelHeight * 0.22f, 150f, 240f);
+            float baseY = Mathf.Clamp(panelHeight * 0.22f, 140f, 230f);
+            float gap = Mathf.Clamp(panelHeight * 0.18f, 120f, 200f);
 
             primaryRect.anchorMin = new Vector2(0.5f, 0f);
             primaryRect.anchorMax = new Vector2(0.5f, 0f);
@@ -1142,6 +1406,34 @@ namespace LoopSorting
             }
         }
 
+        private void EnsureResultLoseTitleImage()
+        {
+            EnsureResultPanelLayoutRefs();
+            if (_resultPanelLayoutRoot == null) return;
+
+            if (_resultLoseTitleImage == null)
+            {
+                var existing = _resultPanelLayoutRoot.Find("LoseTitle") as RectTransform;
+                if (existing != null) _resultLoseTitleImage = existing.GetComponent<Image>();
+            }
+
+            if (_resultLoseTitleImage == null)
+            {
+                var titleGO = new GameObject("LoseTitle");
+                titleGO.transform.SetParent(_resultPanelLayoutRoot, false);
+                var img = titleGO.AddComponent<Image>();
+                img.raycastTarget = false;
+                img.preserveAspect = true;
+                var rect = img.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 1f);
+                rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.anchoredPosition = new Vector2(0f, -84f);
+                rect.sizeDelta = new Vector2(720f, 140f);
+                _resultLoseTitleImage = img;
+            }
+        }
+
         private void UpdateResultWinStats()
         {
             if (_resultWinCoinsText != null) _resultWinCoinsText.text = FormatCurrencyValue(_progress.Coins);
@@ -1221,6 +1513,8 @@ namespace LoopSorting
 
         private static Sprite _resultWinTitleSprite;
         private static bool _resultWinTitleSpriteTried;
+        private static Sprite _resultLoseTitleSprite;
+        private static bool _resultLoseTitleSpriteTried;
 
         private static Sprite LoadResultWinTitleSprite()
         {
@@ -1236,6 +1530,22 @@ namespace LoopSorting
                     100f);
             }
             return _resultWinTitleSprite;
+        }
+
+        private static Sprite LoadResultLoseTitleSprite()
+        {
+            if (_resultLoseTitleSpriteTried) return _resultLoseTitleSprite;
+            _resultLoseTitleSpriteTried = true;
+            var tex = Resources.Load<Texture2D>("ResultPanel/title_level_failed_placeholder");
+            if (tex != null)
+            {
+                _resultLoseTitleSprite = Sprite.Create(
+                    tex,
+                    new Rect(0f, 0f, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+            }
+            return _resultLoseTitleSprite;
         }
 
         private void EnsureResultCloseButton()

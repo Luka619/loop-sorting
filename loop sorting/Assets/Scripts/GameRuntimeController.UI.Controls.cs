@@ -296,6 +296,7 @@ namespace LoopSorting
             _slotMarkers.Clear();
             _slotBasePositions.Clear();
             _slotCurrentPositions.Clear();
+            _slotPrevPositions.Clear();
 
             if (_beltSlots == null || _beltSlots.Count == 0)
             {
@@ -308,6 +309,7 @@ namespace LoopSorting
                 var pos = slot != null ? slot.position : transform.position;
                 _slotBasePositions.Add(pos);
                 SetSlotCurrent(i, pos);
+                _slotPrevPositions.Add(pos);
             }
 
             if (!showSlotMarkersRuntime)
@@ -327,17 +329,22 @@ namespace LoopSorting
 
             float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             float aspect = slotTex != null && slotTex.width > 0 ? (float)slotTex.height / slotTex.width : 1f;
-            float beltWidth = _beltWidthUsed > 0.0001f ? _beltWidthUsed : spacing;
-            float baseSide = Mathf.Max(0.02f, spacing * Mathf.Max(0.01f, slotMarkerScale));
-            // Keep markers readable but avoid overly long slots on tight belts.
-            float minHeightForBelt = Mathf.Max(0.02f, Mathf.Min(beltWidth * 0.55f, spacing * 0.85f));
-            float minSideForBelt = minHeightForBelt / Mathf.Max(0.01f, aspect);
-            baseSide = Mathf.Max(baseSide, minSideForBelt);
-            float height = baseSide * aspect;
-            float maxHeightForBelt = Mathf.Max(minHeightForBelt, Mathf.Min(spacing * 0.95f, beltWidth * 0.9f));
-            if (height > maxHeightForBelt)
+            float blockUnit = _currentLayout != null && _currentLayout.blockSize > 0f ? _currentLayout.blockSize : blockVisualSize.x;
+            float scaleBias = Mathf.Clamp(0.7f + slotMarkerScale, 0.6f, 1.1f);
+            float targetSide = blockUnit * scaleBias;
+            float maxSide = Mathf.Min(spacing * 0.95f, blockUnit * 1.1f);
+            float minSide = Mathf.Min(spacing * 0.6f, blockUnit * 0.7f);
+            if (maxSide < minSide)
             {
-                height = maxHeightForBelt;
+                minSide = maxSide;
+            }
+            float baseSide = Mathf.Clamp(targetSide, minSide, maxSide);
+            float height = baseSide * aspect;
+            float maxHeight = spacing * 0.95f;
+            if (height > maxHeight && maxHeight > 0.001f)
+            {
+                height = maxHeight;
+                baseSide = height / Mathf.Max(0.01f, aspect);
             }
             var scale = new Vector3(baseSide, height, 1f);
 

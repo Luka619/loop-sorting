@@ -211,6 +211,13 @@ public class LevelEditorWindow : EditorWindow
                 JumpToCurrentLevelAtRuntime();
             }
         }
+        using (new EditorGUI.DisabledScope(!Application.isPlaying))
+        {
+            if (GUILayout.Button("Trigger Lose (Play)", GUILayout.Width(140)))
+            {
+                TriggerRuntimeLose();
+            }
+        }
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
@@ -2417,6 +2424,25 @@ public class LevelEditorWindow : EditorWindow
 
         ctrl.Build(_level);
         Debug.Log($"Jumped to current level at runtime: {_level.name} (no flow found).");
+    }
+
+    private void TriggerRuntimeLose()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("Runtime trigger requires Play mode.");
+            return;
+        }
+
+        var ctrl = Object.FindObjectOfType<GameRuntimeController>();
+        if (ctrl == null)
+        {
+            Debug.LogWarning("GameRuntimeController not found. Make sure one exists in the scene.");
+            return;
+        }
+
+        ctrl.DebugForceLose();
+        Debug.Log("Triggered runtime lose.");
     }
 
     private bool TryFindFlowForLevel(LevelLayout level, out LevelFlow flow, out int index)

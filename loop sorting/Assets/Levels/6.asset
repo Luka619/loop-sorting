@@ -39,7 +39,7 @@ MonoBehaviour:
     width: 20
   boxes:
   - name: Box 1
-    position: {x: 0.69312555, y: -1.0754265}
+    position: {x: 0.5, y: -2.5}
     size: {x: 0.90000004, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -58,7 +58,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 0
   - name: Box 2
-    position: {x: -1.4517378, y: -1.0599995}
+    position: {x: -2, y: 0}
     size: {x: 0.90000004, y: 2.4}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 3
@@ -77,7 +77,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 2
   - name: Box 3
-    position: {x: -1.5, y: 3}
+    position: {x: -0.5, y: 3}
     size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8
@@ -96,7 +96,7 @@ MonoBehaviour:
     locked: 0
     unlockColor: 4
   - name: Box 4
-    position: {x: -1.5, y: 5}
+    position: {x: -0.5, y: 5}
     size: {x: 2.4, y: 0.90000004}
     color: {r: 0, g: 0, b: 0, a: 0}
     columns: 8

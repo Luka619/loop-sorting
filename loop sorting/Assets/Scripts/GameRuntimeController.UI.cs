@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
@@ -1657,7 +1657,7 @@ namespace LoopSorting
             float tiltCos = Mathf.Cos(cameraTiltX * Mathf.Deg2Rad);
             if (tiltCos < 0.25f) tiltCos = 0.25f; // avoid extreme distortion / division by near-zero
 
-            // With X tilt and a mostly-flat (Z¡Ö0) level, the effective vertical span in camera space is scaled by cos(tiltX).
+            // With X tilt and a mostly-flat (Zâ‰ˆ0) level, the effective vertical span in camera space is scaled by cos(tiltX).
             float heightInCamera = height * tiltCos;
             float orthoSize = Mathf.Max(heightInCamera * 0.5f, width * 0.5f / Mathf.Max(0.0001f, cam.aspect));
 
@@ -1737,6 +1737,13 @@ namespace LoopSorting
                     break;
                 }
 
+                if (_activeReleasePort.HasValue &&
+                    !IsPortAlignedToMouth(containerIndex, _activeReleasePort.Value))
+                {
+                    yield return null;
+                    continue;
+                }
+
                 var result = _game.TryReleaseFromContainer(containerIndex);
                 if (result == ReleaseResult.BeltBlocked)
                 {
@@ -1785,3 +1792,5 @@ namespace LoopSorting
         }
     }
 }
+
+

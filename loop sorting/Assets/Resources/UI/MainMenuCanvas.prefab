@@ -520,8 +520,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 229, y: 407}
-  m_SizeDelta: {x: 458, y: 814}
+  m_AnchoredPosition: {x: 238.5, y: 424.25}
+  m_SizeDelta: {x: 477, y: 848.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &3079129500163049567
 Canvas:
@@ -767,7 +767,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u7B2C 3 \u5173"
+  m_text: "\u7B2C 6 \u5173"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

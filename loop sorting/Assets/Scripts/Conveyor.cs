@@ -117,12 +117,12 @@ namespace LoopSorting
             _ports[beltIndex] = container;
         }
 
-        public void Advance(int? blockedPort = null, bool allowInsert = true)
+        public void Advance(int? blockedPort = null, bool allowInsert = true, Func<int, bool> canInsertAtPort = null)
         {
-            Advance(blockedPort, events: null, allowInsert: allowInsert);
+            Advance(blockedPort, events: null, allowInsert: allowInsert, canInsertAtPort: canInsertAtPort);
         }
 
-        public void Advance(int? blockedPort, List<ConveyorPortEvent> events, bool allowInsert = true)
+        public void Advance(int? blockedPort, List<ConveyorPortEvent> events, bool allowInsert = true, Func<int, bool> canInsertAtPort = null)
         {
             if (blockedPort.HasValue)
             {
@@ -221,6 +221,10 @@ namespace LoopSorting
             foreach (var port in _ports)
             {
                 int beltIndex = port.Key;
+                if (canInsertAtPort != null && !canInsertAtPort(beltIndex))
+                {
+                    continue;
+                }
                 var slot = _slots[beltIndex];
                 if (!slot.HasValue)
                 {

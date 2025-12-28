@@ -124,6 +124,7 @@ namespace LoopSorting.Editor
             private int _beltLength;
             private int _seedBase;
             private SimulationRunState _currentRun;
+            private readonly List<int> _peakCounts = new List<int>();
 
             internal FailureRateSimulation(LevelLayout layout, int runsTotal)
             {
@@ -140,6 +141,8 @@ namespace LoopSorting.Editor
             public bool Cancelled => _cancelled;
             public float FailureRate => _runsCompleted > 0 ? _failures / (float)_runsCompleted : 0f;
             public int RunsStarted => _runsStarted;
+            public IReadOnlyList<int> PeakCounts => _peakCounts;
+            public int BeltLength => _beltLength;
 
             public void Cancel()
             {
@@ -259,6 +262,16 @@ namespace LoopSorting.Editor
                         _failures++;
                     }
 
+                    if (_currentRun != null)
+                    {
+                        int peak = _currentRun.MaxBeltCount;
+                        if (_beltLength > 0)
+                        {
+                            peak = Mathf.Clamp(peak, 0, _beltLength);
+                        }
+                        _peakCounts.Add(peak);
+                    }
+
                     _runsCompleted++;
                     _currentRun = null;
                 }
@@ -275,6 +288,7 @@ namespace LoopSorting.Editor
             private bool Initialize()
             {
                 _initialized = true;
+                _peakCounts.Clear();
                 if (_sourceLayout == null || _sourceLayout.boxes == null || _sourceLayout.boxes.Count == 0)
                 {
                     return false;
@@ -379,6 +393,7 @@ namespace LoopSorting.Editor
                     RunIndex = runIndex,
                     TickCount = 0,
                     BeltLength = _beltLength,
+                    MaxBeltCount = game.Conveyor.BlockCount,
                     ReleaseAttemptsPerTick = Mathf.Max(1, Mathf.CeilToInt(DefaultConveyorTickSeconds / DefaultReleaseInterval)),
                     Rng = rng,
                     InboundStreamCounts = new int[containers.Count],
@@ -495,6 +510,7 @@ namespace LoopSorting.Editor
             public int NoInsertWhileFull;
             public int NoProgressTicks;
             public int BeltLength;
+            public int MaxBeltCount;
             public System.Random Rng;
             public int ReleaseAttemptsPerTick;
             public int[] InboundStreamCounts;
@@ -606,6 +622,8 @@ namespace LoopSorting.Editor
 
             UpdateLocks(state.Game, state.Layout, state.BoxLocked);
             UpdateCompletion(state.Game, state.BoxCompleted);
+
+            state.MaxBeltCount = Mathf.Max(state.MaxBeltCount, state.Game.Conveyor.BlockCount);
 
             if (IsSolved(state.Game))
             {

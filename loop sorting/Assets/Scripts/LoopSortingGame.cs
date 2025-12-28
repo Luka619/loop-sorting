@@ -81,14 +81,14 @@ namespace LoopSorting
             return ReleaseResult.Success;
         }
 
-        public void TickConveyor(int? blockedPort = null, bool allowInsert = true)
+        public void TickConveyor(int? blockedPort = null, bool allowInsert = true, Func<int, bool> canInsertAtPort = null)
         {
-            _conveyor.Advance(blockedPort, allowInsert);
+            _conveyor.Advance(blockedPort, allowInsert, canInsertAtPort);
         }
 
-        public void TickConveyor(int? blockedPort, List<ConveyorPortEvent> events, bool allowInsert = true)
+        public void TickConveyor(int? blockedPort, List<ConveyorPortEvent> events, bool allowInsert = true, Func<int, bool> canInsertAtPort = null)
         {
-            _conveyor.Advance(blockedPort, events, allowInsert);
+            _conveyor.Advance(blockedPort, events, allowInsert, canInsertAtPort);
         }
 
         public bool IsSolved(bool requireFull = false)

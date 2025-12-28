@@ -65,6 +65,19 @@ public class LevelEditorWindow : EditorWindow
     private float _dsrSimBudgetMs = 10f;
     private bool _previewSimActive;
     private LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot _previewSimSnapshot;
+    private bool _showPressureGraph = true;
+    private int _pressureGraphMinCap = 0;
+    private int _pressureGraphMaxCap = 0;
+    private int _pressureGraphStep = 1;
+    private int _pressureGraphTargetCap = -1;
+    private int _pressureGraphLastBeltLen = -1;
+    private readonly Dictionary<int, PressureSnapshot> _pressureByLayoutId = new Dictionary<int, PressureSnapshot>();
+
+    private struct PressureSnapshot
+    {
+        public int BeltLength;
+        public int[] Peaks;
+    }
 
     // Preview-only camera framing (to match GameRuntimeController.FitCameraToLevel).
     private static bool _previewCameraActive;
@@ -427,8 +440,113 @@ public class LevelEditorWindow : EditorWindow
         }
         EditorGUILayout.EndHorizontal();
 
+        DrawPressureGraphSection(layoutId);
+
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space(4f);
+    }
+
+    private void DrawPressureGraphSection(int layoutId)
+    {
+        _showPressureGraph = EditorGUILayout.Foldout(_showPressureGraph, "Pressure Graph", true);
+        if (!_showPressureGraph)
+        {
+            return;
+        }
+
+        if (!_pressureByLayoutId.TryGetValue(layoutId, out var snapshot) ||
+            snapshot.Peaks == null || snapshot.Peaks.Length == 0)
+        {
+            EditorGUILayout.HelpBox("Run the simulation to generate pressure data.", MessageType.Info);
+            return;
+        }
+
+        if (_pressureGraphLastBeltLen != snapshot.BeltLength)
+        {
+            _pressureGraphMinCap = 0;
+            _pressureGraphMaxCap = snapshot.BeltLength;
+            _pressureGraphStep = 1;
+            int defaultTarget = _level != null && _level.beltCapacity > 0 ? _level.beltCapacity : snapshot.BeltLength;
+            _pressureGraphTargetCap = Mathf.Clamp(defaultTarget, 0, snapshot.BeltLength);
+            _pressureGraphLastBeltLen = snapshot.BeltLength;
+        }
+
+        _pressureGraphMinCap = Mathf.Clamp(EditorGUILayout.IntField("Min Used", _pressureGraphMinCap), 0, snapshot.BeltLength);
+        _pressureGraphMaxCap = Mathf.Clamp(EditorGUILayout.IntField("Max Used", _pressureGraphMaxCap), _pressureGraphMinCap + 1, snapshot.BeltLength);
+        _pressureGraphStep = Mathf.Clamp(EditorGUILayout.IntField("Step", _pressureGraphStep), 1, Mathf.Max(1, _pressureGraphMaxCap - _pressureGraphMinCap));
+        _pressureGraphTargetCap = Mathf.Clamp(EditorGUILayout.IntField("Target Used", _pressureGraphTargetCap), _pressureGraphMinCap, _pressureGraphMaxCap);
+
+        int runs = snapshot.Peaks.Length;
+        int maxPeak = 0;
+        for (int i = 0; i < snapshot.Peaks.Length; i++)
+        {
+            if (snapshot.Peaks[i] > maxPeak) maxPeak = snapshot.Peaks[i];
+        }
+        EditorGUILayout.LabelField($"Runs {runs}  BeltSlots {snapshot.BeltLength}  PeakMax {maxPeak}");
+
+        int sampleCount = ((_pressureGraphMaxCap - _pressureGraphMinCap) / _pressureGraphStep) + 1;
+        var counts = new int[sampleCount];
+        for (int i = 0; i < sampleCount; i++)
+        {
+            int cap = _pressureGraphMinCap + i * _pressureGraphStep;
+            int over = 0;
+            for (int r = 0; r < snapshot.Peaks.Length; r++)
+            {
+                if (snapshot.Peaks[r] > cap) over++;
+            }
+            counts[i] = over;
+        }
+
+        float graphHeight = 120f;
+        var rect = GUILayoutUtility.GetRect(1f, graphHeight);
+        EditorGUI.DrawRect(rect, new Color(0.12f, 0.12f, 0.12f, 0.2f));
+
+        Handles.BeginGUI();
+        var lineColor = new Color(0.2f, 0.8f, 0.9f, 1f);
+        Handles.color = lineColor;
+        for (int i = 1; i < counts.Length; i++)
+        {
+            float x0 = rect.x + (i - 1) / (float)(counts.Length - 1) * rect.width;
+            float x1 = rect.x + i / (float)(counts.Length - 1) * rect.width;
+            float y0 = rect.yMax - (counts[i - 1] / (float)runs) * rect.height;
+            float y1 = rect.yMax - (counts[i] / (float)runs) * rect.height;
+            Handles.DrawLine(new Vector3(x0, y0), new Vector3(x1, y1));
+        }
+
+        float capRange = Mathf.Max(1f, _pressureGraphMaxCap - _pressureGraphMinCap);
+        float targetNorm = (_pressureGraphTargetCap - _pressureGraphMinCap) / capRange;
+        float targetX = rect.x + targetNorm * rect.width;
+        Handles.color = new Color(1f, 0.8f, 0.2f, 0.9f);
+        Handles.DrawLine(new Vector3(targetX, rect.y), new Vector3(targetX, rect.yMax));
+        Handles.EndGUI();
+
+        var labelStyle = new GUIStyle(EditorStyles.miniLabel)
+        {
+            normal = { textColor = new Color(0.95f, 0.95f, 0.95f, 0.9f) }
+        };
+        for (int i = 0; i < counts.Length; i++)
+        {
+            bool turning = i == 0 || i == counts.Length - 1 || counts[i] != counts[i - 1];
+            if (!turning) continue;
+            int cap = _pressureGraphMinCap + i * _pressureGraphStep;
+            float pct = runs > 0 ? (counts[i] / (float)runs) * 100f : 0f;
+            float x = rect.x + (i / (float)(counts.Length - 1)) * rect.width;
+            float y = rect.yMax - (counts[i] / (float)runs) * rect.height;
+            var dot = new Rect(x - 2f, y - 2f, 4f, 4f);
+            EditorGUI.DrawRect(dot, new Color(0.95f, 0.95f, 0.95f, 0.9f));
+            var label = $"x={cap} y={pct:0.#}%";
+            var labelRect = new Rect(x + 6f, y - 10f, 120f, 16f);
+            GUI.Label(labelRect, label, labelStyle);
+        }
+
+        int overTarget = 0;
+        for (int r = 0; r < snapshot.Peaks.Length; r++)
+        {
+            if (snapshot.Peaks[r] > _pressureGraphTargetCap) overTarget++;
+        }
+        float overPct = runs > 0 ? (overTarget / (float)runs) * 100f : 0f;
+        EditorGUILayout.LabelField("y = runs with peak used > x (percent), x = used slots");
+        EditorGUILayout.LabelField($"Target { _pressureGraphTargetCap }: {overTarget}/{runs}  ({overPct:0.0}%)");
     }
 
     private int GetMaxBoxCount()
@@ -2448,12 +2566,29 @@ public class LevelEditorWindow : EditorWindow
             {
                 var metrics = LoopSorting.Editor.LevelDifficultyMetrics.ComputeStatic(_level, _dsrSimMaxBoxes, _dsrSim.FailureRate);
                 LoopSorting.Editor.LevelDifficultyMetrics.StoreCachedMetrics(_level, metrics);
-                _dsrLastRByLayoutId[_level.GetInstanceID()] = _dsrSim.FailureRate;
+                int layoutId = _level.GetInstanceID();
+                _dsrLastRByLayoutId[layoutId] = _dsrSim.FailureRate;
+                StorePressureSnapshot(layoutId, _dsrSim);
             }
             CancelDsrSimulation();
         }
 
         Repaint();
+    }
+
+    private void StorePressureSnapshot(int layoutId, LoopSorting.Editor.LevelDifficultyMetrics.FailureRateSimulation sim)
+    {
+        if (sim == null || sim.PeakCounts == null || sim.PeakCounts.Count == 0) return;
+        var peaks = new int[sim.PeakCounts.Count];
+        for (int i = 0; i < peaks.Length; i++)
+        {
+            peaks[i] = sim.PeakCounts[i];
+        }
+        _pressureByLayoutId[layoutId] = new PressureSnapshot
+        {
+            BeltLength = sim.BeltLength,
+            Peaks = peaks
+        };
     }
 
     private void DrawDsrSimPreview(LoopSorting.Editor.LevelDifficultyMetrics.SimulationDebugSnapshot snap)

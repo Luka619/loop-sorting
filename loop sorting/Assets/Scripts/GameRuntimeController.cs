@@ -102,6 +102,10 @@ namespace LoopSorting
         private Dictionary<int, GameObject> _beltBlockVisuals = new Dictionary<int, GameObject>();
         private List<BoxView> _boxViews = new List<BoxView>();
         private Dictionary<int, int> _containerToBelt = new Dictionary<int, int>();
+        private Dictionary<int, int> _beltToContainer = new Dictionary<int, int>();
+        private readonly List<Vector3> _portAlignPositions = new List<Vector3>();
+        private readonly List<bool> _portAlignEnabled = new List<bool>();
+        private readonly List<bool> _portAlignedThisTick = new List<bool>();
         private readonly Dictionary<Container, int> _containerIndexByRef = new Dictionary<Container, int>();
         private readonly List<ConveyorPortEvent> _portEvents = new List<ConveyorPortEvent>(32);
         private readonly Dictionary<int, Vector3> _beltBlockOffsets = new Dictionary<int, Vector3>();
@@ -1026,11 +1030,11 @@ namespace LoopSorting
             go.transform.SetParent(transform, true);
             go.transform.position = start + new Vector3(0f, 0f, beltBlockZOffset);
 
-            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
-            float baseSize = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
+            float baseSize = GetBeltBlockBaseSize();
             float s0 = baseSize * 0.32f;
             go.transform.localScale = new Vector3(s0, s0, s0 * beltBlockDepthFactor);
 
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
             Vector3 mid = (start + end) * 0.5f + Vector3.up * Mathf.Clamp(spacing * 0.65f, 0.25f, 0.75f);
 
             float t = 0f;
@@ -1348,13 +1352,17 @@ namespace LoopSorting
             float progress = Mathf.Clamp01(_tickTimer / Mathf.Max(0.0001f, conveyorTickSeconds));
             UpdateSlotMarkersVisuals(progress);
             UpdateBeltBlockVisuals(progress);
+            UpdatePortAlignmentFlags();
 
             if (_tickTimer >= conveyorTickSeconds)
             {
                 _tickTimer = 0f;
+                // Align belt visuals to base positions so in/out happens straight in front of box mouths.
+                ResetSlotPositionsToBase();
+                UpdateBeltBlockVisuals(0f);
                 int? blocked = _isReleasing && TryGetBlockedPort() is int idx ? idx : (int?)null;
                 _portEvents.Clear();
-                _game.TickConveyor(blocked, _portEvents, allowInsert: true);
+                _game.TickConveyor(blocked, _portEvents, allowInsert: true, canInsertAtPort: CanInsertAtPort);
                 ProcessConveyorPortEvents(_portEvents);
                 RefreshInboundStreamLocks();
                 _conveyorTickSfxCountdown--;
@@ -1377,6 +1385,7 @@ namespace LoopSorting
                 UpdateBgmPressureAfterTick();
                 EmitSfxFromStateChanges();
                 CheckEndConditions();
+                ResetPortAlignmentFlags();
             }
         }
 
@@ -2885,6 +2894,10 @@ namespace LoopSorting
             _boxSpecs.Clear();
             _boxLocked.Clear();
             _boxCompleted.Clear();
+            _beltToContainer.Clear();
+            _portAlignPositions.Clear();
+            _portAlignEnabled.Clear();
+            _portAlignedThisTick.Clear();
             var containers = new List<Container>();
             var containerToBelt = new Dictionary<int, int>();
             var reservedSlots = new HashSet<int>();
@@ -2953,8 +2966,14 @@ namespace LoopSorting
                     }
                 }
                 _containerToBelt[i] = slotIndex;
+                _beltToContainer[slotIndex] = i;
                 containerToBelt[i] = slotIndex;
                 reservedSlots.Add(slotIndex);
+
+                EnsurePortAlignCapacity(i + 1);
+                var portAnchor = ResolvePortAlignAnchor(spec);
+                _portAlignPositions[i] = portAnchor;
+                _portAlignEnabled[i] = ShouldEnablePortAlignment(portAnchor);
 
                 if (debugLogBoxPorts && _beltSlots != null && slotIndex >= 0 && slotIndex < _beltSlots.Count)
                 {
@@ -3545,8 +3564,7 @@ namespace LoopSorting
                 created = true;
             }
 
-            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
-            float baseSize = Mathf.Max(0.05f, spacing * beltBlockSizeFactor);
+            float baseSize = GetBeltBlockBaseSize();
             go.transform.localScale = new Vector3(baseSize, baseSize, baseSize * beltBlockDepthFactor);
 
             BlockVisual.ApplyColor(go, BlockVisual.ToUnityColor(block.Color));
@@ -3576,6 +3594,149 @@ namespace LoopSorting
             }
 
             return basePos + GetBeltBlockOffset(index) + new Vector3(0f, 0f, beltBlockZOffset);
+        }
+
+        private bool IsPortAlignedToMouth(int containerIndex, int beltIndex)
+        {
+            if (beltIndex < 0) return false;
+            if (_slotCurrentPositions.Count == 0) return true;
+            if (beltIndex >= _slotCurrentPositions.Count) return true;
+            if (containerIndex < 0 || containerIndex >= _portAlignEnabled.Count) return true;
+            if (!_portAlignEnabled[containerIndex]) return true;
+
+            float tolerance = GetPortAlignTolerance();
+            var anchor = _portAlignPositions[containerIndex];
+            float dist = Vector3.Distance(_slotCurrentPositions[beltIndex], anchor);
+            return dist <= tolerance;
+        }
+
+        private bool CanInsertAtPort(int beltIndex)
+        {
+            if (!_beltToContainer.TryGetValue(beltIndex, out var containerIndex))
+            {
+                return true;
+            }
+            if (containerIndex < 0 || containerIndex >= _portAlignEnabled.Count)
+            {
+                return true;
+            }
+            if (!_portAlignEnabled[containerIndex])
+            {
+                return true;
+            }
+            if (containerIndex < _portAlignedThisTick.Count && _portAlignedThisTick[containerIndex])
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private float GetPortAlignTolerance()
+        {
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+            float unit = _currentLayout != null && _currentLayout.blockSize > 0f ? _currentLayout.blockSize : blockVisualSize.x;
+            float target = unit * 0.4f;
+            return Mathf.Clamp(target, spacing * 0.2f, spacing * 0.55f);
+        }
+
+        private void EnsurePortAlignCapacity(int count)
+        {
+            while (_portAlignPositions.Count < count)
+            {
+                _portAlignPositions.Add(Vector3.zero);
+            }
+            while (_portAlignEnabled.Count < count)
+            {
+                _portAlignEnabled.Add(false);
+            }
+            while (_portAlignedThisTick.Count < count)
+            {
+                _portAlignedThisTick.Add(false);
+            }
+        }
+
+        private void UpdatePortAlignmentFlags()
+        {
+            if (_portAlignEnabled.Count == 0 || _slotCurrentPositions.Count == 0)
+            {
+                return;
+            }
+
+            EnsurePortAlignCapacity(_portAlignEnabled.Count);
+
+            for (int i = 0; i < _portAlignEnabled.Count; i++)
+            {
+                if (!_portAlignEnabled[i])
+                {
+                    continue;
+                }
+                if (!_containerToBelt.TryGetValue(i, out var beltIndex))
+                {
+                    continue;
+                }
+                if (beltIndex < 0 || beltIndex >= _slotCurrentPositions.Count)
+                {
+                    continue;
+                }
+                if (IsPortAlignedToMouth(i, beltIndex))
+                {
+                    _portAlignedThisTick[i] = true;
+                }
+            }
+        }
+
+        private void ResetPortAlignmentFlags()
+        {
+            for (int i = 0; i < _portAlignedThisTick.Count; i++)
+            {
+                _portAlignedThisTick[i] = false;
+            }
+        }
+
+        private Vector3 ResolvePortAlignAnchor(BoxSpec spec)
+        {
+            if (_currentLayout == null)
+            {
+                return Vector3.zero;
+            }
+
+            float unit = _currentLayout.blockSize > 0f ? _currentLayout.blockSize : blockVisualSize.x;
+            var size = LayoutUtils.ComputeBoxSize(spec, unit);
+            var mouth2 = LayoutUtils.ComputeMouth(spec, size);
+            return new Vector3(mouth2.x, mouth2.y, 0f);
+        }
+
+        private bool ShouldEnablePortAlignment(Vector3 anchor)
+        {
+            if (_slotBasePositions.Count == 0)
+            {
+                return false;
+            }
+
+            float tolerance = GetPortAlignTolerance();
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+            float maxAllowed = Mathf.Max(tolerance * 2.5f, spacing * 0.8f);
+            float minDist = float.MaxValue;
+
+            for (int i = 0; i < _slotBasePositions.Count; i++)
+            {
+                float dist = Vector3.Distance(_slotBasePositions[i], anchor);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                }
+            }
+
+            return minDist <= maxAllowed;
+        }
+
+        private float GetBeltBlockBaseSize()
+        {
+            float spacing = _beltSpacingUsed > 0.0001f ? _beltSpacingUsed : beltSlotSpacing;
+            float baseSize = spacing * beltBlockSizeFactor;
+            float unit = _currentLayout != null && _currentLayout.blockSize > 0f ? _currentLayout.blockSize : blockVisualSize.x;
+            float maxSize = Mathf.Max(0.05f, unit);
+            return Mathf.Clamp(baseSize, 0.05f, maxSize);
         }
 
         private void StartBeltSpawnFromBox(int containerIndex, Block released)

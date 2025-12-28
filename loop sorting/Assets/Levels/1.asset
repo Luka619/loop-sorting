@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65e1c79ae65a8454faa53ad7a19d56a1, type: 3}
   m_Name: 1
   m_EditorClassIdentifier: 
-  beltCapacity: 50
+  beltCapacity: 18
   beltSlotSpacing: 0
   smoothCorners: 1
   cornerSmoothTension: 1

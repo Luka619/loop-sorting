@@ -8,6 +8,18 @@ namespace LoopSorting
     public class BoxView : MonoBehaviour
     {
         private static Texture2D _mouthFlashTexture;
+        private readonly HashSet<Material> _runtimeMaterials = new HashSet<Material>();
+        private readonly HashSet<Mesh> _runtimeMeshes = new HashSet<Mesh>();
+        private Material _mouthFlashMaterial;
+        private Material _mouthIndicatorMaterial;
+        private Material _mouthRippleMaterial;
+        private Material _lockOverlayMaterial;
+        private Material _lockMarkerPlateMaterial;
+        private Material _lockMarkerDiscMaterial;
+        private Material _lockMarkerIconMaterial;
+        private Material _completedFrameMaterial;
+        private Material _completedGlassMaterial;
+        private Material _completedBadgeMaterial;
 
         public int ContainerIndex { get; private set; }
         public GameRuntimeController Controller { get; private set; }
@@ -1313,7 +1325,7 @@ namespace LoopSorting
         private const string BoxRimCornerTexturePath = "World_Sprites/box_rim_corner.png";
         private const string BoxCavityTexturePath = "World_Sprites/box_cavity_fill.png";
 
-        private static Material CreateBoxTextureMaterial(Texture2D texture, int renderQueue, Color tint)
+        private Material CreateBoxTextureMaterial(Texture2D texture, int renderQueue, Color tint)
         {
             if (texture == null) return null;
 
@@ -1328,6 +1340,7 @@ namespace LoopSorting
             if (shader == null) return null;
 
             var mat = new Material(shader);
+            TrackRuntimeMaterial(mat);
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
             else mat.mainTexture = texture;
 
@@ -1340,6 +1353,30 @@ namespace LoopSorting
             if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 0);
 
             return mat;
+        }
+
+        private void TrackRuntimeMaterial(Material mat)
+        {
+            if (mat == null) return;
+            _runtimeMaterials.Add(mat);
+        }
+
+        private void TrackRuntimeMesh(Mesh mesh)
+        {
+            if (mesh == null) return;
+            _runtimeMeshes.Add(mesh);
+        }
+
+        private void ReplaceRuntimeMaterial(ref Material current, Material next)
+        {
+            if (ReferenceEquals(current, next)) return;
+            if (current != null)
+            {
+                _runtimeMaterials.Remove(current);
+                Destroy(current);
+            }
+            current = next;
+            TrackRuntimeMaterial(current);
         }
 
         private static GameObject EnsureQuadChild(GameObject parent, string name, out Renderer renderer)
@@ -1391,7 +1428,8 @@ namespace LoopSorting
             {
                 if (_boxCavityMaterial == null || _boxCavityMaterial.mainTexture != tex || _boxCavityMaterial.renderQueue != BoxCavityRenderQueue)
                 {
-                    _boxCavityMaterial = CreateBoxTextureMaterial(tex, BoxCavityRenderQueue, BoxCavityTint);
+                    var mat = CreateBoxTextureMaterial(tex, BoxCavityRenderQueue, BoxCavityTint);
+                    ReplaceRuntimeMaterial(ref _boxCavityMaterial, mat);
                 }
                 else
                 {
@@ -1455,7 +1493,8 @@ namespace LoopSorting
 
             if (_boxRimEdgeMaterial == null || _boxRimEdgeMaterial.mainTexture != edgeTex || _boxRimEdgeMaterial.renderQueue != BoxRimRenderQueue)
             {
-                _boxRimEdgeMaterial = CreateBoxTextureMaterial(edgeTex, BoxRimRenderQueue, BoxRimTint);
+                var mat = CreateBoxTextureMaterial(edgeTex, BoxRimRenderQueue, BoxRimTint);
+                ReplaceRuntimeMaterial(ref _boxRimEdgeMaterial, mat);
             }
             else
             {
@@ -1464,7 +1503,8 @@ namespace LoopSorting
 
             if (_boxRimCornerMaterial == null || _boxRimCornerMaterial.mainTexture != cornerTex || _boxRimCornerMaterial.renderQueue != (BoxRimRenderQueue + 1))
             {
-                _boxRimCornerMaterial = CreateBoxTextureMaterial(cornerTex, BoxRimRenderQueue + 1, BoxRimTint);
+                var mat = CreateBoxTextureMaterial(cornerTex, BoxRimRenderQueue + 1, BoxRimTint);
+                ReplaceRuntimeMaterial(ref _boxRimCornerMaterial, mat);
             }
             else
             {
@@ -1628,6 +1668,7 @@ namespace LoopSorting
                     {
                         color = Color.white,
                     };
+                    TrackRuntimeMaterial(mat);
                     mat.renderQueue = 3300;
                     lr.sharedMaterial = mat;
                 }
@@ -1688,8 +1729,10 @@ namespace LoopSorting
                 if (shader != null)
                 {
                     var mat = new Material(shader);
+                    TrackRuntimeMaterial(mat);
                     mat.renderQueue = LockOverlayQueue;
                     sr.sharedMaterial = mat;
+                    _lockOverlayMaterial = mat;
                 }
                 // Marker root sits above overlay (do not parent under overlay to avoid double Z offsets).
                 _lockBadge = new GameObject("LockMarker");
@@ -1728,7 +1771,12 @@ namespace LoopSorting
                         if (r != null)
                         {
                             var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(plateTex, Color.white, LockBadgeQueue);
-                            if (mat != null) r.sharedMaterial = mat;
+                            if (mat != null)
+                            {
+                                TrackRuntimeMaterial(mat);
+                                r.sharedMaterial = mat;
+                                _lockMarkerPlateMaterial = mat;
+                            }
                         }
                     }
                     if (discTex != null)
@@ -1737,7 +1785,12 @@ namespace LoopSorting
                         if (r != null)
                         {
                             var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(discTex, Color.white, LockBadgeQueue + 1);
-                            if (mat != null) r.sharedMaterial = mat;
+                            if (mat != null)
+                            {
+                                TrackRuntimeMaterial(mat);
+                                r.sharedMaterial = mat;
+                                _lockMarkerDiscMaterial = mat;
+                            }
                         }
                     }
                     if (iconTex != null)
@@ -1746,7 +1799,12 @@ namespace LoopSorting
                         if (r != null)
                         {
                             var mat = LoopSortingUIKit.CreateUnlitTextureMaterial(iconTex, Color.white, LockBadgeQueue + 2);
-                            if (mat != null) r.sharedMaterial = mat;
+                            if (mat != null)
+                            {
+                                TrackRuntimeMaterial(mat);
+                                r.sharedMaterial = mat;
+                                _lockMarkerIconMaterial = mat;
+                            }
                         }
                     }
                 }
@@ -2047,6 +2105,7 @@ namespace LoopSorting
             if (shader != null)
             {
                 var mat = new Material(shader);
+                TrackRuntimeMaterial(mat);
                 if (_mouthFlashTexture != null)
                 {
                     if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
@@ -2057,6 +2116,7 @@ namespace LoopSorting
 
                 var r = _mouthFlash.GetComponent<Renderer>();
                 if (r != null) r.sharedMaterial = mat;
+                _mouthFlashMaterial = mat;
             }
 
             _mouthFlash.SetActive(false);
@@ -2086,6 +2146,7 @@ namespace LoopSorting
                 if (shader != null)
                 {
                     var mat = new Material(shader);
+                    TrackRuntimeMaterial(mat);
                     if (_mouthFlashTexture != null)
                     {
                         if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
@@ -2096,6 +2157,7 @@ namespace LoopSorting
 
                     var r = _mouthIndicator.GetComponent<Renderer>();
                     if (r != null) r.sharedMaterial = mat;
+                    _mouthIndicatorMaterial = mat;
                 }
             }
 
@@ -2167,6 +2229,7 @@ namespace LoopSorting
             if (shader != null)
             {
                 var mat = new Material(shader);
+                TrackRuntimeMaterial(mat);
                 if (_mouthFlashTexture != null)
                 {
                     if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", _mouthFlashTexture);
@@ -2177,6 +2240,7 @@ namespace LoopSorting
 
                 var r = _mouthRipple.GetComponent<Renderer>();
                 if (r != null) r.sharedMaterial = mat;
+                _mouthRippleMaterial = mat;
             }
 
             _mouthRipple.SetActive(false);
@@ -2504,7 +2568,7 @@ namespace LoopSorting
             if (_lockBadge != null) _lockBadge.transform.localScale = Vector3.one;
         }
 
-        private static void EnsureUnlitColorMaterial(GameObject quad, Color color, int renderQueue)
+        private void EnsureUnlitColorMaterial(GameObject quad, Color color, int renderQueue)
         {
             if (quad == null) return;
             var r = quad.GetComponent<Renderer>();
@@ -2535,6 +2599,7 @@ namespace LoopSorting
                 if (tintShader == null) return;
 
                 var tintMat = new Material(tintShader);
+                TrackRuntimeMaterial(tintMat);
                 if (tintMat.HasProperty("_MainTex")) tintMat.SetTexture("_MainTex", tex);
                 else tintMat.mainTexture = tex;
                 TrySetMaterialColor(tintMat, color);
@@ -2570,6 +2635,7 @@ namespace LoopSorting
             if (shader == null) return;
 
             var mat = new Material(shader);
+            TrackRuntimeMaterial(mat);
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", Texture2D.whiteTexture);
             else mat.mainTexture = Texture2D.whiteTexture;
             TrySetMaterialColor(mat, color);
@@ -2927,7 +2993,7 @@ namespace LoopSorting
             }
         }
 
-        private static GameObject CreateSlicedSpriteLayer(
+        private GameObject CreateSlicedSpriteLayer(
             Transform parent,
             string name,
             float z,
@@ -2960,6 +3026,7 @@ namespace LoopSorting
             if (shader != null)
             {
                 var mat = new Material(shader);
+                TrackRuntimeMaterial(mat);
                 mat.renderQueue = renderQueue;
                 sr.sharedMaterial = mat;
             }
@@ -2990,7 +3057,7 @@ namespace LoopSorting
             return go;
         }
 
-        private static void UpdateNineSliceMesh(GameObject go, float width, float height, float borderFrac)
+        private void UpdateNineSliceMesh(GameObject go, float width, float height, float borderFrac)
         {
             if (go == null) return;
             var mf = go.GetComponent<MeshFilter>();
@@ -3029,6 +3096,7 @@ namespace LoopSorting
             if (mesh == null)
             {
                 mesh = new Mesh { name = $"{go.name}_NineSlice" };
+                TrackRuntimeMesh(mesh);
                 mf.sharedMesh = mesh;
             }
             else
@@ -3262,7 +3330,7 @@ namespace LoopSorting
             }
         }
 
-        private static void CreateOneConfettiSystem(
+        private void CreateOneConfettiSystem(
             Transform parent,
             string name,
             Texture2D texture,
@@ -3359,7 +3427,7 @@ namespace LoopSorting
             return new[] { a, b, c, d };
         }
 
-        private static Material CreateAdditiveTextureMaterial(Texture2D texture, Color color, int renderQueue)
+        private Material CreateAdditiveTextureMaterial(Texture2D texture, Color color, int renderQueue)
         {
             var shader =
                 Shader.Find("Particles/Additive") ??
@@ -3373,12 +3441,28 @@ namespace LoopSorting
             if (shader == null) return null;
 
             var mat = new Material(shader);
+            TrackRuntimeMaterial(mat);
             if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", texture);
             else mat.mainTexture = texture;
             TrySetMaterialColor(mat, color);
             mat.renderQueue = renderQueue;
             if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
             return mat;
+        }
+
+        private void OnDestroy()
+        {
+            foreach (var mat in _runtimeMaterials)
+            {
+                if (mat != null) Destroy(mat);
+            }
+            _runtimeMaterials.Clear();
+
+            foreach (var mesh in _runtimeMeshes)
+            {
+                if (mesh != null) Destroy(mesh);
+            }
+            _runtimeMeshes.Clear();
         }
 
         private static void RemoveCollider(GameObject quad)

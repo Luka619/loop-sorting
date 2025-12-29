@@ -333,9 +333,10 @@ namespace LoopSorting
             _gameOver = false;
 	            _inputLocked = false;
             _uiModalService.Reset();
-	            _endSequenceRoutine = null;
-	            _fullBeltFastForward = false;
-	            _fullBeltStepsRemaining = 0;
+	        _endSequenceRoutine = null;
+	        _fullBeltFastForward = false;
+	        _fullBeltStepsRemaining = 0;
+            _autoUniformFastForward = false;
             _beltSpawnAnimating.Clear();
             _beltSpawnCoroutines.Clear();
             _beltFrozenPositions.Clear();
@@ -912,6 +913,7 @@ namespace LoopSorting
                 else DestroyImmediate(_backgroundQuad);
                 _backgroundQuad = null;
             }
+            ClearBackgroundAssets();
 
             var cam = Camera.main;
             if (cam == null)
@@ -972,6 +974,7 @@ namespace LoopSorting
                 Color bottom = uiTheme != null ? uiTheme.gradientBottom : new Color(1f, 0.87f, 0.65f);
                 tex.SetPixels(new[] { bottom, top });
                 tex.Apply();
+                _backgroundRuntimeTexture = tex;
             }
 
             Material mat = null;
@@ -1025,6 +1028,7 @@ namespace LoopSorting
                 if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", 2);
                 var renderer = _backgroundQuad.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = mat;
+                _backgroundMaterial = mat;
                 renderer.sortingLayerID = 0;
                 renderer.sortingOrder = int.MinValue;
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -1326,6 +1330,7 @@ namespace LoopSorting
                 var mat = new Material(shader);
                 mat.renderQueue = 2920;
                 _emptyDeferredLine.sharedMaterial = mat;
+                _emptyDeferredLineMaterial = mat;
             }
             _emptyDeferredLine.enabled = false;
         }

@@ -114,6 +114,7 @@ namespace LoopSorting
         private readonly Dictionary<int, int> _inboundStreamCounts = new Dictionary<int, int>();
         private Coroutine _emptyDeferredHintRoutine;
         private LineRenderer _emptyDeferredLine;
+        private Material _emptyDeferredLineMaterial;
         private RejectFeedbackGate _rejectGate;
         private List<BoxSpec> _boxSpecs = new List<BoxSpec>();
         private List<bool> _boxLocked = new List<bool>();
@@ -150,8 +151,12 @@ namespace LoopSorting
         private Camera _cachedMainCamera;
         private int _slotMarkerVisualFrameCounter;
         private GameObject _backgroundQuad;
+        private Material _backgroundMaterial;
+        private Texture2D _backgroundRuntimeTexture;
         private bool _backgroundDebugLogged;
         private GameObject _conveyorBelt;
+        private readonly HashSet<Material> _beltRuntimeMaterials = new HashSet<Material>();
+        private readonly HashSet<Mesh> _beltRuntimeMeshes = new HashSet<Mesh>();
         private static bool _beltMaterialDebugLogged;
         private static bool _beltMaterialFailedLogged;
         private static bool _backgroundMaterialFailedLogged;
@@ -170,6 +175,8 @@ namespace LoopSorting
         private const float WinEndSequenceDelaySeconds = 0.75f;
         private const float LoseEndSequenceDelaySeconds = 0.60f;
         private bool _fullBeltFastForward;
+        private bool _autoUniformFastForward;
+        private readonly HashSet<BlockColor> _autoUniformColors = new HashSet<BlockColor>();
         private int _fullBeltStepsRemaining;
         private const int WinCoinsReward = 40;
         private const int WinAdRewardMultiplier = 5;
@@ -211,6 +218,54 @@ namespace LoopSorting
             return _runtimeUnlitTextureMaterialTemplate;
         }
 
+        private static void SafeDestroy(UnityEngine.Object obj)
+        {
+            if (obj == null) return;
+            if (Application.isPlaying) Destroy(obj);
+            else DestroyImmediate(obj);
+        }
+
+        private void TrackBeltMaterial(Material mat)
+        {
+            if (mat == null) return;
+            _beltRuntimeMaterials.Add(mat);
+        }
+
+        private void TrackBeltMesh(Mesh mesh)
+        {
+            if (mesh == null) return;
+            _beltRuntimeMeshes.Add(mesh);
+        }
+
+        private void ClearConveyorRuntimeAssets()
+        {
+            foreach (var mat in _beltRuntimeMaterials)
+            {
+                SafeDestroy(mat);
+            }
+            _beltRuntimeMaterials.Clear();
+
+            foreach (var mesh in _beltRuntimeMeshes)
+            {
+                SafeDestroy(mesh);
+            }
+            _beltRuntimeMeshes.Clear();
+        }
+
+        private void ClearBackgroundAssets()
+        {
+            if (_backgroundMaterial != null)
+            {
+                SafeDestroy(_backgroundMaterial);
+                _backgroundMaterial = null;
+            }
+            if (_backgroundRuntimeTexture != null)
+            {
+                SafeDestroy(_backgroundRuntimeTexture);
+                _backgroundRuntimeTexture = null;
+            }
+        }
+
         private enum BoosterType
         {
             Sort,
@@ -232,7 +287,7 @@ namespace LoopSorting
         private int _conveyorTickSfxCountdown;
         private int _sfxInsertEventsThisTick;
 
-        public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : _speedMultiplier;
+        public float EffectiveSpeedMultiplier => _fullBeltFastForward ? 5f : (_autoUniformFastForward ? 5f : _speedMultiplier);
 
         private readonly HashSet<int> _beltSpawnAnimating = new HashSet<int>();
         private readonly Dictionary<int, Coroutine> _beltSpawnCoroutines = new Dictionary<int, Coroutine>();
@@ -1349,7 +1404,9 @@ namespace LoopSorting
                 return;
             }
 
-            float effectiveSpeed = _fullBeltFastForward ? 5f : _speedMultiplier;
+            UpdateAutoUniformFastForward();
+
+            float effectiveSpeed = EffectiveSpeedMultiplier;
             _tickTimer += Time.deltaTime * effectiveSpeed;
             float progress = Mathf.Clamp01(_tickTimer / Mathf.Max(0.0001f, conveyorTickSeconds));
             UpdateSlotMarkersVisuals(progress);
@@ -1989,6 +2046,70 @@ namespace LoopSorting
             }
         }
 
+        private void UpdateAutoUniformFastForward()
+        {
+            if (_gameOver || _game == null)
+            {
+                SetAutoUniformFastForward(false);
+                return;
+            }
+
+            if (_fullBeltFastForward)
+            {
+                SetAutoUniformFastForward(false);
+                return;
+            }
+
+            bool want = ShouldAutoUniformFastForward();
+            SetAutoUniformFastForward(want);
+        }
+
+        private void SetAutoUniformFastForward(bool enabled)
+        {
+            if (_autoUniformFastForward == enabled) return;
+            _autoUniformFastForward = enabled;
+            RefreshFastTag();
+
+            // Only play speed change SFX when it actually changes the effective speed.
+            if (_fullBeltFastForward || _speedMultiplier >= 4.99f)
+            {
+                return;
+            }
+
+            if (enabled)
+            {
+                PlaySfx(SfxId.ConveyorSpeedup);
+            }
+            else
+            {
+                PlaySfx(SfxId.ConveyorSpeeddown);
+            }
+        }
+
+        private bool ShouldAutoUniformFastForward()
+        {
+            if (_game == null || _game.Containers == null || _game.Containers.Count == 0) return false;
+
+            bool hasBlocks = false;
+            _autoUniformColors.Clear();
+            for (int i = 0; i < _game.Containers.Count; i++)
+            {
+                var c = _game.Containers[i];
+                if (c == null) continue;
+                if (c.Count > 0) hasBlocks = true;
+                if (!c.IsUniform()) return false;
+
+                // If two unfinished boxes share the same color, keep normal speed.
+                if (!c.IsUniformAndFull() && c.Count > 0)
+                {
+                    var color = c.Blocks[0].Color;
+                    if (!_autoUniformColors.Add(color)) return false;
+                }
+            }
+
+            return hasBlocks;
+        }
+
         private void StartFullBeltFastForward()
         {
             if (_game == null) return;
@@ -2147,6 +2268,7 @@ namespace LoopSorting
                 DestroyImmediate(_conveyorBelt);
                 _conveyorBelt = null;
             }
+            ClearConveyorRuntimeAssets();
 
             if (_beltSlots == null || _beltSlots.Count < 2) return;
             if (path == null || path.points == null || path.points.Count < 2) return;
@@ -2183,10 +2305,15 @@ namespace LoopSorting
             surfaceMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             surfaceMr.receiveShadows = false;
             surfaceMr.allowOcclusionWhenDynamic = false;
-            surfaceMf.sharedMesh = BuildRibbonMesh(pts, surfaceWidth, out float totalLen);
-            surfaceMr.sharedMaterial = CreateConveyorBeltMaterial(totalLen, spacing, loop);
+            var surfaceMesh = BuildRibbonMesh(pts, surfaceWidth, out float totalLen);
+            TrackBeltMesh(surfaceMesh);
+            surfaceMf.sharedMesh = surfaceMesh;
+            var surfaceMat = CreateConveyorBeltMaterial(totalLen, spacing, loop);
+            TrackBeltMaterial(surfaceMat);
+            surfaceMr.sharedMaterial = surfaceMat;
 
             var railMat = CreateConveyorRailMaterial(BeltRailColor);
+            TrackBeltMaterial(railMat);
             var leftGO = new GameObject("BeltRailLeft");
             leftGO.transform.SetParent(go.transform, false);
             var leftMf = leftGO.AddComponent<MeshFilter>();
@@ -2194,7 +2321,9 @@ namespace LoopSorting
             leftMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             leftMr.receiveShadows = false;
             leftMr.allowOcclusionWhenDynamic = false;
-            leftMf.sharedMesh = BuildRoundedRibbonMesh(leftPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            var leftMesh = BuildRoundedRibbonMesh(leftPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            TrackBeltMesh(leftMesh);
+            leftMf.sharedMesh = leftMesh;
             leftMr.sharedMaterial = railMat;
 
             var rightGO = new GameObject("BeltRailRight");
@@ -2204,7 +2333,9 @@ namespace LoopSorting
             rightMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rightMr.receiveShadows = false;
             rightMr.allowOcclusionWhenDynamic = false;
-            rightMf.sharedMesh = BuildRoundedRibbonMesh(rightPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            var rightMesh = BuildRoundedRibbonMesh(rightPts, railWidth, railHeight, railCornerRadius, BeltRailCornerSegments, loop);
+            TrackBeltMesh(rightMesh);
+            rightMf.sharedMesh = rightMesh;
             rightMr.sharedMaterial = railMat;
 
             if (!loop && pts.Count >= 2)
@@ -2220,6 +2351,7 @@ namespace LoopSorting
                 float ringRadius = Mathf.Clamp(Mathf.Min(ringWidth, ringHeight) * BeltEndcapCornerRadiusRatio, 0.001f, Mathf.Min(ringWidth, ringHeight) * 0.5f);
 
                 var capMat = CreateConveyorEndcapMaterial(BeltEndcapColor);
+                TrackBeltMaterial(capMat);
                 AddConveyorEndcap(go.transform, pts[0], pts[1], capLength, capWidth, capHeight, capRadius, BeltEndcapCornerSegments,
                     ringLength, ringWidth, ringHeight, ringRadius, BeltEndcapCornerSegments, capMat, railMat, "BeltEndcapStart");
                 AddConveyorEndcap(go.transform, pts[pts.Count - 1], pts[pts.Count - 2], capLength, capWidth, capHeight, capRadius, BeltEndcapCornerSegments,
@@ -2599,7 +2731,7 @@ namespace LoopSorting
             return mesh;
         }
 
-        private static void AddConveyorEndcap(
+        private void AddConveyorEndcap(
             Transform parent,
             Vector3 anchor,
             Vector3 neighbor,
@@ -2644,7 +2776,9 @@ namespace LoopSorting
                 capMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 capMr.receiveShadows = false;
                 capMr.allowOcclusionWhenDynamic = false;
-                capMf.sharedMesh = BuildRoundedRibbonMesh(BuildStraightPoints(capCenter, dir3, safeCapLength), capWidth, capHeight, capRadius, capSegments, false);
+                var capMesh = BuildRoundedRibbonMesh(BuildStraightPoints(capCenter, dir3, safeCapLength), capWidth, capHeight, capRadius, capSegments, false);
+                TrackBeltMesh(capMesh);
+                capMf.sharedMesh = capMesh;
                 capMr.sharedMaterial = capMat;
             }
 
@@ -2657,7 +2791,9 @@ namespace LoopSorting
                 ringMr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 ringMr.receiveShadows = false;
                 ringMr.allowOcclusionWhenDynamic = false;
-                ringMf.sharedMesh = BuildRoundedRibbonMesh(BuildStraightPoints(ringCenter, dir3, safeRingLength), ringWidth, ringHeight, ringRadius, ringSegments, false);
+                var ringMesh = BuildRoundedRibbonMesh(BuildStraightPoints(ringCenter, dir3, safeRingLength), ringWidth, ringHeight, ringRadius, ringSegments, false);
+                TrackBeltMesh(ringMesh);
+                ringMf.sharedMesh = ringMesh;
                 ringMr.sharedMaterial = ringMat;
             }
         }
@@ -3886,6 +4022,29 @@ namespace LoopSorting
             t = Mathf.Clamp01(t);
             var proj = a + ab * t;
             return Vector3.Distance(p, proj);
+        }
+
+        private void OnDestroy()
+        {
+            if (_backgroundQuad != null)
+            {
+                SafeDestroy(_backgroundQuad);
+                _backgroundQuad = null;
+            }
+            ClearBackgroundAssets();
+            ClearConveyorRuntimeAssets();
+
+            if (_slotMarkerMaterial != null)
+            {
+                SafeDestroy(_slotMarkerMaterial);
+                _slotMarkerMaterial = null;
+            }
+
+            if (_emptyDeferredLineMaterial != null)
+            {
+                SafeDestroy(_emptyDeferredLineMaterial);
+                _emptyDeferredLineMaterial = null;
+            }
         }
     }
 }

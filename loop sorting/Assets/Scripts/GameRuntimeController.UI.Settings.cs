@@ -128,7 +128,7 @@ namespace LoopSorting
             dim.raycastTarget = true;
             // Use a solid full-screen dim (no sprite) to avoid accidental gradients/alpha artifacts from themed overlay sprites.
             dim.sprite = null;
-            dim.color = new Color(0f, 0f, 0f, 0.55f);
+            dim.color = new Color(0f, 0f, 0f, 0.62f);
             var overlayRect = _settingsPanel.GetComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;
             overlayRect.anchorMax = Vector2.one;

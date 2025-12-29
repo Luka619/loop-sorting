@@ -98,7 +98,7 @@ namespace LoopSorting
             dim.raycastTarget = true;
             // Use a solid full-screen dim (no sprite) to keep the background consistent across themes.
             dim.sprite = null;
-            dim.color = new Color(0f, 0f, 0f, 0.55f);
+            dim.color = new Color(0f, 0f, 0f, 0.62f);
 
             var overlayRect = _boosterPurchasePanel.GetComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;

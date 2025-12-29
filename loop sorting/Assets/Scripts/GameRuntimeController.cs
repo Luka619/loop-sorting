@@ -62,13 +62,14 @@ namespace LoopSorting
 
         private const float SaveDelayStrongSeconds = 0.20f;
         private const float SaveDelayWeakSeconds = 2.00f;
+        private const bool InboundRejectSfxEnabled = false;
         private const string RuntimeUnlitTextureMaterialResourcePath = "LoopSortingUnlitTexture";
         private const float BeltSpawnPunchScale = 0.12f;
         private const float BeltSpawnPunchSeconds = 0.12f;
-        private static readonly Color BeltRailColor = Color.white;
+        private static readonly Color BeltRailColor = new Color(0.9f, 0.9f, 0.9f, 1f);
         private const float BeltRailCornerRadiusRatio = 0.12f;
         private const int BeltRailCornerSegments = 2;
-        private static readonly Color BeltEndcapColor = new Color(0.93f, 0.58f, 0.34f, 1f);
+        private static readonly Color BeltEndcapColor = new Color(0.9f, 0.54f, 0.32f, 1f);
         private const float BeltEndcapLengthRatio = 0.75f;
         private const float BeltEndcapHeightRatio = 1.2f;
         private const float BeltEndcapCornerRadiusRatio = 0.45f;
@@ -649,8 +650,7 @@ namespace LoopSorting
             }
             if (inserts > 0)
             {
-                float vol = 1f + Mathf.Min(0.6f, inserts * 0.08f);
-                PlaySfx(SfxId.BlockInsert, vol);
+                PlaySfx(SfxId.BlockInsert);
             }
             if (completions > 0)
             {
@@ -1523,7 +1523,7 @@ namespace LoopSorting
                 }
             }
 
-            if (bestSfxOutcome.HasValue && _rejectGate.ShouldPlay(bestSfxOutcome.Value, bestSfxContainerIndex))
+            if (InboundRejectSfxEnabled && bestSfxOutcome.HasValue && _rejectGate.ShouldPlay(bestSfxOutcome.Value, bestSfxContainerIndex))
             {
                 PlaySfx(MapRejectOutcomeToSfx(bestSfxOutcome.Value));
             }

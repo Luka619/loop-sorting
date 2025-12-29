@@ -101,11 +101,11 @@ namespace LoopSorting
                 // Always use a solid full-screen dim. Some themed overlay sprites can be partially transparent
                 // (e.g. top/bottom gradients), which makes the HUD behind look like a layout bug.
                 dim.sprite = null;
-                dim.color = new Color(0f, 0f, 0f, 0.55f);
+                dim.color = new Color(0f, 0f, 0f, 0.62f);
             }
             else
             {
-                dim.color = new Color(0f, 0f, 0f, 0.55f);
+                dim.color = new Color(0f, 0f, 0f, 0.62f);
             }
             var overlayRect = _shopPanel.GetComponent<RectTransform>();
             overlayRect.anchorMin = Vector2.zero;

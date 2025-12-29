@@ -21,6 +21,13 @@ namespace LoopSorting
         private Coroutine _resultPanelIntroRoutine;
         private Coroutine _resultButtonsIntroRoutine;
         private Coroutine _resultLoseIconIdleRoutine;
+        private Coroutine _resultWinFireworkRoutine;
+        private GameObject _resultWinFireworkRoot;
+        private readonly List<Image> _resultWinFireworkImages = new List<Image>();
+        private Coroutine _resultLoseTitleShakeRoutine;
+        private Coroutine _resultLoseParticleRoutine;
+        private GameObject _resultLoseParticleRoot;
+        private readonly List<Image> _resultLoseParticleImages = new List<Image>();
         private Vector3 _resultPanelIntroBaseScale = Vector3.one;
         private Vector3 _resultPrimaryIntroBaseScale = Vector3.one;
         private Vector3 _resultSecondaryIntroBaseScale = Vector3.one;
@@ -29,9 +36,14 @@ namespace LoopSorting
         private Vector2 _resultLoseIconBasePos;
         private Quaternion _resultLoseIconBaseRotation = Quaternion.identity;
         private bool _resultLoseIconBaseCaptured;
+        private Vector2 _resultLoseTitleBaseAnchored;
+        private Vector3 _resultLoseTitleBaseLocal;
+        private bool _resultLoseTitleBaseCaptured;
         private static Texture2D _resultGlassOverlayNoiseTexture;
         private static Sprite _resultGlassOverlaySprite;
         private static bool _resultGlassOverlaySpriteTried;
+        private static Sprite[] _resultWinFireworkSprites;
+        private static bool _resultWinFireworkSpritesTried;
 
         private static void EnsureTmpSpriteAssetVersion(TMP_SpriteAsset asset)
         {
@@ -400,6 +412,9 @@ namespace LoopSorting
         private void ConfigureResultWinRewardLayout()
         {
             StopResultLoseCardIconIdle();
+            StopResultWinFireworks();
+            StopResultLoseTitleShake();
+            StopResultLoseParticles();
             ApplyResultButtonsLayoutForWinRewards();
 
             // Don't override prefab-authored button layout. This lets "Apply Runtime Layout To Prefabs" persist
@@ -442,6 +457,7 @@ namespace LoopSorting
             UpdateResultWinStats();
             UpdateResultWinFeatureProgress();
             PlayResultIntroAnimations(win: true);
+            StartResultWinFireworks();
         }
 
         private void EnsureWinRewardLayoutPrimary()
@@ -673,6 +689,7 @@ namespace LoopSorting
             SetResultWinLayoutActive(false);
             SetResultLoseLayoutActive(true);
             SetResultBannerVisible(false);
+            StopResultWinFireworks();
             EnsureResultLoseTitleImage();
             if (_resultLoseTitleImage != null && _resultLoseTitleImage.sprite == null)
             {
@@ -867,6 +884,8 @@ namespace LoopSorting
                 _primaryButton.interactable = _progress.Coins >= LoseReviveCoinsCost;
             }
             PlayResultIntroAnimations(win: false);
+            StartResultLoseTitleShake();
+            StartResultLoseParticles();
         }
 
         private void PlayResultIntroAnimations(bool win)
@@ -962,6 +981,566 @@ namespace LoopSorting
                 }
             }
             _resultLoseIconBaseCaptured = false;
+        }
+
+        private void StartResultLoseTitleShake()
+        {
+            if (_resultPanelMode != ResultPanelMode.Lose) return;
+            var title = GetActiveResultTitleTransform(win: false);
+            if (title == null) return;
+
+            StopResultLoseTitleShake();
+
+            if (title is RectTransform rect)
+            {
+                _resultLoseTitleBaseAnchored = rect.anchoredPosition;
+                _resultLoseTitleBaseCaptured = true;
+                _resultLoseTitleShakeRoutine = StartCoroutine(ResultLoseTitleShakeAnchoredRoutine(rect, _resultLoseTitleBaseAnchored));
+            }
+            else
+            {
+                _resultLoseTitleBaseLocal = title.localPosition;
+                _resultLoseTitleBaseCaptured = true;
+                _resultLoseTitleShakeRoutine = StartCoroutine(ResultLoseTitleShakeLocalRoutine(title, _resultLoseTitleBaseLocal));
+            }
+        }
+
+        private void StopResultLoseTitleShake()
+        {
+            if (_resultLoseTitleShakeRoutine != null)
+            {
+                StopCoroutine(_resultLoseTitleShakeRoutine);
+                _resultLoseTitleShakeRoutine = null;
+            }
+
+            if (_resultLoseTitleBaseCaptured)
+            {
+                var title = GetActiveResultTitleTransform(win: false);
+                if (title is RectTransform rect)
+                {
+                    rect.anchoredPosition = _resultLoseTitleBaseAnchored;
+                }
+                else if (title != null)
+                {
+                    title.localPosition = _resultLoseTitleBaseLocal;
+                }
+            }
+            _resultLoseTitleBaseCaptured = false;
+        }
+
+        private IEnumerator ResultLoseTitleShakeAnchoredRoutine(RectTransform rect, Vector2 basePos)
+        {
+            if (rect == null) yield break;
+            float seconds = 0.24f;
+            float amplitude = 6f;
+            float shakes = 10f;
+            float t = 0f;
+            while (t < seconds && rect != null && _resultPanelMode == ResultPanelMode.Lose)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float falloff = 1f - u;
+                float phase = u * shakes * Mathf.PI * 2f;
+                float dx = Mathf.Sin(phase) * amplitude * falloff;
+                float dy = Mathf.Cos(phase) * amplitude * 0.6f * falloff;
+                rect.anchoredPosition = basePos + new Vector2(dx, dy);
+                yield return null;
+            }
+            if (rect != null) rect.anchoredPosition = basePos;
+            _resultLoseTitleShakeRoutine = null;
+        }
+
+        private IEnumerator ResultLoseTitleShakeLocalRoutine(Transform target, Vector3 basePos)
+        {
+            if (target == null) yield break;
+            float seconds = 0.24f;
+            float amplitude = 6f;
+            float shakes = 10f;
+            float t = 0f;
+            while (t < seconds && target != null && _resultPanelMode == ResultPanelMode.Lose)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / seconds);
+                float falloff = 1f - u;
+                float phase = u * shakes * Mathf.PI * 2f;
+                float dx = Mathf.Sin(phase) * amplitude * falloff;
+                float dy = Mathf.Cos(phase) * amplitude * 0.6f * falloff;
+                target.localPosition = basePos + new Vector3(dx, dy, 0f);
+                yield return null;
+            }
+            if (target != null) target.localPosition = basePos;
+            _resultLoseTitleShakeRoutine = null;
+        }
+
+        private struct ResultLoseParticle
+        {
+            public Image image;
+            public Vector2 position;
+            public Vector2 velocity;
+            public float lifetime;
+            public float age;
+            public float rotationSpeed;
+            public float startScale;
+            public Color baseColor;
+        }
+
+        private void StartResultLoseParticles()
+        {
+            if (_resultPanel == null) return;
+            if (_resultPanelMode != ResultPanelMode.Lose) return;
+            var sprites = LoadResultWinFireworkSprites();
+            if (sprites == null || sprites.Length == 0) return;
+
+            StopResultLoseParticles();
+
+            EnsureResultPanelLayoutRefs();
+            var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
+            float panelW = panelRect != null ? panelRect.rect.width : 0f;
+            float panelH = panelRect != null ? panelRect.rect.height : 0f;
+            if (panelW <= 1f) panelW = 1080f;
+            if (panelH <= 1f) panelH = 1280f;
+            float baseSize = Mathf.Min(panelW, panelH);
+
+            var root = new GameObject("LoseParticles");
+            root.transform.SetParent(_resultPanel.transform, false);
+            var rootRect = root.AddComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rootRect.pivot = new Vector2(0.5f, 0.5f);
+            rootRect.anchoredPosition = Vector2.zero;
+            rootRect.sizeDelta = Vector2.zero;
+            root.transform.SetAsLastSibling();
+            _resultLoseParticleRoot = root;
+
+            float spawnX = Mathf.Clamp(panelW * 0.36f, 240f, 520f);
+            float spawnYMin = Mathf.Clamp(panelH * 0.18f, 120f, 360f);
+            float spawnYMax = Mathf.Clamp(panelH * 0.42f, 260f, 560f);
+            float sizeBase = Mathf.Clamp(baseSize * 0.045f, 14f, 36f);
+            float fallSpeed = Mathf.Clamp(baseSize * 0.18f, 90f, 180f);
+            float gravity = Mathf.Clamp(baseSize * 0.12f, 80f, 150f);
+            float minY = -panelH * 0.45f;
+
+            var particles = new List<ResultLoseParticle>(28);
+            _resultLoseParticleImages.Clear();
+
+            int count = 24;
+            for (int i = 0; i < count; i++)
+            {
+                var pos = new Vector2(
+                    UnityEngine.Random.Range(-spawnX, spawnX),
+                    UnityEngine.Random.Range(spawnYMin, spawnYMax));
+                var vel = new Vector2(
+                    UnityEngine.Random.Range(-40f, 40f),
+                    -fallSpeed * UnityEngine.Random.Range(0.7f, 1.1f));
+                float lifetime = UnityEngine.Random.Range(2.2f, 3.2f);
+                float rotSpeed = UnityEngine.Random.Range(-120f, 120f);
+                float scale = UnityEngine.Random.Range(0.75f, 1.15f);
+                float v = UnityEngine.Random.Range(0.35f, 0.6f);
+                float b = UnityEngine.Random.Range(0.85f, 1f);
+                var color = new Color(v * 0.9f, v * 0.95f, v * b, 0.85f);
+
+                var sprite = sprites[UnityEngine.Random.Range(0, sprites.Length)];
+                var img = CreateResultLoseParticleImage(rootRect, $"LoseParticle_{i}", pos, sizeBase, sprite, color);
+                if (img == null) continue;
+
+                particles.Add(new ResultLoseParticle
+                {
+                    image = img,
+                    position = pos,
+                    velocity = vel,
+                    lifetime = lifetime,
+                    age = 0f,
+                    rotationSpeed = rotSpeed,
+                    startScale = scale,
+                    baseColor = color
+                });
+            }
+
+            _resultLoseParticleRoutine = StartCoroutine(ResultLoseParticleRoutine(particles, gravity, minY));
+        }
+
+        private Image CreateResultLoseParticleImage(RectTransform parent, string name, Vector2 anchoredPos, float sizeBase, Sprite sprite, Color color)
+        {
+            if (parent == null || sprite == null) return null;
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(sizeBase, sizeBase);
+            rect.localScale = Vector3.one;
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            img.sprite = sprite;
+            img.color = color;
+            img.enabled = true;
+            _resultLoseParticleImages.Add(img);
+            return img;
+        }
+
+        private IEnumerator ResultLoseParticleRoutine(List<ResultLoseParticle> particles, float gravity, float minY)
+        {
+            if (particles == null || particles.Count == 0) yield break;
+            float maxLife = 0f;
+            for (int i = 0; i < particles.Count; i++)
+            {
+                if (particles[i].lifetime > maxLife) maxLife = particles[i].lifetime;
+            }
+            float totalSeconds = maxLife + 0.4f;
+            float t = 0f;
+            while (t < totalSeconds &&
+                   _resultPanelMode == ResultPanelMode.Lose &&
+                   _resultPanel != null &&
+                   _resultPanel.activeInHierarchy &&
+                   _resultLoseParticleRoot != null)
+            {
+                float dt = Time.unscaledDeltaTime;
+                t += dt;
+                for (int i = 0; i < particles.Count; i++)
+                {
+                    var p = particles[i];
+                    if (p.image == null) continue;
+                    p.age += dt;
+                    if (p.age >= p.lifetime)
+                    {
+                        if (p.image.enabled) p.image.enabled = false;
+                        particles[i] = p;
+                        continue;
+                    }
+
+                    p.velocity.y -= gravity * dt;
+                    p.position += p.velocity * dt;
+
+                    if (p.position.y < minY)
+                    {
+                        p.age = p.lifetime;
+                        if (p.image.enabled) p.image.enabled = false;
+                        particles[i] = p;
+                        continue;
+                    }
+
+                    float u = Mathf.Clamp01(p.age / p.lifetime);
+                    float alpha = u < 0.65f ? p.baseColor.a : Mathf.Lerp(p.baseColor.a, 0f, (u - 0.65f) / 0.35f);
+                    p.image.color = new Color(p.baseColor.r, p.baseColor.g, p.baseColor.b, alpha);
+
+                    var rect = p.image.rectTransform;
+                    if (rect != null)
+                    {
+                        rect.anchoredPosition = p.position;
+                        rect.localRotation = Quaternion.Euler(0f, 0f, p.rotationSpeed * p.age);
+                        float s = Mathf.Lerp(p.startScale, p.startScale * 0.75f, u);
+                        rect.localScale = Vector3.one * s;
+                    }
+
+                    particles[i] = p;
+                }
+                yield return null;
+            }
+            StopResultLoseParticles();
+        }
+
+        private void StopResultLoseParticles()
+        {
+            if (_resultLoseParticleRoutine != null)
+            {
+                StopCoroutine(_resultLoseParticleRoutine);
+                _resultLoseParticleRoutine = null;
+            }
+
+            if (_resultLoseParticleRoot != null)
+            {
+                Destroy(_resultLoseParticleRoot);
+                _resultLoseParticleRoot = null;
+            }
+            _resultLoseParticleImages.Clear();
+        }
+
+        private struct ResultWinFireworkParticle
+        {
+            public Image image;
+            public Vector2 position;
+            public Vector2 velocity;
+            public float lifetime;
+            public float age;
+            public float rotationSpeed;
+            public float startScale;
+            public Color baseColor;
+        }
+
+        private void StartResultWinFireworks()
+        {
+            if (_resultPanel == null) return;
+            if (_resultPanelMode != ResultPanelMode.Win) return;
+            var sprites = LoadResultWinFireworkSprites();
+            if (sprites == null || sprites.Length == 0) return;
+
+            StopResultWinFireworks();
+
+            EnsureResultPanelLayoutRefs();
+            var panelRect = _resultPanelBoxRect != null ? _resultPanelBoxRect : _resultPanel.GetComponent<RectTransform>();
+            float panelW = panelRect != null ? panelRect.rect.width : 0f;
+            float panelH = panelRect != null ? panelRect.rect.height : 0f;
+            if (panelW <= 1f) panelW = 1080f;
+            if (panelH <= 1f) panelH = 1280f;
+            float baseSize = Mathf.Min(panelW, panelH);
+
+            var root = new GameObject("WinFireworks");
+            root.transform.SetParent(_resultPanel.transform, false);
+            var rootRect = root.AddComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rootRect.pivot = new Vector2(0.5f, 0.5f);
+            rootRect.anchoredPosition = Vector2.zero;
+            rootRect.sizeDelta = Vector2.zero;
+            _resultWinFireworkRoot = root;
+            root.transform.SetAsLastSibling();
+
+            float sideInset = Mathf.Clamp(baseSize * 0.08f, 40f, 140f);
+            float xLeft = -panelW * 0.5f - sideInset;
+            float xRight = panelW * 0.5f + sideInset;
+            float yPos = Mathf.Clamp(-panelH * 0.05f, -120f, 120f);
+            float burstSize = Mathf.Clamp(baseSize * 0.06f, 18f, 52f);
+            float speedBase = Mathf.Clamp(baseSize * 0.58f, 380f, 760f);
+            float gravity = Mathf.Clamp(baseSize * 0.42f, 220f, 520f);
+            float spawnSpreadY = Mathf.Clamp(baseSize * 0.08f, 40f, 120f);
+            float spawnInset = Mathf.Clamp(baseSize * 0.03f, 16f, 48f);
+
+            var particles = new List<ResultWinFireworkParticle>(90);
+
+            _resultWinFireworkImages.Clear();
+
+            SpawnResultWinFireworkSide(
+                particles,
+                rootRect,
+                sprites,
+                sideName: "Left",
+                basePos: new Vector2(xLeft, yPos),
+                towardCenter: 1f,
+                count: 44,
+                speedBase: speedBase,
+                spawnSpreadY: spawnSpreadY,
+                spawnInset: spawnInset,
+                sizeBase: burstSize);
+
+            SpawnResultWinFireworkSide(
+                particles,
+                rootRect,
+                sprites,
+                sideName: "Right",
+                basePos: new Vector2(xRight, yPos),
+                towardCenter: -1f,
+                count: 44,
+                speedBase: speedBase,
+                spawnSpreadY: spawnSpreadY,
+                spawnInset: spawnInset,
+                sizeBase: burstSize);
+
+            _resultWinFireworkRoutine = StartCoroutine(ResultWinFireworkParticlesRoutine(particles, gravity));
+        }
+
+        private void SpawnResultWinFireworkSide(
+            List<ResultWinFireworkParticle> particles,
+            RectTransform parent,
+            Sprite[] sprites,
+            string sideName,
+            Vector2 basePos,
+            float towardCenter,
+            int count,
+            float speedBase,
+            float spawnSpreadY,
+            float spawnInset,
+            float sizeBase)
+        {
+            if (particles == null || parent == null || sprites == null || sprites.Length == 0 || count <= 0) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                float angleDeg = UnityEngine.Random.Range(28f, 58f);
+                float angle = Mathf.Deg2Rad * angleDeg;
+                float speed = speedBase * UnityEngine.Random.Range(0.75f, 1.15f);
+                var dir = new Vector2(Mathf.Cos(angle) * towardCenter, Mathf.Sin(angle));
+                var velocity = dir * speed;
+
+                float spawnY = basePos.y + UnityEngine.Random.Range(-spawnSpreadY, spawnSpreadY);
+                float spawnX = basePos.x + UnityEngine.Random.Range(-spawnInset, spawnInset);
+                var pos = new Vector2(spawnX, spawnY);
+
+                float size = sizeBase * UnityEngine.Random.Range(0.7f, 1.25f);
+                var sprite = sprites[UnityEngine.Random.Range(0, sprites.Length)];
+                var img = CreateResultWinFireworkImage(parent, $"Firework_{sideName}_{i}", pos, size, sprite);
+                if (img == null) continue;
+
+                float lifetime = UnityEngine.Random.Range(1.7f, 2.6f);
+                float rotSpeed = UnityEngine.Random.Range(-280f, 280f);
+                float scale = UnityEngine.Random.Range(0.85f, 1.15f);
+                var color = Color.HSVToRGB(UnityEngine.Random.value, UnityEngine.Random.Range(0.55f, 0.9f), UnityEngine.Random.Range(0.85f, 1f));
+                color.a = 1f;
+                img.color = color;
+
+                particles.Add(new ResultWinFireworkParticle
+                {
+                    image = img,
+                    position = pos,
+                    velocity = velocity,
+                    lifetime = lifetime,
+                    age = 0f,
+                    rotationSpeed = rotSpeed,
+                    startScale = scale,
+                    baseColor = color,
+                });
+            }
+        }
+
+        private static Sprite[] LoadResultWinFireworkSprites()
+        {
+            if (_resultWinFireworkSprites != null && _resultWinFireworkSprites.Length > 0) return _resultWinFireworkSprites;
+            if (_resultWinFireworkSpritesTried) return null;
+            _resultWinFireworkSpritesTried = true;
+
+            var textures = new List<Texture2D>(5);
+            Texture2D tex = null;
+            if (LoopSortingUIKit.IsAvailable())
+            {
+                tex = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_rect_256.png");
+                if (tex != null) textures.Add(tex);
+                tex = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_tri_256.png");
+                if (tex != null) textures.Add(tex);
+                tex = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_stream_256.png");
+                if (tex != null) textures.Add(tex);
+                tex = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_confetti_star_256.png");
+                if (tex != null) textures.Add(tex);
+                tex = LoopSortingUIKit.LoadTexture("World_Sprites/vfx_sparkle_star_256.png");
+                if (tex != null) textures.Add(tex);
+            }
+
+            if (textures.Count == 0)
+            {
+                tex = Resources.Load<Texture2D>("loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_rect_256");
+                if (tex != null) textures.Add(tex);
+                tex = Resources.Load<Texture2D>("loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_tri_256");
+                if (tex != null) textures.Add(tex);
+                tex = Resources.Load<Texture2D>("loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_stream_256");
+                if (tex != null) textures.Add(tex);
+                tex = Resources.Load<Texture2D>("loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_confetti_star_256");
+                if (tex != null) textures.Add(tex);
+                tex = Resources.Load<Texture2D>("loop_sorting_ui_components_v04_4_meta_pack_firework_confetti/World_Sprites/vfx_sparkle_star_256");
+                if (tex != null) textures.Add(tex);
+            }
+
+            if (textures.Count == 0) return null;
+
+            var sprites = new Sprite[textures.Count];
+            for (int i = 0; i < textures.Count; i++)
+            {
+                var t = textures[i];
+                var rect = new Rect(0f, 0f, t.width, t.height);
+                var sprite = Sprite.Create(t, rect, new Vector2(0.5f, 0.5f), 100f);
+                sprite.hideFlags = HideFlags.DontSave;
+                sprite.name = $"ResultFireworkSprite_{i}";
+                sprites[i] = sprite;
+            }
+
+            _resultWinFireworkSprites = sprites;
+            return sprites;
+        }
+
+        private Image CreateResultWinFireworkImage(RectTransform parent, string name, Vector2 anchoredPos, float size, Sprite sprite)
+        {
+            if (parent == null || sprite == null) return null;
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = new Vector2(size, size);
+            rect.localScale = Vector3.one;
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            img.sprite = sprite;
+            img.enabled = true;
+            _resultWinFireworkImages.Add(img);
+            return img;
+        }
+
+        private IEnumerator ResultWinFireworkParticlesRoutine(List<ResultWinFireworkParticle> particles, float gravity)
+        {
+            if (particles == null || particles.Count == 0) yield break;
+            float maxLife = 0f;
+            for (int i = 0; i < particles.Count; i++)
+            {
+                if (particles[i].lifetime > maxLife) maxLife = particles[i].lifetime;
+            }
+            float totalSeconds = maxLife + 0.4f;
+            float t = 0f;
+            while (t < totalSeconds &&
+                   _resultPanelMode == ResultPanelMode.Win &&
+                   _resultPanel != null &&
+                   _resultPanel.activeInHierarchy &&
+                   _resultWinFireworkRoot != null)
+            {
+                float dt = Time.unscaledDeltaTime;
+                t += dt;
+                for (int i = 0; i < particles.Count; i++)
+                {
+                    var p = particles[i];
+                    if (p.image == null) continue;
+                    p.age += dt;
+                    if (p.age >= p.lifetime)
+                    {
+                        if (p.image.enabled) p.image.enabled = false;
+                        particles[i] = p;
+                        continue;
+                    }
+
+                    p.velocity.y -= gravity * dt;
+                    p.position += p.velocity * dt;
+
+                    float u = Mathf.Clamp01(p.age / p.lifetime);
+                    float alpha = u < 0.6f ? 1f : Mathf.Lerp(1f, 0f, (u - 0.6f) / 0.4f);
+                    p.image.color = new Color(p.baseColor.r, p.baseColor.g, p.baseColor.b, alpha);
+
+                    var rect = p.image.rectTransform;
+                    if (rect != null)
+                    {
+                        rect.anchoredPosition = p.position;
+                        rect.localRotation = Quaternion.Euler(0f, 0f, p.rotationSpeed * p.age);
+                        float s = Mathf.Lerp(p.startScale, p.startScale * 0.65f, u);
+                        rect.localScale = Vector3.one * s;
+                    }
+
+                    particles[i] = p;
+                }
+                yield return null;
+            }
+
+            CleanupResultWinFireworks();
+            _resultWinFireworkRoutine = null;
+        }
+
+        private void CleanupResultWinFireworks()
+        {
+            if (_resultWinFireworkRoot != null)
+            {
+                Destroy(_resultWinFireworkRoot);
+                _resultWinFireworkRoot = null;
+            }
+            _resultWinFireworkImages.Clear();
+        }
+
+        private void StopResultWinFireworks()
+        {
+            if (_resultWinFireworkRoutine != null)
+            {
+                StopCoroutine(_resultWinFireworkRoutine);
+                _resultWinFireworkRoutine = null;
+            }
+            CleanupResultWinFireworks();
         }
 
         private IEnumerator ResultLoseCardIconIdleRoutine(RectTransform iconRect, Vector2 basePos, Quaternion baseRotation)
@@ -2205,6 +2784,9 @@ namespace LoopSorting
         {
             StopResultIntroRoutinesSafe();
             StopResultLoseCardIconIdle();
+            StopResultWinFireworks();
+            StopResultLoseTitleShake();
+            StopResultLoseParticles();
             _resultText = null;
             _primaryButton = null;
             _secondaryButton = null;

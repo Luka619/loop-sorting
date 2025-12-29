@@ -208,7 +208,7 @@ namespace LoopSorting
 
                     if (_legoBaseMaterial.HasProperty("_RimColor")) _legoBaseMaterial.SetColor("_RimColor", new Color(1f, 1f, 1f, 1f));
                     if (_legoBaseMaterial.HasProperty("_RimPower")) _legoBaseMaterial.SetFloat("_RimPower", 8f);
-                    if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.1f);
+                    if (_legoBaseMaterial.HasProperty("_RimStrength")) _legoBaseMaterial.SetFloat("_RimStrength", 0.18f);
                     if (_legoBaseMaterial.HasProperty("_EdgeDarken")) _legoBaseMaterial.SetFloat("_EdgeDarken", 1f);
                     if (_legoBaseMaterial.HasProperty("_Ambient")) _legoBaseMaterial.SetFloat("_Ambient", 1.0f);
                     if (_legoBaseMaterial.HasProperty("_Cull")) _legoBaseMaterial.SetFloat("_Cull", 2f);

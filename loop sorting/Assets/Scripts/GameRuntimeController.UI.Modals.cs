@@ -98,7 +98,7 @@ namespace LoopSorting
             return img;
         }
 
-        private static void ApplyFakeDecorShadow(Image image, float alpha = 0.22f, float yOffsetFrac = 0.012f)
+        private static void ApplyFakeDecorShadow(Image image, float alpha = 0.16f, float yOffsetFrac = 0.012f)
         {
             if (image == null) return;
 
@@ -203,6 +203,13 @@ namespace LoopSorting
             var existingDecor = !string.IsNullOrEmpty(decorName) ? parent.Find(decorName) : null;
             if (existingDecor != null) existingDecor.gameObject.SetActive(false);
             ApplyFakeDecorShadow(baseImage);
+
+            var existingTopLight = parent.Find("TopLightClip") ?? parent.Find("TopLightMask");
+            if (existingTopLight != null)
+            {
+                if (Application.isPlaying) Destroy(existingTopLight.gameObject);
+                else DestroyImmediate(existingTopLight.gameObject);
+            }
         }
 	
 	        private void OnModalPanelShown(GameObject panel)
@@ -228,6 +235,13 @@ namespace LoopSorting
             else if (panel == _boosterPurchasePanel)
             {
                 StopBoosterPurchaseEffects();
+            }
+            else if (panel == _resultPanel)
+            {
+                StopResultWinFireworks();
+                StopResultLoseCardIconIdle();
+                StopResultLoseTitleShake();
+                StopResultLoseParticles();
             }
 	        }
 

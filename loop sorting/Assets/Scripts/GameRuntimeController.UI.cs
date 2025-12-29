@@ -931,6 +931,15 @@ namespace LoopSorting
             }
             if (cam == null) return;
 
+            for (int i = cam.transform.childCount - 1; i >= 0; i--)
+            {
+                var child = cam.transform.GetChild(i);
+                if (child == null) continue;
+                if (!child.name.StartsWith("BackgroundQuad", StringComparison.Ordinal)) continue;
+                if (Application.isPlaying) Destroy(child.gameObject);
+                else DestroyImmediate(child.gameObject);
+            }
+
             _backgroundQuad = RuntimePrimitives.CreateQuad("BackgroundQuad");
             int layer = cam.gameObject.layer;
             if ((cam.cullingMask & (1 << layer)) == 0)
@@ -1419,7 +1428,7 @@ namespace LoopSorting
 
             if (tex != null)
             {
-                var beltTint = new Color(0.7372549f, 0.7372549f, 0.7372549f, 1f);
+                var beltTint = new Color(0.6f, 0.62f, 0.6f, 1f);
                 mat.mainTexture = tex;
                 if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
 

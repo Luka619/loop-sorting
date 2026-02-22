@@ -39,6 +39,8 @@ namespace LoopSorting
         public bool shopEnabled = false;
         [Tooltip("Show stamina (lives) pill in the HUD.")]
         public bool livesHudEnabled = false;
+        [Tooltip("Build heavy panels (result/shop/booster purchase) only when first opened.")]
+        public bool startupLazyBuildPanels = true;
         [Header("UI Layout")]
         [Tooltip("Allow runtime code to override prefab layout (positions/sizes/anchors).")]
         public bool useRuntimeUiLayoutOverrides = false;
@@ -58,6 +60,12 @@ namespace LoopSorting
         private SettingsUiController SettingsUi => _settingsUi ??= new SettingsUiController(this);
         private SettingsUiController _settingsUi;
         private readonly UiModalService _uiModalService = new UiModalService();
+        [Header("Ads")]
+        [Tooltip("Leave empty in editor. In WeChat, set this in Inspector and provide the ad unit ID.")]
+        public string wxReviveAdUnitId = string.Empty;
+        [Tooltip("Leave empty in editor. In WeChat, set this in Inspector and provide the ad unit ID.")]
+        public string wxBoosterAdUnitId = string.Empty;
+        private IAdService _adService;
 
         private float _hudTopInsetUnits;
         private float _hudRightInsetUnits;
@@ -344,6 +352,8 @@ namespace LoopSorting
             _beltFrozenRemove.Clear();
             _conveyorBelt = null;
             _conveyorTickSfxCountdown = 0;
+            _loopSfxRunning = false;
+            _loopSfxPitch = -1f;
 
             _lockChipLayer = null;
             _lockChipByBox.Clear();
@@ -355,6 +365,7 @@ namespace LoopSorting
         {
             EnsureStateMachine();
             EnsureAudioService();
+            EnsureAdService();
             // Load persistent settings / economy / progress before building any UI.
             LoadSaveIfNeeded();
             EnsureEconomyDefaults();
@@ -462,7 +473,7 @@ namespace LoopSorting
         private void RefreshLevelHudLabel()
         {
             if (_levelHudText == null) return;
-            int levelNumber = _flow != null ? (_flowIndex + 1) : 1;
+            int levelNumber = ResolveDisplayLevelNumber();
             _levelHudText.text = LocalizedText.LevelLabel(levelNumber);
         }
 
@@ -480,9 +491,9 @@ namespace LoopSorting
         {
             LoadSaveIfNeeded();
             _pendingFlow = flow;
-            int max = flow != null ? Mathf.Max(0, flow.levels.Count - 1) : 0;
+            int max = flow != null ? Mathf.Max(0, flow.levels.Count) : 0;
             int savedIndex = useSavedProgress ? _progress.SavedFlowIndex : startIndex;
-            _pendingFlowIndex = Mathf.Clamp(savedIndex, 0, max);
+            _pendingFlowIndex = ResolvePendingFlowIndex(savedIndex, max);
             _pendingLevel = null;
             EnsureStateMachine();
             _stateMachine.EnterMenu();
@@ -527,8 +538,10 @@ namespace LoopSorting
             if (_pendingFlow != null && _pendingFlow.levels != null && _pendingFlow.levels.Count > 0)
             {
                 _flow = _pendingFlow;
-                _flowIndex = Mathf.Clamp(_pendingFlowIndex, 0, Mathf.Max(0, _flow.levels.Count - 1));
-                BuildInternal(_flow.levels[_flowIndex], clearFlow: false);
+                int flowCount = _flow.levels.Count;
+                _flowIndex = ResolvePendingFlowIndex(_pendingFlowIndex, flowCount);
+                _activeFlowIndex = ResolvePhysicalFlowIndex(_flowIndex, flowCount);
+                BuildInternal(_flow.levels[_activeFlowIndex], clearFlow: false);
                 return;
             }
 
@@ -577,13 +590,13 @@ namespace LoopSorting
                     var refs = instance.GetComponent<MainMenuCanvasPrefabRefs>();
                     if (refs != null) refs.AutoAssign();
 
-                    if (refs != null)
+                                if (refs != null)
                     {
                         if (refs.playText != null) refs.playText.text = LocalizedText.MainMenuPlay;
                         if (refs.titleText != null) refs.titleText.text = LocalizedText.MainMenuTitle;
                         if (refs.levelPillText != null)
                         {
-                            int levelNumber = _pendingFlow != null ? (_pendingFlowIndex + 1) : 1;
+                            int levelNumber = ResolveDisplayLevelNumber(_pendingFlowIndex);
                             refs.levelPillText.text = LocalizedText.LevelLabel(levelNumber);
                         }
                     }
@@ -825,7 +838,7 @@ namespace LoopSorting
                 pillTextGO.transform.SetParent(levelPillGO.transform, false);
                 var pillText = pillTextGO.AddComponent<TextMeshProUGUI>();
                 pillText.raycastTarget = false;
-                int levelNumber = _pendingFlow != null ? (_pendingFlowIndex + 1) : 1;
+                int levelNumber = ResolveDisplayLevelNumber(_pendingFlowIndex);
                 pillText.text = LocalizedText.LevelLabel(levelNumber);
                 pillText.alignment = TextAlignmentOptions.Center;
                 pillText.fontSize = 44;

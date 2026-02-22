@@ -5,17 +5,23 @@ namespace LoopSorting
 {
     public sealed class SfxPlayer : MonoBehaviour
     {
-        private const int WebglWeChatPoolSize = 2;
+        private const int WebglWeChatPoolSize = 10;
         private const int WebglMaxQueuedSfx = 24;
         private const float WebglQueueMaxSecondsHigh = 0.25f;
         private const float WebglQueueMaxSecondsDefault = 0.35f;
         private const float WebglQueueMaxSecondsLow = 0.15f;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private const float WebglMissingRetrySeconds = 0.75f;
+#endif
 
         [Range(0f, 1f)]
         public float masterVolume = 1f;
 
         [Min(1)]
-        public int poolSize = 8;
+        public int poolSize = 10;
+
+        [Min(1)]
+        public int boxIoPoolSize = 4;
 
         [Header("Debug")]
         public bool debugLog;
@@ -25,10 +31,17 @@ namespace LoopSorting
         private readonly Dictionary<SfxId, AudioClip[]> _clips = new Dictionary<SfxId, AudioClip[]>();
         private readonly Dictionary<SfxId, float> _lastTime = new Dictionary<SfxId, float>();
         private readonly HashSet<SfxId> _missingLogged = new HashSet<SfxId>();
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private readonly Dictionary<SfxId, float> _clipRetryAt = new Dictionary<SfxId, float>();
+#endif
 
         private AudioSource[] _sources;
         private float[] _sourceBusyUntil;
         private int _nextSource;
+        private Transform _boxIoRoot;
+        private AudioSource[] _boxIoSources;
+        private float[] _boxIoBusyUntil;
+        private int _nextBoxIoSource;
 
         private AudioSource _loopSource;
         private float _webglLoopRetryAt;
@@ -59,6 +72,11 @@ namespace LoopSorting
             if (!Debug.isDebugBuild) return;
             Debug.Log($"[Sfx][BlockInsert] {message}");
 #endif
+        }
+
+        private static bool IsBoxIoSfx(SfxId id)
+        {
+            return id == SfxId.BlockInsert || id == SfxId.BlockEject;
         }
 
         public void SetEnabled(bool enabled)
@@ -120,6 +138,48 @@ namespace LoopSorting
             }
 
             return false;
+        }
+
+        private bool TryPlayBoxIoWebgl(SfxId id, AudioClip clip, float volume, float pitch)
+        {
+            EnsureBoxIoPool();
+            float now = Time.realtimeSinceStartup;
+            if (!TryGetFreeBoxIoSource(now, out int sourceIndex))
+            {
+                if (id == SfxId.BlockInsert)
+                {
+                    LogBlockInsert($"drop: box-io pool busy size={_boxIoSources?.Length ?? 0}");
+                }
+                if (debugLog && Debug.isDebugBuild)
+                {
+                    Debug.Log($"SfxPlayer: drop '{id}' (box-io pool busy)");
+                }
+                return false;
+            }
+
+            if (_boxIoSources == null || sourceIndex < 0 || sourceIndex >= _boxIoSources.Length) return false;
+            var src = _boxIoSources[sourceIndex];
+            if (src == null) return false;
+
+            src.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
+            src.volume = volume;
+            src.loop = false;
+            src.clip = clip;
+            src.Play();
+
+            MarkBoxIoBusy(sourceIndex, clip, src.pitch);
+
+            if (id == SfxId.BlockInsert)
+            {
+                LogBlockInsert($"play box-io clip={clip.name} vol={volume:0.00} pitch={src.pitch:0.00} src={sourceIndex}");
+            }
+
+            if (debugLog && Debug.isDebugBuild)
+            {
+                Debug.Log($"SfxPlayer: play '{id}' clip='{clip.name}' src=box:{sourceIndex} vol={volume:0.00} pitch={src.pitch:0.00}");
+            }
+
+            return true;
         }
 
         private bool TryStealSourceWebgl(int priority, float now, out int sourceIndex)
@@ -328,6 +388,12 @@ namespace LoopSorting
             if (clip != null)
             {
 #if UNITY_WEBGL && !UNITY_EDITOR
+                if (IsBoxIoSfx(id))
+                {
+                    TryPlayBoxIoWebgl(id, clip, vol, pitch);
+                    return;
+                }
+
                 float nowRealtime = Time.realtimeSinceStartup;
                 int priority = GetWebglSfxPriority(id);
                 if (TryGetFreeSourceWebgl(nowRealtime, out int freeIndex))
@@ -533,7 +599,18 @@ namespace LoopSorting
         {
             if (_clips.TryGetValue(id, out var cached))
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if (cached.Length > 0)
+                {
+                    return cached;
+                }
+                if (_clipRetryAt.TryGetValue(id, out var retryAt) && Time.realtimeSinceStartup < retryAt)
+                {
+                    return cached;
+                }
+#else
                 return cached;
+#endif
             }
 
             int variants = Mathf.Max(1, SfxCatalog.GetVariantCount(id));
@@ -549,6 +626,16 @@ namespace LoopSorting
 
             var arr = list.ToArray();
             _clips[id] = arr;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (arr.Length == 0)
+            {
+                _clipRetryAt[id] = Time.realtimeSinceStartup + WebglMissingRetrySeconds;
+            }
+            else
+            {
+                _clipRetryAt.Remove(id);
+            }
+#endif
 
             if (arr.Length == 0 && !_missingLogged.Contains(id))
             {
@@ -558,6 +645,83 @@ namespace LoopSorting
             }
 
             return arr;
+        }
+
+        private void EnsureBoxIoPool()
+        {
+            int targetSize = Mathf.Max(1, boxIoPoolSize);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            targetSize = Mathf.Clamp(targetSize, 1, WebglWeChatPoolSize);
+#endif
+
+            if (_boxIoSources != null &&
+                _boxIoSources.Length == targetSize &&
+                _boxIoBusyUntil != null &&
+                _boxIoBusyUntil.Length == _boxIoSources.Length)
+            {
+                return;
+            }
+
+            if (_boxIoRoot == null)
+            {
+                var root = new GameObject("SFX_BoxIO");
+                root.transform.SetParent(transform, false);
+                _boxIoRoot = root.transform;
+            }
+
+            var existing = _boxIoRoot.GetComponents<AudioSource>();
+            var list = new List<AudioSource>(existing.Length);
+            for (int i = 0; i < existing.Length; i++)
+            {
+                var s = existing[i];
+                if (s == null) continue;
+                list.Add(s);
+            }
+
+            for (int i = list.Count; i < targetSize; i++)
+            {
+                var src = _boxIoRoot.gameObject.AddComponent<AudioSource>();
+                src.playOnAwake = false;
+                src.loop = false;
+                src.spatialBlend = 0f;
+                src.dopplerLevel = 0f;
+                src.rolloffMode = AudioRolloffMode.Linear;
+                list.Add(src);
+            }
+
+            for (int i = list.Count - 1; i >= targetSize; i--)
+            {
+                var extra = list[i];
+                list.RemoveAt(i);
+                if (extra == null) continue;
+                if (Application.isPlaying) Destroy(extra);
+                else DestroyImmediate(extra);
+            }
+
+            _boxIoSources = list.ToArray();
+            _boxIoBusyUntil = new float[_boxIoSources.Length];
+            _nextBoxIoSource = 0;
+        }
+
+        private bool TryGetFreeBoxIoSource(float now, out int sourceIndex)
+        {
+            sourceIndex = -1;
+            if (_boxIoSources == null || _boxIoSources.Length == 0) return false;
+            if (_boxIoBusyUntil == null || _boxIoBusyUntil.Length != _boxIoSources.Length) return false;
+
+            for (int i = 0; i < _boxIoSources.Length; i++)
+            {
+                int idx = (_nextBoxIoSource + i) % _boxIoSources.Length;
+                var s = _boxIoSources[idx];
+                if (s != null && _boxIoBusyUntil[idx] <= now)
+                {
+                    _nextBoxIoSource = (idx + 1) % _boxIoSources.Length;
+                    sourceIndex = idx;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void EnsurePool()
@@ -687,6 +851,17 @@ namespace LoopSorting
             _nextSource = (_nextSource + 1) % _sources.Length;
             return fallback;
 #endif
+        }
+
+        private void MarkBoxIoBusy(int sourceIndex, AudioClip clip, float pitch)
+        {
+            if (_boxIoBusyUntil == null) return;
+            if (sourceIndex < 0 || sourceIndex >= _boxIoBusyUntil.Length) return;
+            if (clip == null) return;
+
+            float duration = clip.length / Mathf.Max(0.01f, pitch);
+            float until = Time.realtimeSinceStartup + Mathf.Max(0f, duration);
+            _boxIoBusyUntil[sourceIndex] = until;
         }
 
         private void MarkSourceBusy(int sourceIndex, AudioClip clip, float pitch)

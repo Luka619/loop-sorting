@@ -284,21 +284,41 @@ namespace LoopSorting
         {
             if (_resultPanelMode == ResultPanelMode.Win)
             {
-                // Placeholder: grant immediately. Hook your ad SDK here.
-                PlaySfx(SfxId.UiConfirm);
-                PlayCoinFlyToHud(_resultWinRewardCoinSecondary, WinCoinsReward * WinAdRewardMultiplier);
-                GrantCoins(WinCoinsReward * WinAdRewardMultiplier);
-                HideUiPanelImmediate(_resultPanel);
-                _resultPanelMode = ResultPanelMode.None;
-                AdvanceAfterWinResult();
+                EnsureAdService();
+                _adService.ShowBoosterAd((result) =>
+                {
+                    if (!result.Success)
+                    {
+                        PlaySfx(SfxId.UiDenied);
+                        ShowAdFailureMessage(result.FailureReason);
+                        return;
+                    }
+
+                    PlaySfx(SfxId.UiConfirm);
+                    PlayCoinFlyToHud(_resultWinRewardCoinSecondary, WinCoinsReward * WinAdRewardMultiplier);
+                    GrantCoins(WinCoinsReward * WinAdRewardMultiplier);
+                    HideUiPanelImmediate(_resultPanel);
+                    _resultPanelMode = ResultPanelMode.None;
+                    AdvanceAfterWinResult();
+                });
                 return;
             }
 
             if (_resultPanelMode == ResultPanelMode.Lose)
             {
-                // Placeholder: revive immediately. Hook your ad SDK here.
-                PlaySfx(SfxId.UiConfirm);
-                BeginReviveFromResultPanel(useAd: true);
+                EnsureAdService();
+                _adService.ShowReviveAd((result) =>
+                {
+                    if (!result.Success)
+                    {
+                        PlaySfx(SfxId.UiDenied);
+                        ShowAdFailureMessage(result.FailureReason);
+                        return;
+                    }
+
+                    PlaySfx(SfxId.UiConfirm);
+                    BeginReviveFromResultPanel(useAd: true);
+                });
                 return;
             }
 
@@ -2599,7 +2619,7 @@ namespace LoopSorting
             if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
             {
                 _pendingFlow = _flow;
-                _pendingFlowIndex = Mathf.Clamp(_flowIndex, 0, Mathf.Max(0, _flow.levels.Count - 1));
+                _pendingFlowIndex = _flowIndex;
                 _pendingLevel = null;
             }
             else
@@ -2619,9 +2639,14 @@ namespace LoopSorting
             if (_flow != null && _flow.levels != null && _flow.levels.Count > 0)
             {
                 int next = _flowIndex + 1;
-                if (next < _flow.levels.Count)
+                int flowCount = _flow.levels.Count;
+                if (CanAdvanceToLogicalIndex(next, flowCount))
                 {
                     PlaySfx(SfxId.LevelNext);
+                    if (ShouldShuffleReplayNow(next, flowCount))
+                    {
+                        ShuffleReplayOrder(flowCount);
+                    }
                     _flowIndex = next;
                     _progress.SavedFlowIndex = _flowIndex;
                     _progress.SavedHighestUnlockedFlowIndex = Mathf.Max(_progress.SavedHighestUnlockedFlowIndex, _flowIndex);

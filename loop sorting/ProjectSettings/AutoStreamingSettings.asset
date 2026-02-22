@@ -4978,21 +4978,21 @@ AutoStreamingSettings:
     height: 256
     abSize: 22276
   mAudios:
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_select_02.wav
     localFileId: 8300000
     rtMem: 928
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/belt_full_fail.wav
     localFileId: 8300000
     rtMem: 2080
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/fail.wav
     localFileId: 8300000
     rtMem: 4896
@@ -5006,7 +5006,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_complete.wav
     localFileId: 8300000
     rtMem: 2112
@@ -5020,7 +5020,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_fill.wav
     localFileId: 8300000
     rtMem: 3872
@@ -5034,35 +5034,35 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_hover.wav
     localFileId: 8300000
     rtMem: 864
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/lose_jingle.wav
     localFileId: 8300000
     rtMem: 3680
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_booster_activate.wav
     localFileId: 8300000
     rtMem: 6240
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_busy_02.wav
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_land_01.wav
     localFileId: 8300000
     rtMem: 1632
@@ -5076,14 +5076,14 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_land_02.wav
     localFileId: 8300000
     rtMem: 1664
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/box_tap.wav
     localFileId: 8300000
     rtMem: 1248
@@ -5097,21 +5097,21 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/hidden_reveal.wav
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_speedup.wav
     localFileId: 8300000
     rtMem: 2336
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/fast_forward.wav
     localFileId: 8300000
     rtMem: 2880
@@ -5125,35 +5125,35 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_confirm.wav
     localFileId: 8300000
     rtMem: 1408
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/LoopSorting_BGM_Pack_v1/BGM/Stingers/stinger_full_warning.wav
     localFileId: 8300000
     rtMem: 6816
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_03.wav
     localFileId: 8300000
     rtMem: 992
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_open.mp3
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_01.wav
     localFileId: 8300000
     rtMem: 960
@@ -5167,7 +5167,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_02.wav
     localFileId: 8300000
     rtMem: 1216
@@ -5181,7 +5181,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_insert_02.wav
     localFileId: 8300000
     rtMem: 960
@@ -5195,7 +5195,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/box_complete.wav
     localFileId: 8300000
     rtMem: 4704
@@ -5209,7 +5209,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_retry.wav
     localFileId: 8300000
     rtMem: 1248
@@ -5223,21 +5223,21 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_fail.wav
     localFileId: 8300000
     rtMem: 1792
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_start.wav
     localFileId: 8300000
     rtMem: 2592
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_busy_01.wav
     localFileId: 8300000
     rtMem: 1568
@@ -5251,21 +5251,21 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_full_02.wav
     localFileId: 8300000
     rtMem: 1504
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/block_release.wav
     localFileId: 8300000
     rtMem: 1184
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_eject_01.wav
     localFileId: 8300000
     rtMem: 800
@@ -5279,70 +5279,70 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_activate.wav
     localFileId: 8300000
     rtMem: 3072
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_01.wav
     localFileId: 8300000
     rtMem: 704
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_select.wav
     localFileId: 8300000
     rtMem: 960
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_click_02.mp3
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_01.wav
     localFileId: 8300000
     rtMem: 1184
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_cancel.wav
     localFileId: 8300000
     rtMem: 1504
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_end.wav
     localFileId: 8300000
     rtMem: 1504
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_mismatch_02.wav
     localFileId: 8300000
     rtMem: 1184
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/run_ship_start.wav
     localFileId: 8300000
     rtMem: 2144
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_denied.wav
     localFileId: 8300000
     rtMem: 1152
@@ -5356,84 +5356,84 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_locked_02.wav
     localFileId: 8300000
     rtMem: 1344
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/error.wav
     localFileId: 8300000
     rtMem: 1536
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/win_jingle.wav
     localFileId: 8300000
     rtMem: 4416
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_locked_thunk.wav
     localFileId: 8300000
     rtMem: 1376
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_click_03.mp3
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_popup_close.mp3
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_02.wav
     localFileId: 8300000
     rtMem: 672
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_01.wav
     localFileId: 8300000
     rtMem: 1152
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/UI/ui_click_01.mp3
     localFileId: 8300000
     rtMem: 1568
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_unlock.wav
     localFileId: 8300000
     rtMem: 2816
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/block_enter.wav
     localFileId: 8300000
     rtMem: 1184
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_ui_close.wav
     localFileId: 8300000
     rtMem: 1888
@@ -5447,7 +5447,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/booster.wav
     localFileId: 8300000
     rtMem: 4864
@@ -5461,70 +5461,70 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_shuffle.wav
     localFileId: 8300000
     rtMem: 3296
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_eject_03.wav
     localFileId: 8300000
     rtMem: 800
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_locked_01.wav
     localFileId: 8300000
     rtMem: 1376
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_reject_full_01.wav
     localFileId: 8300000
     rtMem: 1472
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_skip_empty_box.wav
     localFileId: 8300000
     rtMem: 800
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/box_busy_denied.wav
     localFileId: 8300000
     rtMem: 1408
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_tick_03.wav
     localFileId: 8300000
     rtMem: 704
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Conveyor/conveyor_speeddown.wav
     localFileId: 8300000
     rtMem: 1952
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/States/level_next.wav
     localFileId: 8300000
     rtMem: 1472
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/ui_click.wav
     localFileId: 8300000
     rtMem: 1152
@@ -5538,7 +5538,7 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/win.wav
     localFileId: 8300000
     rtMem: 7680
@@ -5552,21 +5552,21 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/SFX/unlock.wav
     localFileId: 8300000
     rtMem: 4288
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Boosters/booster_ui_open.wav
     localFileId: 8300000
     rtMem: 1856
     warningFlag: 0
     refs:
     - res
-  - onDemandDownload: 0
+  - onDemandDownload: 1
     assetPath: Assets/Resources/Audio/LoopSorting_SFX_Pack_v3/SFX/Gameplay/block_eject_02.wav
     localFileId: 8300000
     rtMem: 800
@@ -5574,48 +5574,6 @@ AutoStreamingSettings:
     refs:
     - res
   mMeshes:
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Box3x8_Body.asset:Box3x8_Body
-    localFileId: 4300000
-    rtMem: 8736
-    warningFlag: 1
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Box3x8_Cavity.asset:Box3x8_Cavity
-    localFileId: 4300000
-    rtMem: 29792
-    warningFlag: 1
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Box3x8_LidFrame.asset:Box3x8_LidFrame
-    localFileId: 4300000
-    rtMem: 8320
-    warningFlag: 1
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Box3x8_LidGlass.asset:Box3x8_LidGlass
-    localFileId: 4300000
-    rtMem: 4224
-    warningFlag: 1
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Base.asset:Brick2x2Rounded_Base
-    localFileId: 4300000
-    rtMem: 27040
-    warningFlag: 1
-    refs:
-    - res
-  - onDemandDownload: 0
-    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Studs.asset:Brick2x2Rounded_Studs
-    localFileId: 4300000
-    rtMem: 34048
-    warningFlag: 1
-    refs:
-    - res
   - onDemandDownload: 0
     assetPath: Assets/Resources/LegoLikeBrick_2x2_Detailed_UnityPack/LegoLikeBrick_2x2_Detailed_PivotBottom.obj:default
     localFileId: -2432090755550338912
@@ -5658,6 +5616,48 @@ AutoStreamingSettings:
     warningFlag: 0
     refs:
     - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_LidFrame.asset:Box3x8_LidFrame
+    localFileId: 4300000
+    rtMem: 8320
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_Cavity.asset:Box3x8_Cavity
+    localFileId: 4300000
+    rtMem: 29792
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_Body.asset:Box3x8_Body
+    localFileId: 4300000
+    rtMem: 8736
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Box3x8_LidGlass.asset:Box3x8_LidGlass
+    localFileId: 4300000
+    rtMem: 4224
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Studs.asset:Brick2x2Rounded_Studs
+    localFileId: 4300000
+    rtMem: 34048
+    warningFlag: 1
+    refs:
+    - res
+  - onDemandDownload: 0
+    assetPath: Assets/Art3D/Meshes/Brick2x2Rounded_Base.asset:Brick2x2Rounded_Base
+    localFileId: 4300000
+    rtMem: 27040
+    warningFlag: 1
+    refs:
+    - res
   mAnimations: []
   mSharedSceneAssets: []
   mScenes:
@@ -5673,6 +5673,6 @@ AutoStreamingSettings:
     uosAppid: 915dcd76-0f55-493e-8293-d8a3f4e0517e
     bucketUuid: bf041097-85d4-4bb2-8953-116363119d32
     bucketName: LoopSorting
-    badgeName: v0_5
+    badgeName: v0_7
     ttAppid: 
     targetPlatfrom: 

@@ -8,6 +8,7 @@ namespace LoopSorting
     public class BoxView : MonoBehaviour
     {
         private static Texture2D _mouthFlashTexture;
+        private static readonly Block[] EmptyBlocks = new Block[0];
         private readonly HashSet<Material> _runtimeMaterials = new HashSet<Material>();
         private readonly HashSet<Mesh> _runtimeMeshes = new HashSet<Mesh>();
         private Material _mouthFlashMaterial;
@@ -81,6 +82,9 @@ namespace LoopSorting
         private readonly Dictionary<int, Coroutine> _incomingCoroutines = new Dictionary<int, Coroutine>();
         private readonly HashSet<int> _incomingAnimatingSlots = new HashSet<int>();
         private readonly Dictionary<int, Vector3> _slotFinalLocalPos = new Dictionary<int, Vector3>();
+        private bool _hasSyncSnapshot;
+        private bool _lastSyncedLocked;
+        private bool _lastSyncedCompleted;
         private Vector3 _mouthLocalPos;
         private Vector3 _mouthLocalNormal;
         private Vector3 _baseLocalPos;
@@ -204,7 +208,7 @@ namespace LoopSorting
         public void SyncBlocks(IReadOnlyList<Block> blocks)
         {
             EnsureSlotCapacity();
-            if (blocks == null) blocks = new List<Block>();
+            if (blocks == null) blocks = EmptyBlocks;
 
             _tmpIndices.Clear();
             for (int i = 0; i < _slotColors.Count; i++)
@@ -214,6 +218,10 @@ namespace LoopSorting
 
             int oldCount = _tmpIndices.Count;
             int newCount = Mathf.Min(blocks.Count, _capacity);
+            if (CanSkipSyncBlocks(blocks, newCount))
+            {
+                return;
+            }
 
             bool animateInsert = false;
             int animateSlot = -1;
@@ -361,6 +369,43 @@ namespace LoopSorting
             {
                 StartIncomingAnimation(animateSlot);
             }
+
+            MarkSyncSnapshot();
+        }
+
+        private bool CanSkipSyncBlocks(IReadOnlyList<Block> blocks, int newCount)
+        {
+            if (!_hasSyncSnapshot) return false;
+            if (_lastSyncedLocked != _locked || _lastSyncedCompleted != _completed) return false;
+            if (_tmpIndices.Count != newCount) return false;
+            if (newCount == 0) return true;
+
+            int expectedStart = _capacity - newCount;
+            if (_tmpIndices[0] != expectedStart) return false;
+
+            for (int i = 0; i < newCount; i++)
+            {
+                int slot = expectedStart + i;
+                if (slot < 0 || slot >= _slotColors.Count) return false;
+                if (_incomingAnimatingSlots.Contains(slot)) return false;
+                if (!_slotColors[slot].HasValue) return false;
+                if (_slotColors[slot].Value != blocks[i].Color) return false;
+                if (_slotAuthoredHidden[slot] != blocks[i].Hidden) return false;
+            }
+
+            return true;
+        }
+
+        private void MarkSyncSnapshot()
+        {
+            _hasSyncSnapshot = true;
+            _lastSyncedLocked = _locked;
+            _lastSyncedCompleted = _completed;
+        }
+
+        private void InvalidateSyncSnapshot()
+        {
+            _hasSyncSnapshot = false;
         }
 
         private void RebuildFromBlocks(IReadOnlyList<Block> blocks, int newCount)
@@ -1686,6 +1731,7 @@ namespace LoopSorting
         {
             bool wasLocked = _locked;
             _locked = val;
+            InvalidateSyncSnapshot();
             if (_lockOverlay == null)
             {
                 // Prefer Unity's native 9-slice (SpriteRenderer + Sliced) for lock overlay.
@@ -2691,6 +2737,7 @@ namespace LoopSorting
         {
             bool wasCompleted = _completed;
             _completed = val;
+            InvalidateSyncSnapshot();
 
             // Once a box is completed, the dashed operable outline is no longer needed.
             SetBoxOutlineVisible(!val);

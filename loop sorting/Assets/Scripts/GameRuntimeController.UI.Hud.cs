@@ -13,7 +13,7 @@ namespace LoopSorting
     {
         private void EnsureCounterUI()
         {
-            if (_uiCanvas != null && beltCounterUI != null && _resultPanel != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
+            if (_uiCanvas != null && beltCounterUI != null && _settingsButton != null && _boosterPanel != null && _boosterSortButton != null && _boosterShuffleButton != null)
             {
                 if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.GetComponent<CurrencyFlyFx>();
                 if (_currencyFlyFx == null) _currencyFlyFx = _uiCanvas.gameObject.AddComponent<CurrencyFlyFx>();
@@ -141,11 +141,11 @@ namespace LoopSorting
                 }
                 else
                 {
-                    // Fallback: if we can¡¯t locate the capsule rect, nudge down conservatively rather than shifting left.
+                    // Fallback: if we canï¿½ï¿½t locate the capsule rect, nudge down conservatively rather than shifting left.
                     topBarTopUnits = Mathf.Max(topBarTopUnits, safeTopUnits + 120f);
                 }
 
-                // Keep the TopBar on the right edge when it¡¯s below the capsule.
+                // Keep the TopBar on the right edge when itï¿½ï¿½s below the capsule.
                 topBarExtraRightUnits = 0f;
             }
 
@@ -310,9 +310,12 @@ namespace LoopSorting
                 UpdateSpeedButtonLabel();
                 RefreshEconomyHUD();
 
-                EnsureResultPanel();
-                if (shopEnabled) EnsureShopUI();
-                EnsureBoosterPurchaseUI();
+                if (!startupLazyBuildPanels)
+                {
+                    EnsureResultPanel();
+                    if (shopEnabled) EnsureShopUI();
+                    EnsureBoosterPurchaseUI();
+                }
                 return;
             }
 
@@ -465,7 +468,7 @@ namespace LoopSorting
             levelTextGO.transform.SetParent(levelGO.transform, false);
             _levelHudText = levelTextGO.AddComponent<TextMeshProUGUI>();
             _levelHudText.raycastTarget = false;
-            _levelHudText.text = LocalizedText.LevelLabel(_flow != null ? (_flowIndex + 1) : 1);
+            _levelHudText.text = LocalizedText.LevelLabel(ResolveDisplayLevelNumber());
             _levelHudText.alignment = TextAlignmentOptions.Center;
             _levelHudText.fontSize = 52;
             _levelHudText.enableWordWrapping = false;
@@ -718,13 +721,17 @@ namespace LoopSorting
             _boosterShuffleButton.onClick.AddListener(() => HandleBoosterButtonClick(BoosterType.Shuffle));
             if (hasKit) AttachBoosterBadge(_boosterShuffleButton.transform, _progress.BoosterShuffleCount);
 
-            EnsureResultPanel();
-            if (shopEnabled) EnsureShopUI();
-            EnsureBoosterPurchaseUI();
+            if (!startupLazyBuildPanels)
+            {
+                EnsureResultPanel();
+                if (shopEnabled) EnsureShopUI();
+                EnsureBoosterPurchaseUI();
+            }
         }
 
     }
 }
+
 
 
 

@@ -1064,10 +1064,20 @@ namespace LoopSorting
         {
             if (_gameOver) return;
 
-            // Placeholder: grant immediately. Hook your ad SDK here.
-            AddBooster(_boosterPurchaseType, BoosterPurchaseGrantCount);
-            PlaySfx(SfxId.UiConfirm);
-            CloseBoosterPurchase();
+            EnsureAdService();
+            _adService.ShowBoosterAd((result) =>
+            {
+                if (!result.Success)
+                {
+                    PlaySfx(SfxId.UiDenied);
+                    ShowAdFailureMessage(result.FailureReason);
+                    return;
+                }
+
+                AddBooster(_boosterPurchaseType, BoosterPurchaseGrantCount);
+                PlaySfx(SfxId.UiConfirm);
+                CloseBoosterPurchase();
+            });
         }
 
     }

@@ -16,9 +16,14 @@ namespace LoopSorting
         public bool applySafeArea = true;
         public RectTransform safeAreaRect;
         public bool preferWeChatSafeAreaOnWebGL = true;
+        [Min(0.1f)]
+        [Tooltip("When screen size is unchanged, poll safe-area info at this interval (seconds) instead of every frame.")]
+        public float safeAreaPollSeconds = 0.5f;
         [Tooltip("Some platforms (e.g. WeChat mini game) may report a reduced safeArea width in portrait (to avoid the top-right capsule). " +
                  "Keeping horizontal insets off in portrait prevents the whole UI from shifting left; handle top-right buttons separately if needed.")]
         public bool ignoreHorizontalInsetsInPortrait = true;
+        [Tooltip("Enable verbose runtime logs for screen/safe-area changes.")]
+        public bool runtimeVerboseLog = false;
 
         [Header("Refs (optional)")]
         public CanvasScaler canvasScaler;
@@ -27,6 +32,7 @@ namespace LoopSorting
         private int _lastScreenH;
         private Rect _lastSafeArea;
         private float _lastMatch = -1f;
+        private float _nextSafeAreaPollAt;
         private Vector4 _rawSafeAreaInsetsPx;
         private Rect _menuButtonRectPx;
         private float _menuButtonRightInsetPx;
@@ -67,21 +73,40 @@ namespace LoopSorting
             int sh = Screen.height;
             if (sw <= 0 || sh <= 0) return;
 
-            Rect safeArea = applySafeArea ? GetBestSafeArea(sw, sh) : new Rect(0, 0, sw, sh);
-            _rawSafeAreaInsetsPx = applySafeArea
-                ? new Vector4(
-                    safeArea.xMin,
-                    sw - safeArea.xMax,
-                    sh - safeArea.yMax,
-                    safeArea.yMin)
-                : Vector4.zero;
+            bool screenChanged = sw != _lastScreenW || sh != _lastScreenH;
+            bool shouldPollSafeArea = force || screenChanged;
+            if (!shouldPollSafeArea && applySafeArea)
+            {
+                shouldPollSafeArea = Time.unscaledTime >= _nextSafeAreaPollAt;
+            }
+
+            if (!force && !screenChanged && !shouldPollSafeArea)
+            {
+                return;
+            }
+
+            Rect safeArea = _lastSafeArea;
+            Vector4 rawInsets = _rawSafeAreaInsetsPx;
+            if (shouldPollSafeArea)
+            {
+                safeArea = applySafeArea ? GetBestSafeArea(sw, sh) : new Rect(0, 0, sw, sh);
+                rawInsets = applySafeArea
+                    ? new Vector4(
+                        safeArea.xMin,
+                        sw - safeArea.xMax,
+                        sh - safeArea.yMax,
+                        safeArea.yMin)
+                    : Vector4.zero;
+                _nextSafeAreaPollAt = Time.unscaledTime + Mathf.Max(0.1f, safeAreaPollSeconds);
+            }
+
+            _rawSafeAreaInsetsPx = rawInsets;
 
             if (ignoreHorizontalInsetsInPortrait && sh >= sw)
             {
                 safeArea.x = 0f;
                 safeArea.width = sw;
             }
-            bool screenChanged = sw != _lastScreenW || sh != _lastScreenH;
             bool safeAreaChanged = safeArea != _lastSafeArea;
 
             if (!force && !screenChanged && !safeAreaChanged)
@@ -93,7 +118,7 @@ namespace LoopSorting
             _lastScreenH = sh;
             _lastSafeArea = safeArea;
 
-            if (Debug.isDebugBuild)
+            if (runtimeVerboseLog && Debug.isDebugBuild)
             {
                 Debug.Log(
                     $"[LoopSortingScreenAdapter] screen={sw}x{sh}, safeArea={safeArea}, rawInsets(px)={_rawSafeAreaInsetsPx}, " +

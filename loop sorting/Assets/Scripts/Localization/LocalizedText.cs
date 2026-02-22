@@ -66,6 +66,13 @@ namespace LoopSorting
         public const string BoosterFree = "免费";
         public const string BoosterShuffleDesc = "打乱未完成箱子里的积木顺序";
         public const string BoosterSortDesc = "随机选一种颜色，自动集中填满一箱";
+        public const string AdPlayFailed = "广告播放失败";
+        public const string AdPlayFailedUnknown = "广告播放失败，请稍后再试";
+
+        public static string AdPlayFailedWithReason(string reason)
+        {
+            return $"{AdPlayFailed}：{reason}";
+        }
 
         public static string BoosterPurchaseSpecific(string title)
         {

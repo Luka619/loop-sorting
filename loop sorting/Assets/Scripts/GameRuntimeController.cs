@@ -168,6 +168,15 @@ namespace LoopSorting
         private LevelLayout _pendingLevel;
         private LevelFlow _flow;
         private int _flowIndex;
+        private int _activeFlowIndex;
+        private const int ReplayLoopStartLogicalIndex = 40;
+        private const int ReplayPoolStartIndex = 10;
+        private const int ReplayPoolCount = 30;
+        private int _replaySeed;
+        private int[] _replayOrder;
+        private int _savedFlowLength;
+        private int[] _savedReplayOrder;
+        private int _savedReplaySeed;
         private LevelLayout _currentLayout;
         private LevelLayout _currentLayoutSource;
         private LevelLayout _runtimeLayoutInstance;
@@ -279,6 +288,8 @@ namespace LoopSorting
         }
 
         private bool _bgmPressure;
+        private bool _loopSfxRunning;
+        private float _loopSfxPitch = -1f;
         private bool _sfxHasSnapshot;
         private bool _sfxPrevFastForward;
         private bool _sfxSuppressSpeeddownOnce;
@@ -295,6 +306,7 @@ namespace LoopSorting
         private readonly Dictionary<int, Vector3> _beltFrozenPositions = new Dictionary<int, Vector3>();
         private readonly HashSet<int> _beltWaitingIndices = new HashSet<int>();
         private readonly List<int> _beltFrozenRemove = new List<int>();
+        private readonly List<int> _beltVisualRemoveBuffer = new List<int>(32);
 
         private void EnsureStateMachine()
         {
@@ -302,6 +314,41 @@ namespace LoopSorting
             {
                 _stateMachine = new GameStateMachine(this);
             }
+        }
+
+        private void EnsureAdService()
+        {
+            if (_adService == null)
+            {
+                _adService = AdServiceResolver.Create(this, wxReviveAdUnitId, wxBoosterAdUnitId);
+            }
+        }
+
+        private void ShowAdFailureMessage(string failReason)
+        {
+            string normalized = NormalizeFailureReason(failReason);
+            if (normalized == LocalizedText.AdPlayFailedUnknown)
+            {
+                ShowTutorialMessage(LocalizedText.AdPlayFailedUnknown);
+                return;
+            }
+            ShowTutorialMessage(LocalizedText.AdPlayFailedWithReason(normalized));
+        }
+
+        private static string NormalizeFailureReason(string failReason)
+        {
+            if (string.IsNullOrWhiteSpace(failReason))
+            {
+                return LocalizedText.AdPlayFailedUnknown;
+            }
+
+            string trimmed = failReason.Trim();
+            if (trimmed.Length <= 80)
+            {
+                return trimmed;
+            }
+
+            return trimmed.Substring(0, 77) + "...";
         }
 
         private void EnsureAudioService()
@@ -330,17 +377,28 @@ namespace LoopSorting
 
             _progress.SavedFlowIndex = save.flowIndex;
             _progress.SavedHighestUnlockedFlowIndex = save.highestUnlockedFlowIndex;
+            _savedFlowLength = Mathf.Max(0, save.flowLength);
+            _savedReplaySeed = Mathf.Max(0, save.replaySeed);
+            _savedReplayOrder = save.replayOrder != null ? save.replayOrder.ToArray() : null;
+            _replaySeed = 0;
+            _replayOrder = null;
         }
 
         private LoopSortingSaveService.SaveData BuildSaveData()
         {
             int flowIndex = _flow != null ? Mathf.Max(0, _flowIndex) : Mathf.Max(0, _progress.SavedFlowIndex);
             int highestUnlocked = Mathf.Max(_progress.SavedHighestUnlockedFlowIndex, flowIndex);
+            int flowCount = _flow != null ? Mathf.Max(0, _flow.levels.Count) : 0;
+            int saveReplaySeed = IsReplayMode(flowCount) ? _replaySeed : 0;
+            int[] saveReplayOrder = IsReplayMode(flowCount) && _replayOrder != null ? (int[])_replayOrder.Clone() : null;
 
             return new LoopSortingSaveService.SaveData
             {
                 flowIndex = flowIndex,
                 highestUnlockedFlowIndex = highestUnlocked,
+                flowLength = flowCount,
+                replaySeed = saveReplaySeed,
+                replayOrder = saveReplayOrder,
                 coins = Mathf.Max(0, _progress.Coins),
                 lives = Mathf.Max(0, _progress.Lives),
                 boosterSortCount = Mathf.Clamp(_progress.BoosterSortCount, 0, 99),
@@ -349,6 +407,152 @@ namespace LoopSorting
                 musicEnabled = musicEnabled,
                 vibrationEnabled = vibrationEnabled,
             };
+        }
+
+        private static bool IsReplayMode(int flowCount) => flowCount == ReplayLoopStartLogicalIndex;
+
+        private static bool IsValidReplayOrder(int[] order)
+        {
+            if (order == null || order.Length != ReplayPoolCount) return false;
+            var seen = new bool[ReplayLoopStartLogicalIndex];
+            for (int i = 0; i < order.Length; i++)
+            {
+                int idx = order[i];
+                if (idx < ReplayPoolStartIndex || idx >= ReplayLoopStartLogicalIndex) return false;
+                if (seen[idx]) return false;
+                seen[idx] = true;
+            }
+            return true;
+        }
+
+        private int[] CreateReplayOrder(int seed)
+        {
+            var order = new int[ReplayPoolCount];
+            for (int i = 0; i < ReplayPoolCount; i++)
+            {
+                order[i] = ReplayPoolStartIndex + i;
+            }
+
+            var rng = new System.Random(seed);
+            for (int i = order.Length - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                int tmp = order[i];
+                order[i] = order[j];
+                order[j] = tmp;
+            }
+
+            return order;
+        }
+
+        private void EnsureReplayOrder(int flowCount)
+        {
+            if (!IsReplayMode(flowCount))
+            {
+                _replayOrder = null;
+                _replaySeed = 0;
+                return;
+            }
+
+            if (IsValidReplayOrder(_replayOrder)) return;
+
+            if (IsValidReplayOrder(_savedReplayOrder))
+            {
+                _replayOrder = _savedReplayOrder.Clone() as int[];
+                _replaySeed = _savedReplaySeed;
+                return;
+            }
+
+            if (_savedReplaySeed != 0)
+            {
+                _replaySeed = _savedReplaySeed;
+                _replayOrder = CreateReplayOrder(_replaySeed);
+                return;
+            }
+
+            _replaySeed = Environment.TickCount;
+            _replayOrder = CreateReplayOrder(_replaySeed);
+        }
+
+        private void ShuffleReplayOrder(int flowCount)
+        {
+            if (!IsReplayMode(flowCount))
+            {
+                _replayOrder = null;
+                _replaySeed = 0;
+                return;
+            }
+
+            _replaySeed = Environment.TickCount;
+            _replayOrder = CreateReplayOrder(_replaySeed);
+        }
+
+        private int ResolvePhysicalFlowIndex(int logicalIndex, int flowCount)
+        {
+            if (flowCount <= 0) return 0;
+            logicalIndex = Mathf.Max(0, logicalIndex);
+
+            if (!IsReplayMode(flowCount))
+            {
+                return Mathf.Min(logicalIndex, flowCount - 1);
+            }
+
+            if (logicalIndex < ReplayLoopStartLogicalIndex) return logicalIndex;
+
+            EnsureReplayOrder(flowCount);
+            int cycle = logicalIndex - ReplayLoopStartLogicalIndex;
+            int cursor = cycle % ReplayPoolCount;
+            return _replayOrder[cursor];
+        }
+
+        private int ResolveDisplayLevelNumber()
+        {
+            if (_flow != null)
+            {
+                return Mathf.Max(1, _flowIndex + 1);
+            }
+            return 1;
+        }
+
+        private int ResolveDisplayLevelNumber(int logicalFlowIndex)
+        {
+            return Mathf.Max(1, logicalFlowIndex + 1);
+        }
+
+        private bool CanAdvanceToLogicalIndex(int nextLogical, int flowCount)
+        {
+            if (flowCount <= 0) return false;
+            if (IsReplayMode(flowCount)) return true;
+            return nextLogical < flowCount;
+        }
+
+        private bool ShouldShuffleReplayNow(int nextLogicalIndex, int flowCount)
+        {
+            if (!IsReplayMode(flowCount)) return false;
+            if (nextLogicalIndex < ReplayLoopStartLogicalIndex) return false;
+            int cursor = nextLogicalIndex - ReplayLoopStartLogicalIndex;
+            return cursor > 0 && cursor % ReplayPoolCount == 0;
+        }
+
+        private int ResolvePendingFlowIndex(int requestedIndex, int flowCount)
+        {
+            requestedIndex = Mathf.Max(0, requestedIndex);
+
+            if (flowCount > 0 && _savedFlowLength == ReplayLoopStartLogicalIndex &&
+                flowCount > ReplayLoopStartLogicalIndex &&
+                requestedIndex >= ReplayLoopStartLogicalIndex &&
+                useSavedProgress)
+            {
+                return ReplayLoopStartLogicalIndex;
+            }
+
+            if (!IsReplayMode(flowCount))
+            {
+                if (flowCount <= 0) return requestedIndex;
+                return Mathf.Min(requestedIndex, flowCount - 1);
+            }
+
+            return requestedIndex;
         }
 
         private void RequestSave(float delaySeconds, bool coalesce = true)
@@ -430,8 +634,18 @@ namespace LoopSorting
         public void Build(LevelFlow flow, int startIndex = 0)
         {
             _flow = flow;
-            _flowIndex = Mathf.Clamp(startIndex, 0, flow != null ? Mathf.Max(0, flow.levels.Count - 1) : 0);
-            var layout = flow != null && flow.levels.Count > 0 ? flow.levels[_flowIndex] : null;
+            int flowCount = flow != null ? Mathf.Max(0, flow.levels.Count) : 0;
+            _flowIndex = ResolvePendingFlowIndex(startIndex, flowCount);
+            if (flowCount > 0)
+            {
+                _activeFlowIndex = ResolvePhysicalFlowIndex(_flowIndex, flowCount);
+            }
+            else
+            {
+                _activeFlowIndex = 0;
+            }
+
+            var layout = flow != null && flow.levels.Count > 0 ? flow.levels[_activeFlowIndex] : null;
             BuildInternal(layout, clearFlow: false);
         }
 
@@ -494,20 +708,30 @@ namespace LoopSorting
         private void UpdateConveyorLoopSfx()
         {
             if (_audio == null || _audio.Sfx == null) return;
-            if (!conveyorAmbienceEnabled) { _audio.StopSfxLoop(); return; }
-            if (!soundEnabled) { _audio.StopSfxLoop(); return; }
 
-            // Only run loop SFX during active gameplay.
-            if (_game == null || _gameOver)
+            bool shouldPlay = conveyorAmbienceEnabled && soundEnabled && _game != null && !_gameOver;
+            if (!shouldPlay)
             {
-                _audio.StopSfxLoop();
+                if (_loopSfxRunning)
+                {
+                    _audio.StopSfxLoop();
+                    _loopSfxRunning = false;
+                    _loopSfxPitch = -1f;
+                }
                 return;
             }
 
             float pitch = _fullBeltFastForward ? 1.15f : 1f;
             if (!_fullBeltFastForward && _speedMultiplier >= 4.99f) pitch = 1.12f;
 
+            if (_loopSfxRunning && Mathf.Abs(_loopSfxPitch - pitch) <= 0.001f)
+            {
+                return;
+            }
+
             _audio.StartSfxLoop(SfxId.ConveyorLoop, volumeMultiplier: 1f, pitch: pitch);
+            _loopSfxRunning = true;
+            _loopSfxPitch = pitch;
         }
 
         private void PlaySfx(SfxId id, float volumeMultiplier = 1f)
@@ -1420,6 +1644,7 @@ namespace LoopSorting
                 _portEvents.Clear();
                 _game.TickConveyor(blocked, _portEvents, allowInsert: true, canInsertAtPort: CanInsertAtPort);
                 ProcessConveyorPortEvents(_portEvents);
+                bool containersChangedThisTick = _sfxInsertEventsThisTick > 0;
                 RefreshInboundStreamLocks();
                 _conveyorTickSfxCountdown--;
                 if (_conveyorTickSfxCountdown <= 0)
@@ -1433,9 +1658,12 @@ namespace LoopSorting
                 SyncBeltVisuals();
                 UpdateSlotMarkersVisuals(0f);
                 UpdateBeltBlockVisuals(0f);
-                SyncContainersVisuals();
-                UpdateLocks();
-                UpdateCompletionStates();
+                if (containersChangedThisTick)
+                {
+                    SyncContainersVisuals();
+                    UpdateLocks();
+                    UpdateCompletionStates();
+                }
                 UpdateBeltCounter();
                 HandleFullBeltFastForwardAfterTick();
                 UpdateBgmPressureAfterTick();
@@ -3180,7 +3408,7 @@ namespace LoopSorting
             }
 
             // Remove visuals no longer needed.
-            var toRemove = new List<int>();
+            _beltVisualRemoveBuffer.Clear();
             foreach (var kv in _beltBlockVisuals)
             {
                 int idx = kv.Key;
@@ -3189,11 +3417,12 @@ namespace LoopSorting
                 {
                     StopBeltSpawnAnimation(idx);
                     Destroy(kv.Value);
-                    toRemove.Add(idx);
+                    _beltVisualRemoveBuffer.Add(idx);
                 }
             }
-            foreach (var idx in toRemove)
+            for (int i = 0; i < _beltVisualRemoveBuffer.Count; i++)
             {
+                int idx = _beltVisualRemoveBuffer[i];
                 _beltBlockVisuals.Remove(idx);
             }
 

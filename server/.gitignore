@@ -1,0 +1,3 @@
+data/state.json
+*.log
+.env
